@@ -62,13 +62,12 @@ The following scope reflects the team's latest clarification and supersedes conf
 | Selected historical market indicators | MVP | Final inputs depend on data availability and usefulness |
 | Forecast range and uncertainty | MVP | Current target MGO; mapping remains experimental until validated; precomputed delivery recommended, final mode TBD |
 | One saved purchase plan per user | MVP | Create, view, edit, and delete; quantity, deadline, and derived urgency |
-| Purchase impact calculation | MVP | Requires a valid dated MGO reference and comparable forecast |
+| Purchase impact calculation | later | Requires a valid dated MGO reference and comparable forecast |
 | Recommendation and human decision | MVP | Account for deadline/urgency, provide a short explanation, and allow accept/reject |
 | Registration and login | MVP | Retain if required by course or agreed vision scope; mechanism TBD. One-plan-per-user persistence requires an agreed user identity and ownership mechanism. |
-| Per-prediction SHAP | Method TBD | A short recommendation explanation is required; detailed SHAP visualizations can follow after MVP |
-| Keyword-filtered historical GDELT features | TBD | Candidate model input, not an agreed MVP dependency |
-| Historical change detection | TBD | Batch/replay may be considered; not a dependency of the agreed minimum flow |
-| Broader profile/domain CRUD | TBD | Purchase-plan CRUD is agreed; administration of market records and saved analyses is not yet scoped |
+| Per-prediction SHAP | later | A short recommendation explanation is required; detailed SHAP visualizations can follow after MVP |
+| Keyword-filtered historical GDELT features | later | Candidate model input, not an agreed MVP dependency |
+| Broader profile/domain CRUD | MVP | Purchase-plan CRUD is agreed; administration of market records and saved analyses is not yet scoped |
 
 ### Nice-to-haves after the MVP
 
