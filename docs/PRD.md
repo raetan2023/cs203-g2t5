@@ -64,7 +64,7 @@ The following scope reflects the team's latest clarification and supersedes conf
 | One saved purchase plan per user | MVP | Create, view, edit, and delete; quantity, deadline, and derived urgency |
 | Purchase impact calculation | MVP | Requires a valid dated MGO reference and comparable forecast |
 | Recommendation and human decision | MVP | Account for deadline/urgency, provide a short explanation, and allow accept/reject |
-| Registration and login | Conditional MVP | Retain if required by course or agreed vision scope; mechanism TBD. One-plan-per-user persistence requires an agreed user identity and ownership mechanism. |
+| Registration and login | MVP | Retain if required by course or agreed vision scope; mechanism TBD. One-plan-per-user persistence requires an agreed user identity and ownership mechanism. |
 | Per-prediction SHAP | Method TBD | A short recommendation explanation is required; detailed SHAP visualizations can follow after MVP |
 | Keyword-filtered historical GDELT features | TBD | Candidate model input, not an agreed MVP dependency |
 | Historical change detection | TBD | Batch/replay may be considered; not a dependency of the agreed minimum flow |
