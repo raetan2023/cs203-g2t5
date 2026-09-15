@@ -61,13 +61,14 @@ The following scope reflects the team's latest clarification and supersedes conf
 | Historical market dashboard | MVP | Show an explicit historical as-of date; distinguish observed MGO, Gasoil futures, and derived MGO estimates |
 | Selected historical market indicators | MVP | Final inputs depend on data availability and usefulness |
 | Forecast range and uncertainty | MVP | Current target MGO; mapping remains experimental until validated; precomputed delivery recommended, final mode TBD |
-| One saved purchase plan per user | MVP | Create, view, edit, and delete; quantity, deadline, and derived urgency |
-| Purchase impact calculation | later | Requires a valid dated MGO reference and comparable forecast |
+| One saved purchase plan per user with CRUD| MVP | Create, view, edit, and delete; quantity, deadline, and derived urgency |
+| Broader profile/domain CRUD | MVP | Purchase-plan CRUD is agreed; administration of market records and saved analyses is not yet scoped |
 | Recommendation and human decision | MVP | Account for deadline/urgency, provide a short explanation, and allow accept/reject |
 | Registration and login | MVP | Retain if required by course or agreed vision scope; mechanism TBD. One-plan-per-user persistence requires an agreed user identity and ownership mechanism. |
+|---|---|---|
+| Purchase impact calculation | later | Requires a valid dated MGO reference and comparable forecast |
 | Per-prediction SHAP | later | A short recommendation explanation is required; detailed SHAP visualizations can follow after MVP |
 | Keyword-filtered historical GDELT features | later | Candidate model input, not an agreed MVP dependency |
-| Broader profile/domain CRUD | MVP | Purchase-plan CRUD is agreed; administration of market records and saved analyses is not yet scoped |
 
 ### Nice-to-haves after the MVP
 
