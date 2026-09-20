@@ -1,4 +1,4 @@
-# Product Requirements Document
+﻿# Product Requirements Document
 
 Status: Working draft - clarification in progress
 Last updated: 2026-09-20
@@ -283,26 +283,3 @@ All owners and due dates are TBD unless subsequently assigned.
 | D-14 | Model versioning and retraining | Historical training/backtest protocol and tracking TBD; vision's weekly production retraining is not assumed for fixed data |
 | D-15 | Historical dataset cutoff and presentation | Data limited to a historical period; exact cutoff, scenario dates, inference mode, and demo format TBD. Precomputed forecasts with interactive purchase-impact calculation are the team-requested recommendation, not a finalized decision. Team probably will not conduct a live-market demo. |
 
-## 12. Clarification log
-
-2026-09-20: Team accepted the login, market-history dashboard, sidebar, and single-plan CRUD flow and requested its inclusion in the PRD. Supabase Free is the tentative platform choice; Supabase Auth and provider-managed password storage are recommended, pending adoption. Order-by semantics, calendar-day counting, date validation, and urgency labels remain proposed.
-
-2026-09-20: Team supplied and confirmed seven data-source links following feasibility research, including observed MGO prices, Gasoil futures, Dubai and Brent crude, USD index, bunker sales, and GDELT. Crude oil inventories were dropped under the team's supply-signal rationale. The full input set supports later Gasoil forecasting and subsequent MGO estimation; database extensions will be revisited at that stage. Current sprint scope is unchanged.
-
-2026-09-20: Confirmed USD currency and cascade deletion of saved analyses and decisions when deleting a purchase plan, including dependent impacts and recommendations. Plan editing remains supported and preserves prior analysis snapshots. Accepted a basic dashboard/plan-CRUD sprint with generic market tables and only the data needed by displayed features; forecasting and the decision flow remain later work. Gasoil physical price unit and price/contract definitions remain TBC. Forecast horizon representation and explicit price currency/units are included in the revised schema; exact horizon, model tracking, and dataset cutoff remain TBC.
-
-2026-09-15: Team accepted the focused MVP proposal: one complete historical purchase-decision flow and one saved plan per user with create/view/edit/delete. Multiple saved plans and plan comparisons are nice-to-haves after MVP. Live feeds, alerts, automatic retraining, LLM news classification, and detailed SHAP visualizations are deferred. Precomputed forecasts remain recommended with the final mode TBD; registration/login remain conditional on course or agreed scope.
-
-2026-09-15: Team accepted automatically derived urgency for the MVP, based on time remaining until the purchase deadline. Urgency thresholds remain TBD; the example thresholds are not requirements. This resolves the earlier explicit-versus-derived urgency question.
-
-2026-09-15: Team confirmed that purchase plans should include purchase deadline/urgency in addition to quantity. Their representation and detailed recommendation rules remain TBD.
-
-2026-09-15: Team asked to keep precomputed versus on-demand forecasts TBD while recommending precomputed forecasts (option 2), with interactive purchase-quantity and impact calculations.
-
-2026-09-15: Team stated that data will be limited to a certain period and that a live demo is unlikely. Recorded a fixed historical dataset as the working delivery assumption; exact dates and demo format remain TBD. This does not settle whether historical change detection or interactive inference is included.
-
-2026-09-15: Team explicitly confirmed the forecast horizon remains TBD; do not use the illustrative 7-day horizon as the MVP default.
-
-2026-09-15: Team identified https://themaritime.net/market/bunker/port-of-singapore as an existing public MGO database with approximately 2-3 records per month; the remaining data is behind a paywall. This clarifies source availability, but does not decide whether the latest public quote is an acceptable purchase-cost reference.
-
-2026-09-15: Team clarified that Gasoil movements are intended to predict MGO, but exact mathematics are not established. MGO differentiates the project because Singapore MGO data is expensive/paywalled. A later switch to predicting Gasoil futures is possible. The mapping methods in section 6 are suggestions for evaluation, not decisions made by the team.
