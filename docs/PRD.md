@@ -1,7 +1,7 @@
 ﻿# Product Requirements Document
 
 Status: Working draft - clarification in progress
-Last updated: 2026-09-20
+Last updated: 2026-09-21
 Source: CS203-G2-team5-project-vision.pdf (9 pages), supplemented by team clarification in this conversation.
 
 ## 1. Product purpose
@@ -271,7 +271,7 @@ All owners and due dates are TBD unless subsequently assigned.
 | D-02 | MGO conversion mathematics | TBD; percentage-return transfer proposed as baseline |
 | D-03 | Real MGO data role and anchor | Public source identified; team reports 2-3 records/month. Calibration/validation use, current-price anchor, and acceptable quote age remain TBD. |
 | D-04 | Forecast horizon and calendar | Team explicitly confirmed forecast horizon remains TBD. The vision's 7-day example is not a committed requirement. Calendar convention also remains TBD. |
-| D-05 | Change detection, news, and explanation details | Short recommendation explanation required for MVP. Live alerts and detailed SHAP visualizations deferred; historical change detection, keyword-filtered news input, and explanation method remain TBD. |
+| D-05 | Change detection, news, and explanation details | Recommendations are deferred beyond the current sprint; when implemented, they must include a short explanation as specified in FR-09. Live alerts and detailed SHAP visualizations deferred; historical change detection, keyword-filtered news input, and explanation method remain TBD. |
 | D-06 | Purchase-plan fields | Quantity, purchase deadline, and urgency confirmed. MVP urgency is derived from time remaining relative to the historical scenario date. One saved plan per user with CRUD confirmed for MVP; multiple saved plans and comparisons are post-MVP nice-to-haves. Categories, thresholds, day-count convention, date validation, delivery date, budget, and quote input TBD. |
 | D-07 | Recommendation rules | Must account for purchase deadline and urgency; detailed action rules, forecast-horizon alignment, and uncertainty treatment TBD. |
 | D-08 | Interval method and confidence label | Volatility heuristic proposed in vision; calibrated MGO uncertainty TBD |

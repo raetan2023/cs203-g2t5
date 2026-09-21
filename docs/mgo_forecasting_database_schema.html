@@ -1,0 +1,140 @@
+﻿<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MGO database schema</title><style>body{font:16px system-ui,sans-serif;margin:32px;color:#182330;background:#f6f8fa}main{max-width:1500px;margin:auto}section{background:white;padding:24px;margin:24px 0;border:1px solid #d8dee4;border-radius:12px;overflow:auto}svg{max-width:none!important}a{color:#165bb4}p,li{line-height:1.6}table{border-collapse:collapse;width:100%}th,td{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #d8dee4}th{background:#eef3f8}code{background:#eef3f8;padding:2px 5px;border-radius:4px}.mermaid{white-space:pre;overflow:auto}.notice{border-left:4px solid #165bb4;padding:12px 16px;background:#eef3f8}@media print{body{margin:0;background:white}section{break-inside:avoid}svg{max-width:100%!important}}</style></head><body><main><h1>MGO database schema</h1><p>Updated 20 September 2026. Design only; no database migration has been applied. Currency: USD. Gasoil physical unit and contract/price definition: TBC.</p><p class="notice">Current sprint: four tables for the dashboard and one editable purchase plan per user. The second diagram documents the later decision flow; it is not a requirement to build those tables now.</p><p><a href="database-schema.md">Full field definitions, constraints, and deletion policy</a></p><section><h2>Current sprint: dashboard and purchase-plan CRUD</h2><pre class="mermaid">erDiagram
+  USERS ||--o| PURCHASE_PLANS : owns
+  MARKET_SERIES ||--o{ MARKET_OBSERVATIONS : contains
+  USERS {
+    uuid user_id PK
+    string email UK
+  }
+  PURCHASE_PLANS {
+    uuid plan_id PK
+    uuid user_id FK, UK
+    numeric quantity_mt "Positive metric tonnes"
+    date purchase_deadline
+    date scenario_as_of_date
+  }
+  MARKET_SERIES {
+    uuid series_id PK
+    string series_key UK
+    string source_name
+    string source_url
+    string currency_code
+    string unit
+    string price_definition
+    string contract_description
+  }
+  MARKET_OBSERVATIONS {
+    uuid observation_id PK
+    uuid series_id FK
+    date observation_date "Unique with series_id"
+    numeric value
+    string value_type
+    timestamp availability_timestamp
+  }
+</pre></section><section><h2>Later: forecasting and purchase decisions</h2><pre class="mermaid">erDiagram
+  PURCHASE_PLANS ||--o{ PURCHASE_ANALYSES : snapshots
+  MODEL_VERSIONS ||--o{ FORECASTS : produces
+  FORECASTS }o--o| FORECASTS : derived_from
+  MARKET_OBSERVATIONS o|--o{ FORECASTS : mgo_anchor
+  MARKET_OBSERVATIONS o|--o{ FORECASTS : gasoil_origin
+  FORECASTS ||--o{ PURCHASE_ANALYSES : supports
+  MARKET_OBSERVATIONS ||--o{ PURCHASE_ANALYSES : reference_price
+  PURCHASE_ANALYSES ||--o| PURCHASE_IMPACT_CALCULATIONS : calculates
+  PURCHASE_ANALYSES ||--o{ RECOMMENDATIONS : generates
+  RECOMMENDATIONS ||--o| USER_DECISIONS : records
+  USERS ||--o{ USER_DECISIONS : makes
+  MODEL_VERSIONS {
+    uuid model_version_id PK
+    string model_name
+    string target_commodity
+    date training_cutoff_date
+  }
+  FORECASTS {
+    uuid forecast_id PK
+    uuid model_version_id FK
+    string target_commodity
+    date scenario_as_of_date
+    date forecast_target_date "After scenario_as_of_date"
+    string currency_code
+    string unit
+    numeric lower_bound
+    numeric upper_bound
+    string forecast_method
+    string validation_status
+    string uncertainty_method
+    uuid source_gasoil_forecast_id FK
+    uuid gasoil_origin_observation_id FK
+    uuid mgo_anchor_observation_id FK
+  }
+  PURCHASE_ANALYSES {
+    uuid analysis_id PK
+    uuid plan_id FK
+    uuid forecast_id FK
+    uuid reference_price_observation_id FK
+    numeric quantity_mt "Positive metric tonnes"
+    date purchase_deadline
+    date scenario_as_of_date
+    numeric reference_price
+    string currency_code
+    string price_unit
+    timestamp created_at
+  }
+  PURCHASE_IMPACT_CALCULATIONS {
+    uuid impact_id PK
+    uuid analysis_id FK, UK
+    numeric reference_cost
+    numeric forecast_cost_low
+    numeric forecast_cost_high
+    numeric diff_low
+    numeric diff_high
+  }
+  RECOMMENDATIONS {
+    uuid recommendation_id PK
+    uuid analysis_id FK
+    string recommended_action
+    string explanation_text
+    timestamp created_at
+  }
+  USER_DECISIONS {
+    uuid decision_id PK
+    uuid recommendation_id FK, UK
+    uuid user_id FK
+    string decision
+    timestamp decided_at
+  }
+</pre></section><section aria-labelledby="rules"><h2 id="rules">Constraints and saved-result behaviour</h2>
+<table><thead><tr><th>Area</th><th>Schema rule</th></tr></thead><tbody>
+<tr><td>Plan ownership</td><td>One plan per user: user_id is required and unique. Quantity must be positive. Derive urgency from the scenario date and purchase deadline; thresholds and calendar remain TBC. Enforce ownership for all private reads and writes.</td></tr>
+<tr><td>Observation uniqueness</td><td>Composite unique key <code>(series_id, observation_date)</code>. Different price measures/contracts use distinct series keys. Unknown publication time remains null; it is not inferred from observation date.</td></tr>
+<tr><td>Currency and units</td><td>Monetary series and forecasts use USD. Non-monetary indicators may have no currency. Gasoil physical unit, price definition, and contract definition remain TBC. Unit-dependent calculations require verified metadata.</td></tr>
+<tr><td>Forecasts</td><td>Store origin and target dates, ordered bounds, currency/unit, forecast method, validation status, and uncertainty method. Exact horizon remains TBC. Method/status replace the ambiguous is_proxy_estimate flag.</td></tr>
+<tr><td>Plan edits</td><td>Update the current plan in place. Existing PURCHASE_ANALYSES keep immutable input snapshots; new calculations use the updated plan. Referenced forecasts and observations must not change in place.</td></tr>
+<tr><td>Plan deletion</td><td><strong>Plan &rarr; analyses &rarr; impacts and recommendations &rarr; decisions</strong> are cascade-deleted. Shared users, market data, forecasts, and model versions remain. Protect referenced shared records from deletion.</td></tr>
+<tr><td>Recommendations and decisions</td><td>Recommendations reference an analysis, which identifies the forecast and model. Save new recommendations under new IDs. At most one response per recommendation; the responding user must own the plan. Ignore/change-response semantics remain TBC.</td></tr>
+</tbody></table></section>
+<section aria-labelledby="import"><h2 id="import">Gasoil CSV mapping for this sprint</h2>
+<table><thead><tr><th>CSV field</th><th>Storage</th></tr></thead><tbody>
+<tr><td>Date</td><td>MARKET_OBSERVATIONS.observation_date; parse MM/DD/YYYY.</td></tr>
+<tr><td>Price</td><td>MARKET_OBSERVATIONS.value, linked to the Gasoil series. Keep the source label Price until closing/settlement meaning is verified.</td></tr>
+<tr><td>Open, High, Low, Vol., Change %</td><td>Retain in the original CSV; not imported for the basic dashboard. Missing volume means unknown, not zero.</td></tr>
+</tbody></table><p>The supplied sample contains 585 rows, with four differing OHLC rows and only two populated volume rows. Do not assume those fields are uniformly redundant. Import only series used by displayed features; Brent, Dubai and other candidate model inputs do not need separate tables or mandatory imports.</p></section>
+<section aria-labelledby="mapping"><h2 id="mapping">Proposed percentage-transfer mapping</h2>
+<p><code>M_h = M_0 &times; (G_h / G_0)</code>: apply predicted Gasoil percentage movement to a dated MGO anchor. This remains an experimental baseline, not a validated relationship.</p>
+<p>If selected, require the source Gasoil forecast, Gasoil origin observation, and MGO anchor references. Origins/targets must align, the Gasoil denominator must be positive, and units/contracts must be comparable. These references are optional for methods that do not use this mapping. An old anchor requires a separately agreed policy; mapped bounds alone do not establish calibrated MGO uncertainty.</p>
+<p>Purchase impacts use snapshotted quantity Q and reference P0 with MGO bounds [L,U] in USD/MT: reference Q&times;P0; forecast [Q&times;L,Q&times;U]; difference [Q&times;(L-P0),Q&times;(U-P0)].</p></section>
+<section aria-labelledby="pending"><h2 id="pending">Still TBC</h2><p>Extended model tracking and dataset-cutoff storage are deferred. MODEL_VERSIONS is the original minimal placeholder. Authentication, exact horizon/calendar, Gasoil physical unit and contract/price definition, conversion validation, and uncertainty method remain open. No local password-storage mechanism is assumed.</p></section>
+<p id="render-status" role="status">Loading diagrams. Mermaid requires an internet connection; if unavailable, the diagram source remains visible above. Full field definitions are in <a href="database-schema.md">database-schema.md</a>.</p>
+</main><script type="module">
+const status = document.getElementById('render-status');
+try {
+  const { default: mermaid } = await import('https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs');
+  mermaid.initialize({startOnLoad:false,theme:'neutral',securityLevel:'strict',er:{useMaxWidth:false}});
+  // Parse all diagrams before rendering so syntax errors leave the source readable.
+  for (const node of document.querySelectorAll('.mermaid')) await mermaid.parse(node.textContent);
+  await mermaid.run({querySelector:'.mermaid'});
+  status.textContent = 'Diagrams loaded. Full field definitions, constraints, and open decisions are in database-schema.md.';
+} catch (error) {
+  status.textContent = 'Diagrams could not load. Read the diagram source above or open database-schema.md for the complete schema.';
+  console.error('Schema diagram rendering failed', error);
+}
+</script></body></html>
