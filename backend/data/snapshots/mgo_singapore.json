@@ -1,0 +1,2801 @@
+{
+  "data": [
+    {
+      "date": "2020-03-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 353.0
+    },
+    {
+      "date": "2020-03-27",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 294.0
+    },
+    {
+      "date": "2020-03-30",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 287.5
+    },
+    {
+      "date": "2020-04-22",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 248.0
+    },
+    {
+      "date": "2020-05-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 259.0
+    },
+    {
+      "date": "2020-05-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 295.5
+    },
+    {
+      "date": "2020-06-17",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 359.0
+    },
+    {
+      "date": "2020-06-18",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 372.0
+    },
+    {
+      "date": "2020-08-06",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 387.5
+    },
+    {
+      "date": "2020-08-07",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 389.0
+    },
+    {
+      "date": "2020-09-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 339.0
+    },
+    {
+      "date": "2020-09-22",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 363.0
+    },
+    {
+      "date": "2020-09-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 349.0
+    },
+    {
+      "date": "2020-10-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 351.5
+    },
+    {
+      "date": "2020-10-25",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 346.0
+    },
+    {
+      "date": "2020-11-01",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 331.5
+    },
+    {
+      "date": "2020-11-02",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 322.5
+    },
+    {
+      "date": "2020-11-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 388.0
+    },
+    {
+      "date": "2020-11-15",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 386.0
+    },
+    {
+      "date": "2020-11-18",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 380.0
+    },
+    {
+      "date": "2020-12-04",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 412.0
+    },
+    {
+      "date": "2020-12-05",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 427.0
+    },
+    {
+      "date": "2020-12-07",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 427.0
+    },
+    {
+      "date": "2021-01-04",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 455.0
+    },
+    {
+      "date": "2021-01-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 470.0
+    },
+    {
+      "date": "2021-01-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 482.0
+    },
+    {
+      "date": "2021-02-17",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 538.0
+    },
+    {
+      "date": "2021-02-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 555.5
+    },
+    {
+      "date": "2021-04-19",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 536.5
+    },
+    {
+      "date": "2021-04-21",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 533.5
+    },
+    {
+      "date": "2021-04-23",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 531.5
+    },
+    {
+      "date": "2021-04-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 534.0
+    },
+    {
+      "date": "2021-04-25",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 534.0
+    },
+    {
+      "date": "2021-04-29",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 537.5
+    },
+    {
+      "date": "2021-05-01",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 539.5
+    },
+    {
+      "date": "2021-05-09",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 556.5
+    },
+    {
+      "date": "2021-05-10",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 557.5
+    },
+    {
+      "date": "2021-06-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 592.0
+    },
+    {
+      "date": "2021-06-14",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 592.0
+    },
+    {
+      "date": "2021-07-29",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 592.0
+    },
+    {
+      "date": "2021-08-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 570.5
+    },
+    {
+      "date": "2021-08-20",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 542.5
+    },
+    {
+      "date": "2021-09-18",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 613.5
+    },
+    {
+      "date": "2021-09-21",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 608.5
+    },
+    {
+      "date": "2021-10-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 720.5
+    },
+    {
+      "date": "2021-10-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 724.0
+    },
+    {
+      "date": "2021-10-31",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 704.0
+    },
+    {
+      "date": "2021-11-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 692.0
+    },
+    {
+      "date": "2021-12-04",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 603.5
+    },
+    {
+      "date": "2021-12-08",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 630.5
+    },
+    {
+      "date": "2022-01-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 738.0
+    },
+    {
+      "date": "2022-01-19",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 771.5
+    },
+    {
+      "date": "2022-01-20",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 773.5
+    },
+    {
+      "date": "2022-01-29",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 780.5
+    },
+    {
+      "date": "2022-03-05",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1096.0
+    },
+    {
+      "date": "2022-03-09",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1216.0
+    },
+    {
+      "date": "2022-03-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1084.5
+    },
+    {
+      "date": "2022-03-19",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 990.0
+    },
+    {
+      "date": "2022-04-05",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1112.0
+    },
+    {
+      "date": "2022-05-21",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1122.5
+    },
+    {
+      "date": "2022-05-30",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1159.5
+    },
+    {
+      "date": "2022-06-07",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1334.5
+    },
+    {
+      "date": "2022-07-03",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1274.0
+    },
+    {
+      "date": "2022-08-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 999.0
+    },
+    {
+      "date": "2022-08-31",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1134.5
+    },
+    {
+      "date": "2022-09-01",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1102.5
+    },
+    {
+      "date": "2022-09-02",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1064.0
+    },
+    {
+      "date": "2022-09-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 925.5
+    },
+    {
+      "date": "2022-10-14",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1072.0
+    },
+    {
+      "date": "2022-11-06",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1068.5
+    },
+    {
+      "date": "2022-11-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1063.0
+    },
+    {
+      "date": "2022-11-18",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1065.0
+    },
+    {
+      "date": "2022-11-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1000.0
+    },
+    {
+      "date": "2022-12-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 958.0
+    },
+    {
+      "date": "2022-12-31",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 928.5
+    },
+    {
+      "date": "2023-02-04",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 844.5
+    },
+    {
+      "date": "2023-02-15",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 826.0
+    },
+    {
+      "date": "2023-03-07",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 818.5
+    },
+    {
+      "date": "2023-03-15",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 767.0
+    },
+    {
+      "date": "2023-03-29",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 746.5
+    },
+    {
+      "date": "2023-04-03",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 779.5
+    },
+    {
+      "date": "2023-05-31",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 700.5
+    },
+    {
+      "date": "2023-09-28",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 942.0
+    },
+    {
+      "date": "2023-10-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 897.5
+    },
+    {
+      "date": "2023-12-01",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 804.5
+    },
+    {
+      "date": "2024-03-04",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 796.0
+    },
+    {
+      "date": "2024-05-29",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 722.5
+    },
+    {
+      "date": "2024-06-22",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 751.0
+    },
+    {
+      "date": "2024-07-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 726.0
+    },
+    {
+      "date": "2024-08-11",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 691.0
+    },
+    {
+      "date": "2024-10-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 696.0
+    },
+    {
+      "date": "2024-10-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 663.5
+    },
+    {
+      "date": "2024-10-25",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 659.0
+    },
+    {
+      "date": "2024-11-07",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 705.0
+    },
+    {
+      "date": "2024-11-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 681.0
+    },
+    {
+      "date": "2024-12-11",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 658.5
+    },
+    {
+      "date": "2024-12-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 664.5
+    },
+    {
+      "date": "2024-12-14",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 680.5
+    },
+    {
+      "date": "2024-12-20",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 679.5
+    },
+    {
+      "date": "2025-01-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 724.5
+    },
+    {
+      "date": "2025-01-25",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 724.0
+    },
+    {
+      "date": "2025-02-19",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 691.5
+    },
+    {
+      "date": "2025-02-23",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 694.5
+    },
+    {
+      "date": "2025-02-28",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 665.5
+    },
+    {
+      "date": "2025-03-18",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 645.0
+    },
+    {
+      "date": "2025-03-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 644.0
+    },
+    {
+      "date": "2025-04-20",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 609.0
+    },
+    {
+      "date": "2025-04-28",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 620.0
+    },
+    {
+      "date": "2025-05-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 598.5
+    },
+    {
+      "date": "2025-05-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 602.5
+    },
+    {
+      "date": "2025-06-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 620.0
+    },
+    {
+      "date": "2025-06-14",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 659.5
+    },
+    {
+      "date": "2025-06-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 659.5
+    },
+    {
+      "date": "2025-06-30",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 664.0
+    },
+    {
+      "date": "2025-07-11",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 692.5
+    },
+    {
+      "date": "2025-07-20",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 696.0
+    },
+    {
+      "date": "2025-08-08",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 659.0
+    },
+    {
+      "date": "2025-08-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 657.0
+    },
+    {
+      "date": "2025-09-08",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 668.0
+    },
+    {
+      "date": "2025-09-09",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 668.0
+    },
+    {
+      "date": "2025-09-19",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 673.0
+    },
+    {
+      "date": "2025-10-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 674.5
+    },
+    {
+      "date": "2025-10-18",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 656.5
+    },
+    {
+      "date": "2025-11-07",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 734.5
+    },
+    {
+      "date": "2025-11-27",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 673.5
+    },
+    {
+      "date": "2025-12-11",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 655.5
+    },
+    {
+      "date": "2025-12-15",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 638.0
+    },
+    {
+      "date": "2026-01-08",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 606.5
+    },
+    {
+      "date": "2026-01-14",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 616.5
+    },
+    {
+      "date": "2026-01-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 642.5
+    },
+    {
+      "date": "2026-03-03",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 810.5
+    },
+    {
+      "date": "2026-03-06",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1157.0
+    },
+    {
+      "date": "2026-03-09",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1383.0
+    },
+    {
+      "date": "2026-06-01",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker via Internet Archive (web.archive.org)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1061.0
+    },
+    {
+      "date": "2026-06-10",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1112.5
+    },
+    {
+      "date": "2026-06-11",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1112.5
+    },
+    {
+      "date": "2026-06-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1048.5
+    },
+    {
+      "date": "2026-06-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1048.5
+    },
+    {
+      "date": "2026-06-14",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1048.5
+    },
+    {
+      "date": "2026-06-15",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1048.5
+    },
+    {
+      "date": "2026-06-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 973.0
+    },
+    {
+      "date": "2026-06-17",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 923.0
+    },
+    {
+      "date": "2026-06-18",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 909.5
+    },
+    {
+      "date": "2026-06-19",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 913.0
+    },
+    {
+      "date": "2026-06-20",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 913.0
+    },
+    {
+      "date": "2026-06-21",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 913.0
+    },
+    {
+      "date": "2026-06-22",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 913.0
+    },
+    {
+      "date": "2026-06-23",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 936.5
+    },
+    {
+      "date": "2026-06-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 926.0
+    },
+    {
+      "date": "2026-06-25",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 904.5
+    },
+    {
+      "date": "2026-06-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 877.5
+    },
+    {
+      "date": "2026-06-27",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 882.5
+    },
+    {
+      "date": "2026-06-28",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 882.5
+    },
+    {
+      "date": "2026-06-29",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 882.5
+    },
+    {
+      "date": "2026-06-30",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 894.0
+    },
+    {
+      "date": "2026-07-01",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 902.0
+    },
+    {
+      "date": "2026-07-02",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 896.5
+    },
+    {
+      "date": "2026-07-03",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 890.0
+    },
+    {
+      "date": "2026-07-04",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 890.0
+    },
+    {
+      "date": "2026-07-05",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 890.0
+    },
+    {
+      "date": "2026-07-06",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 890.0
+    },
+    {
+      "date": "2026-07-07",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 905.5
+    },
+    {
+      "date": "2026-07-08",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 912.0
+    },
+    {
+      "date": "2026-07-09",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 931.0
+    },
+    {
+      "date": "2026-07-10",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 978.5
+    },
+    {
+      "date": "2026-07-11",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 978.5
+    },
+    {
+      "date": "2026-07-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 978.5
+    },
+    {
+      "date": "2026-07-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 996.0
+    },
+    {
+      "date": "2026-07-14",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1085.0
+    },
+    {
+      "date": "2026-07-15",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1159.0
+    },
+    {
+      "date": "2026-07-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1159.0
+    },
+    {
+      "date": "2026-07-17",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1119.5
+    },
+    {
+      "date": "2026-07-18",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1119.5
+    },
+    {
+      "date": "2026-07-19",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1119.5
+    },
+    {
+      "date": "2026-07-20",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1165.0
+    },
+    {
+      "date": "2026-07-21",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1199.0
+    },
+    {
+      "date": "2026-07-22",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1221.5
+    },
+    {
+      "date": "2026-07-23",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1261.5
+    },
+    {
+      "date": "2026-07-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1282.5
+    },
+    {
+      "date": "2026-07-25",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1282.5
+    },
+    {
+      "date": "2026-07-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1282.5
+    },
+    {
+      "date": "2026-07-27",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1282.5
+    },
+    {
+      "date": "2026-07-28",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1213.5
+    },
+    {
+      "date": "2026-07-29",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1205.0
+    },
+    {
+      "date": "2026-07-30",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1224.5
+    },
+    {
+      "date": "2026-07-31",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1224.5
+    },
+    {
+      "date": "2026-08-01",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1225.5
+    },
+    {
+      "date": "2026-08-02",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1225.5
+    },
+    {
+      "date": "2026-08-03",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1201.5
+    },
+    {
+      "date": "2026-08-04",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1205.0
+    },
+    {
+      "date": "2026-08-05",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1107.0
+    },
+    {
+      "date": "2026-08-06",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1107.0
+    },
+    {
+      "date": "2026-08-07",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1139.5
+    },
+    {
+      "date": "2026-08-08",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1139.5
+    },
+    {
+      "date": "2026-08-09",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1139.5
+    },
+    {
+      "date": "2026-08-10",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1139.5
+    },
+    {
+      "date": "2026-08-11",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1156.5
+    },
+    {
+      "date": "2026-08-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1210.5
+    },
+    {
+      "date": "2026-08-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1236.5
+    },
+    {
+      "date": "2026-08-14",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1219.5
+    },
+    {
+      "date": "2026-08-15",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1219.5
+    },
+    {
+      "date": "2026-08-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1219.5
+    },
+    {
+      "date": "2026-08-17",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1232.5
+    },
+    {
+      "date": "2026-08-18",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1232.5
+    },
+    {
+      "date": "2026-08-19",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1262.5
+    },
+    {
+      "date": "2026-08-20",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1262.5
+    },
+    {
+      "date": "2026-08-21",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1239.5
+    },
+    {
+      "date": "2026-08-22",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1239.5
+    },
+    {
+      "date": "2026-08-23",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1239.5
+    },
+    {
+      "date": "2026-08-24",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1239.0
+    },
+    {
+      "date": "2026-08-25",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1239.0
+    },
+    {
+      "date": "2026-08-26",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1139.5
+    },
+    {
+      "date": "2026-08-27",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1139.5
+    },
+    {
+      "date": "2026-08-28",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1146.0
+    },
+    {
+      "date": "2026-08-29",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1146.0
+    },
+    {
+      "date": "2026-08-30",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1146.0
+    },
+    {
+      "date": "2026-08-31",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1146.0
+    },
+    {
+      "date": "2026-09-01",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1192.5
+    },
+    {
+      "date": "2026-09-02",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1222.5
+    },
+    {
+      "date": "2026-09-03",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1246.0
+    },
+    {
+      "date": "2026-09-04",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1246.0
+    },
+    {
+      "date": "2026-09-05",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1246.0
+    },
+    {
+      "date": "2026-09-06",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1246.0
+    },
+    {
+      "date": "2026-09-07",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1246.0
+    },
+    {
+      "date": "2026-09-08",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1247.5
+    },
+    {
+      "date": "2026-09-09",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1266.0
+    },
+    {
+      "date": "2026-09-10",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1279.5
+    },
+    {
+      "date": "2026-09-11",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1375.0
+    },
+    {
+      "date": "2026-09-12",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1375.0
+    },
+    {
+      "date": "2026-09-13",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1375.0
+    },
+    {
+      "date": "2026-09-14",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1375.0
+    },
+    {
+      "date": "2026-09-15",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1428.0
+    },
+    {
+      "date": "2026-09-16",
+      "metadata": {
+        "port": "Port of Singapore",
+        "quote_source": "Ship & Bunker (shipandbunker.com)"
+      },
+      "retrieved_at": "2026-09-16T15:01:42.970590+00:00",
+      "series": "mgo_singapore",
+      "source": "The Maritime",
+      "unit": "USD/MT",
+      "value": 1448.0
+    }
+  ],
+  "generated_at": "2026-09-16T15:01:42.973762+00:00"
+}
