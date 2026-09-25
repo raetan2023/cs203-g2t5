@@ -12,7 +12,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest
+// These tests cover the snapshot endpoints and never touch the database, so a placeholder
+// connection is enough: Hikari only dials out on first use, which never happens here.
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:postgresql://localhost:5432/placeholder",
+        "spring.datasource.username=placeholder",
+        "spring.datasource.password=placeholder",
+        "mgo.db.check-on-startup=false"})
 @AutoConfigureMockMvc
 class MgoDataApiApplicationTests {
 

@@ -14,10 +14,33 @@ replaced by database queries. Endpoints and response shapes stay the same.
 
 Requires Java 21+. The Maven wrapper downloads Maven on first use.
 
+The app needs the Supabase connection details before it will start. Get them from
+the Supabase project: **Connect → ORM / Direct connection** (use the **Session pooler**
+string instead if your network blocks the direct port). Set them in your shell:
+
+```bash
+export SUPABASE_DB_URL='jdbc:postgresql://HOST:PORT/postgres'
+export SUPABASE_DB_USER='postgres.xxxxxxxx'
+export SUPABASE_DB_PASSWORD='your-database-password'
+```
+
+Supabase gives the URL as `postgresql://user:password@host:port/postgres`. For Java,
+put `jdbc:` in front and leave the user and password out of the URL itself:
+`jdbc:postgresql://HOST:PORT/postgres`.
+
+Never commit these values. Keep them in your shell profile or a local file git ignores.
+
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
+
+On startup the log reports which database it reached and the tables it found. If it
+says `Could not reach the database`, the market-data endpoints still work — only
+database-backed features are affected.
+
+If the app fails to start with `'url' must start with "jdbc"`, the `SUPABASE_*`
+variables are not set in that shell.
 
 Open http://127.0.0.1:8000. Swagger UI is at `/docs`.
 
@@ -69,3 +92,7 @@ data yet; those endpoints return an empty list rather than failing.
 | `PORT` | `8000` |
 | `MGO_API_KEY` | `mgo_public_demo_2026` |
 | `MGO_SNAPSHOT_DIR` | `data/snapshots` (relative to the working directory) |
+| `SUPABASE_DB_URL` | none — required |
+| `SUPABASE_DB_USER` | none — required |
+| `SUPABASE_DB_PASSWORD` | none — required |
+| `SUPABASE_DB_POOL_SIZE` | `5` (the free tier allows 60 connections in total) |
