@@ -51,4 +51,15 @@ class MgoDataApiApplicationTests {
         mvc.perform(get("/api/v1/data/brent?limit=0").header("X-API-Key", KEY)).andExpect(status().isUnprocessableContent());
         mvc.perform(get("/api/v1/data/brent?format=xml").header("X-API-Key", KEY)).andExpect(status().isUnprocessableContent());
     }
+
+    /** Plan requests without a usable caller are rejected before the database is touched. */
+    @Test
+    void purchasePlanRequiresAKnownCaller() throws Exception {
+        mvc.perform(get("/api/v1/purchase-plan").header("X-API-Key", KEY))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.detail").value("Please sign in again."));
+        mvc.perform(get("/api/v1/purchase-plan").header("X-API-Key", KEY).header("X-User-Id", "not-a-uuid"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/purchase-plan")).andExpect(status().isUnauthorized());
+    }
 }
