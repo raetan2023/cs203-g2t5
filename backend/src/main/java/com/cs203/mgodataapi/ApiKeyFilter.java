@@ -32,7 +32,7 @@ public class ApiKeyFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String key = request.getHeader("X-API-Key");
-        // Constant-time comparison, like secrets.compare_digest in the Python service.
+        // Constant-time comparison, so a wrong key cannot be guessed from response timing.
         if (key == null || !MessageDigest.isEqual(key.getBytes(StandardCharsets.UTF_8), apiKey)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
