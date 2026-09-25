@@ -12,7 +12,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest
+// These tests cover the snapshot endpoints and never touch the database, so a placeholder
+// connection is enough: Hikari only dials out on first use, which never happens here.
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:postgresql://localhost:5432/placeholder",
+        "spring.datasource.username=placeholder",
+        "spring.datasource.password=placeholder",
+        "mgo.db.check-on-startup=false"})
 @AutoConfigureMockMvc
 class MgoDataApiApplicationTests {
 
@@ -44,5 +50,16 @@ class MgoDataApiApplicationTests {
         mvc.perform(get("/api/v1/data/nope").header("X-API-Key", KEY)).andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/data/brent?limit=0").header("X-API-Key", KEY)).andExpect(status().isUnprocessableContent());
         mvc.perform(get("/api/v1/data/brent?format=xml").header("X-API-Key", KEY)).andExpect(status().isUnprocessableContent());
+    }
+
+    /** Plan requests without a usable caller are rejected before the database is touched. */
+    @Test
+    void purchasePlanRequiresAKnownCaller() throws Exception {
+        mvc.perform(get("/api/v1/purchase-plan").header("X-API-Key", KEY))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.detail").value("Please sign in again."));
+        mvc.perform(get("/api/v1/purchase-plan").header("X-API-Key", KEY).header("X-User-Id", "not-a-uuid"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/purchase-plan")).andExpect(status().isUnauthorized());
     }
 }
