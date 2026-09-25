@@ -1,0 +1,16 @@
+{
+  "data": [
+    {
+      "date": "2026-09-13",
+      "metadata": {
+        "average_tone": null
+      },
+      "retrieved_at": "2026-09-16T15:04:42.136530+00:00",
+      "series": "gdelt_article_count",
+      "source": "GDELT",
+      "unit": "articles",
+      "value": 250.0
+    }
+  ],
+  "generated_at": "2026-09-16T15:04:42.137431+00:00"
+}
