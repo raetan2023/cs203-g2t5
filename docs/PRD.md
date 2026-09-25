@@ -1,7 +1,7 @@
 ﻿# Product Requirements Document
 
 Status: Working draft - clarification in progress
-Last updated: 2026-09-21
+Last updated: 2026-09-23
 Source: CS203-G2-team5-project-vision.pdf (9 pages), supplemented by team clarification in this conversation.
 
 ## 1. Product purpose
@@ -41,7 +41,7 @@ Confirmed by team: purchase plans include quantity, purchase deadline, and autom
 The team accepted the login, dashboard, sidebar navigation, and single-plan management flow. Forecasting, purchase-impact calculations, and recommendations remain later work. Deadline semantics and the detailed rules below are proposals pending agreement.
 
 1. **Register or log in.** Registration collects email, username/display name, and password. Login uses email and password; the username is used for display. Show clear authentication errors and provide a password-reset route. Supabase Free is the team's tentative platform choice; Supabase Auth is the recommended authentication approach, not yet a finalized implementation decision.
-2. **Open the home dashboard.** After login, show historical MGO and Gasoil market history and selected indicators, with an explicit historical scenario date, sources, currency, units, and observed/estimated labels. Show unavailable data clearly rather than inventing observations. The supported scenario dates and whether users can select them remain TBC.
+2. **Open the home dashboard.** Users can view historical MGO prices, alongside Gasoil market history and selected indicators, after login. For the current local demo these series use explicitly labelled mock data. Display them with an explicit historical scenario date, sources, currency, units, and observed/estimated labels. Show unavailable data clearly rather than inventing observations. The supported scenario dates and whether users can select them remain TBC.
 3. **Navigate using the sidebar.** Provide Dashboard, My purchase plan, and Log out. The singular plan label reflects the current limit of one saved plan per user.
 4. **Create a plan.** When no plan exists, show an empty state and a Create plan button. The form displays the historical scenario date and accepts a positive quantity in metric tonnes and a purchase deadline through a date picker. Show derived time remaining and provide Save and Cancel actions. Saving displays the plan summary and persists it across sessions.
 5. **View or edit the plan.** The summary shows quantity, deadline, scenario date, and derived time remaining, with Edit and Delete actions. Editing updates the same plan. Recalculate time remaining when the deadline or applicable scenario date changes. Once saved analyses exist in later work, editing preserves their original input snapshots and results; new calculations use the updated plan.
@@ -73,9 +73,17 @@ Recommended integration: the frontend authenticates with Supabase Auth and sends
 
 ## 4. Scope and priorities
 
+### Current local demo: confirmed 2026-09-23
+
+Run the frontend and Spring Boot backend on localhost first; deployment is outside this stage. Demonstrate the current MVP flow in section 3: registration/login, password-reset route, historical market context including MGO prices, sidebar navigation, one saved purchase plan with CRUD, and logout. Forecasts, purchase impacts, and recommendations remain deferred.
+
+All application/demo data uses mock fixtures for now, including dated MGO/Gasoil prices and sample purchase inputs. Clearly display "Mock data - demonstration only" and identify synthetic sources; mock points must not be represented as actual market observations. Retain scenario dates, units, and the intended data structure so real data can replace fixtures later. Integration with Rae's smaller current-sprint database (USERS, PURCHASE_PLANS, MARKET_SERIES, MARKET_OBSERVATIONS) is required this sprint. Frontend/backend contributors may inject mock fixtures while it is being prepared, then connect their features to database-backed mock data before sprint completion. Real historical sourcing and the larger forecasting/analysis schema remain deferred.
+
+Mock domain data does not decide the authentication implementation. Use test accounts for actual authentication verification; a simulated session only demonstrates UI behaviour. Authentication provider remains TBC. An in-memory mock plan store may be used during development, but is not sufficient for sprint completion. Verify saved plans persist across browser refresh, logout/login, and backend restart after integrating the smaller database.
+
 ### Historical-data delivery approach
 
-The team plans to use data only up to a chosen historical cutoff and probably will not conduct a live-market demo. The working delivery assumption is a fixed historical dataset; the exact cutoff and demonstration format remain TBD. This does not by itself remove the interactive application or the vision's public-deployment constraint.
+The team plans to use data only up to a chosen historical cutoff and probably will not conduct a live-market demo. The later data-backed delivery assumption is a fixed historical dataset; the exact cutoff remains TBD. The current local demo uses mock fixtures as specified above. This does not by itself remove the interactive application or the vision's public-deployment constraint.
 
 Proposed: show an explicit historical "as of" date throughout the dashboard, forecasts, recommendations, and purchase-impact results. Interpret "current price" as the reference available at that scenario date, not today's market price. Live ingestion, continuous monitoring, and scheduled production retraining are deferred until after the MVP.
 
@@ -128,8 +136,8 @@ The criteria below operationalize the vision. Criteria labelled proposed need te
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
 | FR-01 | Account access | Support registration with email, username/display name, and password; login with email/password; password reset; and logout as described in section 3. Enforce ownership so users cannot access another user's private purchase plan or decisions. Supabase Free is tentative and Supabase Auth is recommended; provider and integration remain TBC. If adopted, Auth manages credentials and the application profile stores no password/hash. |
-| FR-02 | Market dashboard | Display historical prices and selected indicators with dates, source labels, currency, units, and whether the value is observed or estimated. |
-| FR-03 | Market data ingestion | Import selected historical source data up to a declared dataset cutoff and retain observation dates. Proposed: retain availability timestamps and report missing or invalid inputs rather than silently substituting values. Live refresh is not assumed. |
+| FR-02 | Market dashboard | Let users view historical MGO prices, Gasoil history, and selected indicators. Use clearly labelled mock fixtures for the current localhost demo; for the data-backed version, display historical prices and selected indicators with dates, source labels, currency, units, and whether the value is observed or estimated. |
+| FR-03 | Market data ingestion | Deferred for the current local mock stage. At database/data integration, import selected historical source data up to a declared dataset cutoff and retain observation dates. Proposed: retain availability timestamps and report missing or invalid inputs rather than silently substituting values. Live refresh is not assumed. |
 | FR-04 | Forecast output | Show target commodity, forecast origin, horizon, estimated range, and uncertainty method. The MGO conversion method is TBD; an unvalidated proxy must be identified as such. |
 | FR-05 | Uncertainty | Range width responds to market conditions as intended by the vision. A heuristic band is described as heuristic; a numerical confidence claim requires supporting evaluation. |
 | FR-06 | Purchase plan and impact | Accept a positive quantity in metric tonnes and a purchase deadline. Automatically derive and display urgency from time remaining relative to the historical scenario date; recompute when the deadline or scenario date changes. Show reference cost, forecast cost range, and difference range using comparable currency and units. Invalid quantities receive a clear error. Urgency categories, thresholds, day-count convention, date validation, and reference-price policy TBD. |
@@ -279,7 +287,7 @@ All owners and due dates are TBD unless subsequently assigned.
 | D-10 | Model acceptance and pivot criteria | Metrics proposed; measurable thresholds and minimum evidence TBD |
 | D-11 | Roles, authentication, and CRUD boundaries | One saved plan per user with create/view/edit/delete confirmed. Registration/login included in the accepted user flow; Supabase Auth recommended with provider/integration and broader roles/domain CRUD TBC. Plan edits preserve saved analysis snapshots; plan deletion cascades to its analyses, impacts, recommendations, and decisions. |
 | D-12 | Final stack and course constraints | Vision lists technologies/mandatory items; team confirmation pending |
-| D-13 | Release plan and hosting | Dates, milestones, provider, and budget TBD |
+| D-13 | Release plan and hosting | Current stage runs on localhost with mock data; no deployment now. Later hosting, dates, and budget TBD. |
 | D-14 | Model versioning and retraining | Historical training/backtest protocol and tracking TBD; vision's weekly production retraining is not assumed for fixed data |
 | D-15 | Historical dataset cutoff and presentation | Data limited to a historical period; exact cutoff, scenario dates, inference mode, and demo format TBD. Precomputed forecasts with interactive purchase-impact calculation are the team-requested recommendation, not a finalized decision. Team probably will not conduct a live-market demo. |
 
