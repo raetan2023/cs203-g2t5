@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -60,7 +59,7 @@ public class DataController {
             @RequestParam(defaultValue = "5000") @Min(1) @Max(25_000) int limit,
             @RequestParam(defaultValue = "json") @Pattern(regexp = "json|csv") String format) {
         if (!Source.ALL.containsKey(sourceId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unknown source. See /api/v1/sources.");
+            throw new ApiException(HttpStatus.NOT_FOUND, "Unknown source. See /api/v1/sources.");
         }
         String startDate = start == null ? null : start.toString();
         String endDate = end == null ? null : end.toString();
@@ -69,7 +68,7 @@ public class DataController {
                 .filter(row -> endDate == null || SnapshotStore.date(row).compareTo(endDate) <= 0)
                 .filter(row -> series == null || series.equals(row.get("series")))
                 .toList();
-        // Keep the last `limit` rows, as the Python service does with rows[-limit:].
+        // Keep the most recent rows when more than `limit` match.
         List<Map<String, Object>> rows = matching.subList(Math.max(0, matching.size() - limit), matching.size());
 
         if (format.equals("csv")) {

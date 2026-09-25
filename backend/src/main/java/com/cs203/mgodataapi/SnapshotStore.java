@@ -42,7 +42,7 @@ public class SnapshotStore {
         return List.copyOf((List<Map<String, Object>>) file.get("data"));
     }
 
-    /** Record count and date range, matching the Python service's availability shape. */
+    /** Record count and date range for one source, as reported by /api/v1/sources. */
     public Map<String, Object> availability(String sourceId) {
         List<Map<String, Object>> rows = rows(sourceId);
         Map<String, Object> status = new LinkedHashMap<>();
