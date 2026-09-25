@@ -1,5 +1,26 @@
 ﻿<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MGO database schema</title><style>body{font:16px system-ui,sans-serif;margin:32px;color:#182330;background:#f6f8fa}main{max-width:1500px;margin:auto}section{background:white;padding:24px;margin:24px 0;border:1px solid #d8dee4;border-radius:12px;overflow:auto}svg{max-width:none!important}a{color:#165bb4}p,li{line-height:1.6}table{border-collapse:collapse;width:100%}th,td{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #d8dee4}th{background:#eef3f8}code{background:#eef3f8;padding:2px 5px;border-radius:4px}.mermaid{white-space:pre;overflow:auto}.notice{border-left:4px solid #165bb4;padding:12px 16px;background:#eef3f8}@media print{body{margin:0;background:white}section{break-inside:avoid}svg{max-width:100%!important}}</style></head><body><main><h1>MGO database schema</h1><p>Updated 20 September 2026. Design only; no database migration has been applied. Currency: USD. Gasoil physical unit and contract/price definition: TBC.</p><p class="notice">Current sprint: four tables for the dashboard and one editable purchase plan per user. The second diagram documents the later decision flow; it is not a requirement to build those tables now.</p><p><a href="database-schema.md">Full field definitions, constraints, and deletion policy</a></p><section><h2>Current sprint: dashboard and purchase-plan CRUD</h2><pre class="mermaid">erDiagram
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MGO database schema</title><style>body{font:16px system-ui,sans-serif;margin:32px;color:#182330;background:#f6f8fa}main{max-width:1500px;margin:auto}section{background:white;padding:24px;margin:24px 0;border:1px solid #d8dee4;border-radius:12px;overflow:auto}svg{max-width:none!important}a{color:#165bb4}p,li{line-height:1.6}table{border-collapse:collapse;width:100%}th,td{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #d8dee4}th{background:#eef3f8}code{background:#eef3f8;padding:2px 5px;border-radius:4px}.mermaid{white-space:pre;overflow:auto}.notice{border-left:4px solid #165bb4;padding:12px 16px;background:#eef3f8}@media print{body{margin:0;background:white}section{break-inside:avoid}svg{max-width:100%!important}}</style></head><body><main><h1>MGO database schema</h1><p>Updated 25 September 2026. Local SQL fixes and candidate migration tested; shared Supabase has not been changed or verified. Currency: USD. Gasoil physical unit and contract/price definition: TBC.</p><p class="notice">Current sprint: four tables for the dashboard and one editable purchase plan per user. The second diagram documents the later decision flow; it is not a requirement to build those tables now.</p><p><a href="database-schema.md">Full field definitions, constraints, and deletion policy</a></p><section aria-labelledby="changes"><h2 id="changes">What changed locally: 25 September 2026</h2>
+<p class="notice"><strong>Local fixes only &mdash; not deployed to Supabase.</strong> These four fields were already required by the logical design, but the original SQL allowed NULL. The corrected SQL now enforces them. Compare the actual Supabase schema and migration history before applying the candidate migration.</p>
+<table><thead><tr><th scope="col">Table and field</th><th scope="col">Original SQL</th><th scope="col">Corrected local SQL</th><th scope="col">Effect</th></tr></thead><tbody>
+<tr><td><code>purchase_plans.purchase_deadline</code></td><td><code>date</code> (nullable)</td><td><code>date NOT NULL</code></td><td>A plan must have one deadline.</td></tr>
+<tr><td><code>purchase_plans.scenario_as_of_date</code></td><td><code>date</code> (nullable)</td><td><code>date NOT NULL</code></td><td>A plan must record its historical scenario date.</td></tr>
+<tr><td><code>market_series.source_name</code></td><td><code>text</code> (nullable)</td><td><code>text NOT NULL</code></td><td>A series must have a source name.</td></tr>
+<tr><td><code>market_observations.value_type</code></td><td><code>text</code> (nullable)</td><td><code>text NOT NULL</code></td><td>An observation must have a value type.</td></tr>
+</tbody></table>
+<p>Only these four constraints changed in the SQL. Types, relationships, one-plan uniqueness, positive quantity checks, and deletion behaviour are unchanged. NOT NULL rejects missing values; it does not validate blank text, allowed value-type labels, deadline ordering, or urgency rules.</p>
+<p><strong>Local verification:</strong> the original schema passed 12 of 16 checks. The corrected fresh schema and migrated schema each passed 16 of 16. Migration checks also verified rejection of existing NULL data, rollback without partial changes, and repeat execution. Tests used disposable PostgreSQL with placeholder Supabase auth objects; Clerk, RLS/user isolation, APIs, and persistence across sessions/restarts were not tested.</p>
+<p>Review: <a href="mgo_current_sprint_schema.sql">corrected fresh-schema SQL</a> &middot; <a href="migrations/20260925_required_fields.sql">candidate required-field migration</a> &middot; <a href="migrations/README.md">migration handoff</a> &middot; <a href="../tests/database/README.md">test results and rerun instructions</a>.</p>
+<h3>Before changing shared Supabase</h3>
+<ol>
+<li>Get the actual schema and applied migration history from Wunna. Confirm the target tables, column types, constraints, triggers, policies, and database roles; local files do not prove what is deployed.</li>
+<li>Check existing rows for NULL in all four fields. Agree corrections using verified values with the relevant owner. The candidate migration aborts if any remain; it does not invent defaults or delete records.</li>
+<li>Agree the migration runner and deployment timing with Wunna, confirm a recovery point, and test on a disposable copy of the target. The migration uses exclusive table locks with timeouts.</li>
+<li>Apply the reviewed migration through the agreed process, then verify the four constraints and backend integration. Do not use the full fresh-schema script as an upgrade: CREATE TABLE IF NOT EXISTS does not update existing columns.</li>
+</ol>
+<h3>Clerk integration: decision pending</h3>
+<p>Nelson has implemented Clerk; it remains the authentication provider. The current SQL still references <code>auth.users</code>, provisions users through a Supabase Auth trigger, and uses <code>auth.uid()</code>/<code>auth.role()</code> in policies. The four constraint fixes do not make that SQL Clerk-compatible.</p>
+<p><strong>Proposal only:</strong> retain internal UUID <code>user_id</code> values and add a unique text <code>clerk_user_id</code>. This column has not been added to the SQL or diagrams. Nelson and Wunna must agree identity mapping, provisioning, available email fields, and ownership enforcement. Wunna must confirm backend-only versus direct frontend database access before ownership policies are adapted.</p>
+</section><section><h2>Current sprint: dashboard and purchase-plan CRUD</h2><pre class="mermaid">erDiagram
   USERS ||--o| PURCHASE_PLANS : owns
   MARKET_SERIES ||--o{ MARKET_OBSERVATIONS : contains
   USERS {
@@ -10,13 +31,13 @@
     uuid plan_id PK
     uuid user_id FK, UK
     numeric quantity_mt "Positive metric tonnes"
-    date purchase_deadline
-    date scenario_as_of_date
+    date purchase_deadline "NOT NULL - fixed 25 Sep"
+    date scenario_as_of_date "NOT NULL - fixed 25 Sep"
   }
   MARKET_SERIES {
     uuid series_id PK
     string series_key UK
-    string source_name
+    string source_name "NOT NULL - fixed 25 Sep"
     string source_url
     string currency_code
     string unit
@@ -28,7 +49,7 @@
     uuid series_id FK
     date observation_date "Unique with series_id"
     numeric value
-    string value_type
+    string value_type "NOT NULL - fixed 25 Sep"
     timestamp availability_timestamp
   }
 </pre></section><section><h2>Later: forecasting and purchase decisions</h2><pre class="mermaid">erDiagram
@@ -122,7 +143,7 @@
 <p><code>M_h = M_0 &times; (G_h / G_0)</code>: apply predicted Gasoil percentage movement to a dated MGO anchor. This remains an experimental baseline, not a validated relationship.</p>
 <p>If selected, require the source Gasoil forecast, Gasoil origin observation, and MGO anchor references. Origins/targets must align, the Gasoil denominator must be positive, and units/contracts must be comparable. These references are optional for methods that do not use this mapping. An old anchor requires a separately agreed policy; mapped bounds alone do not establish calibrated MGO uncertainty.</p>
 <p>Purchase impacts use snapshotted quantity Q and reference P0 with MGO bounds [L,U] in USD/MT: reference Q&times;P0; forecast [Q&times;L,Q&times;U]; difference [Q&times;(L-P0),Q&times;(U-P0)].</p></section>
-<section aria-labelledby="pending"><h2 id="pending">Still TBC</h2><p>Extended model tracking and dataset-cutoff storage are deferred. MODEL_VERSIONS is the original minimal placeholder. Authentication, exact horizon/calendar, Gasoil physical unit and contract/price definition, conversion validation, and uncertainty method remain open. No local password-storage mechanism is assumed.</p></section>
+<section aria-labelledby="pending"><h2 id="pending">Still TBC</h2><p>Extended model tracking and dataset-cutoff storage are deferred. MODEL_VERSIONS is the original minimal placeholder. Clerk-to-database mapping, provisioning and ownership policies, exact horizon/calendar, Gasoil physical unit and contract/price definition, conversion validation, and uncertainty method remain open. No local password-storage mechanism is assumed.</p></section>
 <p id="render-status" role="status">Loading diagrams. Mermaid requires an internet connection; if unavailable, the diagram source remains visible above. Full field definitions are in <a href="database-schema.md">database-schema.md</a>.</p>
 </main><script type="module">
 const status = document.getElementById('render-status');

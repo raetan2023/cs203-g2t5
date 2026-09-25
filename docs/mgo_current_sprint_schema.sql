@@ -44,8 +44,8 @@ create table if not exists public.purchase_plans (
   plan_id             uuid primary key default gen_random_uuid(),
   user_id             uuid not null unique references public.users (user_id) on delete cascade,
   quantity_mt         numeric not null check (quantity_mt > 0),
-  purchase_deadline   date,
-  scenario_as_of_date date
+  purchase_deadline   date not null,
+  scenario_as_of_date date not null
 );
 
 -- ---------------------------------------------------------------------
@@ -57,7 +57,7 @@ create table if not exists public.purchase_plans (
 create table if not exists public.market_series (
   series_id            uuid primary key default gen_random_uuid(),
   series_key           text not null unique,
-  source_name          text,
+  source_name          text not null,
   source_url           text,
   currency_code        text,      -- e.g. 'USD'; null allowed for non-monetary indicators
   unit                 text,      -- TBC per schema doc
@@ -75,7 +75,7 @@ create table if not exists public.market_observations (
   series_id              uuid not null references public.market_series (series_id) on delete restrict,
   observation_date       date not null,
   value                  numeric not null,
-  value_type             text,
+  value_type             text not null,
   availability_timestamp timestamptz,  -- nullable: unknown != inferred
   unique (series_id, observation_date)
 );
