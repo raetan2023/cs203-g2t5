@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApiPlanService, fetchScenarioDate } from './apiService';
 import { PlanError } from './types';
 
-const options = { baseUrl: 'http://backend.test', getToken: () => 'session-token' };
+const options = { baseUrl: 'http://backend.test', apiKey: 'test-key', getToken: () => 'session-token' };
 const service = createApiPlanService(options);
 
 function mockFetch(status: number, body?: unknown) {
@@ -32,6 +32,7 @@ describe('createApiPlanService', () => {
     expect(url).toBe('http://backend.test/api/v1/purchase-plan');
     expect(init.method).toBe('GET');
     expect(init.headers).toMatchObject({ Authorization: 'Bearer session-token' });
+    expect(init.headers).not.toHaveProperty('X-API-Key');
   });
 
   it('omits the header when nobody is signed in, so the backend answers 401', async () => {

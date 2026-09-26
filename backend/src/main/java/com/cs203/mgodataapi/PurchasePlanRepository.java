@@ -16,6 +16,7 @@ public class PurchasePlanRepository {
 
     private static final RowMapper<PurchasePlan> MAPPER = (rs, rowNum) -> new PurchasePlan(
             rs.getObject("plan_id", UUID.class),
+            rs.getObject("user_id", UUID.class),
             rs.getBigDecimal("quantity_mt"),
             rs.getObject("purchase_deadline", LocalDate.class),
             rs.getObject("scenario_as_of_date", LocalDate.class));
@@ -28,7 +29,7 @@ public class PurchasePlanRepository {
 
     public Optional<PurchasePlan> findByUser(UUID userId) {
         List<PurchasePlan> found = jdbc.query("""
-                select plan_id, quantity_mt, purchase_deadline, scenario_as_of_date
+                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date
                 from purchase_plans where user_id = ?""", MAPPER, userId);
         return found.stream().findFirst();
     }
@@ -37,7 +38,7 @@ public class PurchasePlanRepository {
         return jdbc.queryForObject("""
                 insert into purchase_plans (user_id, quantity_mt, purchase_deadline, scenario_as_of_date)
                 values (?, ?, ?, ?)
-                returning plan_id, quantity_mt, purchase_deadline, scenario_as_of_date""",
+                returning plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date""",
                 MAPPER, userId, quantityMt, deadline, scenarioDate);
     }
 
@@ -46,7 +47,7 @@ public class PurchasePlanRepository {
                 update purchase_plans
                 set quantity_mt = ?, purchase_deadline = ?, scenario_as_of_date = ?
                 where user_id = ?
-                returning plan_id, quantity_mt, purchase_deadline, scenario_as_of_date""",
+                returning plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date""",
                 MAPPER, quantityMt, deadline, scenarioDate, userId);
         return updated.stream().findFirst();
     }

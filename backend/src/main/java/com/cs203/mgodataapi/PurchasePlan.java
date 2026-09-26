@@ -10,6 +10,7 @@ import java.util.UUID;
 /** A user's saved purchase plan, as stored in the purchase_plans table. */
 public record PurchasePlan(
         UUID planId,
+        UUID userId,
         BigDecimal quantityMt,
         LocalDate purchaseDeadline,
         LocalDate scenarioAsOfDate) {
