@@ -25,7 +25,9 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith("/api/");
+        // Browsers send preflight OPTIONS requests without custom headers, so they
+        // must reach the CORS handler rather than being rejected for a missing key.
+        return "OPTIONS".equals(request.getMethod()) || !request.getRequestURI().startsWith("/api/");
     }
 
     @Override
