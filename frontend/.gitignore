@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.local
 test-results/
+.env.local
