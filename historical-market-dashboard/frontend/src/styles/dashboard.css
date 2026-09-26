@@ -1,0 +1,647 @@
+:root {
+  --bg-dark: #060b13;
+  --bg-card: #0c1524;
+  --bg-card-hover: #121e33;
+  --teal: #00d4c8;
+  --text-primary: #ffffff;
+  --text-muted: #7e8f9f;
+  --positive: #3fb950;
+  --negative: #f85149;
+  --border: #162438;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* ==========================================================================
+   Full Screen Utility & Loading / Error States
+   ========================================================================== */
+
+.center-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  gap: 16px;
+  text-align: center;
+}
+
+.spinner {
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--border);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #3d1a1a;
+  border: 2px solid var(--negative);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--negative);
+}
+
+button.retry {
+  background: var(--teal);
+  color: #050a12;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+button.retry:hover {
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   Top Navigation Bar (matches Bunker Buddy UI mockup header)
+   ========================================================================== */
+
+.app-layout {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  position: relative;
+}
+
+.dashboard-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: #060b13;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hamburger-btn {
+  background: #0b1828;
+  border: 1px solid #16364a;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--teal);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.18s ease;
+}
+
+.hamburger-btn:hover {
+  background: #12283e;
+  border-color: var(--teal);
+  box-shadow: 0 0 10px rgba(0, 212, 200, 0.2);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+}
+
+.brand-icon-box {
+  width: 34px;
+  height: 34px;
+  background: var(--teal);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(0, 212, 200, 0.25);
+}
+
+.brand-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.scenario-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #16364a;
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #9cb1c9;
+  background: rgba(12, 27, 44, 0.75);
+  text-transform: uppercase;
+}
+
+.scenario-badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 8px rgba(0, 212, 200, 0.6);
+}
+
+/* ==========================================================================
+   Main Dashboard Layout
+   ========================================================================== */
+
+.dashboard-content {
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 32px 48px;
+}
+
+/* ==========================================================================
+   Ticker Cards Grid
+   ========================================================================== */
+
+.ticker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1024px) {
+  .ticker-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .ticker-grid {
+    grid-template-columns: 1fr;
+  }
+  .top-navbar {
+    padding: 14px 16px;
+  }
+  .dashboard-content {
+    padding: 16px;
+  }
+}
+
+.ticker-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.ticker-card:hover {
+  background: var(--bg-card-hover);
+  border-color: #2b4566;
+}
+
+.ticker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ticker-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.badge--observed {
+  background: #0c2618;
+  color: #3fb950;
+  border: 1px solid #238636;
+}
+
+.badge--estimated {
+  background: #0d273d;
+  color: #38bdf8;
+  border: 1px solid #0284c7;
+}
+
+.badge--experimental {
+  background: #261f0a;
+  color: #e3b341;
+  border: 1px solid #9e6a03;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ticker-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.ticker-unit {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.ticker-change-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.ticker-change {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.ticker-change.positive {
+  color: var(--positive);
+}
+
+.ticker-change.negative {
+  color: var(--negative);
+}
+
+.ticker-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ticker-source {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Chart Card
+   ========================================================================== */
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.chart-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.chart-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 12px 0;
+}
+
+.chart-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-bar {
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.legend-bar--observed {
+  background: #ffffff;
+}
+
+.legend-bar--futures {
+  background: #7e8f9f;
+}
+
+.legend-bar--derived {
+  background: var(--teal);
+}
+
+/* ==========================================================================
+   Indicators Table Card
+   ========================================================================== */
+
+.indicators-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.indicators-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+}
+
+.indicators-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 16px 0;
+}
+
+.indicators-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 14px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.indicator-name {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.indicator-meta {
+  color: var(--text-muted);
+}
+
+.indicator-value {
+  text-align: right;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Sidebar Drawer Integration (matches Luck's Shared Navigation)
+   ========================================================================== */
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(3, 7, 14, 0.65);
+  backdrop-filter: blur(3px);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.sidebar-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sidebar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 270px;
+  height: 100vh;
+  background: #060b13;
+  border-right: 1px solid #141f2e;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  z-index: 101;
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6);
+}
+
+.sidebar-container.open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding: 0 4px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+}
+
+.collapse-toggle-btn {
+  background: #0f1826;
+  border: 1px solid #1c2b3e;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8b9bb0;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+
+.collapse-toggle-btn:hover {
+  background: #172438;
+  color: #ffffff;
+  border-color: #2b3e58;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-nav-item {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8b9bb0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.sidebar-nav-item:hover:not(.disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.sidebar-nav-item.active {
+  background: #0b1c2b;
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.sidebar-nav-item.active .nav-icon {
+  color: var(--teal);
+}
+
+.sidebar-nav-item.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-label {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.nav-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #0b1420;
+  border: 1px solid #192738;
+  color: #5d6f85;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #141f2e;
+}
+
+.sidebar-signout-btn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8b9bb0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sidebar-signout-btn:hover {
+  background: rgba(248, 81, 73, 0.08);
+  color: var(--negative);
+}
+
+.signout-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.signout-text {
+  white-space: nowrap;
+}
