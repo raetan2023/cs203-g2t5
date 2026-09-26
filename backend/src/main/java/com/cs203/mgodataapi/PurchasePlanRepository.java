@@ -55,10 +55,4 @@ public class PurchasePlanRepository {
     public boolean delete(UUID userId) {
         return jdbc.update("delete from purchase_plans where user_id = ?", userId) > 0;
     }
-
-    /** True when the user exists in the application's users table, which owns plan rows. */
-    public boolean userExists(UUID userId) {
-        Integer count = jdbc.queryForObject("select count(*) from users where user_id = ?", Integer.class, userId);
-        return count != null && count > 0;
-    }
 }

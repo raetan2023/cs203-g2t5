@@ -13,7 +13,12 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/** Requires a valid X-API-Key header on every /api/ route. */
+/**
+ * Requires a valid X-API-Key header on the shared market-data routes.
+ *
+ * <p>Purchase-plan routes are exempt: they carry a session token identifying a specific
+ * user, which a shared key cannot do, and sending both would gain nothing.
+ */
 @Component
 public class ApiKeyFilter extends OncePerRequestFilter {
 
@@ -27,7 +32,9 @@ public class ApiKeyFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         // Browsers send preflight OPTIONS requests without custom headers, so they
         // must reach the CORS handler rather than being rejected for a missing key.
-        return "OPTIONS".equals(request.getMethod()) || !request.getRequestURI().startsWith("/api/");
+        return "OPTIONS".equals(request.getMethod())
+                || !request.getRequestURI().startsWith("/api/")
+                || request.getRequestURI().startsWith("/api/v1/purchase-plan");
     }
 
     @Override
