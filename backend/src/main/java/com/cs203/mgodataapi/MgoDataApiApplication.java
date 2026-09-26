@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         version = MgoDataApiApplication.VERSION,
         description = "Historical market data and purchase plans. Send `X-API-Key` with API requests."))
 @SecurityScheme(name = "apiKey", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER, paramName = "X-API-Key")
+@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
 public class MgoDataApiApplication {
 
     public static final String VERSION = "0.0.1";

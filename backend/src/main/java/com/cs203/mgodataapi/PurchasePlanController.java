@@ -15,35 +15,38 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * The one saved purchase plan per user.
  *
- * <p>The owner is taken from a temporary {@code X-User-Id} header. Once verified logins are
- * in place this is replaced by the authenticated user's id; nothing else here changes.
+ * <p>The owner comes from the verified session token, so a signed-in user can only ever
+ * reach their own plan.
  */
 @RestController
 @RequestMapping("/api/v1/purchase-plan")
 @Tag(name = "Purchase plan")
-@SecurityRequirement(name = "apiKey")
+@SecurityRequirement(name = "bearerAuth")
 public class PurchasePlanController {
 
     private final PurchasePlanRepository plans;
+    private final UserAccounts users;
     private final LocalDate scenarioDate;
 
-    public PurchasePlanController(PurchasePlanRepository plans,
+    public PurchasePlanController(PurchasePlanRepository plans, UserAccounts users,
             @Value("${mgo.scenario-date}") LocalDate scenarioDate) {
         this.plans = plans;
+        this.users = users;
         this.scenarioDate = scenarioDate;
     }
 
     @GetMapping
-    public Map<String, Object> get(@RequestHeader(name = "X-User-Id", required = false) String userHeader) {
-        UUID userId = requireUser(userHeader);
+    public Map<String, Object> get(@AuthenticationPrincipal Jwt token) {
+        UUID userId = ownerOf(token);
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("plan", plans.findByUser(userId).map(PurchasePlan::toResponse).orElse(null));
         return body;
@@ -51,9 +54,9 @@ public class PurchasePlanController {
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(
-            @RequestHeader(name = "X-User-Id", required = false) String userHeader,
+            @AuthenticationPrincipal Jwt token,
             @RequestBody PurchasePlanRequest request) {
-        UUID userId = requireUser(userHeader);
+        UUID userId = ownerOf(token);
         validate(request);
         if (plans.findByUser(userId).isPresent()) {
             throw new ApiException(HttpStatus.CONFLICT,
@@ -65,9 +68,9 @@ public class PurchasePlanController {
 
     @PutMapping
     public Map<String, Object> update(
-            @RequestHeader(name = "X-User-Id", required = false) String userHeader,
+            @AuthenticationPrincipal Jwt token,
             @RequestBody PurchasePlanRequest request) {
-        UUID userId = requireUser(userHeader);
+        UUID userId = ownerOf(token);
         validate(request);
         PurchasePlan updated = plans.update(userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
@@ -75,29 +78,21 @@ public class PurchasePlanController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> delete(@RequestHeader(name = "X-User-Id", required = false) String userHeader) {
-        UUID userId = requireUser(userHeader);
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal Jwt token) {
+        UUID userId = ownerOf(token);
         if (!plans.delete(userId)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found.");
         }
         return ResponseEntity.noContent().build();
     }
 
-    /** Temporary stand-in for verified authentication: the header must name a known user. */
-    private UUID requireUser(String userHeader) {
-        if (userHeader == null || userHeader.isBlank()) {
+    /** The application's user id for whoever signed in, created on their first request. */
+    private UUID ownerOf(Jwt token) {
+        if (token == null || token.getSubject() == null) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "Please sign in again.");
         }
-        UUID userId;
-        try {
-            userId = UUID.fromString(userHeader.trim());
-        } catch (IllegalArgumentException e) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Please sign in again.");
-        }
-        if (!plans.userExists(userId)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Please sign in again.");
-        }
-        return userId;
+        // Present only when the provider is configured to include it; the column is optional.
+        return users.resolve(token.getSubject(), token.getClaimAsString("email"));
     }
 
     private void validate(PurchasePlanRequest request) {

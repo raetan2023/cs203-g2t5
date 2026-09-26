@@ -3,13 +3,13 @@ import { PlanError, type PlanInput, type PurchasePlanService } from './types';
 export interface ApiOptions {
   /** Backend base URL. Defaults to VITE_API_URL, then the local backend. */
   baseUrl?: string;
-  /** Shared API key, sent as X-API-Key. Defaults to VITE_API_KEY. */
+  /** Shared API key for the market-data routes, sent as X-API-Key. Defaults to VITE_API_KEY. */
   apiKey?: string;
   /**
-   * Temporary caller identity, sent as X-User-Id: the user's UUID from the users table.
-   * Replaced by the session token's Authorization header once logins are verified.
+   * Returns the signed-in user's session token, or null when nobody is signed in.
+   * Called per request so a refreshed token is always used.
    */
-  userId?: string;
+  getToken?: () => Promise<string | null> | string | null;
 }
 
 const env = import.meta.env ?? {};
@@ -24,17 +24,17 @@ const messages: Record<string, string> = {
 /** Talks to the backend's /api/v1/purchase-plan endpoints. */
 export function createApiPlanService(options: ApiOptions = {}): PurchasePlanService {
   const baseUrl = (options.baseUrl ?? env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
-  const apiKey = options.apiKey ?? env.VITE_API_KEY ?? '';
-  const userId = options.userId;
+  const getToken = options.getToken;
 
   async function request(method: string, body?: PlanInput) {
+    // Plan routes are per-user, so the session token is the only credential they take.
+    const token = getToken ? await getToken() : null;
     let response: Response;
     try {
       response = await fetch(`${baseUrl}/api/v1/purchase-plan`, {
         method,
         headers: {
-          ...(apiKey && { 'X-API-Key': apiKey }),
-          ...(userId && { 'X-User-Id': userId }),
+          ...(token && { Authorization: `Bearer ${token}` }),
           ...(body && { 'Content-Type': 'application/json' }),
         },
         ...(body && { body: JSON.stringify(body) }),
