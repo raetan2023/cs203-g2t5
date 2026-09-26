@@ -74,7 +74,7 @@ Supply a component to `App` with the signature `ComponentType<{ scenarioDate: st
 
 `PurchasePlanPage` remains independently exported from `features/purchase-plan/index.ts` and imports its own CSS. Pass `service` and explicit `scenarioDate`. `PurchasePlanService` exposes read/create/update/delete; adapters unwrap GET/POST/PUT responses as `{ plan }` and map DELETE 204 to void without parsing a body. Inputs contain only quantity_mt and purchase_deadline. General/field failures use `PlanError`.
 
-The mock scenario is 24 October 2025; 500 MT / 15 November 2025 shows **22 days**. Dates remain YYYY-MM-DD and display in UTC. Saved days_remaining comes from the service. The merged `apiService.ts` supplies `createApiPlanService` and `fetchScenarioDate` via GET `/api/v1/config`; the preview still uses explicit fixtures. This adapter currently uses temporary caller headers and is not wired to Clerk or the app. No urgency threshold or decimal precision limit was invented.
+The mock scenario is 24 October 2025; 500 MT / 15 November 2025 shows **22 days**. Dates remain YYYY-MM-DD and display in UTC. Saved days_remaining comes from the service. The merged `apiService.ts` supplies `createApiPlanService` and `fetchScenarioDate` via GET `/api/v1/config`; the preview still uses explicit fixtures. The updated adapter accepts a getToken callback and sends a Bearer session token for purchase-plan requests; it is not yet wired into this mock app. No urgency threshold or decimal precision limit was invented.
 
 Live 401/session handling and 404/409 recovery still need agreement with Wunna. Real persistence, ownership, user isolation and database integration are not established by these mock tests.
 
@@ -90,7 +90,7 @@ Live 401/session handling and 404/409 recovery still need agreement with Wunna. 
 
 ## Verification and resume checkpoint (26 September 2026)
 
-- `npm test`: **28 tests passed** across 4 files (10 purchase-plan UI/mock tests, 10 merged API-adapter tests, 8 auth/shared-app tests), after incorporating the latest origin/main changes.
+- `npm test`: **30 tests passed** across 4 files (10 purchase-plan UI/mock tests, 12 merged API-adapter tests, 8 auth/shared-app tests), after incorporating the latest origin/main changes.
 - `npm run build`: TypeScript and Vite production build passed. The development preview is excluded from the production entry.
 - Automated coverage includes CRUD/cancel/validation/failures, auth validation and password visibility, signup/provider-field-error retry, session-load retry, duplicate-login prevention, navigation with a stable plan store, logout failure, drawer focus/Escape, expiry and private-route guards, popstate handling, unknown routes and dashboard mounting.
 - No browser connection was available. Desktop/mobile visual comparison, native date picker, dialog inertness and real-browser Back/Forward remain **unverified**. jsdom provides minimal dialog method shims for interaction tests.
