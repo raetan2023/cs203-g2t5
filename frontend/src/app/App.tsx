@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ComponentType } from 'react';
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { AppLink, navigate, usePath } from './router';
 import { AppShell } from '../components/AppShell';
 import { StatusPage } from '../components/StatusPage';
@@ -15,11 +15,12 @@ export interface AppProps {
   createPlanService(user: SessionUser): PurchasePlanService;
   scenarioDate: string;
   mock?: boolean;
+  renderAuthPage?: (mode: 'login' | 'signup') => ReactNode;
   /** Anjali owns this component. No dashboard implementation is supplied here. */
   MarketDashboard?: ComponentType<{ scenarioDate: string }>;
 }
 
-export function App({ auth, createPlanService, scenarioDate, mock = false, MarketDashboard }: AppProps) {
+export function App({ auth, createPlanService, scenarioDate, mock = false, renderAuthPage, MarketDashboard }: AppProps) {
   const path = usePath();
   const [session, setSession] = useState<Session>({ state: 'loading' });
   const [attempt, setAttempt] = useState(0);
@@ -69,7 +70,9 @@ export function App({ auth, createPlanService, scenarioDate, mock = false, Marke
   if (path === '/' || (!user && privateRoutes.includes(path)) || (user && (path === '/login' || path === '/signup'))) return <StatusPage message="Loading..." />;
   if (!user && (path === '/login' || path === '/signup')) {
     const epoch = generation.current;
-    return <>{notice && <p className="bb-notice" role="status">{notice}</p>}<AuthPage key={`${path}-${epoch}`} mode={path === '/signup' ? 'signup' : 'login'} service={auth} mock={mock} onSuccess={nextUser => {
+    const mode = path === '/signup' ? 'signup' : 'login';
+    if (renderAuthPage) return <>{notice && <p className="bb-notice" role="status">{notice}</p>}{renderAuthPage(mode)}</>;
+    return <>{notice && <p className="bb-notice" role="status">{notice}</p>}<AuthPage key={`${path}-${epoch}`} mode={mode} service={auth} mock={mock} onSuccess={nextUser => {
       if (epoch !== generation.current) return;
       setNotice(''); acceptUser(nextUser); navigate(returnPath.current, true);
     }} /></>;
