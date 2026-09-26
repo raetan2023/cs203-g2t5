@@ -72,6 +72,16 @@ describe('createApiPlanService', () => {
     expect(JSON.parse(init.body)).toEqual({ quantity_mt: 500, purchase_deadline: '2025-11-15' });
   });
 
+  it('sends the input as JSON when updating', async () => {
+    const fetchMock = mockFetch(200, { plan: null });
+    await service.update({ quantity_mt: 750, purchase_deadline: '2025-12-01' });
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.method).toBe('PUT');
+    expect(init.headers['Content-Type']).toBe('application/json');
+    expect(JSON.parse(init.body)).toEqual({ quantity_mt: 750, purchase_deadline: '2025-12-01' });
+  });
+
   it('turns field errors into a PlanError the form can display', async () => {
     mockFetch(422, { detail: 'Please check your inputs.', field_errors: { quantity_mt: 'Quantity must be greater than zero.' } });
 
@@ -90,6 +100,14 @@ describe('createApiPlanService', () => {
     const error = await service.read().catch(e => e);
     expect(error.status).toBe(status);
     expect(error.detail).toBe(detail);
+  });
+
+  it('falls back to a friendly message when an error response has no body', async () => {
+    mockFetch(500);
+    const error = await service.read().catch(e => e);
+    expect(error).toBeInstanceOf(PlanError);
+    expect(error.status).toBe(500);
+    expect(error.detail).toContain("couldn't load");
   });
 
   it('accepts an empty 204 body when deleting', async () => {
@@ -111,5 +129,12 @@ describe('fetchScenarioDate', () => {
   it('reads the configured date, which is available before any plan exists', async () => {
     mockFetch(200, { scenario_as_of_date: '2025-10-24' });
     await expect(fetchScenarioDate(options)).resolves.toBe('2025-10-24');
+  });
+
+  it('throws a PlanError when the scenario date cannot be loaded', async () => {
+    mockFetch(500);
+    const error = await fetchScenarioDate(options).catch(e => e);
+    expect(error).toBeInstanceOf(PlanError);
+    expect(error.status).toBe(500);
   });
 });
