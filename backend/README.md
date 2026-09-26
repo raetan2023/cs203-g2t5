@@ -42,18 +42,19 @@ database-backed features are affected.
 If the app fails to start with `'url' must start with "jdbc"`, the `SUPABASE_*`
 variables are not set in that shell.
 
-The API documentation is at http://127.0.0.1:8000/docs.
+Open http://127.0.0.1:8000. Swagger UI is at `/docs`.
 
 ```bash
-curl 'http://127.0.0.1:8000/api/v1/data/brent?limit=10'
+curl -H 'X-API-Key: mgo_public_demo_2026' 'http://127.0.0.1:8000/api/v1/data/brent?limit=10'
 ```
 
 ## API
 
-`/health` and `/docs` are public.
+`/`, `/health` and `/docs` are public.
 
-Market data is shared reference data and needs no credential. Purchase-plan
-routes are per-user and take the signed-in user's session token:
+Market-data routes carry an `X-API-Key` header; the development key is
+`mgo_public_demo_2026`. Purchase-plan routes are per-user and take the signed-in
+user's session token instead:
 
 ```
 Authorization: Bearer <session token>
@@ -169,7 +170,7 @@ curl -s -X POST localhost:8000/api/v1/purchase-plan \
 ```
 
 `/docs` has the same endpoints with a **Try it out** button: click **Authorize**
-and paste a session token for the plan routes.
+and paste either the API key or a session token, depending on the route.
 
 ## Available data
 
@@ -198,6 +199,7 @@ data yet; those endpoints return an empty list rather than failing.
 | Environment variable | Default |
 | --- | --- |
 | `PORT` | `8000` |
+| `MGO_API_KEY` | `mgo_public_demo_2026` |
 | `MGO_SNAPSHOT_DIR` | `data/snapshots` (relative to the working directory) |
 | `FRONTEND_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173` — browser origins allowed to call the API |
 | `CLERK_ISSUER_URI` | the team's development tenant — the identity provider whose tokens are accepted |

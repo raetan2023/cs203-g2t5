@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.cs203</groupId>
-	<artifactId>mgo-backend</artifactId>
+	<artifactId>mgo-data-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>mgo-backend</name>
-	<description>Spring Boot backend for the MGO purchasing application</description>
+	<name>mgo-data-api</name>
+	<description>Read-only Spring Boot service for the bundled MGO market-data snapshots</description>
 	<properties>
 		<java.version>21</java.version>
 	</properties>
