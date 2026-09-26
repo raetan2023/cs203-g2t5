@@ -56,6 +56,7 @@ curl -H 'X-API-Key: mgo_public_demo_2026' 'http://127.0.0.1:8000/api/v1/data/bre
 | Endpoint | Returns |
 | --- | --- |
 | `GET /health` | Service status, for uptime checks |
+| `GET /api/v1/config` | Settings the frontend needs before it has data, currently the scenario date |
 | `GET /api/v1/sources` | Every series with its provider, unit, record count, and date range |
 | `GET /api/v1/data/{sourceId}` | Dated observations for one series |
 | `GET/POST/PUT/DELETE /api/v1/purchase-plan` | The caller's single saved purchase plan |
@@ -66,6 +67,18 @@ default 5000, keeps the most recent rows), and `format` (`json` or `csv`).
 
 Errors are returned as `{"detail": "..."}`, with `field_errors` added when a
 submitted field is rejected.
+
+Browsers may call `/api/` from the origins listed in `FRONTEND_ORIGINS`, which
+defaults to the Vite dev server on both `127.0.0.1:5173` and `localhost:5173`
+(browsers treat those as different origins). Requests from anywhere else are
+refused. Add deployed origins to that variable rather than the code.
+
+`GET /api/v1/config` exists because screens need the scenario date before a plan
+is saved, to show days remaining while a deadline is being chosen:
+
+```json
+{ "scenario_as_of_date": "2025-10-24" }
+```
 
 ### Purchase plan
 
@@ -178,6 +191,7 @@ data yet; those endpoints return an empty list rather than failing.
 | `PORT` | `8000` |
 | `MGO_API_KEY` | `mgo_public_demo_2026` |
 | `MGO_SNAPSHOT_DIR` | `data/snapshots` (relative to the working directory) |
+| `FRONTEND_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173` — browser origins allowed to call the API |
 | `MGO_SCENARIO_DATE` | `2025-10-24` — the historical date every feature treats as "today" |
 | `SUPABASE_DB_URL` | none — required |
 | `SUPABASE_DB_USER` | none — required |

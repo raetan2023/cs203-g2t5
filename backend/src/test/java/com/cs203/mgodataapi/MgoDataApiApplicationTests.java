@@ -2,7 +2,9 @@ package com.cs203.mgodataapi;
 
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,5 +63,26 @@ class MgoDataApiApplicationTests {
         mvc.perform(get("/api/v1/purchase-plan").header("X-API-Key", KEY).header("X-User-Id", "not-a-uuid"))
                 .andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/purchase-plan")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void configReportsTheScenarioDate() throws Exception {
+        mvc.perform(get("/api/v1/config").header("X-API-Key", KEY))
+                .andExpect(jsonPath("$.scenario_as_of_date").value("2025-10-24"));
+    }
+
+    /** The browser's preflight must pass the API key filter and be answered for the dev origin. */
+    @Test
+    void allowsTheFrontendDevServerOrigin() throws Exception {
+        mvc.perform(options("/api/v1/purchase-plan")
+                        .header("Origin", "http://127.0.0.1:5173")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type,x-api-key,x-user-id"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://127.0.0.1:5173"));
+        mvc.perform(options("/api/v1/purchase-plan")
+                        .header("Origin", "http://evil.example.com")
+                        .header("Access-Control-Request-Method", "POST"))
+                .andExpect(status().isForbidden());
     }
 }
