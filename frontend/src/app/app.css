@@ -1,0 +1,40 @@
+html, body, #root { margin: 0; min-width: 320px; min-height: 100%; background: #06111f; }
+.bb-app, .auth-page { font: 14px/1.5 Inter, 'Segoe UI', Arial, sans-serif; color: #f6f8fc; }
+.bb-app *, .auth-page * { box-sizing: border-box; }
+.bb-app button, .auth-page button, .auth-page input { font: inherit; }
+.bb-app :focus-visible, .auth-page :focus-visible { outline: 2px solid #0db3b1; outline-offset: 4px; }
+.bb-brand { display: inline-flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 650; white-space: nowrap; }
+.bb-brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: #0db3b1; color: #06111f; flex-shrink: 0; }
+.bb-header { height: 64px; display: flex; align-items: center; gap: 12px; padding: 12px 32px 12px 16px; background: #081625; border-bottom: 1px solid #20354c; }
+.bb-menu, .bb-icon-button { border: 0; border-radius: 8px; display: grid; place-items: center; cursor: pointer; color: #0db3b1; background: #082b38; width: 40px; height: 40px; }
+.bb-date { margin-left: auto; color: #91a4b9; background: #101f30; padding: 4px 12px; border-radius: 4px; font-size: 11px; }
+.bb-button { border: 0; border-radius: 8px; display: inline-flex; justify-content: center; align-items: center; gap: 6px; padding: 13px 28px; background: #0db3b1; color: #031923; font-weight: 600; text-decoration: none; cursor: pointer; box-shadow: 0 4px 14px #0db3b124; }
+.bb-button:hover:not(:disabled) { background: #25c6c2; }
+.bb-app button:disabled, .auth-page button:disabled { cursor: not-allowed; opacity: .5; }
+.bb-skip { position: fixed; left: 16px; top: -80px; z-index: 10; padding: 12px; background: #0db3b1; color: #06111f; }
+.bb-skip:focus { top: 10px; }
+.bb-home { min-height: calc(100dvh - 64px); padding: 60px 6.67vw; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding-bottom: 15vh; }
+.bb-home h1 { margin: 0; font-size: clamp(32px, 3.6vw, 50px); line-height: 1.2; font-weight: 650; overflow-wrap: anywhere; }
+.bb-home p { margin: 18px 0 40px; color: #91a4b9; font-size: 18px; }
+.bb-status { min-height: calc(100dvh - 64px); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; text-align: center; color: #91a4b9; font-size: 18px; }
+.bb-status h1 { font-size: 28px; color: #f6f8fc; }
+.bb-spinner { display: block; margin: auto auto 24px; width: 56px; height: 56px; border: 5px solid #0db3b1; border-right-color: transparent; border-radius: 50%; animation: bb-spin .85s linear infinite; }
+@keyframes bb-spin { to { transform: rotate(360deg); } }
+.bb-sidebar { position: fixed; inset: 0 auto 0 0; width: 312px; max-width: calc(100vw - 24px); height: 100dvh; max-height: 100dvh; margin: 0; padding: 64px 24px 40px; border: 0; border-right: 1px solid #20354c; background: #06111f; color: #f6f8fc; font: inherit; }
+.bb-sidebar[open] { display: flex; flex-direction: column; }
+.bb-sidebar::backdrop { background: #020913b8; }
+.bb-sidebar-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 48px; }
+.bb-sidebar .bb-icon-button { width: 32px; height: 32px; background: #1b2939; color: white; flex-shrink: 0; }
+.bb-sidebar nav { display: grid; gap: 8px; }
+.bb-sidebar nav a, .bb-sidebar nav button, .bb-signout { min-height: 42px; width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: transparent; border: 0; border-radius: 8px; color: #f6f8fc; text-decoration: none; text-align: left; font: inherit; cursor: pointer; }
+.bb-sidebar nav svg, .bb-signout svg { flex-shrink: 0; color: #91a4b9; }
+.bb-sidebar nav a:hover, .bb-signout:hover:not(:disabled) { background: #101f30; }
+.bb-sidebar nav a[aria-current=page] { background: #111f30; color: #00c4c2; }
+.bb-sidebar nav a[aria-current=page] svg { color: #00c4c2; }
+.bb-coming { margin-left: auto; font-size: 8px; text-transform: uppercase; white-space: nowrap; background: #101f30; color: #91a4b9; padding: 2px 5px; border-radius: 3px; }
+.bb-sidebar nav button { font-size: 13px; }
+.bb-sidebar-bottom { margin-top: auto; padding-top: 24px; }
+.bb-sidebar-bottom p { color: #ff9095; font-size: 13px; }
+.bb-notice { margin: 0; padding: 12px 24px; background: #142536; color: #bdd1e2; }
+@media (max-width: 640px) { .bb-header { padding-right: 16px; } .bb-date { display: none; } .bb-home { padding: 40px 24px 15vh; } .bb-home p { font-size: 16px; } .bb-sidebar { padding-top: 24px; } }
+@media (prefers-reduced-motion: reduce) { .bb-spinner { animation: none; } }
