@@ -1,0 +1,17 @@
+/* Preview shell only. Do not import this file into Luck's shared app. */
+html, body, #root { margin: 0; min-width: 320px; min-height: 100%; background: #06111f; }
+.preview-header { height: 64px; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 12px 32px 12px 16px; background: #081625; border-bottom: 1px solid #20354c; color: #f6f8fc; font-family: Inter, 'Segoe UI', Arial, sans-serif; }
+.preview-menu, .preview-logo { display: grid; place-items: center; border-radius: 8px; flex-shrink: 0; }
+.preview-menu { background: #082b38; color: #0db3b1; height: 40px; width: 40px; }
+.preview-logo { background: #0db3b1; color: #06111f; height: 32px; width: 32px; }
+.preview-brand { font-size: 18px; font-weight: 650; }
+.preview-date { margin-left: auto; background: #101f30; color: #91a4b9; border-radius: 4px; padding: 6px 12px; font-size: 11px; }
+.preview-tools { position: fixed; z-index: 5; bottom: 10px; right: 12px; width: 270px; max-width: calc(100vw - 24px); border: 1px solid #34506b; border-radius: 8px; background: #102235; color: #d8e4f0; font: 13px/1.5 'Segoe UI', Arial, sans-serif; box-shadow: 0 6px 24px #0005; }
+.preview-tools:not([open]) { width: auto; }
+.preview-tools summary { padding: 7px 12px; cursor: pointer; }
+.preview-tools-body { padding: 8px 14px 14px; display: grid; gap: 8px; }
+.preview-tools-body select, .preview-tools-body button { width: 100%; padding: 8px; background: #081625; color: #e6eff8; border: 1px solid #42617f; border-radius: 4px; font: inherit; cursor: pointer; }
+.preview-tools-body p { margin: 0; color: #a8bdd0; font-size: 12px; }
+.preview-checkbox { display: flex; align-items: center; gap: 6px; }
+.preview-tools :focus-visible { outline: 2px solid #36ded7; outline-offset: 2px; }
+@media (max-width: 480px) { .preview-header { padding-right: 16px; gap: 8px; } .preview-date { display: none; } }
