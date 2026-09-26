@@ -15,6 +15,8 @@ npm run dev
 
 On macOS/Linux, use `cp .env.example .env.local` instead of `copy`. Put the Clerk publishable key and backend API key in `.env.local`, then open the printed localhost URL (normally http://127.0.0.1:5173). Keep Spring Boot running on the URL configured by `VITE_API_URL`.
 
+Running on WSL (Windows): open the app at http://localhost:5173 and keep VITE_API_URL=http://localhost:8000. A Windows browser can reach localhost inside WSL but not 127.0.0.1 for the same port so using 127.0.0.1 makes the page load while every backend call fails with "Failed to fetch" (ERR_CONNECTION_REFUSED). Use localhost for both the app and the API URL.
+
 Clerk handles sign-in, signup, email verification, password reset, social login, sessions and logout. The frontend requests a current Clerk session token for each protected purchase-plan request and sends it as `Authorization: Bearer <token>` to Spring Boot.
 
 ```powershell
