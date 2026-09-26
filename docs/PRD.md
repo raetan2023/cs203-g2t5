@@ -1,4 +1,4 @@
-﻿# Product Requirements Document
+# Product Requirements Document
 
 Status: Working draft - clarification in progress
 Last updated: 2026-09-23
@@ -63,14 +63,11 @@ Proposed initial rules, not yet confirmed:
 - Reject a deadline before the scenario date; show Due today for the same date and X days remaining for a later date.
 - A deadline may extend beyond available historical observations. Later forecasting features must explain when a forecast does not cover the purchasing decision window.
 
-#### Recommended authentication and password ownership
+#### Authentication and password ownership
 
-If Supabase Auth is adopted, it manages credential storage, password verification, email confirmation, and password resets. Do not add a password or password_hash field to the application's public user/profile table, and do not duplicate Auth's credential data. Supabase currently hashes passwords using bcrypt; the application does not implement its own hashing for this approach. See [Supabase password security](https://supabase.com/docs/guides/auth/password-security).
+Clerk is the authentication provider for the MVP and owns login, passwords, and password resets. The application does not store passwords. The four-table database retains an internal UUID `users.user_id` and a unique text `users.clerk_user_id`; purchase plans reference the UUID. No separate profile table is required. Display names can come from Clerk.
 
-Recommended schema adaptation if adopted: represent the application's user record as a profile with a user_id referencing the primary key of Supabase-managed auth.users, plus the display name and any agreed profile fields. Email stays managed by Auth. This is a proposed adaptation of the current logical USERS entity; the database diagrams have not yet committed to a provider. See [Supabase user management](https://supabase.com/docs/guides/auth/managing-user-data).
-
-Recommended integration: the frontend authenticates with Supabase Auth and sends its access token to Spring Boot for domain requests. Spring Boot verifies the token and uses the authenticated user ID to enforce ownership. A direct backend database connection does not automatically carry the end user's identity; ownership enforcement must be explicit. Configure appropriate Row Level Security if exposing tables through Supabase's data API. Provider selection, email delivery configuration for confirmation/reset messages, and final integration remain TBC.
-
+The frontend sends its Clerk login token to Spring Boot. The backend must verify it, resolve the authenticated Clerk ID to the application UUID, and enforce ownership for every private operation. This integration is pending: the current temporary `X-User-Id` header does not authenticate a person. The schema keeps RLS enabled with no client-facing policies; database access is intended through the trusted backend with appropriate server-only privileges. Supabase remains a PostgreSQL hosting option, not the authentication provider.
 ## 4. Scope and priorities
 
 ### Current local demo: confirmed 2026-09-23
