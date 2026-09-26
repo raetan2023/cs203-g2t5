@@ -1,0 +1,12 @@
+com/example/market/service/MarketDashboardService.class
+com/example/market/dto/ChartPointDTO.class
+com/example/market/repository/MarketObservationRepository.class
+com/example/market/MarketDashboardApplication.class
+com/example/market/dto/IndicatorDTO.class
+com/example/market/repository/MarketIndicatorRepository.class
+com/example/market/model/MarketObservation.class
+com/example/market/dto/DashboardResponse.class
+com/example/market/model/MarketSeries.class
+com/example/market/controller/MarketDashboardController.class
+com/example/market/model/MarketIndicator.class
+com/example/market/dto/MarketTickerDTO.class
