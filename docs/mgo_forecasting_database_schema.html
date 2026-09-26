@@ -1,58 +1,68 @@
-﻿<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MGO database schema</title><style>body{font:16px system-ui,sans-serif;margin:32px;color:#182330;background:#f6f8fa}main{max-width:1500px;margin:auto}section{background:white;padding:24px;margin:24px 0;border:1px solid #d8dee4;border-radius:12px;overflow:auto}svg{max-width:none!important}a{color:#165bb4}p,li{line-height:1.6}table{border-collapse:collapse;width:100%}th,td{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid #d8dee4}th{background:#eef3f8}code{background:#eef3f8;padding:2px 5px;border-radius:4px}.mermaid{white-space:pre;overflow:auto}.notice{border-left:4px solid #165bb4;padding:12px 16px;background:#eef3f8}@media print{body{margin:0;background:white}section{break-inside:avoid}svg{max-width:100%!important}}</style></head><body><main><h1>MGO database schema</h1><p>Updated 25 September 2026. Local SQL fixes and candidate migration tested; shared Supabase has not been changed or verified. Currency: USD. Gasoil physical unit and contract/price definition: TBC.</p><p class="notice">Current sprint: four tables for the dashboard and one editable purchase plan per user. The second diagram documents the later decision flow; it is not a requirement to build those tables now.</p><p><a href="database-schema.md">Full field definitions, constraints, and deletion policy</a></p><section aria-labelledby="changes"><h2 id="changes">What changed locally: 25 September 2026</h2>
-<p class="notice"><strong>Local fixes only &mdash; not deployed to Supabase.</strong> These four fields were already required by the logical design, but the original SQL allowed NULL. The corrected SQL now enforces them. Compare the actual Supabase schema and migration history before applying the candidate migration.</p>
-<table><thead><tr><th scope="col">Table and field</th><th scope="col">Original SQL</th><th scope="col">Corrected local SQL</th><th scope="col">Effect</th></tr></thead><tbody>
-<tr><td><code>purchase_plans.purchase_deadline</code></td><td><code>date</code> (nullable)</td><td><code>date NOT NULL</code></td><td>A plan must have one deadline.</td></tr>
-<tr><td><code>purchase_plans.scenario_as_of_date</code></td><td><code>date</code> (nullable)</td><td><code>date NOT NULL</code></td><td>A plan must record its historical scenario date.</td></tr>
-<tr><td><code>market_series.source_name</code></td><td><code>text</code> (nullable)</td><td><code>text NOT NULL</code></td><td>A series must have a source name.</td></tr>
-<tr><td><code>market_observations.value_type</code></td><td><code>text</code> (nullable)</td><td><code>text NOT NULL</code></td><td>An observation must have a value type.</td></tr>
-</tbody></table>
-<p>Only these four constraints changed in the SQL. Types, relationships, one-plan uniqueness, positive quantity checks, and deletion behaviour are unchanged. NOT NULL rejects missing values; it does not validate blank text, allowed value-type labels, deadline ordering, or urgency rules.</p>
-<p><strong>Local verification:</strong> the original schema passed 12 of 16 checks. The corrected fresh schema and migrated schema each passed 16 of 16. Migration checks also verified rejection of existing NULL data, rollback without partial changes, and repeat execution. Tests used disposable PostgreSQL with placeholder Supabase auth objects; Clerk, RLS/user isolation, APIs, and persistence across sessions/restarts were not tested.</p>
-<p>Review: <a href="mgo_current_sprint_schema.sql">corrected fresh-schema SQL</a> &middot; <a href="migrations/20260925_required_fields.sql">candidate required-field migration</a> &middot; <a href="migrations/README.md">migration handoff</a> &middot; <a href="../tests/database/README.md">test results and rerun instructions</a>.</p>
-<h3>Before changing shared Supabase</h3>
-<ol>
-<li>Get the actual schema and applied migration history from Wunna. Confirm the target tables, column types, constraints, triggers, policies, and database roles; local files do not prove what is deployed.</li>
-<li>Check existing rows for NULL in all four fields. Agree corrections using verified values with the relevant owner. The candidate migration aborts if any remain; it does not invent defaults or delete records.</li>
-<li>Agree the migration runner and deployment timing with Wunna, confirm a recovery point, and test on a disposable copy of the target. The migration uses exclusive table locks with timeouts.</li>
-<li>Apply the reviewed migration through the agreed process, then verify the four constraints and backend integration. Do not use the full fresh-schema script as an upgrade: CREATE TABLE IF NOT EXISTS does not update existing columns.</li>
-</ol>
-<h3>Clerk integration: decision pending</h3>
-<p>Nelson has implemented Clerk; it remains the authentication provider. The current SQL still references <code>auth.users</code>, provisions users through a Supabase Auth trigger, and uses <code>auth.uid()</code>/<code>auth.role()</code> in policies. The four constraint fixes do not make that SQL Clerk-compatible.</p>
-<p><strong>Proposal only:</strong> retain internal UUID <code>user_id</code> values and add a unique text <code>clerk_user_id</code>. This column has not been added to the SQL or diagrams. Nelson and Wunna must agree identity mapping, provisioning, available email fields, and ownership enforcement. Wunna must confirm backend-only versus direct frontend database access before ownership policies are adapted.</p>
-</section><section><h2>Current sprint: dashboard and purchase-plan CRUD</h2><pre class="mermaid">erDiagram
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MGO &middot; MVP database schema</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#192c40;font:15px/1.55 system-ui,sans-serif}main{max-width:1440px;margin:auto;padding:40px 28px}h1{font-size:34px;margin:8px 0}h2{font-size:23px;margin:0 0 16px}h3{margin:0;font:700 21px ui-monospace,monospace}p{margin:8px 0 16px}.eyebrow{color:#087e83;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:12px}.muted{color:#586c80}.status{background:#e5eef9;border-left:4px solid #3677b7;padding:12px 16px;margin:20px 0}.flow{background:#102e43;color:white;border-radius:12px;padding:20px 24px;margin:24px 0}.flow strong{color:#73e0d6}.flow p{margin:5px 0}.group{margin:28px 0 36px}.relation{padding:10px 0;color:#456079;font-weight:600}.pair{display:grid;grid-template-columns:1fr 1.15fr;gap:24px;align-items:start}article{background:white;border:1px solid #cedae5;border-radius:12px;overflow:hidden;box-shadow:0 5px 18px #19344e08}header{padding:18px 20px;background:#eaf1f7;border-bottom:1px solid #cedae5}header p{margin:4px 0 0;color:#53697d}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #e6edf3;vertical-align:top}thead th{font-size:11px;text-transform:uppercase;color:#627487}tbody th{font-weight:500}code{font:12px ui-monospace,monospace;overflow-wrap:anywhere}tr.new{background:#ddf8f0}tr.new th{border-left:4px solid #11917a}.foot{padding:12px 16px;margin:0;background:#f5f8fb;font:12px ui-monospace,monospace}.notes{background:white;border:1px solid #cedae5;padding:24px;border-radius:12px}.notes li{margin:8px 0}a{color:#1468a1}details{margin-top:28px;padding:20px;border:1px solid #cedae5;border-radius:12px}summary{cursor:pointer;font-weight:600}pre{overflow:auto;font-size:13px}footer{margin-top:24px;color:#586c80;font-size:13px}@media(max-width:1000px){.pair{grid-template-columns:1fr}main{padding:24px 14px}th,td{padding:10px 8px}}@media print{body{background:white}main{padding:0}.pair{grid-template-columns:1fr}article{break-inside:avoid}details{display:none}}
+.group{background:white;padding:24px;border:1px solid #cedae5;border-radius:12px;overflow:auto}.mermaid{white-space:pre;overflow:auto}.mermaid svg{max-width:none!important}details section{overflow:auto;margin-top:20px}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">Current sprint &middot; Four-table MVP</div>
+<h1>MGO database schema</h1>
+<p class="muted">Updated 26 September 2026 &middot; Dashboard data and one editable purchase plan per user.</p>
+<div class="status">Local schema updated. Candidate migrations have not been applied to shared Supabase or executed against PostgreSQL in this session.</div>
+<div class="flow"><div class="eyebrow" style="color:#73e0d6">Clerk &rarr; application user &rarr; purchase plan</div><p><strong>Clerk account ID</strong> <code>user_abc123</code> &rarr; <strong>users.clerk_user_id</strong> &rarr; internal <strong>users.user_id</strong> UUID &rarr; <strong>purchase_plans.user_id</strong></p><p>Clerk handles login. The backend must verify the login token and resolve this mapping before accessing a user's plan. That API integration is pending.</p></div>
+<section class="group"><h2>Current MVP: dashboard and purchase plans</h2>
+<p>Four tables. Each user owns at most one plan; each market series contains zero or more observations.</p>
+<pre class="mermaid" id="mvp-diagram">erDiagram
   USERS ||--o| PURCHASE_PLANS : owns
   MARKET_SERIES ||--o{ MARKET_OBSERVATIONS : contains
   USERS {
-    uuid user_id PK
-    string email UK
+    uuid user_id PK "Generated UUID"
+    text clerk_user_id UK "Clerk account ID - nullable during backfill"
+    text email UK "Required"
   }
   PURCHASE_PLANS {
-    uuid plan_id PK
-    uuid user_id FK, UK
-    numeric quantity_mt "Positive metric tonnes"
-    date purchase_deadline "NOT NULL - fixed 25 Sep"
-    date scenario_as_of_date "NOT NULL - fixed 25 Sep"
+    uuid plan_id PK "Generated UUID"
+    uuid user_id FK, UK "Required - internal user UUID"
+    numeric quantity_mt "Required - greater than zero"
+    date purchase_deadline "Required - single deadline"
+    date scenario_as_of_date "Required - historical scenario"
   }
   MARKET_SERIES {
-    uuid series_id PK
-    string series_key UK
-    string source_name "NOT NULL - fixed 25 Sep"
-    string source_url
-    string currency_code
-    string unit
-    string price_definition
-    string contract_description
+    uuid series_id PK "Generated UUID"
+    text series_key UK "Required"
+    text source_name "Required"
+    text source_url "Nullable"
+    text currency_code "Nullable"
+    text unit "Nullable"
+    text price_definition "Nullable"
+    text contract_description "Nullable"
   }
   MARKET_OBSERVATIONS {
-    uuid observation_id PK
-    uuid series_id FK
-    date observation_date "Unique with series_id"
-    numeric value
-    string value_type "NOT NULL - fixed 25 Sep"
-    timestamp availability_timestamp
+    uuid observation_id PK "Generated UUID"
+    uuid series_id FK "Required"
+    date observation_date "Required - unique with series_id"
+    numeric value "Required"
+    text value_type "Required"
+    timestamptz availability_timestamp "Nullable"
   }
-</pre></section><section><h2>Later: forecasting and purchase decisions</h2><pre class="mermaid">erDiagram
+</pre>
+<p class="muted">PK = primary key; FK = foreign key; UK = unique constraint. Observations have a composite unique constraint on (series_id, observation_date).</p>
+<p id="render-status" role="status">Loading Mermaid diagram. An internet connection is required; diagram source stays visible if loading fails.</p>
+</section>
+<section class="notes"><h2>How this matches the MVP</h2><ul>
+<li>The updated purchase-plan screens use quantity in MT, one purchase deadline, and a read-only historical scenario date. Time remaining is calculated from the dates.</li>
+<li>There is no separate profile table. Display names can come from Clerk. Passwords are not stored here.</li>
+<li>User UUIDs are generated with <code>gen_random_uuid()</code>. The unique Clerk ID is nullable while existing accounts are mapped; new Clerk-backed users need their verified Clerk ID.</li>
+<li>The fresh schema has no Supabase Auth foreign key, signup trigger, or auth-based policies. Supabase can still host PostgreSQL.</li>
+<li>RLS is enabled on all four tables with no client-facing policies. Direct access by ordinary client roles is denied. Trusted backend access needs suitable server-only database privileges and explicit user ownership checks.</li>
+<li>Deleting a user cascades to their plan. Deleting a plan leaves the user and market data intact. Deleting a market series is restricted while observations reference it.</li>
+<li>Unverified market unit and contract metadata stays nullable. Monetary series use USD by convention; non-monetary indicators may have no currency.</li>
+</ul></section>
+<details><summary>Deferred larger schema &middot; outside the MVP</summary><p>This earlier design is retained for reference only. It does not add requirements to the four-table MVP above.</p><section><h2>Later: forecasting and purchase decisions</h2><pre class="mermaid" id="later-diagram">erDiagram
   PURCHASE_PLANS ||--o{ PURCHASE_ANALYSES : snapshots
   MODEL_VERSIONS ||--o{ FORECASTS : produces
   FORECASTS }o--o| FORECASTS : derived_from
@@ -123,39 +133,41 @@
     string decision
     timestamp decided_at
   }
-</pre></section><section aria-labelledby="rules"><h2 id="rules">Constraints and saved-result behaviour</h2>
-<table><thead><tr><th>Area</th><th>Schema rule</th></tr></thead><tbody>
-<tr><td>Plan ownership</td><td>One plan per user: user_id is required and unique. Quantity must be positive. Derive urgency from the scenario date and purchase deadline; thresholds and calendar remain TBC. Enforce ownership for all private reads and writes.</td></tr>
-<tr><td>Observation uniqueness</td><td>Composite unique key <code>(series_id, observation_date)</code>. Different price measures/contracts use distinct series keys. Unknown publication time remains null; it is not inferred from observation date.</td></tr>
-<tr><td>Currency and units</td><td>Monetary series and forecasts use USD. Non-monetary indicators may have no currency. Gasoil physical unit, price definition, and contract definition remain TBC. Unit-dependent calculations require verified metadata.</td></tr>
-<tr><td>Forecasts</td><td>Store origin and target dates, ordered bounds, currency/unit, forecast method, validation status, and uncertainty method. Exact horizon remains TBC. Method/status replace the ambiguous is_proxy_estimate flag.</td></tr>
-<tr><td>Plan edits</td><td>Update the current plan in place. Existing PURCHASE_ANALYSES keep immutable input snapshots; new calculations use the updated plan. Referenced forecasts and observations must not change in place.</td></tr>
-<tr><td>Plan deletion</td><td><strong>Plan &rarr; analyses &rarr; impacts and recommendations &rarr; decisions</strong> are cascade-deleted. Shared users, market data, forecasts, and model versions remain. Protect referenced shared records from deletion.</td></tr>
-<tr><td>Recommendations and decisions</td><td>Recommendations reference an analysis, which identifies the forecast and model. Save new recommendations under new IDs. At most one response per recommendation; the responding user must own the plan. Ignore/change-response semantics remain TBC.</td></tr>
-</tbody></table></section>
-<section aria-labelledby="import"><h2 id="import">Gasoil CSV mapping for this sprint</h2>
-<table><thead><tr><th>CSV field</th><th>Storage</th></tr></thead><tbody>
-<tr><td>Date</td><td>MARKET_OBSERVATIONS.observation_date; parse MM/DD/YYYY.</td></tr>
-<tr><td>Price</td><td>MARKET_OBSERVATIONS.value, linked to the Gasoil series. Keep the source label Price until closing/settlement meaning is verified.</td></tr>
-<tr><td>Open, High, Low, Vol., Change %</td><td>Retain in the original CSV; not imported for the basic dashboard. Missing volume means unknown, not zero.</td></tr>
-</tbody></table><p>The supplied sample contains 585 rows, with four differing OHLC rows and only two populated volume rows. Do not assume those fields are uniformly redundant. Import only series used by displayed features; Brent, Dubai and other candidate model inputs do not need separate tables or mandatory imports.</p></section>
-<section aria-labelledby="mapping"><h2 id="mapping">Proposed percentage-transfer mapping</h2>
-<p><code>M_h = M_0 &times; (G_h / G_0)</code>: apply predicted Gasoil percentage movement to a dated MGO anchor. This remains an experimental baseline, not a validated relationship.</p>
-<p>If selected, require the source Gasoil forecast, Gasoil origin observation, and MGO anchor references. Origins/targets must align, the Gasoil denominator must be positive, and units/contracts must be comparable. These references are optional for methods that do not use this mapping. An old anchor requires a separately agreed policy; mapped bounds alone do not establish calibrated MGO uncertainty.</p>
-<p>Purchase impacts use snapshotted quantity Q and reference P0 with MGO bounds [L,U] in USD/MT: reference Q&times;P0; forecast [Q&times;L,Q&times;U]; difference [Q&times;(L-P0),Q&times;(U-P0)].</p></section>
-<section aria-labelledby="pending"><h2 id="pending">Still TBC</h2><p>Extended model tracking and dataset-cutoff storage are deferred. MODEL_VERSIONS is the original minimal placeholder. Clerk-to-database mapping, provisioning and ownership policies, exact horizon/calendar, Gasoil physical unit and contract/price definition, conversion validation, and uncertainty method remain open. No local password-storage mechanism is assumed.</p></section>
-<p id="render-status" role="status">Loading diagrams. Mermaid requires an internet connection; if unavailable, the diagram source remains visible above. Full field definitions are in <a href="database-schema.md">database-schema.md</a>.</p>
-</main><script type="module">
+</pre></section></details><footer>
+<a href="mgo_current_sprint_schema.sql">Current SQL</a> &middot; <a href="database-schema.md">Schema notes</a> &middot; <a href="migrations/README.md">Candidate migrations</a>
+<p>Diagrams are rendered with Mermaid JS. An internet connection is required to load the library. PK = primary key; FK = foreign key; UNIQUE = unique constraint.</p>
+</footer></main><script type="module">
 const status = document.getElementById('render-status');
 try {
   const { default: mermaid } = await import('https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs');
-  mermaid.initialize({startOnLoad:false,theme:'neutral',securityLevel:'strict',er:{useMaxWidth:false}});
-  // Parse all diagrams before rendering so syntax errors leave the source readable.
-  for (const node of document.querySelectorAll('.mermaid')) await mermaid.parse(node.textContent);
-  await mermaid.run({querySelector:'.mermaid'});
-  status.textContent = 'Diagrams loaded. Full field definitions, constraints, and open decisions are in database-schema.md.';
+  mermaid.initialize({startOnLoad:false, theme:'neutral', securityLevel:'strict', er:{useMaxWidth:false}});
+  const render = async node => {
+    const source = node.textContent;
+    try {
+      await mermaid.parse(source);
+      await mermaid.run({nodes:[node]});
+    } catch (error) {
+      node.textContent = source;
+      node.removeAttribute('data-processed');
+      throw error;
+    }
+  };
+  await render(document.getElementById('mvp-diagram'));
+  status.textContent = 'MVP diagram loaded. Scroll horizontally if needed to view the full diagram.';
+  const deferred = document.querySelector('details');
+  let rendering = false;
+  const renderDeferred = async () => {
+    const node = document.getElementById('later-diagram');
+    if (!deferred.open || rendering || node.dataset.processed) return;
+    rendering = true;
+    try { await render(node); }
+    catch (error) { console.error('Deferred diagram could not render', error); }
+    finally { rendering = false; }
+  };
+  deferred.addEventListener('toggle', renderDeferred);
+  await renderDeferred();
 } catch (error) {
-  status.textContent = 'Diagrams could not load. Read the diagram source above or open database-schema.md for the complete schema.';
-  console.error('Schema diagram rendering failed', error);
+  status.textContent = 'Mermaid could not load or render. Diagram source remains visible; check your internet connection and reload.';
+  console.error('Diagram rendering failed', error);
 }
 </script></body></html>

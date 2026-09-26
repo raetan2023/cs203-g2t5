@@ -8,33 +8,13 @@ create extension if not exists "pgcrypto";  -- for gen_random_uuid()
 
 -- ---------------------------------------------------------------------
 -- USERS
--- Profile table keyed to Supabase Auth's auth.users, since no local
--- password-storage mechanism is assumed by the schema doc.
+-- Application users map verified Clerk accounts to internal UUID owners.
 -- ---------------------------------------------------------------------
 create table if not exists public.users (
-  user_id uuid primary key references auth.users (id) on delete cascade,
+  user_id uuid primary key default gen_random_uuid(),
+  clerk_user_id text unique, -- nullable during verified account backfill; never a UUID
   email   text not null unique
 );
-
--- Keep public.users in sync automatically when someone signs up via Supabase Auth
-create or replace function public.handle_new_auth_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  insert into public.users (user_id, email)
-  values (new.id, new.email)
-  on conflict (user_id) do update set email = excluded.email;
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert or update of email on auth.users
-  for each row execute function public.handle_new_auth_user();
 
 -- ---------------------------------------------------------------------
 -- PURCHASE_PLANS
@@ -92,37 +72,11 @@ alter table public.purchase_plans enable row level security;
 alter table public.market_series enable row level security;
 alter table public.market_observations enable row level security;
 
--- USERS: a person can see/update only their own row
-create policy "users_select_own" on public.users
-  for select using (auth.uid() = user_id);
-
-create policy "users_update_own" on public.users
-  for update using (auth.uid() = user_id);
-
--- PURCHASE_PLANS: full CRUD, but only on your own plan ("enforce ownership
--- for all private reads and writes")
-create policy "purchase_plans_select_own" on public.purchase_plans
-  for select using (auth.uid() = user_id);
-
-create policy "purchase_plans_insert_own" on public.purchase_plans
-  for insert with check (auth.uid() = user_id);
-
-create policy "purchase_plans_update_own" on public.purchase_plans
-  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
-
-create policy "purchase_plans_delete_own" on public.purchase_plans
-  for delete using (auth.uid() = user_id);
-
--- MARKET_SERIES / MARKET_OBSERVATIONS: shared reference data.
--- Readable by any signed-in user; writes reserved for the service role
--- (e.g. your CSV import job), since the doc assigns no per-user
--- ownership over market data.
-create policy "market_series_select_authenticated" on public.market_series
-  for select using (auth.role() = 'authenticated');
-
-create policy "market_observations_select_authenticated" on public.market_observations
-  for select using (auth.role() = 'authenticated');
-
--- No insert/update/delete policies are defined for market_series or
--- market_observations, so only the service role (which bypasses RLS)
--- can write to them — e.g. from your Gasoil CSV import script.
+-- No client-facing policies are installed. With RLS enabled, ordinary roles
+-- cannot access these tables. Do not replace this with permissive policies.
+-- Access is through the trusted backend using a server-only database role
+-- with suitable privileges (table owner or BYPASSRLS). Before private CRUD is
+-- exposed, the backend must verify Clerk tokens, resolve clerk_user_id to
+-- user_id, and enforce ownership on every read/write. The current temporary
+-- X-User-Id API header is not verified authentication.
+-- User provisioning and email synchronization are backend integration work.

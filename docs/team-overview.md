@@ -8,7 +8,7 @@ Based on the [PRD](PRD.md), [database schema](database-schema.md), supplied spri
 
 Localhost only with mock application data. Demo scope is the PRD's current MVP flow, including historical MGO prices. The larger forecasting/analysis design is outside this sprint. These are two design scopes in the schema docs; separate physical database instances are not specified. Database integration is included this sprint, limited to USERS, PURCHASE_PLANS, MARKET_SERIES, and MARKET_OBSERVATIONS. Frontend/backend contributors can inject their own clearly labelled mock fixtures while Rae prepares this smaller database. They then connect their features to it before sprint completion; real historical sourcing remains deferred. See [backend conventions and checkpoints](backend-conventions.md).
 
-The agreed frontend split is: Luck owns UI design, shared frontend infrastructure/navigation, and authentication screens; Rae owns purchase-plan screens; Anjali owns market context frontend and backend. Nelson implements the authentication/provider/session logic called by Luck's screens. Wunna verifies authentication in Spring Boot. Authentication provider selection is Supabase Auth.
+The agreed frontend split is: Luck owns UI design, shared frontend infrastructure/navigation, and authentication screens; Rae owns purchase-plan screens; Anjali owns market context frontend and backend. Nelson implements the authentication/provider/session logic called by Luck's screens. Wunna verifies authentication in Spring Boot. Clerk is the confirmed authentication provider; Supabase is used for the PostgreSQL database only.
 
 Luck's mockups are expected under `docs/ui-mockups/`; receipt and review are not yet verified. Designs are not completed frontend code. Each feature owner connects and tests their own feature with the relevant backend owner; Luck maintains visual consistency and shared routing.
 
@@ -31,7 +31,7 @@ Luck's mockups are expected under `docs/ui-mockups/`; receipt and review are not
 - Provision/configure the development database and give backend contributors the access they need through a private channel.
 - Maintain repeatable migrations for the current schema: minimal user ownership record, purchase plans, market series, and market observations.
 - Enforce required fields, foreign keys, positive plan quantities, one plan per user, and unique series/date observations.
-- Verify the minimal signup-to-user-ID linkage with Nelson and Wunna so purchase plans reference the authenticated owner. The existing SQL automatically synchronizes auth.users to public.users; verify this when integrating the database. Separate profile creation/editing is outside this sprint; do not add duplicate password storage.
+- Verify the minimal signup-to-user-ID linkage with Nelson and Wunna so purchase plans reference the authenticated owner. Adapt the existing SQL identity linkage and ownership policies to Clerk; agree how verified Clerk identities map to public.users before integrating the database. Separate profile creation/editing is outside this sprint; do not add duplicate password storage.
 - Document database initialization and configuration-variable names.
 - Implement purchase-plan empty state, create/edit form, saved summary, and delete interaction using Luck's mockups/shared components.
 - Display quantity, deadline, scenario date, and derived time remaining/urgency under the agreed rules.
@@ -79,17 +79,17 @@ Luck's mockups are expected under `docs/ui-mockups/`; receipt and review are not
 
 **Work**
 
-- Implement registration/login/password-reset/logout functions using the agreed provider, for Luck's screens to call.
+- Implement registration/login/password-reset/logout functions using Clerk, for Luck's screens to call.
 - Agree function inputs, results, and errors with Luck: registration uses email/display name/password; login uses email/password.
 - Handle session restoration, token refresh as supported by the provider, and session state/current-token access for other contributors.
 - Supply the authenticated user ID to Wunna and coordinate signup with Rae's minimal user-record linkage. Separate profile creation/editing is deferred; no profile screen or standalone profile API is required. Registration still includes the PRD's display name field, whose storage can use the agreed authentication mechanism.
 - Help verify authentication, expired sessions, logout, and test-account behaviour with Luck and Wunna.
 
-**Needs from others:** Luck's screen/input requirements; the team's provider decision and project configuration; Rae's minimal user-record linkage; Wunna's API authentication contract.
+**Needs from others:** Luck's screen/input requirements; Clerk project configuration; Rae's minimal user-record linkage; Wunna's API authentication contract.
 
 **Hands off:** authentication functions and session/error interfaces to Luck; current-token access and verification/identity details to Wunna and other frontend consumers.
 
-**Boundary:** Luck implements the authentication screens; Nelson implements the logic behind them. Wunna configures Spring Boot token verification and backend authorization. If Supabase Auth is adopted, credential management belongs to the provider; this split does not require Nelson to implement duplicate Java login/password endpoints.
+**Boundary:** Luck implements the authentication screens; Nelson implements the logic behind them. Wunna configures Spring Boot token verification and backend authorization. Clerk manages credentials; this split does not require Nelson to implement duplicate Java login/password endpoints.
 
 ## Wunna (WA): backend foundation and integration
 
@@ -148,7 +148,7 @@ Luck's mockups are expected under `docs/ui-mockups/`; receipt and review are not
 
 ## Sprint boundaries and remaining decisions
 
-- Confirm authentication provider; separate profile creation/editing is outside this sprint. Minimal signup identity linkage remains necessary for plan ownership.
+- Authentication uses Clerk; Supabase supplies the database only. Agree Clerk-to-database identity linkage and ownership enforcement; separate profile creation/editing is outside this sprint.
 - Wunna owns the shared scenario-date configuration; agree the actual mock date and supported-date behaviour with Anjali and Rae. Anjali coordinates displayed mock series. Historical source-data collection/import remains deferred.
 - Agree deadline meaning, date validation, calendar versus trading days, and urgency presentation/thresholds. Always derive time remaining from the historical scenario date, not today.
 - Current demo environment confirmed as localhost; deployment is deferred.
