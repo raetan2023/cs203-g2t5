@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApiPlanService, fetchScenarioDate } from './apiService';
 import { PlanError } from './types';
 
-const options = { baseUrl: 'http://backend.test', apiKey: 'test-key', userId: 'user-uuid' };
+const options = { baseUrl: 'http://backend.test', apiKey: 'test-key', getToken: () => 'session-token' };
 const service = createApiPlanService(options);
 
 function mockFetch(status: number, body?: unknown) {
@@ -22,7 +22,7 @@ function mockFetch(status: number, body?: unknown) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('createApiPlanService', () => {
-  it('sends both headers and returns the saved plan', async () => {
+  it('sends the session token and returns the saved plan', async () => {
     const plan = { plan_id: 'p1', quantity_mt: 500, purchase_deadline: '2025-11-15', scenario_as_of_date: '2025-10-24', days_remaining: 22 };
     const fetchMock = mockFetch(200, { plan });
 
@@ -31,7 +31,30 @@ describe('createApiPlanService', () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('http://backend.test/api/v1/purchase-plan');
     expect(init.method).toBe('GET');
-    expect(init.headers).toMatchObject({ 'X-API-Key': 'test-key', 'X-User-Id': 'user-uuid' });
+    expect(init.headers).toMatchObject({ Authorization: 'Bearer session-token' });
+    expect(init.headers).not.toHaveProperty('X-API-Key');
+  });
+
+  it('omits the header when nobody is signed in, so the backend answers 401', async () => {
+    const fetchMock = mockFetch(401, { detail: 'Please sign in again.' });
+    const anonymous = createApiPlanService({ baseUrl: 'http://backend.test', getToken: () => null });
+
+    const error = await anonymous.read().catch(e => e);
+    expect(error.status).toBe(401);
+    expect(fetchMock.mock.calls[0][1].headers).not.toHaveProperty('Authorization');
+  });
+
+  it('asks for the token on every request, so a refreshed one is used', async () => {
+    const tokens = ['first-token', 'second-token'];
+    const getToken = vi.fn(() => tokens.shift() ?? null);
+    const service = createApiPlanService({ baseUrl: 'http://backend.test', getToken });
+    const fetchMock = mockFetch(200, { plan: null });
+
+    await service.read();
+    await service.read();
+
+    expect(getToken).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe('Bearer second-token');
   });
 
   it('returns a null plan without treating it as an error', async () => {

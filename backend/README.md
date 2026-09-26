@@ -50,8 +50,20 @@ curl -H 'X-API-Key: mgo_public_demo_2026' 'http://127.0.0.1:8000/api/v1/data/bre
 
 ## API
 
-`/`, `/health` and `/docs` are public. Every `/api/` route requires an
-`X-API-Key` header; the development key is `mgo_public_demo_2026`.
+`/`, `/health` and `/docs` are public.
+
+Market-data routes carry an `X-API-Key` header; the development key is
+`mgo_public_demo_2026`. Purchase-plan routes are per-user and take the signed-in
+user's session token instead:
+
+```
+Authorization: Bearer <session token>
+```
+
+Tokens are verified against the identity provider's published signing keys, set
+by `CLERK_ISSUER_URI`. The backend has no login, logout or password endpoints:
+the provider owns credentials, and this service only checks the token it is
+given. A missing, malformed or expired token returns 401.
 
 | Endpoint | Returns |
 | --- | --- |
@@ -86,17 +98,16 @@ One plan per user, stored in `purchase_plans`. The backend supplies
 `scenario_as_of_date` from `MGO_SCENARIO_DATE` and derives `days_remaining` as
 calendar days from that date to the deadline.
 
-**Identifying the caller is temporary.** Until authentication is wired up, the
-owner comes from an `X-User-Id` header holding the user's UUID from the `users`
-table; unknown or missing values return 401. Only the way the caller is
-identified changes once verified logins land — the request and response shapes
-stay as they are.
+The owner comes from the verified token, never from anything the caller sends,
+so a signed-in user can only reach their own plan. The token's subject is matched
+against `users.clerk_user_id`, and the row is created on that account's first
+request, so signing up needs no extra step. `email` is stored only when the
+provider includes it in the token.
 
-Every call below needs both headers:
+Every call below needs the one header:
 
 ```
-X-API-Key: mgo_public_demo_2026
-X-User-Id: 8a9d4260-9070-4bb1-b5af-a71f458a3f47
+Authorization: Bearer <session token>
 ```
 
 **Read — `GET /api/v1/purchase-plan`** → `200`
@@ -145,22 +156,21 @@ With no saved plan, still `200`:
 
 #### Try it
 
+Copy a session token from the running frontend, then:
+
 ```bash
-curl -s localhost:8000/api/v1/purchase-plan \
-  -H 'X-API-Key: mgo_public_demo_2026' \
-  -H 'X-User-Id: PASTE-A-UUID-FROM-THE-USERS-TABLE'
+curl -s localhost:8000/api/v1/purchase-plan -H "Authorization: Bearer $TOKEN"
 ```
 
 ```bash
 curl -s -X POST localhost:8000/api/v1/purchase-plan \
-  -H 'X-API-Key: mgo_public_demo_2026' \
-  -H 'X-User-Id: PASTE-A-UUID-FROM-THE-USERS-TABLE' \
+  -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"quantity_mt": 500, "purchase_deadline": "2025-11-15"}'
 ```
 
-`/docs` has the same endpoints with a **Try it out** button: click **Authorize**,
-paste the API key, and pass the user UUID in the `X-User-Id` field.
+`/docs` has the same endpoints with a **Try it out** button: click **Authorize**
+and paste either the API key or a session token, depending on the route.
 
 ## Available data
 
@@ -192,6 +202,7 @@ data yet; those endpoints return an empty list rather than failing.
 | `MGO_API_KEY` | `mgo_public_demo_2026` |
 | `MGO_SNAPSHOT_DIR` | `data/snapshots` (relative to the working directory) |
 | `FRONTEND_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173` — browser origins allowed to call the API |
+| `CLERK_ISSUER_URI` | the team's development tenant — the identity provider whose tokens are accepted |
 | `MGO_SCENARIO_DATE` | `2025-10-24` — the historical date every feature treats as "today" |
 | `SUPABASE_DB_URL` | none — required |
 | `SUPABASE_DB_USER` | none — required |
