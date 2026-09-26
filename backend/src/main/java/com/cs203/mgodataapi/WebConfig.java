@@ -28,7 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(allowedOrigins.toArray(String[]::new))
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 // Custom headers make browsers send a preflight OPTIONS request first.
-                .allowedHeaders("Authorization", "Content-Type", "X-API-Key", "X-User-Id")
+                .allowedHeaders("Authorization", "Content-Type")
                 .maxAge(3600);
     }
 }

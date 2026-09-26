@@ -3,7 +3,6 @@ package com.cs203.mgodataapi;
 import java.time.LocalDate;
 import java.util.Map;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @Tag(name = "Operations")
-@SecurityRequirement(name = "apiKey")
 public class ConfigController {
 
     private final LocalDate scenarioDate;
