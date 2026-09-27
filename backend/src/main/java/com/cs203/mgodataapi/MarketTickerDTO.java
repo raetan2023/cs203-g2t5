@@ -1,4 +1,4 @@
-package com.example.market.dto;
+package com.cs203.mgodataapi;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

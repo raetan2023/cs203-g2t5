@@ -1,6 +1,6 @@
-package com.example.market.repository;
+package com.cs203.mgodataapi;
 
-import com.example.market.model.MarketIndicator;
+import com.cs203.mgodataapi.MarketIndicator;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

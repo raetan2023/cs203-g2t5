@@ -1,4 +1,4 @@
-package com.example.market.dto;
+package com.cs203.mgodataapi;
 
 import java.time.LocalDate;
 import java.util.List;

@@ -1,6 +1,6 @@
-package com.example.market.repository;
+package com.cs203.mgodataapi;
 
-import com.example.market.model.MarketObservation;
+import com.cs203.mgodataapi.MarketObservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
