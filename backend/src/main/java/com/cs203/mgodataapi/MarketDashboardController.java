@@ -14,7 +14,7 @@ import java.time.LocalDate;
  */
 @RestController
 @RequestMapping("/api/v1/market")
-@CrossOrigin(origins = "http://localhost:3000")
+
 public class MarketDashboardController {
 
     private final MarketDashboardService service;
