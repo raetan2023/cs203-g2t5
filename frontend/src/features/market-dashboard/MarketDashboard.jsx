@@ -24,8 +24,8 @@ function formatScenarioDateBadge(dateStr) {
  * - MGO History & Forecast Line Chart
  * - Selected Indicators Table
  */
-export default function MarketDashboard({ onToggleNav }) {
-  const { status, data, error, retry } = useMarketDashboard();
+export default function MarketDashboard({ scenarioDate, onToggleNav }) {
+  const { status, data, error, retry } = useMarketDashboard(scenarioDate);
 
   // Loading state
   if (status === 'loading') {
