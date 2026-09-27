@@ -5,6 +5,8 @@ import { ClerkAuthPage } from '../features/auth/ClerkAuthPage';
 import type { AuthService, SessionUser } from '../features/auth/types';
 import { createApiPlanService, fetchScenarioDate } from '../features/purchase-plan/apiService';
 import { App } from './App';
+import MarketDashboard from '../features/market-dashboard/MarketDashboard';
+
 
 type Scenario =
   | { state: 'idle' | 'loading' }
@@ -72,5 +74,6 @@ export function ClerkApp() {
     createPlanService={createPlanService}
     scenarioDate={scenario.state === 'ready' ? scenario.date : ''}
     renderAuthPage={mode => <ClerkAuthPage mode={mode} />}
+    MarketDashboard={MarketDashboard}
   />;
 }
