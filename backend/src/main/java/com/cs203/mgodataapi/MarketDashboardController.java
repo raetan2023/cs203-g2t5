@@ -1,7 +1,7 @@
-package com.example.market.controller;
+package com.cs203.mgodataapi;
 
-import com.example.market.dto.DashboardResponse;
-import com.example.market.service.MarketDashboardService;
+import com.cs203.mgodataapi.DashboardResponse;
+import com.cs203.mgodataapi.MarketDashboardService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
