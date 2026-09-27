@@ -1,10 +1,13 @@
-package com.example.market.service;
+package com.cs203.mgodataapi;
 
-import com.example.market.dto.*;
-import com.example.market.model.MarketIndicator;
-import com.example.market.model.MarketObservation;
-import com.example.market.repository.MarketIndicatorRepository;
-import com.example.market.repository.MarketObservationRepository;
+import com.cs203.mgodataapi.ChartPointDTO;
+import com.cs203.mgodataapi.DashboardResponse;
+import com.cs203.mgodataapi.IndicatorDTO;
+import com.cs203.mgodataapi.MarketTickerDTO;
+import com.cs203.mgodataapi.MarketIndicator;
+import com.cs203.mgodataapi.MarketObservation;
+import com.cs203.mgodataapi.MarketIndicatorRepository;
+import com.cs203.mgodataapi.MarketObservationRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
