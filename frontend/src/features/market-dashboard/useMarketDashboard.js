@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 
+const env = import.meta.env ?? {};
+const API_BASE = (env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
+const API_KEY = env.VITE_API_KEY ?? '';
+
 const EXTERNAL_API_BASE = 'https://mgo-data-api.vercel.app';
 
 /**
@@ -175,7 +179,9 @@ export function useMarketDashboard(scenarioDate = '2025-10-24') {
     setError(null);
 
     // 1. First attempt: Query local Spring Boot backend
-    fetch(`/api/v1/market/dashboard?scenarioDate=${scenarioDate}`)
+    fetch(`${API_BASE}/api/v1/market/dashboard?scenarioDate=${scenarioDate}`, {
+      headers: { ...(API_KEY && { 'X-API-Key': API_KEY }) },
+    })
       .then(r => {
         if (r.status === 204) throw new Error('NO_DATA');
         if (!r.ok) throw new Error('FETCH_ERROR');
