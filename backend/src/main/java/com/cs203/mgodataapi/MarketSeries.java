@@ -1,4 +1,4 @@
-package com.example.market.model;
+package com.cs203.mgodataapi;
 
 import jakarta.persistence.*;
 
