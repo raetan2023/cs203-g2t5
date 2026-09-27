@@ -1,9 +1,9 @@
 import React from 'react';
-import '../styles/dashboard.css';
-import { useMarketDashboard } from '../hooks/useMarketDashboard';
-import TickerCards from '../components/TickerCards';
-import MGOChart from '../components/MGOChart';
-import IndicatorsTable from '../components/IndicatorsTable';
+import './dashboard.css';
+import { useMarketDashboard } from './useMarketDashboard';
+import TickerCards from './TickerCards';
+import MGOChart from './MGOChart';
+import IndicatorsTable from './IndicatorsTable';
 
 function formatScenarioDateBadge(dateStr) {
   if (!dateStr) return 'OCT 24, 2025';
