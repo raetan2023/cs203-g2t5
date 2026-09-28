@@ -36,7 +36,9 @@ import org.springframework.test.web.servlet.MockMvc;
         "spring.datasource.url=jdbc:postgresql://localhost:5432/placeholder",
         "spring.datasource.username=placeholder",
         "spring.datasource.password=placeholder",
-        "mgo.db.check-on-startup=false"})
+        "mgo.db.check-on-startup=false",
+        // A hosted dev origin, to prove they can be added without a second CORS class.
+        "mgo.frontend-origins=http://127.0.0.1:5173,http://localhost:5173,https://example.app.github.dev"})
 @AutoConfigureMockMvc
 class MgoDataApiApplicationTests {
 
@@ -173,5 +175,11 @@ class MgoDataApiApplicationTests {
                         .header("Origin", "http://evil.example.com")
                         .header("Access-Control-Request-Method", "POST"))
                 .andExpect(status().isForbidden());
+        // Hosted dev environments reach the API routes, which a /** mapping would not cover.
+        mvc.perform(options("/api/v1/market/dashboard")
+                        .header("Origin", "https://example.app.github.dev")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://example.app.github.dev"));
     }
 }
