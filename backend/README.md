@@ -52,9 +52,9 @@ curl -H 'X-API-Key: mgo_public_demo_2026' 'http://127.0.0.1:8000/api/v1/data/bre
 
 `/`, `/health` and `/docs` are public.
 
-Market-data routes carry an `X-API-Key` header; the development key is
-`mgo_public_demo_2026`. Purchase-plan routes are per-user and take the signed-in
-user's session token instead:
+Market-data routes, including the dashboard, carry an `X-API-Key` header; the
+development key is `mgo_public_demo_2026`. Purchase-plan routes are per-user and
+take the signed-in user's session token instead:
 
 ```
 Authorization: Bearer <session token>
@@ -71,6 +71,7 @@ given. A missing, malformed or expired token returns 401.
 | `GET /api/v1/config` | Settings the frontend needs before it has data, currently the scenario date |
 | `GET /api/v1/sources` | Every series with its provider, unit, record count, and date range |
 | `GET /api/v1/data/{sourceId}` | Dated observations for one series |
+| `GET /api/v1/market/dashboard` | Everything the historical dashboard shows for one scenario date |
 | `GET/POST/PUT/DELETE /api/v1/purchase-plan` | The caller's single saved purchase plan |
 
 `/api/v1/data/{sourceId}` accepts `start`, `end` (ISO dates), `series` (for
@@ -91,6 +92,26 @@ is saved, to show days remaining while a deadline is being chosen:
 ```json
 { "scenario_as_of_date": "2025-10-24" }
 ```
+
+### Market dashboard
+
+`GET /api/v1/market/dashboard?scenarioDate=2025-10-24` returns the scenario date,
+ticker cards, chart points and indicator rows in one payload. The date defaults to
+the configured scenario date. When no data can be assembled it answers `204 No
+Content` rather than an empty payload.
+
+It takes its data from the first source that can supply it:
+
+1. the database tables `MARKET_SERIES` / `MARKET_OBSERVATIONS` / `MARKET_INDICATORS`,
+   when those repositories are available and hold records for the date;
+2. otherwise `https://mgo-data-api.vercel.app`, an external deployment outside this
+   repository.
+
+Be aware of what that means when checking your work: the dashboard can show data
+while the database path is broken, and the frontend falls back to that same external
+service when this backend is unreachable. Seeing numbers on the page is therefore not
+by itself evidence that this backend, or the database, is working. The browser console
+logs a message when the frontend falls back.
 
 ### Purchase plan
 
