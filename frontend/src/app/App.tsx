@@ -6,13 +6,16 @@ import { AuthPage } from '../features/auth/AuthPage';
 import type { AuthService, SessionUser } from '../features/auth/types';
 import { HomePage } from '../features/home/HomePage';
 import { PurchasePlanPage, type PurchasePlanService } from '../features/purchase-plan';
+import { RecommendationsPage } from '../features/recommendations/RecommendationsPage';
+import type { RecommendationService } from '../features/recommendations/service';
 import './app.css';
 
 type Session = { state: 'loading' } | { state: 'error'; message: string } | { state: 'ready'; user: SessionUser | null };
-const privateRoutes = ['/home', '/purchase-plans', '/market-dashboard'];
+const privateRoutes = ['/home', '/purchase-plans', '/purchase-plans/recommendation', '/market-dashboard'];
 export interface AppProps {
   auth: AuthService;
   createPlanService(user: SessionUser): PurchasePlanService;
+  createRecommendationService?(user: SessionUser): RecommendationService;
   scenarioDate: string;
   mock?: boolean;
   renderAuthPage?: (mode: 'login' | 'signup') => ReactNode;
@@ -20,7 +23,7 @@ export interface AppProps {
   MarketDashboard?: ComponentType<{ scenarioDate: string }>;
 }
 
-export function App({ auth, createPlanService, scenarioDate, mock = false, renderAuthPage, MarketDashboard }: AppProps) {
+export function App({ auth, createPlanService, scenarioDate, mock = false, renderAuthPage, MarketDashboard, createRecommendationService }: AppProps) {
   const path = usePath();
   const [session, setSession] = useState<Session>({ state: 'loading' });
   const [attempt, setAttempt] = useState(0);
@@ -28,7 +31,7 @@ export function App({ auth, createPlanService, scenarioDate, mock = false, rende
   const returnPath = useRef('/home');
   const read = useRef<{ auth: AuthService; attempt: number; promise: ReturnType<AuthService['readSession']> } | null>(null);
   const generation = useRef(0);
-  const planStore = useRef<{ userId: string; service: PurchasePlanService } | null>(null);
+  const planStore = useRef<{ userId: string; service: PurchasePlanService; recommendations?: RecommendationService } | null>(null);
 
   function acceptUser(user: SessionUser | null) {
     generation.current++;
@@ -62,7 +65,7 @@ export function App({ auth, createPlanService, scenarioDate, mock = false, rende
   }, [path, session, user]);
 
   useEffect(() => {
-    document.title = `${({ '/login': 'Sign in', '/signup': 'Create account', '/home': 'Home', '/purchase-plans': 'Purchase plans', '/market-dashboard': 'Market dashboard' } as Record<string, string>)[path] ?? 'Bunker Buddy'} · Bunker Buddy`;
+    document.title = `${({ '/login': 'Sign in', '/signup': 'Create account', '/home': 'Home', '/purchase-plans': 'Purchase plans', '/purchase-plans/recommendation': 'Purchase recommendation', '/market-dashboard': 'Market dashboard' } as Record<string, string>)[path] ?? 'Bunker Buddy'} · Bunker Buddy`;
   }, [path]);
 
   if (session.state === 'loading') return <StatusPage message={privateRoutes.includes(path) ? 'Loading your home...' : 'Loading your session...'} />;
@@ -78,10 +81,10 @@ export function App({ auth, createPlanService, scenarioDate, mock = false, rende
     }} /></>;
   }
   if (!user) return <div className="bb-app"><main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/login">Go to sign in</AppLink></main></div>;
-  if (!planStore.current || planStore.current.userId !== user.id) planStore.current = { userId: user.id, service: createPlanService(user) };
+  if (!planStore.current || planStore.current.userId !== user.id) planStore.current = { userId: user.id, service: createPlanService(user), recommendations: createRecommendationService?.(user) };
   return <AppShell path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
     await auth.signOut(); acceptUser(null); returnPath.current = '/home'; setNotice(''); navigate('/login', true);
   }}>
-    {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
+    {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? <RecommendationsPage key={user.id} planService={planStore.current.service} service={planStore.current.recommendations} scenarioDate={scenarioDate} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
   </AppShell>;
 }

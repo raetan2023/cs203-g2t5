@@ -1,3 +1,4 @@
+import { AppLink } from '../../../app/router';
 import { formatDate } from '../dates';
 import type { PurchasePlan } from '../types';
 import { PlanButton } from './Primitives';
@@ -27,7 +28,8 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
     </dl>
     <div className="pp-actions">
       <PlanButton ref={deleteRef} variant="danger-outline" disabled={busy} onClick={onDelete}>Delete</PlanButton>
-      <PlanButton ref={editRef} disabled={busy} onClick={onEdit}>Edit</PlanButton>
+      <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>
+      {!busy && <AppLink className="pp-button pp-button--primary" style={{ textDecoration: 'none' }} href="/purchase-plans/recommendation">View recommendation &rarr;</AppLink>}
     </div>
   </section>;
 }
