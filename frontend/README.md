@@ -48,10 +48,11 @@ Routing uses a small local History API wrapper (`app/router.tsx`): semantic anch
 | `/signup` | Signup form; signed-in users return to the app |
 | `/home` | Welcome and Go to purchase plans |
 | `/purchase-plans` | Existing one-plan CRUD feature |
+| `/purchase-plans/recommendation` | Private recommendation page for the current saved plan; reloads saved inputs on each visit |
 | `/market-dashboard` | Mount the supplied dashboard component, or show an explicit unavailable message |
 | Other paths | Page-not-found with a working return link |
 
-Market navigation is disabled until a component is supplied. Recommendation stays disabled/Coming soon and has no route. Password recovery is supplied by Clerk's sign-in flow.
+Market navigation is disabled until a component is supplied. Recommendations open from the saved-plan card; there is no separate global recommendations menu item. Password recovery is supplied by Clerk's sign-in flow.
 
 ## Clerk authentication
 
@@ -98,3 +99,14 @@ Mock previews can supply `createMockPlanService({ getScenarioDate: () => activeD
 - Clerk sign-in and the protected backend smoke test succeeded with `200: {"plan":null}`. Provider redirects, email delivery and two-account ownership remain to be exercised manually.
 
 **Completed checkpoint:** Clerk provider/session/logout integration, Clerk sign-in/signup screens, authenticated purchase-plan API wiring, shared shell/routes, Home and automated tests/build. Remaining team checks include provider redirects, email delivery, two-account ownership, responsive visual review and mounting Anjali's dashboard when supplied.
+
+
+## Recommendations mock frontend (Task 6)
+
+Run `npm run dev` and open `/preview.html` on the printed local URL. This isolated entry starts on the synthetic recommendation example without Clerk or a backend. Demo controls offer ready, delayed loading, fail-once/retry, predictions-only, missing forecast unsupported-context and no-plan cases. A demo-only scenario toggle exercises updates without changing backend configuration. In-app navigation stays within the mock session; reopening `/preview.html` resets it. Refreshing an app route loads the normal Clerk entry instead.
+
+The normal app shows an explicit unavailable state until `App.createRecommendationService(user)` is supplied. No real request silently falls back to a mock. The service is stable per signed-in user and discarded on logout/account change. The page reads the saved plan before analysis on every visit, so successful edits/deletion are reflected when returning; no analysis cache is retained across routes. Active scenario/service changes hide previous output immediately and discard late responses, including A-to-B-to-A transitions. Responses must echo the exact saved inputs and active scenario.
+
+`features/recommendations/` owns the desktop page, scoped styles, injectable service and synthetic mock. Price basis and uncertainty is a native, keyboard-accessible disclosure, collapsed by default. `PlanForecast.horizon_description` is optional source-provided coverage text, not an inferred horizon. The mock supplies guidance only for the configured 100 MT / 30 October 2025 plan in the 24 October scenario; different inputs produce an explicit unavailable result rather than an invented rule.
+
+The latest mockups include cost-impact cards on this page. `RecommendationService.readImpact(context)` optionally supplies their data independently of `read(context)`, with separate loading, error/retry and stale-response guards. Display components use supplied totals, target date and optional central/savings values without calculating purchase costs. The savings label is Potential savings, never a claim that a purchase occurred. Backend adapters, recommendation policy, database work and ML integration remain separate. No mobile-specific layout was added for the recommendation page.
