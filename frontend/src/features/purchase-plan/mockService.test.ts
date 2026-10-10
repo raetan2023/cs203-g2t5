@@ -5,6 +5,17 @@ import { createMockPlanService } from './mockService';
 import { validateDraft } from './validation';
 
 describe('mock API contract and dates', () => {
+  it('uses the active scenario on reads and writes without losing a saved overdue plan', async () => {
+    let date = '2025-11-01';
+    const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0, getScenarioDate: () => date });
+    expect((await service.read()).plan).toMatchObject({ plan_id: DEMO_PLAN.plan_id, days_remaining: 14, scenario_as_of_date: date });
+    date = '2025-11-16';
+    expect((await service.read()).plan).toMatchObject({ plan_id: DEMO_PLAN.plan_id, days_remaining: -1 });
+    await expect(service.update({ quantity_mt: 600, purchase_deadline: '2025-11-15' })).rejects.toMatchObject({ status: 422 });
+    expect((await service.read()).plan?.quantity_mt).toBe(500);
+    expect((await service.update({ quantity_mt: 600.25, purchase_deadline: date })).plan).toMatchObject({ days_remaining: 0, quantity_mt: 600.25 });
+  });
+
   it('returns API wrappers, enforces one plan, recalculates dates, and deletes without a body', async () => {
     const service = createMockPlanService({ delayMs: 0 });
     expect(await service.read()).toEqual({ plan: null });

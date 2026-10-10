@@ -71,6 +71,14 @@ The mock scenario is 24 October 2025; 500 MT / 15 November 2025 shows **22 days*
 
 The backend remains responsible for rejecting invalid or expired tokens and enforcing ownership using the Clerk `sub` claim. Two-account isolation should be checked before release.
 
+### Sprint 4 scenario handling (10 October 2026)
+
+The purchase-plan page reloads when its active historical `scenarioDate` or service changes and validates forms against that active date. It displays service-returned days only when the response scenario matches; an obsolete backend date produces a retryable error. Backend GET still needs alignment with the active-date contract; this frontend change does not update backend calculations.
+
+Changing context closes the previous form/dialog and reloads saved state. Same-context failed saves retain drafts. Late responses from old contexts are ignored; old-scenario writes trigger a same-account reconciliation read. Plan actions remain disabled while an earlier write for that service is pending, preventing conflicting edits. The optional `onInvalidateAnalysis` callback lets future cost/recommendation consumers clear results on context changes and successful writes.
+
+Mock previews can supply `createMockPlanService({ getScenarioDate: () => activeDate })` to keep one store while changing historical dates. This is mock-only; real requests retain their existing contract. Task 4 verification: 45 tests passed across 6 files and focused type checking passed. The full build remains blocked by the pre-existing `ClerkApp`/`MarketDashboard` `onToggleNav` prop mismatch; browser/live API checks remain pending.
+
 ## Intentional visual differences
 
 - Rae requested removal of the purchase-plan empty-state circle/plus; the top-right Create plan control remains.

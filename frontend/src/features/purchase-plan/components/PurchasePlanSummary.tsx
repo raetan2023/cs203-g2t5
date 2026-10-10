@@ -3,8 +3,9 @@ import type { PurchasePlan } from '../types';
 import { PlanButton } from './Primitives';
 import type { RefObject } from 'react';
 
-export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef }: {
+export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef, busy = false }: {
   plan: PurchasePlan;
+  busy?: boolean;
   onEdit(): void;
   onDelete(): void;
   editRef: RefObject<HTMLButtonElement | null>;
@@ -25,8 +26,8 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
       <div><dt>Time remaining</dt><dd>{timeRemaining}<span className="pp-time-note">Calculated from scenario date</span></dd></div>
     </dl>
     <div className="pp-actions">
-      <PlanButton ref={deleteRef} variant="danger-outline" onClick={onDelete}>Delete</PlanButton>
-      <PlanButton ref={editRef} onClick={onEdit}>Edit</PlanButton>
+      <PlanButton ref={deleteRef} variant="danger-outline" disabled={busy} onClick={onDelete}>Delete</PlanButton>
+      <PlanButton ref={editRef} disabled={busy} onClick={onEdit}>Edit</PlanButton>
     </div>
   </section>;
 }
