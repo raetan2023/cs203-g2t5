@@ -128,7 +128,7 @@ describe('shared app and auth journeys', () => {
     expect(within(menu).getByRole('button', { name: 'Sign out' })).toHaveFocus();
     await user.tab();
     expect(within(menu).getByRole('button', { name: 'Close navigation' })).toHaveFocus();
-    expect(within(menu).getByRole('button', { name: /Recommendation/ })).toBeDisabled();
+    expect(within(menu).queryByRole('button', { name: /Recommendation/ })).not.toBeInTheDocument();
     expect(within(menu).getByRole('button', { name: 'Market dashboard' })).toBeDisabled();
     fireEvent(menu, new Event('cancel', { bubbles: true, cancelable: true }));
     expect(screen.getByRole('button', { name: 'Open navigation' })).toHaveFocus();

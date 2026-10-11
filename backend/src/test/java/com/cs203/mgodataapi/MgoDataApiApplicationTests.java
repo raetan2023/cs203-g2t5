@@ -57,6 +57,24 @@ class MgoDataApiApplicationTests {
     private PurchasePlanRepository plans;
 
     @Test
+    void defaultAnalysisIsExplicitlyUnavailable() throws Exception {
+        UUID owner = UUID.randomUUID(), planId = UUID.randomUUID();
+        when(users.resolve("analysis_owner", null)).thenReturn(owner);
+        when(plans.findByUser(owner)).thenReturn(Optional.of(new PurchasePlan(planId, owner,
+                new BigDecimal("100"), LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"))));
+        for (String section : new String[]{"recommendation", "cost-impact"}) {
+            mvc.perform(get("/api/v1/purchase-plan/" + section)
+                    .param("plan_id", planId.toString()).param("quantity_mt", "100")
+                    .param("purchase_deadline", "2025-11-15").param("scenario_as_of_date", "2025-10-24")
+                    .with(jwt().jwt(token -> token.subject("analysis_owner"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.provenance").value("unavailable"))
+                    .andExpect(jsonPath("$.recommendation.status").value("unavailable"))
+                    .andExpect(jsonPath("$.cost_impact.status").value("unavailable"));
+        }
+    }
+
+    @Test
     void homeHealthAndDocsArePublic() throws Exception {
         mvc.perform(get("/")).andExpect(status().isOk());
         mvc.perform(get("/health")).andExpect(jsonPath("$.status").value("ok"));
