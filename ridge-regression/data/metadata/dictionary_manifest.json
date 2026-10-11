@@ -1,0 +1,27 @@
+[
+  {
+    "file": "DATA_DICTIONARY.md",
+    "bytes": 18345,
+    "sha256": "dab9993ddf8063c944ebe317c7d4d8039a03f3aa297c71a33c54e16968de8d5d"
+  },
+  {
+    "file": "series_dictionary.csv",
+    "bytes": 24979,
+    "sha256": "ba1c06b2a0c68184ee653e585d0de6646f7b19f81dca68ab5a51e286e4a823f5"
+  },
+  {
+    "file": "series_dictionary.json",
+    "bytes": 37533,
+    "sha256": "bc991a85fd26471ed79111af198612229fa6a7b354262727eceaafa04b3f9bc6"
+  },
+  {
+    "file": "field_dictionary.csv",
+    "bytes": 4545,
+    "sha256": "73fa2fb6a030eec81571249bbfbb0abbb19c91b413efdbdddb6cbaab34c9e3b0"
+  },
+  {
+    "file": "definition_evidence.json",
+    "bytes": 3628,
+    "sha256": "8db74854e79a471a864ac2a38e8ee7f2c84bf921e62a4919df9ce98640610d37"
+  }
+]
