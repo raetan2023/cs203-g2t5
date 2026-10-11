@@ -1,6 +1,6 @@
 import type { PlanAnalysis, PlanResultContext } from '../purchase-plan/types';
 
-/** Provisional view-model interface; no backend endpoint is assumed. */
+/** Independent analysis reads; apiService maps the authenticated backend contract. */
 export interface RecommendationService {
   read(context: PlanResultContext): Promise<PlanAnalysis>;
   readImpact?(context: PlanResultContext): Promise<PlanAnalysis>;

@@ -8,8 +8,8 @@ const amount = (value: number) => number.format(value);
 const signed = (value: number) => value > 0 ? `+${amount(value)}` : amount(value);
 
 /** Display source-supplied totals only; no price/quantity calculations here. */
-export function PurchaseImpact({ plan, service }: { plan: PurchasePlan; service: RecommendationService }) {
-  const { analysis, loading, error, retry } = useAnalysis(service, plan, 'readImpact');
+export function PurchaseImpact({ plan, service, reload }: { plan: PurchasePlan; service: RecommendationService; reload?: () => void }) {
+  const { analysis, loading, error, message, changed, retry } = useAnalysis(service, plan, 'readImpact');
   const impact = analysis?.cost_impact.status === 'ready' ? analysis.cost_impact.value : undefined;
   const forecast = analysis?.forecast.status === 'ready' ? analysis.forecast.value : undefined;
   const reference = analysis?.reference.status === 'ready' ? analysis.reference.value : undefined;
@@ -19,7 +19,7 @@ export function PurchaseImpact({ plan, service }: { plan: PurchasePlan; service:
     <h2>{ready ? `Estimated impact for forecast date ${formatDate(impact.target_date!)}` : 'Estimated impact'}</h2>
     <p>{ready ? `Cost estimate for ${amount(plan.quantity_mt)} MT · Forecast target, not a purchase recommendation.` : `For your planned purchase of ${amount(plan.quantity_mt)} MT`}</p>
     {loading ? <div role="status"><div className="rec-costs" aria-hidden="true">{['Cost at reference price', 'Forecast cost range', 'Difference from reference'].map(label => <div key={label}><span>{label}</span><div className="rec-skeleton" /></div>)}</div><p>Loading cost impact… Cost estimates appear independently when this request completes.</p></div>
-      : error ? <div role="alert"><p>Couldn’t load cost impact. Your recommendation is unaffected.</p><button className="bb-button" onClick={retry}>Retry cost impact</button></div>
+      : error ? <div role="alert"><p>{message ?? 'Couldn’t load cost impact. Your recommendation is unaffected.'}</p><button className="bb-button" onClick={changed && reload ? reload : retry}>{changed && reload ? 'Reload saved plan' : 'Retry cost impact'}</button></div>
       : ready ? <>
         <dl className="rec-costs">
           <div><dt>Cost at reference price</dt><dd>USD {amount(impact.reference_total)}</dd></div>
@@ -28,7 +28,7 @@ export function PurchaseImpact({ plan, service }: { plan: PurchasePlan; service:
         </dl>
         {impact.central_total !== undefined && <p className="rec-central">Central estimated cost: USD {amount(impact.central_total)}</p>}
       </> : <p>{analysis?.cost_impact.status === 'unavailable' ? analysis.cost_impact.message : 'Cost impact is unavailable for this forecast date.'}</p>}
-    {analysis?.source === 'mock' && <p className="rec-demo">Synthetic demo data — estimates, not realized savings.</p>}
+    {(analysis?.source === 'mock' || analysis?.provenance === 'fixture') && <p className="rec-demo">Synthetic demo data — estimates, not realized savings.</p>}
     {forecast && <details className="rec-forecast"><summary>Price basis and uncertainty</summary><dl>
       {reference && <div><dt>Reference price · {formatDate(reference.observation_date)}</dt><dd>{reference.basis.commodity} · {reference.basis.currency} {amount(reference.price)}/{reference.basis.unit}</dd></div>}
       <div><dt>Forecast target date</dt><dd>{formatDate(forecast.target_date)}</dd></div>

@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * The one saved purchase plan per user.
@@ -36,20 +37,44 @@ public class PurchasePlanController {
     private final PurchasePlanRepository plans;
     private final UserAccounts users;
     private final LocalDate scenarioDate;
+    private final PlanAnalysisService analysis;
 
     public PurchasePlanController(PurchasePlanRepository plans, UserAccounts users,
-            @Value("${mgo.scenario-date}") LocalDate scenarioDate) {
+            @Value("${mgo.scenario-date}") LocalDate scenarioDate, PlanAnalysisService analysis) {
         this.plans = plans;
         this.users = users;
         this.scenarioDate = scenarioDate;
+        this.analysis = analysis;
     }
 
     @GetMapping
     public Map<String, Object> get(@AuthenticationPrincipal Jwt token) {
         UUID userId = ownerOf(token);
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("plan", plans.findByUser(userId).map(PurchasePlan::toResponse).orElse(null));
+        body.put("plan", plans.findByUser(userId).map(plan -> plan.toResponse(scenarioDate)).orElse(null));
         return body;
+    }
+
+    @GetMapping({"/recommendation", "/cost-impact"})
+    public ResponseEntity<Map<String, Object>> analyze(@AuthenticationPrincipal Jwt token,
+            @RequestParam("plan_id") UUID planId,
+            @RequestParam("quantity_mt") BigDecimal quantity,
+            @RequestParam("purchase_deadline") LocalDate deadline,
+            @RequestParam("scenario_as_of_date") LocalDate scenario,
+            jakarta.servlet.http.HttpServletRequest request) {
+        UUID owner = ownerOf(token);
+        PurchasePlan plan = plans.findByUser(owner).orElseThrow(() ->
+                new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
+        PlanAnalysisService.Context context = PlanAnalysisService.Context.of(plan, scenarioDate);
+        if (!context.matches(new PlanAnalysisService.Context(planId, quantity, deadline, scenario))) {
+            throw new ApiException(HttpStatus.CONFLICT, "Your saved plan or scenario changed. Reload the purchase plan.");
+        }
+        Map<String, Object> result = analysis.read(context, request.getRequestURI().endsWith("/cost-impact"));
+        // A slow provider must not publish results for inputs edited/deleted during its request.
+        if (!plans.findByUser(owner).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate))).orElse(false)) {
+            throw new ApiException(HttpStatus.CONFLICT, "Your saved plan changed while analysis was loading. Reload the purchase plan.");
+        }
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(result);
     }
 
     @PostMapping

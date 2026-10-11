@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createApiPlanService, fetchScenarioDate } from './apiService';
 import { PlanError } from './types';
+import { DEMO_PLAN } from './fixtures';
 
 const options = { baseUrl: 'http://backend.test', apiKey: 'test-key', getToken: () => 'session-token' };
 const service = createApiPlanService(options);
@@ -63,7 +64,7 @@ describe('createApiPlanService', () => {
   });
 
   it('sends the input as JSON when creating', async () => {
-    const fetchMock = mockFetch(201, { plan: null });
+    const fetchMock = mockFetch(201, { plan: DEMO_PLAN });
     await service.create({ quantity_mt: 500, purchase_deadline: '2025-11-15' });
 
     const [, init] = fetchMock.mock.calls[0];
@@ -73,7 +74,7 @@ describe('createApiPlanService', () => {
   });
 
   it('sends the input as JSON when updating', async () => {
-    const fetchMock = mockFetch(200, { plan: null });
+    const fetchMock = mockFetch(200, { plan: { ...DEMO_PLAN, quantity_mt: 750, purchase_deadline: '2025-12-01' } });
     await service.update({ quantity_mt: 750, purchase_deadline: '2025-12-01' });
 
     const [, init] = fetchMock.mock.calls[0];
@@ -123,9 +124,18 @@ describe('createApiPlanService', () => {
     expect(error.status).toBe(0);
     expect(error.detail).toContain("couldn't load");
   });
+
+  it.each([{ plan: { ...DEMO_PLAN, days_remaining: '22' } }, { plan: { ...DEMO_PLAN, quantity_mt: Infinity } }, {}, null])('rejects invalid saved context %#', async body => {
+    mockFetch(200, body);
+    await expect(service.read()).rejects.toMatchObject({ status: 502 });
+  });
 });
 
 describe('fetchScenarioDate', () => {
+  it('rejects malformed historical dates without substituting device time', async () => {
+    mockFetch(200, { scenario_as_of_date: '2025-02-30' });
+    await expect(fetchScenarioDate(options)).rejects.toMatchObject({ status: 502 });
+  });
   it('reads the configured date, which is available before any plan exists', async () => {
     mockFetch(200, { scenario_as_of_date: '2025-10-24' });
     await expect(fetchScenarioDate(options)).resolves.toBe('2025-10-24');
