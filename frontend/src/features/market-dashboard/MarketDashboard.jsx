@@ -24,7 +24,7 @@ function formatScenarioDateBadge(dateStr) {
  * - MGO History & Forecast Line Chart
  * - Selected Indicators Table
  */
-export default function MarketDashboard({ scenarioDate, onToggleNav }) {
+export default function MarketDashboard({ scenarioDate, onToggleNav = undefined }) {
   const { status, data, error, retry } = useMarketDashboard(scenarioDate);
 
   // Loading state
@@ -68,7 +68,7 @@ export default function MarketDashboard({ scenarioDate, onToggleNav }) {
       {/* Top Bar with hamburger icon and historical scenario pill */}
       <header className="top-navbar">
         <div className="navbar-left">
-          <button
+          {onToggleNav && <button
             className="hamburger-btn"
             onClick={onToggleNav}
             aria-label="Toggle navigation menu"
@@ -79,7 +79,7 @@ export default function MarketDashboard({ scenarioDate, onToggleNav }) {
               <line x1="3" y1="12" x2="21" y2="12" />
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
-          </button>
+          </button>}
         </div>
 
         <div className="scenario-badge">

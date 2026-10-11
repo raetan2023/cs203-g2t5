@@ -6,6 +6,7 @@ import type { AuthService, SessionUser } from '../features/auth/types';
 import { createApiPlanService, fetchScenarioDate } from '../features/purchase-plan/apiService';
 import { App } from './App';
 import MarketDashboard from '../features/market-dashboard/MarketDashboard';
+import { createApiRecommendationService } from '../features/recommendations/apiService';
 
 
 type Scenario =
@@ -38,7 +39,7 @@ export function ClerkApp() {
         });
       });
     return () => { current = false; };
-  }, [signedIn, scenarioAttempt]);
+  }, [signedIn, authState.userId, scenarioAttempt]);
 
   const sessionUser = useMemo<SessionUser | null>(() => {
     if (!signedIn) return null;
@@ -62,6 +63,10 @@ export function ClerkApp() {
     () => createApiPlanService({ getToken: () => authState.getToken() }),
     [authState.getToken],
   );
+  const createRecommendationService = useCallback(
+    () => createApiRecommendationService({ getToken: () => authState.getToken() }),
+    [authState.getToken],
+  );
 
   if (!authState.isLoaded || !userState.isLoaded) return <StatusPage message="Loading your session..." />;
   if (signedIn && scenario.state !== 'ready') {
@@ -70,8 +75,11 @@ export function ClerkApp() {
   }
 
   return <App
+    key={authState.userId ?? 'signed-out'}
     auth={auth}
     createPlanService={createPlanService}
+    createRecommendationService={createRecommendationService}
+    refreshScenario={() => setScenarioAttempt(value => value + 1)}
     scenarioDate={scenario.state === 'ready' ? scenario.date : ''}
     renderAuthPage={mode => <ClerkAuthPage mode={mode} />}
     MarketDashboard={MarketDashboard}

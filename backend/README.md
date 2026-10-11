@@ -3,12 +3,10 @@
 The team's shared Spring Boot application. It exposes the historical market data
 the dashboard needs, and is the project other backend features are built in.
 
-No database is wired up yet. Observations are read at startup from the JSON
-snapshots in `data/snapshots`, so the API works on a fresh checkout with no setup.
-Once the current-sprint schema is applied (see
-[docs/database-schema.md](../docs/database-schema.md)), those snapshots become
-import data for `MARKET_SERIES` / `MARKET_OBSERVATIONS` and `SnapshotStore` is
-replaced by database queries. Endpoints and response shapes stay the same.
+Purchase plans and Clerk user mappings use PostgreSQL. Shared snapshot routes
+read bundled JSON from `data/snapshots`; the market dashboard has its own
+database/fallback path described below. Analysis uses a separate provider boundary
+and reports unavailable by default until normalized ML inputs are connected.
 
 ## Run
 
@@ -229,3 +227,12 @@ data yet; those endpoints return an empty list rather than failing.
 | `SUPABASE_DB_USER` | none — required |
 | `SUPABASE_DB_PASSWORD` | none — required |
 | `SUPABASE_DB_POOL_SIZE` | `5` (the free tier allows 60 connections in total) |
+
+
+### Sprint 4 analysis integration
+
+Authenticated GET `/api/v1/purchase-plan/recommendation` and `/api/v1/purchase-plan/cost-impact` now expose independent guidance and cost availability. Both require saved-context query preconditions; see [the complete API/provider contract](../docs/sprint-4-purchase-plan-api-contract.md). Ownership uses the existing verified Clerk subject mapping. Saved-plan GET derives days from the active configured scenario, including previously saved/overdue plans, without updating stored rows.
+
+`PlanAnalysisProvider` is Wunna's normalized ML boundary. Default output is explicitly unavailable; no policy or model adapter is implemented. Register a real provider bean when ready. To test synthetic cost calculations locally, both profile `analysis-fixture` and property `mgo.analysis.fixture-enabled=true` are required. All fixture responses are labelled and authentication remains enabled. Do not enable this profile for real-model output. Forecasts exist independently of plans; calculations are on demand, with no persisted totals or recommendation FK/table changes.
+
+Run `./mvnw clean test` (`.\mvnw.cmd clean test` on Windows). `PlanAnalysisHttpTests` starts a real local HTTP server on a random port, while stubbing identity decoding and database repositories. It verifies fixture costs, authentication requirements, two-owner isolation, conflicts and active-scenario reads. Unit tests cover signed/fractional calculations, missing inputs, incompatible basis, invalid ranges, provider failure/context checks and fixture opt-in isolation. No shared database credentials or writes are needed by these tests; real Clerk/DB/ML deployment checks remain pending.
