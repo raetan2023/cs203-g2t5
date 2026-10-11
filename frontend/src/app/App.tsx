@@ -17,13 +17,14 @@ export interface AppProps {
   createPlanService(user: SessionUser): PurchasePlanService;
   createRecommendationService?(user: SessionUser): RecommendationService;
   scenarioDate: string;
+  refreshScenario?: () => void;
   mock?: boolean;
   renderAuthPage?: (mode: 'login' | 'signup') => ReactNode;
   /** Anjali owns this component. No dashboard implementation is supplied here. */
   MarketDashboard?: ComponentType<{ scenarioDate: string }>;
 }
 
-export function App({ auth, createPlanService, scenarioDate, mock = false, renderAuthPage, MarketDashboard, createRecommendationService }: AppProps) {
+export function App({ auth, createPlanService, scenarioDate, refreshScenario, mock = false, renderAuthPage, MarketDashboard, createRecommendationService }: AppProps) {
   const path = usePath();
   const [session, setSession] = useState<Session>({ state: 'loading' });
   const [attempt, setAttempt] = useState(0);
@@ -85,6 +86,6 @@ export function App({ auth, createPlanService, scenarioDate, mock = false, rende
   return <AppShell path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
     await auth.signOut(); acceptUser(null); returnPath.current = '/home'; setNotice(''); navigate('/login', true);
   }}>
-    {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? <RecommendationsPage key={user.id} planService={planStore.current.service} service={planStore.current.recommendations} scenarioDate={scenarioDate} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
+    {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? <RecommendationsPage refreshScenario={refreshScenario} key={user.id} planService={planStore.current.service} service={planStore.current.recommendations} scenarioDate={scenarioDate} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
   </AppShell>;
 }

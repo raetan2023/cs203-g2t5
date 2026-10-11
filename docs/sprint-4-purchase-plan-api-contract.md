@@ -1,135 +1,116 @@
-# Sprint 4 purchase-plan analysis contract draft
+# Sprint 4 purchase-plan analysis API contract
 
-Date: 10 October 2026. Status: provisional frontend handoff; no Wunna/ML sample or backend agreement received. No endpoint, SQL migration, calculation engine or screen is implemented by this document.
+Updated: 11 October 2026. Feature HTTP contract implemented on `rae/sprint-4-recommendations`. Rae owns these endpoints and calculations; Wunna owns the real ML provider. Recommendation policy and production source semantics remain unapproved. No model integration or shared database migration is claimed.
 
-## Decisions and sources
+## Authentication and existing CRUD
 
-| Decision | Status / source |
-| --- | --- |
-| One saved plan per user; existing CRUD stays intact | Existing implementation and Rae's Sprint 4 scope |
-| Numeric `days_remaining`, calculated by backend; no urgency column/category | Rae's Task 2 decision, 10 October |
-| Use the active historical scenario date from backend, not device time | Rae's Task 2 decision, 10 October; backend behavior must be aligned |
-| Saving a plan does not require forecasts; analysis loads separately | Rae accepted this direction in Task 2 discussion; transport pending Wunna |
-| Display zero or one current recommendation; edits invalidate old results | Rae's Task 2 decision; does not settle database cardinality or retention |
-| USD totals; comparable USD/MT input prices; difference = forecast minus reference | Personal implementation plan and PRD section 7 |
-| New field names, availability reasons, combined analysis response shape below | Frontend proposal only; map actual transport to these types later |
+All `/api/v1/purchase-plan` routes require a verified Clerk Bearer token. The backend resolves its subject through `UserAccounts` and queries `PurchasePlanRepository.findByUser`; caller-supplied owner IDs are never used. Existing POST/PUT/DELETE and one-plan-per-user storage remain intact. Plans save without forecasts.
 
-## Existing API: preserve
-
-Inspected `PurchasePlanController.java`, `PurchasePlanRequest.java`, `PurchasePlan.java`, and frontend `apiService.ts`. These are source-code observations, not deployed API verification. The owner is resolved from the authenticated Clerk token; clients do not supply `user_id`.
-
-| Method / path | Request | Success |
+| Method/path | Request | Success |
 | --- | --- | --- |
-| GET `/api/v1/purchase-plan` | Bearer token; no body | 200 `{ "plan": null }` or `{ "plan": { ... } }` |
-| POST `/api/v1/purchase-plan` | Bearer token; input below | 201 `{ "plan": { ... } }`; existing plan gives 409 |
-| PUT `/api/v1/purchase-plan` | Bearer token; input below | 200 `{ "plan": { ... } }`; absent plan gives 404 |
-| DELETE `/api/v1/purchase-plan` | Bearer token; no body | 204 with no body; absent plan gives 404 |
-| GET `/api/v1/config` | Existing adapter sends configured `X-API-Key` | `scenario_as_of_date` supplies the historical context before a plan exists |
+| GET `/api/v1/purchase-plan` | Bearer token | `{ "plan": null }` or `{ "plan": { ... } }` |
+| POST `/api/v1/purchase-plan` | `quantity_mt`, `purchase_deadline` | 201 `{ "plan": { ... } }`; existing plan: 409 |
+| PUT `/api/v1/purchase-plan` | Same input | 200 `{ "plan": { ... } }`; absent plan: 404 |
+| DELETE `/api/v1/purchase-plan` | No body | 204; absent plan: 404 |
+| GET `/api/v1/config` | Existing `X-API-Key` | `{ "scenario_as_of_date": "2025-10-24" }` |
 
-Create/update input (unchanged):
+Quantity is positive decimal MT. Same-day deadlines are allowed; writes before the active scenario date receive 422 field errors. Existing overdue plans remain readable. Dates are ISO calendar dates, never device time.
 
-```json
-{ "quantity_mt": 100, "purchase_deadline": "2025-11-15" }
-```
+GET now returns the active configured `mgo.scenario-date` and derives numeric `days_remaining` from it and the saved deadline. Stored `scenario_as_of_date` records the last write context; reading under a different active scenario does not mutate it. No urgency column or category is added. Scenario configuration is process configuration: changes require restarting the backend. Frontend configuration loads on login/account change; analysis conflict recovery refreshes configuration and saved inputs. A page reload also refreshes it; no polling is added.
 
-Existing plan response fields (example is synthetic):
+## Independent authenticated analysis reads
+
+- GET `/api/v1/purchase-plan/recommendation`
+- GET `/api/v1/purchase-plan/cost-impact`
+
+Both require all four query parameters: `plan_id` (UUID), `quantity_mt` (decimal), `purchase_deadline` and `scenario_as_of_date` (ISO dates). These are preconditions, not analysis inputs trusted from the browser. The server resolves the caller's saved plan, checks the tuple against saved inputs and active configuration, then computes only from that authoritative context. Decimal scale is ignored when comparing quantity (`100` equals `100.00`).
+
+Each response echoes the authoritative tuple as `context`. Responses use `Cache-Control: no-store`. A second owned-plan read after provider completion rejects edits/deletion during a slow analysis. No result cache or persisted analysis revision is introduced.
+
+| Status | Meaning/recovery |
+| --- | --- |
+| 200 | Valid response; each section independently ready or unavailable |
+| 401 | Missing, expired or invalid session; sign in again |
+| 404 | Caller has no saved plan; reload saved plan |
+| 409 | Saved context changed, including plan ID, quantity, deadline or scenario; reload configuration and saved plan |
+| 400/422 | Missing or malformed query parameters |
+| 503 | Provider failed or returned a malformed/mismatched envelope; retry the affected section |
+
+Errors use `detail` (existing CRUD validation also uses `field_errors`). HTTP errors never fall back to browser mocks or synthetic results.
+
+Both reads use this envelope, mapped by the frontend to `PlanAnalysis`:
 
 ```json
 {
-  "plan": {
+  "provenance": "unavailable",
+  "context": {
     "plan_id": "8a9d4260-9070-4bb1-b5af-a71f458a3f47",
     "quantity_mt": 100,
     "purchase_deadline": "2025-11-15",
-    "scenario_as_of_date": "2025-10-24",
-    "days_remaining": 22
-  }
+    "scenario_as_of_date": "2025-10-24"
+  },
+  "reference": { "status": "unavailable", "reason": "missing_reference", "message": "No normalized reference price is available." },
+  "forecast": { "status": "unavailable", "reason": "missing_forecast", "message": "No forecast provider is connected for this scenario." },
+  "cost_impact": { "status": "unavailable", "reason": "missing_forecast", "message": "No forecast provider is connected for this scenario." },
+  "recommendation": { "status": "unavailable", "reason": "recommendation_unavailable", "message": "Recommendations are loaded separately." }
 }
 ```
 
-Existing errors use `detail` with optional `field_errors` keyed by `quantity_mt` and `purchase_deadline`. Validation errors use 422; authentication failures can give 401. Network failures remain request errors, not unavailable forecasts. Example:
+Unused result fields may serialize as null. A ready result is `{ "status": "ready", "value": ... }`. The recommendation endpoint calls only the guidance provider method; its reference/forecast/cost sections say they are loaded separately. The cost endpoint calls only the independent prices provider method; its recommendation says it is loaded separately. This preserves independent latency, availability, errors and retries.
 
-```json
-{
-  "detail": "Please check your inputs.",
-  "field_errors": { "quantity_mt": "Quantity must be greater than zero." }
-}
+`provenance` is required: `unavailable`, `fixture`, or `model`. The frontend assigns `source: 'api'` to HTTP responses and preserves provenance; `api` alone does not imply real ML. Fixture labels appear visibly in both sections, outside the collapsed price disclosure.
+
+### Ready values
+
+| Section | Value fields |
+| --- | --- |
+| Reference | `price`, `observation_date`, `basis: { commodity, currency, unit }` |
+| Forecast | `prices: { lower, upper }`, explicit `target_date`, `basis`, nonempty `range_description`; optional/null `central_estimate`, `horizon_description` |
+| Cost impact | `currency: "USD"`, explicit `target_date`, `reference_total`, `forecast_total`, `difference_total`, `savings_total`; optional/null `central_total` |
+| Recommendation | One `recommendation_id`, `action`, `explanation`, all nonempty source-supplied strings |
+
+All ranges use `{ lower, upper }`. Prices must be nonnegative and finite for browser consumption; bounds ordered; central estimates inside bounds. Unknown/missing basis is rejected. Cost calculation requires exact matching normalized commodity identity, currency USD and denominator MT. Commodity identity must encode the relevant grade/location/market; the provider must not normalize different commodities into a generic matching name. No currency/unit conversion is inferred.
+
+The reference observation must not follow the historical scenario. The forecast target must not precede it. Provider availability establishes the supported horizon; the feature does not select an optimal date, infer a target from the plan deadline, or force cost availability to depend on guidance. A target beyond a plan deadline remains explicitly labelled a forecast cost estimate, not a recommended purchase date. Production reference selection/age and historical publication availability rules still need Wunna/ML agreement.
+
+Backend calculations use BigDecimal with no early rounding:
+
+- Reference total = reference price times saved quantity.
+- Forecast totals = each forecast bound times saved quantity.
+- Difference bounds = each forecast total minus reference total.
+- Potential savings bounds = reference total minus **upper**, then minus **lower**, forecast total.
+- Optional central total = supplied central estimate times saved quantity.
+
+Totals are USD, prices USD/MT. Negative difference means lower forecast cost. Potential savings are estimates, never realized savings. The frontend validates and formats supplied totals; it does not compute purchase costs.
+
+Unavailable reasons: `missing_forecast`, `missing_reference`, `unsupported_horizon`, `incompatible_basis`, `invalid_bounds`, `recommendation_unavailable`. Malformed price details become unavailable sections; provider exceptions, invalid envelopes and wrong-context responses are 503 failures. Recommendations can be unavailable while cost impact is ready.
+
+## Wunna's provider boundary
+
+Implement one Spring bean of `PlanAnalysisProvider`; the default unavailable bean backs off when one is registered. Do not enable the fixture profile alongside a real provider.
+
+- `prices(LocalDate scenarioDate)` returns `Prices(scenario_as_of_date, reference, forecast)`. It deliberately takes no plan ID or quantity: forecast existence/storage remains independent of plans. It must return normalized historical inputs with an explicit target, range meaning and exact basis.
+- `recommendation(Context context)` returns `Recommendation(context, result)`. Context is the already-owned saved input tuple. The provider must echo the context it actually analyzed; source guidance is optional. If ML supplies predictions only, return `recommendation_unavailable` until an approved policy exists.
+- `provenance()` identifies unavailable, fixture or model output. An unavailable provider cannot emit ready data. Throw for provider/network errors; do not disguise failures as synthetic success.
+
+No adapter exists for a trained model. Real forecast horizon, reference source/age/publication availability, uncertainty meaning, commodity identity and guidance policy require Wunna/ML confirmation. No lowest-price-date rule is implemented. No source API, model-training or other branch work was replaced. Local/backend and remote-tracking refs were inspected; no overlapping analysis/provider implementation was found in this checkout. Unfetched/private teammate work remains unknown.
+
+## Explicit development fixture
+
+Both the `analysis-fixture` Spring profile and `mgo.analysis.fixture-enabled=true` are required. Neither is enabled by default. With existing local backend credentials/environment configured, PowerShell example:
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = 'analysis-fixture'
+$env:MGO_ANALYSIS_FIXTURE_ENABLED = 'true'
+.\mvnw.cmd spring-boot:run
 ```
 
-Quantity must be finite and positive; fractional MT is allowed. Dates are valid `YYYY-MM-DD` calendar dates. Same-day deadlines are allowed and past deadlines rejected on writes. Preserve inputs on rejected saves.
+Clear both variables after the development session. Clerk authentication and normal owned-plan CRUD are still required; this profile bypasses neither. Do not enable it for a real-model deployment.
 
-**Current scenario gap:** create/update uses backend configuration, but GET derives days from the stored plan date. Rae's desired behavior is to return context/days for the active historical scenario even for previously saved plans. Wunna must specify whether stored scenario dates are updated or treated as creation/edit context. Do not add browser production urgency calculations to mask this gap. Existing overdue saved plans can still be read; changing scenario alone must not delete a plan.
+For scenario 24 October 2025, the fixture supplies synthetic Singapore MGO reference USD 700/MT, forecast USD 680-740/MT, central USD 710/MT, target 30 October 2025. At 100 MT the backend returns reference USD 70,000, forecast USD 68,000-74,000, difference USD -2,000 to +4,000, savings USD -4,000 to +2,000 and central USD 71,000. Other scenarios return unavailable prices. Guidance remains unavailable even in fixture mode; the fixture is not an approved recommendation policy.
 
-## Proposed separate analysis read
+## Frontend lifecycle and persistence
 
-Keep analysis out of CRUD writes. Propose one authenticated read returning reference/forecast/cost/recommendation sections; splitting it into multiple backend reads is also compatible with the frontend model. **URL, method, request keys, response transport and status codes are not agreed; no new URL is wired.**
+`ClerkApp` injects `createApiRecommendationService`, retrieving a Clerk token for each request. No shared API key or privileged database credential is sent to analysis routes. Session changes remount private app state; independent analysis scopes discard late replies after context, account or route changes, including A to B to A. Successful edits are observed through a fresh saved-plan read on returning to the recommendation page. A 404/409 offers saved-plan/configuration reload; ordinary provider failures retry only that section.
 
-The logical request context is `PlanResultContext`: plan ID, saved quantity, saved deadline, and active historical scenario date. Backend must verify ownership and use authoritative saved inputs/configuration rather than trust supplied quantity or dates. A response must identify the inputs/scenario it actually analyzed. Whether that is conveyed as query fields, response context, or a revision token is for Wunna to confirm.
-
-### Frontend field inventory
-
-Canonical TypeScript definitions: `frontend/src/features/purchase-plan/types.ts`. All additions below are provisional frontend view models, not guaranteed backend JSON. Existing `PurchasePlan` and `PlanInput` are unchanged.
-
-| Type / fields | Meaning and source |
-| --- | --- |
-| `PlanResultContext.plan_id`, `quantity_mt`, `purchase_deadline`, `scenario_as_of_date` | Echo of analyzed saved inputs and active date; proposed for stale-result detection. Existing plan fields supply the values. |
-| `PriceBasis.commodity`, `currency`, `unit` | Exact target and price denominator; proposal pending ML sample. A basis of USD + MT means USD/MT, not total USD. Commodity identity must include enough market/grade/location detail for comparability in the real contract. |
-| `ReferencePrice.price`, `observation_date`, `basis` | Dated reference available at the historical scenario; backend selects source and acceptable age. Selection/source semantics pending team agreement. |
-| `PlanForecast.prices.lower/upper`, `target_date`, `basis`, `range_description` | Forecast price bounds and target date, with source-supplied range meaning. Do not label a heuristic range as a calibrated confidence interval. Actual horizon/metadata pending ML sample. |
-| `PlanCostImpact.currency`, `reference_total`, `forecast_total.lower/upper`, `difference_total.lower/upper` | Display-ready backend totals. Currency is USD for this scope; no calculations inside display components. Field names provisional, sign/unit convention from PRD/plan. |
-| `CurrentRecommendation.recommendation_id`, `action`, `explanation` | Source-supplied current guidance, not generated from price bounds in the browser. Action remains text until an agreed action vocabulary exists. IDs in fixtures are synthetic, not FK targets. |
-| `AvailableResult.status`, `value` or `reason/message` | Ready value or explicit unavailable section. No dummy zero totals. Proposed reason vocabulary: missing forecast/reference, unsupported horizon, incompatible basis, invalid bounds, recommendation unavailable. |
-| `PlanAnalysis.source`, `context`, `reference`, `forecast`, `cost_impact`, `recommendation` | Proposed aggregate. `source` is adapter-assigned provenance (`mock`/`api`), not a required server field. API provenance alone does not prove real-model output; retain any backend fixture/model labels during integration. |
-| `PlanAnalysisState.status`, `context`, `analysis`, `message`, `previous` | Local no-plan/loading/error/loaded/stale states. These are not HTTP payloads. `previous` is explicitly obsolete data, never current output. |
-
-Independent availability lets predictions exist without a recommendation, or a forecast exist without comparable reference data. Backend/adapters must reject non-finite numbers, reversed bounds, unknown basis and incompatible currencies/units/commodities before exposing ready cost impact. Types alone do not validate network data. Define the real target identifiers, reference source/date policy and supported horizons with Wunna/ML before integration.
-
-### Context and invalidation proposal
-
-- Use the backend-configured active historical date consistently across header, form validation, urgency and analysis. No device-clock substitution or new date-selection UI in Task 2.
-- Read analysis for saved inputs, not unsaved form values. On successful create/update/delete, invalidate dependent analysis; failed edits retain the last saved context and draft input separately.
-- On active-date changes, clear or mark old results stale, refresh backend-derived plan days, and request analysis for the new context. When the scenario/config is refreshed is an integration detail still to agree; no polling is introduced here.
-- Match responses against plan ID + saved quantity + deadline + active date. Also use a local request generation and current user/session when later implementing reads, so a superseded request cannot win even after an A → B → A change. Reset on logout/account switch. A backend revision token may replace the input tuple if agreed; no revision column is required by this draft.
-- Error/retry must never silently substitute mock data. Unsupported/missing results are explicit successful availability states, distinct from failed HTTP requests.
-
-## Deterministic synthetic examples
-
-`frontend/src/features/purchase-plan/fixtures.ts` retains existing CRUD fixtures and adds `ANALYSIS_DEMO_PLAN`, `DEMO_ANALYSIS`, `PLAN_ANALYSIS_FIXTURES`, and `CHANGED_SCENARIO_DEMO_PLAN`. No random IDs, clock reads, fetches or calculation engine are added. Consumers should clone before mutation. Display `ANALYSIS_MOCK_LABEL` whenever these examples are mounted in future previews; they are not mounted in the production app.
-
-| Fixture | Expected meaning |
-| --- | --- |
-| `noPlan` | No saved plan; future page links to plan entry |
-| `loading` | Saved context exists; analysis pending |
-| `failedRequest` | Request failure with retry; no mock fallback |
-| `ready` | Synthetic 100 MT × 700 USD/MT = USD 70,000 reference; 680–740 USD/MT = USD 68,000–74,000 forecast; differences USD −2,000 to +4,000 |
-| `planWithoutForecast` | Plan/reference exist; forecast and cost impact unavailable |
-| `predictionsOnly` | Forecast/cost available; recommendation unavailable |
-| `unsupportedHorizon` | Deadline outside supported horizon; no forecast/cost/guidance |
-| `incompatibleBasis` | Gasoil USD/bbl forecast and MGO USD/MT reference; cost unavailable, no conversion invented |
-| `changedScenario` | Active date 1 November 2025, previous results dated 24 October explicitly stale; expected refreshed plan has 14 days to 15 November, versus 22 previously |
-
-The ready recommendation wording is independently invented layout content, not a rule inferred from its numeric fixture. No advice is calculated in the frontend. Further signed-range and malformed-data cases belong with the Task 5 component/Task 7 adapter tests.
-
-## Persistence boundary
-
-Retain existing required user ownership, unique owner, positive quantity, deadline and scenario columns. Derived urgency and calculated totals require no new plan columns under these decisions. Zero or one recommendation displayed does not determine whether storage retains many historical recommendations. Do not introduce a recommendation FK until its real table/key, owner, optionality, cardinality and delete behavior are known. Enforce matching ownership if linking private recommendations; existence alone is insufficient. No SQL changes in Task 2.
-
-## Coordination draft for Rae to send
-
-Not sent by the agent. Wunna can coordinate the ML/storage parts with their owners:
-
-> We are keeping one saved plan per user and existing CRUD. Plans can be saved without forecasts; we propose a separate authenticated analysis read for forecast/cost impact and zero or one current recommendation. Urgency is calculated numeric days, with no stored urgency/category. Saved plans should follow the backend's active historical scenario date, not the device clock; edits/date changes invalidate old analysis.
->
-> Can you confirm who owns the recommendations endpoint and ML integration, and share proposed request/success/unavailable/error JSON? Please specify how active scenario changes refresh saved-plan days and how analysis responses identify their saved inputs/scenario (or revision).
->
-> For persistence, what is the recommendation table/key/type, who owns it, and what relationship/ownership/delete behavior is intended? Can a plan have no recommendation, and are there overlapping DB changes?
->
-> With the ML team, please confirm whether outputs are predictions only or recommendations too, and provide one representative output: scenario date, target date/horizon, target commodity/market, currency/unit, lower/upper prices and range meaning. Also confirm the reference price source/date policy. We propose calendar days, same-day deadlines allowed, past deadlines rejected on save, forecast-minus-reference cost differences, and USD display to two decimals without early rounding.
-
-Until those answers arrive, the models/fixtures support UI development only; shared transport, database relationships and real-model comparability remain open.
-
-
-## Latest mockup display additions (provisional)
-
-Rae requested the updated recommendation screen, including independently available cost impact. The frontend mock now supplies separate `read` and optional `readImpact` operations; these do not prescribe endpoint paths or require separate backend endpoints. Each result identifies its saved inputs and scenario, and each section retries independently.
-
-Optional view-model additions: `PlanForecast.central_estimate`; `PlanCostImpact.target_date`, `central_total`, and `savings_total` (source-supplied reference-minus-forecast range). The impact display requires an explicit target date matching the supplied forecast. Existing `difference_total` keeps its forecast-minus-reference convention. Positive potential savings are not realized savings. These are provisional display fields pending the shared API contract; the browser does not calculate totals or recommendation rules.
+The supplied schema and existing repository enforce one owned plan and positive quantity. No schema change is required by this implementation: there are no persisted calculated totals, new recommendation tables, foreign keys or snapshots. Existing forecasts are untouched. Actual shared Supabase schema/history and real two-account Clerk persistence still require deployment verification; local tests stub repositories and token decoding.

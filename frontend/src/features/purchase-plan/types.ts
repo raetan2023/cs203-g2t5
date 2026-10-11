@@ -14,7 +14,7 @@ export interface PlanInput {
 export interface PlanResponse { plan: PurchasePlan | null }
 export interface SavedPlanResponse { plan: PurchasePlan }
 
-/** Provisional frontend models, NOT agreed backend JSON. See the Sprint 4 API draft. */
+/** Analysis view models. The API adapter validates the Sprint 4 transport contract. */
 export interface PlanResultContext {
   plan_id: string;
   quantity_mt: number;
@@ -82,6 +82,7 @@ export interface CurrentRecommendation {
 
 export interface PlanAnalysis {
   source: 'mock' | 'api';
+  provenance?: 'fixture' | 'model' | 'unavailable';
   context: PlanResultContext;
   reference: AvailableResult<ReferencePrice>;
   forecast: AvailableResult<PlanForecast>;

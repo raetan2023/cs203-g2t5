@@ -1,5 +1,7 @@
 # Bunker Buddy frontend
 
+For this branch's status, recommendation preview, backend fixture testing and next-sprint scope, see the [Sprint 4 testing handoff](../docs/sprint-4-recommendations-testing.md).
+
 React 19 + TypeScript + Vite, with Clerk authentication and a Spring Boot API. Includes sign-in, signup, session/logout handling, Home, shared header/sidebar/navigation and the purchase-plan feature. Clerk supplies email/password recovery and the configured Google and Microsoft login flows.
 
 ## Run and test during development
@@ -62,7 +64,7 @@ Market navigation is disabled until a component is supplied. Recommendations ope
 
 ## Market dashboard handoff to Anjali
 
-Supply a component to `App` with the signature `ComponentType<{ scenarioDate: string }>`. The shared shell renders its header/navigation once; the dashboard should render only its page content, with scoped styles. Keep networking/auth in the agreed service boundary. No dashboard data, charts or screen implementation was added.
+The existing `features/market-dashboard/MarketDashboard.jsx` is mounted by `ClerkApp`. `App` accepts it with the signature `ComponentType<{ scenarioDate: string }>`. The shared shell owns app navigation; the dashboard's optional navigation callback is not required by this integration. Recommendation work preserves the existing dashboard data, charts and layout.
 
 ## Purchase-plan integration
 
@@ -74,7 +76,7 @@ The backend remains responsible for rejecting invalid or expired tokens and enfo
 
 ### Sprint 4 scenario handling (10 October 2026)
 
-The purchase-plan page reloads when its active historical `scenarioDate` or service changes and validates forms against that active date. It displays service-returned days only when the response scenario matches; an obsolete backend date produces a retryable error. Backend GET still needs alignment with the active-date contract; this frontend change does not update backend calculations.
+The purchase-plan page reloads when its active historical `scenarioDate` or service changes and validates forms against that active date. It displays service-returned days only when the response scenario matches; an obsolete backend date produces a retryable error. Backend GET now returns active-scenario context and derived days without rewriting the stored scenario; see the 11 October API integration notes below.
 
 Changing context closes the previous form/dialog and reloads saved state. Same-context failed saves retain drafts. Late responses from old contexts are ignored; old-scenario writes trigger a same-account reconciliation read. Plan actions remain disabled while an earlier write for that service is pending, preventing conflicting edits. The optional `onInvalidateAnalysis` callback lets future cost/recommendation consumers clear results on context changes and successful writes.
 
@@ -105,8 +107,23 @@ Mock previews can supply `createMockPlanService({ getScenarioDate: () => activeD
 
 Run `npm run dev` and open `/preview.html` on the printed local URL. This isolated entry starts on the synthetic recommendation example without Clerk or a backend. Demo controls offer ready, delayed loading, fail-once/retry, predictions-only, missing forecast unsupported-context and no-plan cases. A demo-only scenario toggle exercises updates without changing backend configuration. In-app navigation stays within the mock session; reopening `/preview.html` resets it. Refreshing an app route loads the normal Clerk entry instead.
 
-The normal app shows an explicit unavailable state until `App.createRecommendationService(user)` is supplied. No real request silently falls back to a mock. The service is stable per signed-in user and discarded on logout/account change. The page reads the saved plan before analysis on every visit, so successful edits/deletion are reflected when returning; no analysis cache is retained across routes. Active scenario/service changes hide previous output immediately and discard late responses, including A-to-B-to-A transitions. Responses must echo the exact saved inputs and active scenario.
+The normal Clerk app now injects the authenticated analysis adapter through `App.createRecommendationService(user)`. The default backend provider returns explicit unavailable results until ML/policy integration exists. No real request silently falls back to a mock. The service is stable per signed-in user and discarded on logout/account change. The page reads the saved plan before analysis on every visit, so successful edits/deletion are reflected when returning; no analysis cache is retained across routes. Active scenario/service changes hide previous output immediately and discard late responses, including A-to-B-to-A transitions. Responses must echo the exact saved inputs and active scenario.
 
 `features/recommendations/` owns the desktop page, scoped styles, injectable service and synthetic mock. Price basis and uncertainty is a native, keyboard-accessible disclosure, collapsed by default. `PlanForecast.horizon_description` is optional source-provided coverage text, not an inferred horizon. The mock supplies guidance only for the configured 100 MT / 30 October 2025 plan in the 24 October scenario; different inputs produce an explicit unavailable result rather than an invented rule.
 
-The latest mockups include cost-impact cards on this page. `RecommendationService.readImpact(context)` optionally supplies their data independently of `read(context)`, with separate loading, error/retry and stale-response guards. Display components use supplied totals, target date and optional central/savings values without calculating purchase costs. The savings label is Potential savings, never a claim that a purchase occurred. Backend adapters, recommendation policy, database work and ML integration remain separate. No mobile-specific layout was added for the recommendation page.
+The latest mockups include cost-impact cards on this page. `RecommendationService.readImpact(context)` optionally supplies their data independently of `read(context)`, with separate loading, error/retry and stale-response guards. Display components use supplied totals, target date and optional central/savings values without calculating purchase costs. The savings label is Potential savings, never a claim that a purchase occurred. The real backend adapter is connected; recommendation policy and ML integration remain pending. This implementation requires no schema changes. No mobile-specific layout was added for the recommendation page.
+
+
+## Recommendations API integration (11 October 2026)
+
+`ClerkApp` injects the real `createApiRecommendationService` using a fresh Clerk token per request. The existing desktop design and collapsed Price basis and uncertainty disclosure are retained. No browser mocks are imported by the real adapter.
+
+The adapter calls authenticated GET `/api/v1/purchase-plan/recommendation` and `/api/v1/purchase-plan/cost-impact` independently, sending the saved plan ID, quantity, deadline and backend scenario as preconditions. It validates numeric/date/range/basis/context/provenance data before exposing results. CRUD and configuration reads also validate the saved context. See [the feature contract](../docs/sprint-4-purchase-plan-api-contract.md) for JSON fields, unavailable reasons, arithmetic, provider integration and fixture opt-ins.
+
+403/401 and provider/network failures remain errors; no synthetic fallback is used. 404/409 analysis failures offer Reload saved plan, which refreshes backend configuration and saved inputs. Ordinary section retries leave the other section intact. Scope guards continue to discard old results across edits, scenario changes, navigation, logout and account switches. Configuration is read at sign-in/account change and explicit context recovery; there is no background polling.
+
+The backend's default provider reports unavailable prices/guidance. For local fixture verification, explicitly enable both the `analysis-fixture` Spring profile and `mgo.analysis.fixture-enabled=true` (instructions in the contract). Responses retain `provenance: fixture`, visibly labelled Synthetic demo data in the UI; authentication is still required. Cost impact may be ready while guidance remains unavailable. The source's explicit forecast target is shown, independently of the deadline.
+
+The existing dashboard remains mounted. Its optional `onToggleNav` control is rendered only when a callback is supplied; the normal app already supplies navigation through AppShell. This resolves the previous required-prop build mismatch without redesigning the dashboard.
+
+Verification distinction: frontend tests exercise real adapters and ClerkApp injection with mocked fetch/Clerk hooks. Backend socket HTTP tests use the real Spring server/security filter/controller/calculator with deterministic prices and stubbed token decoder/user repository/plan repository. These do not establish deployed Clerk/Supabase access or actual ML integration. Browser desktop acceptance and live two-account persistence remain separate checks.
