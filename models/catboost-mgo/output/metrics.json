@@ -1,0 +1,25 @@
+{
+  "n_total": 252,
+  "n_train": 202,
+  "n_test": 50,
+  "test_period": [
+    "2026-08-18",
+    "2026-10-06"
+  ],
+  "target_units": "USD/metric tonne",
+  "results": [
+    {
+      "model": "CatBoost (predicts change)",
+      "MAE_usd_per_mt": 15.23,
+      "RMSE_usd_per_mt": 25.91
+    },
+    {
+      "model": "Persistence (last MGO)",
+      "MAE_usd_per_mt": 14.0,
+      "RMSE_usd_per_mt": 26.45
+    }
+  ],
+  "catboost_vs_baseline_MAE_improvement_pct": -8.8,
+  "directional_accuracy_vs_last_quote": 0.56,
+  "best_iteration": 13
+}
