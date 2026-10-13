@@ -1,6 +1,6 @@
 """Reproducible gasoil OLS experiment and separate experimental MGO mapping.
 
-Run: python "linear regression/gasoil_regression.py" --data-dir /path/to/market_data_cleaned
+Run: python "models/linear-regression/gasoil_regression.py" --data-dir /path/to/market_data_cleaned
 Requires Python 3.10+, numpy and pandas. No source files are modified.
 """
 from __future__ import annotations

@@ -73,7 +73,7 @@ To determine an overall winner, agree on the decision time and forecast horizon,
 
 ## Sources
 
-- [Linear regression specification](linear%20regression/README.md), [saved results](linear%20regression/outputs/results.json) and [training script](linear%20regression/gasoil_regression.py).
+- [Linear regression specification](models/linear-regression/README.md), [saved results](models/linear-regression/outputs/results.json) and [training script](models/linear-regression/gasoil_regression.py).
 - [CatBoost specification](models/catboost-mgo/README.md), [saved results](models/catboost-mgo/output/metrics.json) and [training script](models/catboost-mgo/train_catboost_mgo.py).
 - [Random Forest specification](models/random-forest-mgo/README.md), [saved results](models/random-forest-mgo/output/metrics.json) and [training script](models/random-forest-mgo/train_random_forest_mgo.py).
-- Ridge artifacts are on the `ridge-regression` branch: [specification](https://github.com/raetan2023/cs203-g2t5/blob/ridge-regression/ridge-regression/README.md), [saved results](https://github.com/raetan2023/cs203-g2t5/blob/ridge-regression/ridge-regression/reports/evaluation_metrics.json), [model code](https://github.com/raetan2023/cs203-g2t5/blob/ridge-regression/ridge-regression/src/ridge_model.py) and [feature engineering](https://github.com/raetan2023/cs203-g2t5/blob/ridge-regression/ridge-regression/src/feature_engineering.py).
+- [Ridge specification](models/ridge-regression/README.md), [saved results](models/ridge-regression/reports/evaluation_metrics.json), [model code](models/ridge-regression/src/ridge_model.py) and [feature engineering](models/ridge-regression/src/feature_engineering.py).
