@@ -1,0 +1,85 @@
+{
+  "forecast_origin_date": "2026-10-05",
+  "target_commodity": "Singapore Marine Gas Oil (MGO)",
+  "unit": "USD/metric tonne",
+  "anchor_reference": {
+    "anchor_price": 1297.0,
+    "days_since_anchor": 1,
+    "anchor_freshness": "Fresh (<3 days)"
+  },
+  "forecast": {
+    "point_estimate_price": 1275.07,
+    "expected_price_change": -21.93,
+    "expected_return_pct": -1.69,
+    "expected_direction": "DOWN",
+    "direction_rationale": "Forecast indicates downward price pressure (-1.69%).",
+    "directional_probabilities": {
+      "prob_up": 0.3119,
+      "prob_down": 0.6881,
+      "prob_neutral_band": 0.0615
+    }
+  },
+  "prediction_intervals": {
+    "80%": {
+      "lower": 1229.85,
+      "upper": 1320.28,
+      "margin_of_error": 45.22,
+      "range_width": 90.44
+    },
+    "90%": {
+      "lower": 1217.04,
+      "upper": 1333.09,
+      "margin_of_error": 58.02,
+      "range_width": 116.04
+    },
+    "95%": {
+      "lower": 1205.93,
+      "upper": 1344.2,
+      "margin_of_error": 69.13,
+      "range_width": 138.26
+    }
+  },
+  "confidence_and_uncertainty": {
+    "uncertainty_score": 35.8,
+    "confidence_score": 64.2,
+    "confidence_tier": "MODERATE",
+    "days_since_anchor": 1,
+    "guidance": "Moderate uncertainty due to market volatility or multi-day anchor gap.",
+    "components": {
+      "model_error_component": 27.7,
+      "anchor_staleness_component": 0.0,
+      "volatility_component": 8.2
+    }
+  },
+  "model_provenance": {
+    "algorithm": "Ridge Regression (L2 Regularized)",
+    "optimal_alpha": 8.161400793251826,
+    "residual_std_price": 35.27,
+    "top_drivers": [
+      {
+        "feature": "hsfo_lag1",
+        "contribution": -0.033860241064936555
+      },
+      {
+        "feature": "vlsfo_lag1",
+        "contribution": -0.019120824426135045
+      },
+      {
+        "feature": "brent_fred_lag1",
+        "contribution": 0.017568908144372297
+      },
+      {
+        "feature": "dubai_crude_investing_lag1",
+        "contribution": 0.017279598787367862
+      },
+      {
+        "feature": "sg_gasoil_investing_ret20",
+        "contribution": -0.013944193576299443
+      }
+    ]
+  },
+  "benchmark_context": {
+    "persistence_baseline_price": 1297.0,
+    "actual_realized_price": 1297.0
+  }
+}
