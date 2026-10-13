@@ -41,8 +41,8 @@ def find_market_data_file(custom_path: Optional[str] = None) -> Path:
         MODULE_DIR / MARKET_DATA_FILENAME,
         DATA_DIR / "raw" / MARKET_DATA_FILENAME,
         DATA_DIR / MARKET_DATA_FILENAME,
-        MODULE_DIR.parent / "ridge-regression" / MARKET_DATA_FILENAME,
-        Path.cwd() / "ridge-regression" / MARKET_DATA_FILENAME,
+        MODULE_DIR.parent.parent / MARKET_DATA_FILENAME,
+        Path.cwd() / "models" / "ridge-regression" / MARKET_DATA_FILENAME,
         Path.cwd() / MARKET_DATA_FILENAME
     ]
 
