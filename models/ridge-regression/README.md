@@ -11,7 +11,7 @@ The system uses historical Marine Gas Oil (MGO) prices (`sg_mgo_themaritime`) an
 The module is organized into a clean, modular structure separating source code, data, models, reports, notebooks, and tests:
 
 ```text
-ridge-regression/
+models/ridge-regression/
 ├── .gitignore                      # Excludes large >100MB files, __pycache__, checkpoints
 ├── README.md                       # Comprehensive model and pipeline documentation
 ├── requirements.txt                # Python package dependencies
@@ -128,6 +128,12 @@ Validation is performed using expanding-window walk-forward cross validation (no
 ## 4. How to Run
 
 ### 4.1 Prerequisites
+
+From the repository root, enter the model directory first:
+
+```bash
+cd models/ridge-regression
+```
 Ensure the Python environment has the required packages installed:
 ```bash
 pip install -r requirements.txt

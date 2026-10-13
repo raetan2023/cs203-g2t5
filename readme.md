@@ -22,7 +22,8 @@ The normal app uses the backend analysis API, whose default provider reports una
 | [`frontend/`](frontend/README.md) | Main React app: authentication, navigation, dashboard, purchase plans and analysis UI |
 | [`backend/`](backend/README.md) | Shared Spring Boot API, snapshot data, token verification and PostgreSQL-backed purchase plans |
 | [`historical-market-dashboard/`](historical-market-dashboard/README.md) | Separate standalone market dashboard; has its own setup and ports |
-| [`linear regression/`](linear%20regression/README.md) | Gasoil regression and experimental gasoil-to-MGO mapping |
+| [`models/linear-regression/`](models/linear-regression/README.md) | Gasoil regression and experimental gasoil-to-MGO mapping |
+| [`models/ridge-regression/`](models/ridge-regression/README.md) | Ridge MGO return forecasting and walk-forward evaluation |
 | [`models/catboost-mgo/`](models/catboost-mgo/README.md) | CatBoost MGO regression experiment |
 | [`models/random-forest-mgo/`](models/random-forest-mgo/README.md) | Random Forest MGO regression and approximate intervals |
 | [`docs/`](docs/PRD.md) | Product requirements, database design, release planning and feature contracts |
