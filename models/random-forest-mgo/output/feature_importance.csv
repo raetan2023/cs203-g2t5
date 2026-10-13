@@ -1,0 +1,17 @@
+feature,importance
+days_since_mgo,0.15986609915157718
+sg_gasoil_investing_chg20,0.1507416668618308
+sg_gasoil_investing_chg5,0.1255556390445661
+brent_fred_chg5,0.11052742464593451
+brent_fred_chg20,0.08351817940194206
+dubai_crude_investing_chg20,0.06714577548309546
+dubai_crude_investing_chg5,0.0638126771579401
+usd_index_fred,0.06293938424691041
+usd_index_fred_chg5,0.03627209095564373
+sg_vlsfo_themaritime,0.029809392019625895
+sg_gasoil_investing,0.025274824974236238
+usd_index_fred_chg20,0.02471014928729476
+lag_mgo,0.021764551858825434
+sg_hsfo_themaritime,0.021665477632545567
+brent_fred,0.008480122614981616
+dubai_crude_investing,0.007916544663050048
