@@ -1,25 +1,29 @@
 {
-  "n_total": 252,
-  "n_train": 202,
-  "n_test": 50,
-  "test_period": [
-    "2026-08-18",
-    "2026-10-06"
-  ],
-  "target_units": "USD/metric tonne",
-  "results": [
-    {
-      "model": "CatBoost (predicts change)",
-      "MAE_usd_per_mt": 15.23,
-      "RMSE_usd_per_mt": 25.91
+  "protocol": "gasoil return model, chronological 70/15/15, test fold; MGO via predicted-gasoil-% applied to paired real MGO quotes",
+  "train_end": "2023-10-02",
+  "validation_end": "2025-04-01",
+  "gasoil": {
+    "catboost": {
+      "n": 376,
+      "mae": 1.9262359312592174,
+      "rmse": 4.29781870576106
     },
-    {
-      "model": "Persistence (last MGO)",
-      "MAE_usd_per_mt": 14.0,
-      "RMSE_usd_per_mt": 26.45
+    "unchanged_price": {
+      "n": 376,
+      "mae": 1.9345478723404257,
+      "rmse": 4.314289190979698
     }
-  ],
-  "catboost_vs_baseline_MAE_improvement_pct": -8.8,
-  "directional_accuracy_vs_last_quote": 0.56,
-  "best_iteration": 13
+  },
+  "mgo": {
+    "catboost": {
+      "n": 82,
+      "mae": 25.356672002792987,
+      "rmse": 42.14962424254852
+    },
+    "unchanged_price": {
+      "n": 82,
+      "mae": 25.432926829268293,
+      "rmse": 42.730900739965456
+    }
+  }
 }
