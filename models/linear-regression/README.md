@@ -11,15 +11,15 @@ This implements the two-stage approach in `docs/PRD.md`: forecast Singapore gaso
 From the repository root:
 
 ```sh
-python3 -m pip install -r "linear regression/requirements.txt"
-python3 "linear regression/gasoil_regression.py" --data-dir /path/to/market_data_cleaned
-python3 -m unittest discover -s "linear regression" -p 'test_*.py'
+python3 -m pip install -r "models/linear-regression/requirements.txt"
+python3 "models/linear-regression/gasoil_regression.py" --data-dir /path/to/market_data_cleaned
+python3 -m unittest discover -s "models/linear-regression" -p 'test_*.py'
 ```
 
 In the current Codex workspace, the bundled Python already has the required dependencies:
 
 ```sh
-/Users/nelsontan/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 "linear regression/gasoil_regression.py" --data-dir /Users/nelsontan/Downloads/market_data_cleaned
+/Users/nelsontan/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 "models/linear-regression/gasoil_regression.py" --data-dir /Users/nelsontan/Downloads/market_data_cleaned
 ```
 
 ## What is being fitted?
@@ -41,7 +41,7 @@ The first horizon is the next observed gasoil trading date, a modelling assumpti
 
 ## Generated outputs
 
-All outputs go into `linear regression/outputs/` by default; `--output-dir` can change this. Source files remain untouched.
+All outputs go into `models/linear-regression/outputs/` by default; `--output-dir` can change this. Source files remain untouched.
 
 | File | Contents |
 |---|---|

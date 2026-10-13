@@ -69,8 +69,8 @@ set.
 
 ## How to run
 
-The data file isn't committed here. `market_observations.csv` lives on the
-`ridge-regression` branch at `ridge-regression/data/raw/market_observations.csv`.
+The shared training data is committed at
+`models/ridge-regression/data/raw/market_observations.csv` (relative to the repository root).
 
 ```bash
 pip install -r requirements.txt
