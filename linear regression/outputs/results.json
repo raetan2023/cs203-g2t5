@@ -1,0 +1,273 @@
+{
+  "source_sha256": "abbb18839f136aa94c413dc2bbe63a3f04b2b11233b9853fd5762093c97a7bbc",
+  "coverage": [
+    {
+      "name": "gasoil",
+      "series": "sg_gasoil_investing",
+      "rows": 2510,
+      "observed": 2510,
+      "missing": 0,
+      "first": "2016-10-06",
+      "last": "2026-10-05"
+    },
+    {
+      "name": "brent",
+      "series": "brent_fred",
+      "rows": 2604,
+      "observed": 2531,
+      "missing": 73,
+      "first": "2016-10-06",
+      "last": "2026-09-29"
+    },
+    {
+      "name": "dubai",
+      "series": "dubai_crude_investing",
+      "rows": 2513,
+      "observed": 2513,
+      "missing": 0,
+      "first": "2016-10-06",
+      "last": "2026-10-05"
+    },
+    {
+      "name": "usd",
+      "series": "usd_index_fred",
+      "rows": 2607,
+      "observed": 2492,
+      "missing": 115,
+      "first": "2016-10-06",
+      "last": "2026-10-02"
+    },
+    {
+      "name": "mgo",
+      "series": "sg_mgo_themaritime",
+      "rows": 253,
+      "observed": 253,
+      "missing": 0,
+      "first": "2020-03-13",
+      "last": "2026-10-06"
+    }
+  ],
+  "features": [
+    "gasoil_return",
+    "brent_return",
+    "dubai_return",
+    "usd_return"
+  ],
+  "horizon": "next observed gasoil trading date",
+  "max_feature_age_days": 7,
+  "feature_lag": "previous gasoil trading date",
+  "train_end": "2023-10-02",
+  "validation_end": "2025-04-01",
+  "gasoil_model": {
+    "intercept": 0.0005678842158360675,
+    "slopes": [
+      -0.04848685548004839,
+      0.02367465688989528,
+      0.02223404346660996,
+      0.019398951241218154
+    ],
+    "rank": 5,
+    "training_rows": 1754
+  },
+  "mapping_model": {
+    "intercept": 0.011081412255820142,
+    "slopes": [
+      0.8070215320249617
+    ],
+    "rank": 2,
+    "training_rows": 30
+  },
+  "gasoil_metrics": {
+    "train": {
+      "regression": {
+        "n": 1754,
+        "mae": 0.8673995768784563,
+        "rmse": 1.7335936280854278,
+        "r2": 0.9961963826905978
+      },
+      "persistence": {
+        "n": 1754,
+        "mae": 0.8654618015963511,
+        "rmse": 1.7313877153175616,
+        "r2": 0.9962060563645598
+      },
+      "return_regression": {
+        "n": 1754,
+        "mae": 0.00998282320663608,
+        "rmse": 0.018747109605174117,
+        "r2": 0.002400616166173042
+      },
+      "first_origin": "2016-10-10",
+      "last_target": "2023-10-02"
+    },
+    "validation": {
+      "regression": {
+        "n": 375,
+        "mae": 0.7722139572626369,
+        "rmse": 1.2491533686308223,
+        "r2": 0.980012177736731
+      },
+      "persistence": {
+        "n": 375,
+        "mae": 0.7610400000000002,
+        "rmse": 1.2398833278444654,
+        "r2": 0.9803077385796667
+      },
+      "return_regression": {
+        "n": 375,
+        "mae": 0.007854020688614743,
+        "rmse": 0.012561432418893508,
+        "r2": -0.01627435623054474
+      },
+      "first_origin": "2023-10-03",
+      "last_target": "2025-04-01"
+    },
+    "test": {
+      "regression": {
+        "n": 376,
+        "mae": 1.9427684748353535,
+        "rmse": 4.3364051513322135,
+        "r2": 0.9883970081822692
+      },
+      "persistence": {
+        "n": 376,
+        "mae": 1.9345478723404257,
+        "rmse": 4.314289190979698,
+        "r2": 0.9885150584707201
+      },
+      "return_regression": {
+        "n": 376,
+        "mae": 0.014533203271909987,
+        "rmse": 0.02856988121548781,
+        "r2": -0.011840108013741135
+      },
+      "first_origin": "2025-04-02",
+      "last_target": "2026-10-05"
+    }
+  },
+  "mapping_diagnostic_metrics": {
+    "train": {
+      "actual_gasoil_transfer": {
+        "n": 30,
+        "mae": 22.94920752304335,
+        "rmse": 34.90571470765078,
+        "r2": 0.9829187322753875
+      },
+      "persistence": {
+        "n": 30,
+        "mae": 39.6,
+        "rmse": 57.007017111931056,
+        "r2": 0.9544400053427639
+      },
+      "interval_days_min": 1,
+      "interval_days_max": 28,
+      "calibrated_actual_gasoil": {
+        "n": 30,
+        "mae": 25.53059511512349,
+        "rmse": 36.75542632610227,
+        "r2": 0.9810604367823211
+      }
+    },
+    "validation": {
+      "actual_gasoil_transfer": {
+        "n": 7,
+        "mae": 16.273012991406908,
+        "rmse": 18.857485611648166,
+        "r2": 0.10295588478043904
+      },
+      "persistence": {
+        "n": 7,
+        "mae": 17.785714285714285,
+        "rmse": 22.915216404327122,
+        "r2": -0.3246286905711857
+      },
+      "interval_days_min": 1,
+      "interval_days_max": 29,
+      "calibrated_actual_gasoil": {
+        "n": 7,
+        "mae": 16.931578565965406,
+        "rmse": 19.597176340925692,
+        "r2": 0.031202002299696385
+      }
+    },
+    "test": {
+      "actual_gasoil_transfer": {
+        "n": 77,
+        "mae": 30.951804831519674,
+        "rmse": 50.32214856849751,
+        "r2": 0.9529411731641215
+      },
+      "persistence": {
+        "n": 77,
+        "mae": 31.136363636363637,
+        "rmse": 58.40796400954462,
+        "r2": 0.9366032666394124
+      },
+      "interval_days_min": 1,
+      "interval_days_max": 24,
+      "calibrated_actual_gasoil": {
+        "n": 77,
+        "mae": 31.457322781796925,
+        "rmse": 49.99490121852968,
+        "r2": 0.9535512346874586
+      }
+    }
+  },
+  "end_to_end_mgo_metrics": {
+    "train": {
+      "transfer": {
+        "n": 7,
+        "mae": 15.37623829860034,
+        "rmse": 20.478934155409043,
+        "r2": 0.9958961845082015
+      },
+      "persistence": {
+        "n": 7,
+        "mae": 15.5,
+        "rmse": 20.524375751773793,
+        "r2": 0.9958779520333706
+      }
+    },
+    "validation": {
+      "transfer": {
+        "n": 1,
+        "mae": 5.678818100910689,
+        "rmse": 5.678818100910689,
+        "r2": null
+      },
+      "persistence": {
+        "n": 1,
+        "mae": 6.0,
+        "rmse": 6.0,
+        "r2": null
+      }
+    },
+    "test": {
+      "transfer": {
+        "n": 82,
+        "mae": 25.461045750778638,
+        "rmse": 42.536445397860206,
+        "r2": 0.9341167799447003
+      },
+      "persistence": {
+        "n": 82,
+        "mae": 25.432926829268293,
+        "rmse": 42.730900739965456,
+        "r2": 0.9335130328519757
+      }
+    }
+  },
+  "row_accounting": {
+    "gasoil_source_rows": 2510,
+    "feature_candidates": 2509,
+    "complete_rows": 2507,
+    "boundary_purged": 2,
+    "exclusions": {
+      "": 2507,
+      "missing_feature_or_target": 2
+    },
+    "adjacent_mgo_intervals": 252,
+    "eligible_mapping_intervals": 115,
+    "end_to_end_rows": 90
+  }
+}
