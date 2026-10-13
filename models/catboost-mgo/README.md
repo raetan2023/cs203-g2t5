@@ -1,74 +1,50 @@
-# CatBoost model — Singapore MGO bunker price
+# CatBoost model — gasoil forecast + experimental MGO mapping
 
-Part of the CS203 MGO project's model-comparison track. This folder is the **CatBoost
-regression** model. It predicts the Singapore MGO bunker indication (`sg_mgo_themaritime`,
-USD/metric tonne) from market signals, and is benchmarked against a persistence baseline.
+CS203 MGO project, model-comparison track. This is the **CatBoost** candidate. It uses
+the **same evaluation pipeline as the team's linear/ridge regression** and swaps the
+linear model for CatBoost, so the result tables are directly comparable.
 
-Not wired into the backend or frontend — it's a standalone modelling experiment, like the
-other regression models.
+## Method (matches the team's protocol)
 
-## What it does
+- Predict the next observed gasoil trading-day **return** from four historical returns
+  (gasoil, Brent, Dubai, broad USD), predictors lagged to the previous gasoil trading
+  date (backward as-of join, 7-day max age).
+- Chronological **70/15/15** split (train/validation/test); boundary-crossing labels purged.
+- **Gasoil price** = origin × (1 + predicted return); baseline = origin price.
+- **MGO (experimental)** = only where a real MGO quote exists at *both* the gasoil
+  forecast origin and the next trading date, the predicted gasoil % move is applied to
+  the MGO origin price; baseline = MGO origin. No interpolation or carry-forward.
 
-- **Target:** observed MGO quote (USD/MT). Only **253 irregular observations** (2020→2026).
-- **Features (all known *before* each MGO date — no look-ahead):**
-  - Levels of gasoil, Brent, Dubai crude, broad USD index (liquid daily series)
-  - 5- and 20-day % changes of those series (momentum)
-  - Last observed HSFO / VLSFO bunker quotes
-  - Last observed MGO value + days since it
-- **The model predicts the *change* from the last MGO quote, not the price level.** Tree
-  models can't extrapolate beyond the training price range, and MGO is sticky/near-daily, so
-  modelling the level loses to persistence by construction. Predicting the delta makes the
-  model "persistence + a learned adjustment" — a fair test of whether market signals help.
-- **Baseline:** persistence (predict the last observed MGO). Deliberately a hard baseline.
-- **Validation:** strictly chronological split (oldest 80% train, most recent 20% test),
-  time-based early-stopping tail inside train. No random shuffling.
+Because the pipeline is identical to the team's, the unchanged-price baselines reproduce
+theirs exactly (Gasoil 1.9345 / 4.3143, MGO 25.4329 / 42.7309).
 
-News / GDELT data is **not used**: the data context states it has zero date overlap with
-observed MGO, so it cannot train or evaluate an MGO model.
+## Results (test fold)
 
-## Results (most recent 50 observations, 2026-08-18 → 2026-10-06)
-
-| Model | MAE (USD/MT) | RMSE (USD/MT) |
+| Test metric | CatBoost | Unchanged-price baseline |
 |---|---|---|
-| **CatBoost (predicts change)** | 15.2 | **25.9** |
-| Persistence (last MGO) | **14.0** | 26.5 |
+| Gasoil MAE (USD/barrel) | **1.9262** | 1.9345 |
+| Gasoil RMSE (USD/barrel) | **4.2978** | 4.3143 |
+| MGO MAE (USD/tonne) | **25.3567** | 25.4329 |
+| MGO RMSE (USD/tonne) | **42.1496** | 42.7309 |
 
-- CatBoost **essentially ties** persistence: marginally worse on average error (MAE),
-  marginally better on large-move error (RMSE), i.e. it catches some bigger swings a little
-  better. Directional accuracy ≈ **56%** (just above a coin flip).
-- **Most informative signal: gasoil's 20-day change** (≈32% of importance), followed by the
-  gap since the last quote and the USD index's 20-day change. This gently supports the
-  project's core hypothesis that gasoil carries information about MGO moves.
+CatBoost is marginally at-or-below the baseline on every metric, and edges out both
+linear (MGO MAE 25.4610) and ridge regression. **Honest read:** all models essentially
+tie the unchanged-price baseline — the market signals give only a marginal edge on this
+sparse data. CatBoost is the narrow best, not a decisive winner.
 
-**Honest read:** with only ~200 sparse training points and a near-daily, sticky target,
-*no* model should be expected to beat persistence by much — and this confirms that. The RMSE
-edge is small (~2%) and within noise given 50 test points. The value here is the method
-(leak-safe, benchmarked, chronologically validated) and the feature-importance signal, not a
-claim of strong predictive power. Do not describe this as a validated MGO forecaster.
-
-## How to run
+## Run
 
 ```bash
 pip install -r requirements.txt
-python train_catboost_mgo.py \
-  --market /path/to/market_observations.csv \
-  --outdir ./output
+python train_catboost_mgo.py --market /path/to/market_observations.csv --outdir ./output
 ```
 
-Outputs written to `--outdir`: `catboost_mgo.cbm` (model), `feature_table.csv`,
-`feature_importance.csv`, `metrics.json`, `mgo_predictions.png`.
+Outputs: `metrics.json`, `comparison_table.csv`, `gasoil_predictions.csv`, `mgo_predictions.csv`.
 
-## Files here
+## Limitations
 
-- `train_catboost_mgo.py` — the full pipeline (load → leak-safe features → train → evaluate → save)
-- `metrics.json`, `feature_importance.csv`, `mgo_predictions.png` — the results above
-- `requirements.txt`
-
-## Limitations / honesty notes
-
-- Same-day market closes have unverified publication timing, so features are lagged ≥1 day;
-  lagging alone doesn't prove strict point-in-time availability.
-- Monthly MPA sales were **not** used as features (release-timing/lag unresolved).
-- 50 test points is small; treat the MAE/RMSE gap as indicative, not definitive.
-- Trees can't extrapolate price levels — hence the change-based target. A level-based CatBoost
-  scored MAE ≈ 122 and is the wrong framing for this series.
+- Forecast horizon (next gasoil trading day) is an initial choice, not a confirmed requirement.
+- MGO quotes are sparse; the test subset is small, and exact date matches don't prove
+  contemporaneous publication.
+- News and monthly sales are excluded (news has no MGO date overlap; sales need release-date rules).
+- Not a validated purchasing forecaster — an initial experiment.
