@@ -1,0 +1,62 @@
+{
+  "horizon_days": 30,
+  "features": [
+    "gasoil_ret5",
+    "gasoil_ret20",
+    "brent_ret5",
+    "brent_ret20",
+    "dubai_ret5",
+    "dubai_ret20",
+    "usd_ret5",
+    "usd_ret20",
+    "gasoil_vol20",
+    "brent_vol20",
+    "dubai_vol20",
+    "usd_vol20",
+    "gasoil_brent",
+    "brent_dubai",
+    "basis_dev",
+    "mgo_prev_ret",
+    "quote_age",
+    "gasoil_since_quote",
+    "brent_since_quote"
+  ],
+  "alpha": 88.58667904100822,
+  "trained_to_origin": "2026-09-09",
+  "n_rows": 131,
+  "q_lo": -0.04990885508212025,
+  "q_hi": 0.36322115154890566,
+  "lags": {
+    "gasoil": 1,
+    "dubai": 1,
+    "brent": 3,
+    "usd": 5
+  },
+  "tolerance_days": 3,
+  "backtest": {
+    "n": 81,
+    "model_MAE": 184.46842105174588,
+    "persist_MAE": 154.679012345679,
+    "model_RMSE": 225.8009761182671,
+    "persist_RMSE": 186.079732014711,
+    "MAE_skill_vs_persist": -0.19258856294927096,
+    "RMSE_skill_vs_persist": -0.21346357109121294,
+    "paired_MAE_gain_mean": -29.78940870606685,
+    "paired_MAE_gain_CI95": [
+      -74.30901522500544,
+      15.826554388255266
+    ],
+    "direction_acc": 0.5925925925925926,
+    "n_nonzero_moves": 81,
+    "oracle_gasoil_MAE": 89.4170695373161,
+    "coverage_80": 0.0,
+    "n_with_interval": 31,
+    "by_year": {
+      "2026": {
+        "n": 81,
+        "MAE_skill": -0.19258856294927096
+      }
+    },
+    "rows_total": 131
+  }
+}
