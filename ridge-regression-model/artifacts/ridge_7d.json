@@ -13,19 +13,19 @@
     "brent_vol20",
     "dubai_vol20",
     "usd_vol20",
-    "gasoil_brent",
-    "brent_dubai",
     "basis_dev",
     "mgo_prev_ret",
     "quote_age",
     "gasoil_since_quote",
     "brent_since_quote"
   ],
-  "alpha": 297.63514416313194,
+  "alpha": 100.0,
+  "gamma": 0.0,
   "trained_to_origin": "2026-10-02",
   "n_rows": 164,
-  "q_lo": -0.10125084419925512,
-  "q_hi": 0.1283462000530508,
+  "q_scale": 5.4602112395586,
+  "q_lo": -5.4602112395586,
+  "q_hi": 5.4602112395586,
   "lags": {
     "gasoil": 1,
     "dubai": 1,
@@ -35,26 +35,36 @@
   "tolerance_days": 3,
   "backtest": {
     "n": 114,
-    "model_MAE": 82.90331629227666,
+    "model_MAE": 77.23245614035088,
     "persist_MAE": 77.23245614035088,
-    "model_RMSE": 102.30726371758921,
+    "model_RMSE": 95.3793097023576,
     "persist_RMSE": 95.3793097023576,
-    "MAE_skill_vs_persist": -0.07342586828548336,
-    "RMSE_skill_vs_persist": -0.0726358162671874,
-    "paired_MAE_gain_mean": -5.670860151925779,
+    "MAE_skill_vs_persist": 0.0,
+    "RMSE_skill_vs_persist": 0.0,
+    "paired_MAE_gain_mean": 0.0,
     "paired_MAE_gain_CI95": [
-      -12.235716357607048,
-      0.6772486766949926
+      0.0,
+      0.0
     ],
-    "direction_acc": 0.415929203539823,
+    "direction_acc": 0.3893805309734513,
     "n_nonzero_moves": 113,
     "oracle_gasoil_MAE": 53.63971443223558,
-    "coverage_80": 0.8275862068965517,
+    "sma5_MAE": 90.55350877192981,
+    "sma5_RMSE": 109.99132780807065,
+    "MAE_skill_vs_sma5": 0.1471069736803866,
+    "sma10_MAE": 97.36096491228072,
+    "sma10_RMSE": 119.2378640520041,
+    "MAE_skill_vs_sma10": 0.2067410567475889,
+    "ema10_MAE": 88.33569296252637,
+    "ema10_RMSE": 108.17994428660558,
+    "MAE_skill_vs_ema10": 0.12569366300081763,
+    "gamma": 0.0,
+    "coverage_80": 0.7816091954022989,
     "n_with_interval": 87,
     "by_year": {
       "2026": {
         "n": 114,
-        "MAE_skill": -0.07342586828548336
+        "MAE_skill": 0.0
       }
     },
     "rows_total": 164

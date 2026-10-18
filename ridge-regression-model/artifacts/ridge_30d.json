@@ -13,19 +13,19 @@
     "brent_vol20",
     "dubai_vol20",
     "usd_vol20",
-    "gasoil_brent",
-    "brent_dubai",
     "basis_dev",
     "mgo_prev_ret",
     "quote_age",
     "gasoil_since_quote",
     "brent_since_quote"
   ],
-  "alpha": 88.58667904100822,
+  "alpha": 100.0,
+  "gamma": 0.8500000000000001,
   "trained_to_origin": "2026-09-09",
   "n_rows": 131,
-  "q_lo": -0.04990885508212025,
-  "q_hi": 0.36322115154890566,
+  "q_scale": 9.493477163152061,
+  "q_lo": -9.493477163152061,
+  "q_hi": 9.493477163152061,
   "lags": {
     "gasoil": 1,
     "dubai": 1,
@@ -35,26 +35,36 @@
   "tolerance_days": 3,
   "backtest": {
     "n": 81,
-    "model_MAE": 184.46842105174588,
+    "model_MAE": 114.43755927067508,
     "persist_MAE": 154.679012345679,
-    "model_RMSE": 225.8009761182671,
+    "model_RMSE": 147.48857607380782,
     "persist_RMSE": 186.079732014711,
-    "MAE_skill_vs_persist": -0.19258856294927096,
-    "RMSE_skill_vs_persist": -0.21346357109121294,
-    "paired_MAE_gain_mean": -29.78940870606685,
+    "MAE_skill_vs_persist": 0.2601610423078712,
+    "RMSE_skill_vs_persist": 0.20739043163417847,
+    "paired_MAE_gain_mean": 40.2414530750039,
     "paired_MAE_gain_CI95": [
-      -74.30901522500544,
-      15.826554388255266
+      12.041584682254067,
+      72.50352157715541
     ],
-    "direction_acc": 0.5925925925925926,
+    "direction_acc": 0.7160493827160493,
     "n_nonzero_moves": 81,
     "oracle_gasoil_MAE": 89.4170695373161,
-    "coverage_80": 0.0,
+    "sma5_MAE": 163.00123456790126,
+    "sma5_RMSE": 192.03021977970545,
+    "MAE_skill_vs_sma5": 0.29793440169924645,
+    "sma10_MAE": 169.7296296296296,
+    "sma10_RMSE": 196.23700208588164,
+    "MAE_skill_vs_sma10": 0.32576557481217894,
+    "ema10_MAE": 165.21188567862276,
+    "ema10_RMSE": 191.4115310422695,
+    "MAE_skill_vs_ema10": 0.3073285326862988,
+    "gamma": 0.8500000000000001,
+    "coverage_80": 1.0,
     "n_with_interval": 31,
     "by_year": {
       "2026": {
         "n": 81,
-        "MAE_skill": -0.19258856294927096
+        "MAE_skill": 0.2601610423078712
       }
     },
     "rows_total": 131
