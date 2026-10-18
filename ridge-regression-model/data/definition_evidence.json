@@ -1,0 +1,47 @@
+{
+  "verified_on": "2026-10-08",
+  "source_urls": {
+    "brent": "https://fred.stlouisfed.org/series/DCOILBRENTEU",
+    "eia": "https://www.eia.gov/dnav/pet/TblDefs/pet_pri_spt_tbldef2.asp",
+    "usd": "https://fred.stlouisfed.org/series/DTWEXBGS",
+    "bunker": "https://themaritime.net/market/bunker/port-of-singapore",
+    "methodology": "https://www.shipandbunker.com/about/about-sb-prices",
+    "gasoil": "https://www.investing.com/commodities/nymex-singapore-gasoil-platts-c1-futures-historical-data",
+    "gasoil_contract": "https://www.cmegroup.com/rulebook/NYMEX/6/669.pdf",
+    "gasoil_overview": "https://www.investing.com/commodities/nymex-singapore-gasoil-platts-c1-futures",
+    "dubai": "https://www.investing.com/commodities/dubai-crude-oil-platts-futures-historical-data",
+    "dubai_contract": "https://www.cmegroup.com/rulebook/NYMEX/5/511.pdf",
+    "dubai_overview": "https://www.investing.com/commodities/dubai-crude-oil-platts-futures",
+    "sales": "https://data.gov.sg/datasets/d_4f5abbf4486bf8e52bbed3be56dde562/view",
+    "sales_xls": "https://www.mpa.gov.sg/api/media/9cd431ec-4e86-418b-951b-b96a09cd3991/bunker-sales_Aug-2026.xls",
+    "events": "https://data.gdeltproject.org/documentation/GDELT-Event_Codebook-V2.0.pdf",
+    "gkg": "https://data.gdeltproject.org/documentation/GDELT-Global_Knowledge_Graph_Codebook-V2.1.pdf"
+  },
+  "observations": {
+    "units": "Bunker prices USD/metric tonne: preserved The Maritime HTML and underlying provider methodology. Brent USD/barrel: FRED. Futures USD/barrel: provider identity/currency plus CME named-product rules.",
+    "sales_discrepancy": "Catalogue says tonnes; linked MPA workbook explicitly labels thousands of tonnes. All 320 shared category/month values match exactly. No values were rescaled.",
+    "futures_limits": "CME named products are 1,000-barrel cash-settled contracts. Vendor roll fields are blank; exact historical c1 construction and volume units remain unverified.",
+    "bunker_limits": "Underlying source describes benchmark indications, not invoices. Marine Gas Oil label does not prove low-sulphur grade or exact ISO specification.",
+    "gkg_timestamp": "Codebook describes GKG DATE as document publication field and constant within an archive. Release uses those record/archive UTC dates; independent webpage publication timestamps were not validated."
+  },
+  "local_evidence": [
+    "raw/sg_mgo.html",
+    "raw/sg_bunker_history.json",
+    "metadata/definitions/mpa_bunker_sales_aug_2026.xls",
+    "metadata/definitions/mpa_workbook_extract.json",
+    "metadata/definitions/mpa_unit_reconciliation.json",
+    "distribution/manifest.json",
+    "scripts/clean_distribution.py",
+    "scripts/summarize_gdelt.py"
+  ],
+  "local_evidence_sha256": {
+    "raw/sg_mgo.html": "2d1deb4eba910c3452449188a97593ff856043b632198c986ee4bb60e742ea2e",
+    "raw/sg_bunker_history.json": "f7b7e170c8fb6fbe7a5233d51d34ce11cd6ca6290c8eb53efe6ef7cdc0165f06",
+    "metadata/definitions/mpa_bunker_sales_aug_2026.xls": "55da8965284620774373593e4d4942c6537532e5fae108af95e40340cfbc603e",
+    "metadata/definitions/mpa_workbook_extract.json": "fdd32cd88e8174607c0511246bd8ba9e8c4b4b570bf0efdd207ea2903d8fff89",
+    "metadata/definitions/mpa_unit_reconciliation.json": "2e79f7b894a9433c5f7b6eeb679b3e13278048e391d3c87095d12b35fb10e322",
+    "distribution/manifest.json": "0348764a9697a48012e0ae0a808acb35c30fef2790b555642e1c40a47394070d",
+    "scripts/clean_distribution.py": "e8d67aa6900f253057ddb2219c36af9476805d8ea125c6990040cbfe4ebfea4c",
+    "scripts/summarize_gdelt.py": "774216363136baf3f8ee3d32fc4b040e6066d845715eeefe7490b70e88f0816d"
+  }
+}

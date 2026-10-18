@@ -1,0 +1,93 @@
+[
+  {
+    "file": "gdelt_daily_scores.csv",
+    "bytes": 120647,
+    "sha256": "38fdf91d5ac2702ba712050a0bb19cd5668b624b10f47660bd983351cc7fb946",
+    "rows": 3653,
+    "unique_keys": 3653,
+    "distinct_dates": 3653,
+    "first_date": "2016-10-06",
+    "last_date": "2026-10-06",
+    "blank_values": {
+      "mean_document_tone": 3553,
+      "mean_goldstein": 3553,
+      "document_count": 3553,
+      "documents_with_tone": 3553,
+      "matched_event_count": 3553,
+      "events_with_goldstein": 3553
+    },
+    "series_counts": {}
+  },
+  {
+    "file": "gdelt_documents.csv",
+    "bytes": 902358170,
+    "sha256": "f733e7ff5933c17cbd1295d046613bb8b3f3bc63cc8b5488ad75cc1a2d46e997",
+    "rows": 4971810,
+    "unique_keys": 4971810,
+    "distinct_dates": 100,
+    "first_date": "2016-10-06",
+    "last_date": "2017-01-14",
+    "blank_values": {
+      "source": 44
+    },
+    "series_counts": {}
+  },
+  {
+    "file": "gdelt_matched_events.csv",
+    "bytes": 1230579869,
+    "sha256": "37f760bfc2310b82613fcf467d6824fec9854f61900c9a7dc8a07aee52e70338",
+    "rows": 7423513,
+    "unique_keys": 7423513,
+    "distinct_dates": 100,
+    "first_date": "2016-10-06",
+    "last_date": "2017-01-14",
+    "blank_values": {
+      "goldstein": 70
+    },
+    "series_counts": {}
+  },
+  {
+    "file": "market_observations.csv",
+    "bytes": 1547857,
+    "sha256": "abbb18839f136aa94c413dc2bbe63a3f04b2b11233b9853fd5762093c97a7bbc",
+    "rows": 17075,
+    "unique_keys": 17075,
+    "distinct_dates": 2974,
+    "first_date": "1995-01-01",
+    "last_date": "2026-10-06",
+    "blank_values": {
+      "quote_source": 16314,
+      "open": 12052,
+      "high": 12052,
+      "low": 12052,
+      "volume": 16952,
+      "change_pct": 12052,
+      "value": 188
+    },
+    "series_counts": {
+      "Ammonia": 380,
+      "B100": 380,
+      "Bio-Blended Low Sulphur Fuel Oil": 380,
+      "Bio-Blended Low Sulphur Marine Gas Oil": 380,
+      "Bio-Blended Marine Diesel Oil": 380,
+      "Bio-Blended Marine Fuel Oil": 380,
+      "Bio-Blended Marine Gas Oil": 380,
+      "Bio-Blended Ultra Low Sulphur Fuel Oil": 380,
+      "LNG": 380,
+      "Low Sulphur Fuel Oil": 380,
+      "Low Sulphur Marine Gas Oil": 380,
+      "Marine Diesel Oil": 380,
+      "Marine Fuel Oil": 380,
+      "Marine Gas Oil": 380,
+      "Methanol": 380,
+      "Ultra Low Sulphur Fuel Oil": 380,
+      "brent_fred": 2604,
+      "dubai_crude_investing": 2513,
+      "sg_gasoil_investing": 2510,
+      "usd_index_fred": 2607,
+      "sg_hsfo_themaritime": 255,
+      "sg_mgo_themaritime": 253,
+      "sg_vlsfo_themaritime": 253
+    }
+  }
+]
