@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import StoredMarketPanel from './StoredMarketPanel';
 
@@ -53,5 +53,29 @@ describe('stored market dashboard', () => {
     render(<StoredMarketPanel />);
     expect(await screen.findByText('No imported market observations are available.')).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Stored observation history' })).not.toBeInTheDocument();
+  });
+
+  it('filters fuel categories and expands the full category list', async () => {
+    serve(Array.from({ length: 8 }, (_, index) => series(`MPA_BUNKER_SALES_FUEL_${index}`,
+      `Bunker sales: FUEL ${index}`, 'sales', index, 'thousand tonnes', '2026-08-01')));
+    render(<StoredMarketPanel />);
+    const region = await screen.findByRole('region', { name: 'Monthly bunker sales' });
+    expect(within(region).getAllByRole('row')).toHaveLength(7);
+    fireEvent.click(screen.getByRole('button', { name: 'View all 8 categories' }));
+    expect(within(region).getAllByRole('row')).toHaveLength(9);
+    fireEvent.change(screen.getByLabelText('Filter fuel categories'), { target: { value: 'Fuel 0' } });
+    expect(within(region).getAllByRole('row')).toHaveLength(2);
+    expect(within(region).getByText('0')).toBeInTheDocument();
+  });
+
+  it('changes the displayed history range without inventing daily observations', async () => {
+    const item = series('BRENT_CRUDE', 'Brent crude', 'prices', 126.55, 'USD/barrel', '2026-08-20', 'USD');
+    item.history = Array.from({ length: 20 }, (_, index) => ({ date: `2026-08-${String(index + 1).padStart(2, '0')}`, value: 100 + index }));
+    serve([item]);
+    render(<StoredMarketPanel />);
+    await screen.findByRole('region', { name: 'Stored observation history' });
+    fireEvent.click(screen.getByRole('button', { name: '15 obs' }));
+    expect(screen.getByRole('button', { name: '15 obs' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText(/15 observations ·/)).toBeInTheDocument();
   });
 });
