@@ -12,7 +12,7 @@ vi.mock('recharts', () => ({
 const series = (key, label, category, value, unit, date, currency = null) => ({
   category, ticker: { seriesKey: key, label, value, unit, observedDate: date, currency,
     source: 'Provider', valueType: 'OBSERVED', changeAbs: null, changePct: null },
-  history: [{ date, value }],
+  history: [{ date: new Date(Date.parse(`${date}T00:00:00Z`) - 86400000).toISOString().slice(0, 10), value }, { date, value }],
 });
 function serve(rows, missing = []) {
   const fetcher = vi.fn().mockResolvedValue({ ok: true, status: 200,
@@ -114,6 +114,37 @@ describe('stored market dashboard', () => {
     expect(button).toBeEnabled();
     expect(button.querySelector('svg')).not.toHaveClass('sm-spinning');
     expect(screen.getAllByText('$125.00').length).toBeGreaterThan(0);
+  });
+
+  it('offers only documented market price/index series with usable database history', async () => {
+    const priceKeys = ['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'BRENT_CRUDE', 'DUBAI_CRUDE', 'USD_INDEX'];
+    const items = priceKeys.map(key => series(key, key, 'prices', 120, 'index', '2026-10-14'));
+    const single = series('BRENT_CRUDE', 'Brent without history', 'prices', 120, 'USD/barrel', '2026-10-14');
+    single.history = [{ date: '2026-10-14', value: 120 }];
+    serve([...items.filter(item => item.ticker.seriesKey !== 'BRENT_CRUDE'), single,
+      series('MPA_BUNKER_SALES_MGO', 'Bunker sales: MGO', 'sales', 5, 'thousand tonnes', '2026-08-01'),
+      series('GDELT_ARTICLE_COUNT', 'GDELT daily article count', 'news', 5, 'articles', '2026-10-14'),
+      series('UNKNOWN_PRICE', 'Undocumented price', 'prices', 5, 'USD', '2026-10-14')]);
+    render(<StoredMarketPanel />);
+    const menu = await screen.findByRole('combobox', { name: 'Choose a series' });
+    expect(within(menu).getAllByRole('option').map(option => option.value))
+      .toEqual(['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'DUBAI_CRUDE', 'USD_INDEX']);
+    expect(menu).toHaveValue('SGP_MGO_OBSERVED');
+    fireEvent.change(menu, { target: { value: 'USD_INDEX' } });
+    expect(menu).toHaveValue('USD_INDEX');
+    expect(screen.getByRole('region', { name: 'Monthly bunker sales' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'GDELT daily aggregates' })).toBeInTheDocument();
+  });
+
+  it('omits the history chart when no supported series has multiple valid dates', async () => {
+    const item = series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-10-14');
+    item.history = [{ date: '2026-10-14', value: 120 }, { date: '2026-10-14', value: 121 },
+      { date: 'invalid', value: 122 }, { date: '2026-10-13', value: null }];
+    serve([item]);
+    render(<StoredMarketPanel />);
+    await screen.findByRole('region', { name: 'Stored prices and index' });
+    expect(screen.queryByRole('combobox', { name: 'Choose a series' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Stored observation history' })).not.toBeInTheDocument();
   });
 
 });

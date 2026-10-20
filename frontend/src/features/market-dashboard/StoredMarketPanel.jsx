@@ -59,7 +59,12 @@ export default function StoredMarketPanel() {
   const prices = series.filter(s => s.category === 'prices').sort((a, b) => order.indexOf(a.ticker.seriesKey) - order.indexOf(b.ticker.seriesKey));
   const sales = series.filter(s => s.category === 'sales').sort((a, b) => b.ticker.value - a.ticker.value || a.ticker.label.localeCompare(b.ticker.label));
   const news = series.filter(s => s.category === 'news');
-  const selected = series.find(s => s.ticker.seriesKey === selectedKey) || prices[0] || series[0];
+  // This menu is for documented price/index histories, not monthly sales or news.
+  const chartSeries = prices.filter(s => order.includes(s.ticker.seriesKey)
+    && new Set(s.history.filter(row => Number.isFinite(row.value)
+      && /^\d{4}-\d{2}-\d{2}$/.test(row.date)
+      && Number.isFinite(Date.parse(`${row.date}T00:00:00Z`))).map(row => row.date)).size >= 2);
+  const selected = chartSeries.find(s => s.ticker.seriesKey === selectedKey) || chartSeries[0];
   // Calendar-day windows include the latest observation day; missing days stay missing.
   const endDate = selected ? Date.parse(`${selected.ticker.observedDate}T00:00:00Z`) : NaN;
   const startDate = endDate - (range - 1) * 86400000;
@@ -108,7 +113,7 @@ export default function StoredMarketPanel() {
     {selected && <section className="sm-panel sm-history" aria-label="Stored observation history">
       <div className="sm-panel-heading"><div><div className="sm-section-kicker">THE BIGGER PICTURE</div><h2>Market history</h2></div>
         <div className="sm-history-controls"><label className="sm-sr-only" htmlFor="market-history-series">Choose a series</label>
-          <select id="market-history-series" value={selected.ticker.seriesKey} onChange={event => setSelectedKey(event.target.value)}>{series.map(s => <option key={s.ticker.seriesKey} value={s.ticker.seriesKey}>{s.ticker.label}</option>)}</select>
+          <select id="market-history-series" value={selected.ticker.seriesKey} onChange={event => setSelectedKey(event.target.value)}>{chartSeries.map(s => <option key={s.ticker.seriesKey} value={s.ticker.seriesKey}>{s.ticker.label}</option>)}</select>
           <div className="sm-range" role="group" aria-label="History length">{[15, 30, 60].map(value => <button type="button" key={value} aria-pressed={range === value} onClick={() => setRange(value)}>{value} days</button>)}</div>
         </div>
       </div>
