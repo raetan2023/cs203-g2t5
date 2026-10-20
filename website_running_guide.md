@@ -5,7 +5,7 @@ Choose the instructions for your operating system:
 - [macOS](#macos)
 - [Windows](#windows)
 
-The website needs two terminals running at the same time:
+The manual instructions use two terminals. On macOS/Linux, the single launcher below runs both services in one terminal:
 
 ```text
 Terminal 1: Spring Boot backend
@@ -42,6 +42,45 @@ node --version
 npm --version
 java --version
 ```
+
+## Start both services with one file (recommended)
+
+From the repository root, create `backend/.env`:
+
+```bash
+SUPABASE_DB_URL='jdbc:postgresql://YOUR_HOST:5432/postgres?sslmode=require'
+SUPABASE_DB_USER='YOUR_DATABASE_USER'
+SUPABASE_DB_PASSWORD='YOUR_DATABASE_PASSWORD'
+CLERK_ISSUER_URI='https://YOUR_CLERK_INSTANCE.clerk.accounts.dev'
+MGO_API_KEY='mgo_public_demo_2026'
+PORT='8000'
+```
+
+Replace all `YOUR_...` placeholders with the team's real values. Configure `frontend/.env.local` with:
+
+```dotenv
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_REPLACE_WITH_YOUR_CLERK_KEY
+VITE_API_URL=http://127.0.0.1:8000
+VITE_API_KEY=mgo_public_demo_2026
+```
+
+Then double-click `run.command` in Finder, or run:
+
+```bash
+./run.command
+```
+
+The launcher installs frontend dependencies with `npm ci` when `node_modules` is missing and starts both services. Open **http://127.0.0.1:5173** when Vite is ready; wait for Spring Boot startup before using API features. Press **Ctrl+C** to stop both. If either service exits, the other is stopped too. Port 5173 must be free. If you change `PORT`, also change the frontend's `VITE_API_URL` to match.
+
+It checks required backend values and environment-file presence; it cannot confirm database credentials or Clerk configuration. Linux users can run the same launcher with Bash. Windows users should follow the manual Windows instructions below.
+
+To test launcher behaviour without connecting to Supabase or Clerk:
+
+```bash
+python3 -m unittest discover -s tests -p 'test_run_launcher.py' -v
+```
+
+The following steps are the manual alternative.
 
 ## Step 1: Start the backend
 
