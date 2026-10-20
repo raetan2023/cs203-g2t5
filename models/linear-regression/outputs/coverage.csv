@@ -1,0 +1,6 @@
+name,series,rows,observed,missing,first,last
+gasoil,sg_gasoil_investing,2510,2510,0,2016-10-06,2026-10-05
+brent,brent_fred,2604,2531,73,2016-10-06,2026-09-29
+dubai,dubai_crude_investing,2513,2513,0,2016-10-06,2026-10-05
+usd,usd_index_fred,2607,2492,115,2016-10-06,2026-10-02
+mgo,sg_mgo_themaritime,253,253,0,2020-03-13,2026-10-06

@@ -22,12 +22,17 @@ public record PurchasePlan(
 
     /** The response shape agreed with the frontend: snake_case, derived days included. */
     public Map<String, Object> toResponse() {
+        return toResponse(scenarioAsOfDate);
+    }
+
+    /** Stored scenario is write context; reads follow the active backend scenario without a database write. */
+    public Map<String, Object> toResponse(LocalDate activeScenario) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("plan_id", planId.toString());
         body.put("quantity_mt", quantityMt);
         body.put("purchase_deadline", purchaseDeadline.toString());
-        body.put("scenario_as_of_date", scenarioAsOfDate.toString());
-        body.put("days_remaining", daysRemaining());
+        body.put("scenario_as_of_date", activeScenario.toString());
+        body.put("days_remaining", ChronoUnit.DAYS.between(activeScenario, purchaseDeadline));
         return body;
     }
 }

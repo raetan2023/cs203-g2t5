@@ -7,6 +7,8 @@ type Operation = 'read' | 'create' | 'update' | 'delete';
 interface MockOptions {
   initialPlan?: PurchasePlan | null;
   scenarioDate?: string;
+  /** Preview-owned active historical date; does not change the real API contract. */
+  getScenarioDate?: () => string;
   delayMs?: number;
   failOnce?: Partial<Record<Operation, boolean>>;
 }
@@ -15,7 +17,7 @@ interface MockOptions {
 export function createMockPlanService(options: MockOptions = {}): PurchasePlanService {
   let plan = options.initialPlan ? { ...options.initialPlan } : null;
   const failures = { ...options.failOnce };
-  const scenarioDate = options.scenarioDate ?? DEMO_SCENARIO_DATE;
+  const getScenarioDate = options.getScenarioDate ?? (() => options.scenarioDate ?? DEMO_SCENARIO_DATE);
   const messages: Record<Operation, string> = {
     read: "We couldn't load your purchase plan. Please try again.",
     create: "We couldn't save your plan. Your inputs are still here—try again.",
@@ -30,6 +32,7 @@ export function createMockPlanService(options: MockOptions = {}): PurchasePlanSe
     }
   }
   function save(input: PlanInput) {
+    const scenarioDate = getScenarioDate();
     const errors = validateDraft({ quantity: String(input.quantity_mt), deadline: input.purchase_deadline }, scenarioDate);
     if (Object.keys(errors).length) throw new PlanError('Please check your inputs.', errors, 422);
     plan = {
@@ -41,7 +44,11 @@ export function createMockPlanService(options: MockOptions = {}): PurchasePlanSe
     return { plan: { ...plan } };
   }
   return {
-    async read() { await wait('read'); return { plan: plan ? { ...plan } : null }; },
+    async read() {
+      await wait('read');
+      const scenarioDate = getScenarioDate();
+      return { plan: plan ? { ...plan, scenario_as_of_date: scenarioDate, days_remaining: calendarDays(scenarioDate, plan.purchase_deadline) } : null };
+    },
     async create(input) {
       await wait('create');
       if (plan) throw new PlanError('You already have a saved plan. Edit or delete it first.', {}, 409);

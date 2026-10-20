@@ -1,0 +1,36 @@
+{
+  "n_total": 252,
+  "n_train": 202,
+  "n_test": 50,
+  "test_period": [
+    "2026-08-18",
+    "2026-10-06"
+  ],
+  "target_units": "USD/metric tonne",
+  "results": [
+    {
+      "model": "Random Forest (predicts change)",
+      "MAE_usd_per_mt": 16.68,
+      "RMSE_usd_per_mt": 25.72
+    },
+    {
+      "model": "Persistence (last MGO)",
+      "MAE_usd_per_mt": 14.0,
+      "RMSE_usd_per_mt": 26.45
+    }
+  ],
+  "rf_vs_baseline_MAE_improvement_pct": -19.1,
+  "directional_accuracy_vs_last_quote": 0.52,
+  "prediction_interval": {
+    "method": "percentiles of per-tree predictions",
+    "nominal_coverage": 0.8,
+    "empirical_coverage_on_test": 0.72,
+    "mean_width_usd_per_mt": 31.09
+  },
+  "selected_params": {
+    "max_depth": 3,
+    "min_samples_leaf": 20,
+    "max_features": 0.33
+  },
+  "cv_MAE_change_usd_per_mt": 41.01
+}

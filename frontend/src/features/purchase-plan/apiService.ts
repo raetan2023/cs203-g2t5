@@ -1,4 +1,5 @@
-import { PlanError, type PlanInput, type PurchasePlanService } from './types';
+import { PlanError, type PlanInput, type PurchasePlan, type PurchasePlanService } from './types';
+import { isValidDate } from './dates';
 
 export interface ApiOptions {
   /** Backend base URL. Defaults to VITE_API_URL, then the local backend. */
@@ -13,6 +14,21 @@ export interface ApiOptions {
 }
 
 const env = import.meta.env ?? {};
+
+function parsePlan(payload: { plan?: unknown } | undefined, required: true): { plan: PurchasePlan };
+function parsePlan(payload: { plan?: unknown } | undefined, required?: false): { plan: PurchasePlan | null };
+function parsePlan(payload: { plan?: unknown } | undefined, required = false): { plan: PurchasePlan | null } {
+  if (payload?.plan === null && !required) return { plan: null };
+  const p = payload?.plan as Partial<PurchasePlan> | undefined;
+  if (!p || typeof p.plan_id !== 'string' || !p.plan_id.trim()
+    || typeof p.quantity_mt !== 'number' || !Number.isFinite(p.quantity_mt) || p.quantity_mt <= 0
+    || typeof p.purchase_deadline !== 'string' || !isValidDate(p.purchase_deadline)
+    || typeof p.scenario_as_of_date !== 'string' || !isValidDate(p.scenario_as_of_date)
+    || typeof p.days_remaining !== 'number' || !Number.isSafeInteger(p.days_remaining)) {
+    throw new PlanError('The purchase-plan response was invalid. Please retry.', {}, 502);
+  }
+  return { plan: p as PurchasePlan };
+}
 
 const messages: Record<string, string> = {
   GET: "We couldn't load your purchase plan. Please try again.",
@@ -48,7 +64,8 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
 
     let payload: { plan?: unknown; detail?: string; field_errors?: Record<string, string> } = {};
     try {
-      payload = await response.json();
+      const data: unknown = await response.json();
+      if (data && typeof data === 'object' && !Array.isArray(data)) payload = data;
     } catch {
       // Keep the status-based message below rather than failing on an empty body.
     }
@@ -61,13 +78,13 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
 
   return {
     async read() {
-      return (await request('GET')) as { plan: never };
+      return parsePlan(await request('GET'));
     },
     async create(input) {
-      return (await request('POST', input)) as { plan: never };
+      return parsePlan(await request('POST', input), true);
     },
     async update(input) {
-      return (await request('PUT', input)) as { plan: never };
+      return parsePlan(await request('PUT', input), true);
     },
     async delete() {
       await request('DELETE');
@@ -80,9 +97,13 @@ export async function fetchScenarioDate(options: ApiOptions = {}): Promise<strin
   const baseUrl = (options.baseUrl ?? env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
   const apiKey = options.apiKey ?? env.VITE_API_KEY ?? '';
   const response = await fetch(`${baseUrl}/api/v1/config`, {
+    cache: 'no-store',
     headers: { ...(apiKey && { 'X-API-Key': apiKey }) },
   });
   if (!response.ok) throw new PlanError('Could not load the scenario date.', {}, response.status);
-  const payload = (await response.json()) as { scenario_as_of_date: string };
+  const payload = (await response.json()) as { scenario_as_of_date?: unknown } | null;
+  if (typeof payload?.scenario_as_of_date !== 'string' || !isValidDate(payload.scenario_as_of_date)) {
+    throw new PlanError('The scenario date response was invalid. Please retry.', {}, 502);
+  }
   return payload.scenario_as_of_date;
 }

@@ -1,0 +1,66 @@
+name: Market data synchronization
+
+on:
+  push:
+    branches: [market-data-integration]
+    paths:
+      - '.github/workflows/import-market.yml'
+      - 'data-ingestion/import_market.py'
+      - 'data-ingestion/import_brent.py'
+      - 'data-ingestion/test_*.py'
+  schedule:
+    # 07:37 Singapore time. Only the default branch can run scheduled workflows.
+    - cron: '37 23 * * *'
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Write selected observations to Supabase'
+        type: boolean
+        default: false
+      source:
+        description: 'Dataset to synchronize'
+        type: choice
+        default: all
+        options: [all, brent, mgo_singapore, gasoil_singapore, dubai_crude, usd_index, bunker_sales, gdelt]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Same group as the Brent job: never race writes between the two importers.
+  group: brent-supabase-import
+  cancel-in-progress: false
+
+jobs:
+  synchronize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Test import validation
+        run: python -m unittest discover -s data-ingestion -p 'test_*.py'
+      - name: Fetch and validate selected sources
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SOURCE: ${{ inputs.source || 'all' }}
+          # New switches: old Brent-only switches never authorize writes to other sources.
+          APPLY_IMPORT: ${{ (github.event_name == 'schedule' && vars.MARKET_DAILY_IMPORT_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.apply) || (github.event_name == 'push' && github.ref == 'refs/heads/market-data-integration' && vars.MARKET_TEST_IMPORT_ENABLED == 'true') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--source "$SOURCE" --mode snapshot --check-supabase)
+          if [[ "$APPLY_IMPORT" == "true" ]]; then args+=(--apply); fi
+          python data-ingestion/import_market.py "${args[@]}"
+          {
+            echo '### Market data synchronization'
+            echo "- Sources: $SOURCE"
+            echo "- Database writes enabled: $APPLY_IMPORT"
+            echo '- See the logs for per-series units, record counts and latest dates.'
+            echo '- Snapshot synchronization does not establish real-time source collection.'
+          } >> "$GITHUB_STEP_SUMMARY"
