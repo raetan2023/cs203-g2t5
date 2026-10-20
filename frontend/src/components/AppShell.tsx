@@ -14,7 +14,9 @@ export function AppShell({ children, path, scenarioDate, onSignOut, marketAvaila
     <a className="bb-skip" href="#app-content">Skip to content</a>
     <header className="bb-header">
       <button ref={trigger} className="bb-menu" aria-label="Open navigation" aria-expanded={open} aria-controls="app-navigation" onClick={() => setOpen(true)}><Icon name="menu" /></button>
-      <Brand /><time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>
+      <Brand />{path === '/market-dashboard'
+        ? <span className="bb-date">MARKET OVERVIEW</span>
+        : <time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>}
     </header>
     <div id="app-content" tabIndex={-1}>{children}</div>
     {open && <Navigation path={path} marketAvailable={marketAvailable} onSignOut={onSignOut} onClose={() => { setOpen(false); trigger.current?.focus(); }} />}
@@ -61,9 +63,8 @@ function Navigation({ path, onClose, onSignOut, marketAvailable }: {
     <div className="bb-sidebar-top"><Brand /><button ref={close} className="bb-icon-button" aria-label="Close navigation" disabled={busy} onClick={onClose}><AppIcon name="close" /></button></div>
     <nav>
       <AppLink href="/home" aria-current={path === '/home' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="home" />Home</AppLink>
-      <AppLink href="/purchase-plans" aria-current={path === '/purchase-plans' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="plan" />Purchase plans</AppLink>
+      <AppLink href="/purchase-plans" aria-current={path.startsWith('/purchase-plans') ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="plan" />Purchase plans</AppLink>
       {marketAvailable ? <AppLink href="/market-dashboard" aria-current={path === '/market-dashboard' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="chart" />Market dashboard</AppLink> : <button disabled title="Awaiting market dashboard integration"><AppIcon name="chart" />Market dashboard</button>}
-      <button disabled><AppIcon name="bulb" />Recommendation <span className="bb-coming">Coming soon</span></button>
     </nav>
     <div className="bb-sidebar-bottom">{error && <p role="alert">{error}</p>}<button className="bb-signout" disabled={busy} onClick={signOut}><AppIcon name="logout" />{busy ? 'Signing out...' : 'Sign out'}</button></div>
   </dialog>;
