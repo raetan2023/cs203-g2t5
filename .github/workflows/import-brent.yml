@@ -59,7 +59,7 @@ jobs:
           IMPORT_MODE: ${{ inputs.mode || 'snapshot' }}
           SERIES_KEY: ${{ vars.BRENT_SERIES_KEY || 'BRENT_CRUDE' }}
           # Daily writes are enabled only after a successful manual test.
-          APPLY_IMPORT: ${{ (github.event_name == 'schedule' && vars.BRENT_DAILY_IMPORT_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.apply) }}
+          APPLY_IMPORT: ${{ (github.event_name == 'schedule' && vars.BRENT_DAILY_IMPORT_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.apply) || (github.event_name == 'push' && github.ref == 'refs/heads/test-daily-brent-import' && vars.BRENT_TEST_IMPORT_ENABLED == 'true') }}
         shell: bash
         run: |
           set -euo pipefail
