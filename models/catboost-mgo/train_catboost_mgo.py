@@ -1,206 +1,142 @@
-"""
-CatBoost regression for Singapore MGO bunker price (sg_mgo_themaritime).
+"""CatBoost gasoil forecast + experimental MGO mapping -- CS203 model-comparison track.
 
-CS203 MGO project -- model-comparison track (this file = the CatBoost model).
+This mirrors the team's linear-regression evaluation pipeline exactly and swaps the
+linear model for CatBoost, so the result tables are directly comparable:
 
-What it does, and the guardrails it respects (from the data context.md):
-  * Target  = observed MGO quote, USD/metric tonne (only 253 irregular obs).
-  * Features = market signals known *before* each MGO date (no look-ahead):
-      - levels of gasoil, Brent, Dubai crude, broad USD index (daily series)
-      - short/medium % changes of those series
-      - last observed HSFO / VLSFO bunker quotes
-      - the last observed MGO value + days since it (so the model can improve
-        on simple persistence rather than just re-learn the price level)
-  * Baseline = persistence (predict the last observed MGO). With near-daily,
-    sticky 2026 data this is a hard baseline on purpose -- beating it is the
-    real test, not a high R^2 on price levels.
-  * Split = chronological (old -> train, recent -> test). No random shuffling.
-  * Metrics reported in USD/MT so they're interpretable.
+  * Model predicts the next observed gasoil trading-day RETURN from four historical
+    returns (gasoil, Brent, Dubai, broad USD), with predictors lagged to the previous
+    gasoil trading date (backward as-of join, 7-day max age).
+  * Chronological 70/15/15 split (train/validation/test); boundary-crossing labels purged.
+  * Gasoil price = origin x (1 + predicted return). Baseline = origin price (zero return).
+  * MGO (experimental): only where a real MGO quote exists at BOTH the gasoil forecast
+    origin and target date, the predicted gasoil % move is applied to the MGO origin
+    price. Baseline = MGO origin. No interpolation or quote carry-forward.
 
-News/GDELT data is deliberately unused: context.md states it has zero date
-overlap with observed MGO, so it cannot train or evaluate an MGO model.
+With this pipeline the unchanged-price baselines reproduce the team's exactly
+(Gasoil 1.9345 / 4.3143, MGO 25.4329 / 42.7309), so the CatBoost column lines up
+with the linear and ridge tables.
 
 Usage:
-    python train_catboost_mgo.py \
-        --market /path/to/market_observations.csv \
-        --outdir /path/to/output
+    python train_catboost_mgo.py --market /path/to/market_observations.csv --outdir ./output
 """
 import argparse, json, os
 import numpy as np
 import pandas as pd
 from catboost import CatBoostRegressor, Pool
-from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-TARGET = "sg_mgo_themaritime"
-DAILY_FEATURES = ["sg_gasoil_investing", "brent_fred", "dubai_crude_investing", "usd_index_fred"]
-BUNKER_FEATURES = ["sg_hsfo_themaritime", "sg_vlsfo_themaritime"]
-LAG_DAYS = 1          # features must be known at least 1 day before the MGO quote
-CHANGE_WINDOWS = [5, 20]   # calendar-day % change windows
-TEST_FRACTION = 0.20       # most recent 20% of MGO observations = test set
+SERIES = {"gasoil": "sg_gasoil_investing", "brent": "brent_fred",
+          "dubai": "dubai_crude_investing", "usd": "usd_index_fred",
+          "mgo": "sg_mgo_themaritime"}
+FEATURES = ["gasoil_return", "brent_return", "dubai_return", "usd_return"]
 
 
-def load_series(market_csv):
-    mo = pd.read_csv(market_csv, parse_dates=["date"])
-    out = {}
-    for s in DAILY_FEATURES + BUNKER_FEATURES + [TARGET]:
-        d = mo.loc[mo["series"] == s, ["date", "value"]].dropna(subset=["value"])
-        out[s] = d.sort_values("date").set_index("date")["value"]
-    return out
+def read_market(market_csv):
+    raw = pd.read_csv(market_csv, parse_dates=["date"])
+    values = raw.pivot(index="date", columns="series", values="value").sort_index()
+    return {k: values[n].dropna() for k, n in SERIES.items()}
 
 
-def daily_frame(series):
-    """Put the 4 liquid daily series on a continuous calendar and forward-fill,
-    so an 'as-of' lookup returns the last value actually published by then."""
-    idx = pd.date_range(
-        min(series[s].index.min() for s in DAILY_FEATURES),
-        max(series[s].index.max() for s in DAILY_FEATURES),
-        freq="D",
-    )
-    df = pd.DataFrame(index=idx)
-    for s in DAILY_FEATURES:
-        df[s] = series[s].reindex(idx).ffill()
-    return df
+def make_features(series, max_age_days=7):
+    gasoil = series["gasoil"]
+    frame = pd.DataFrame({"origin": gasoil.index, "gasoil_origin": gasoil.values})
+    frame["target_date"] = frame.origin.shift(-1)
+    frame["gasoil_actual"] = frame.gasoil_origin.shift(-1)
+    frame["target_return"] = frame.gasoil_actual / frame.gasoil_origin - 1
+    frame["feature_cutoff"] = frame.origin.shift(1)           # predictors stop one trading day back
+    for key in ["gasoil", "brent", "dubai", "usd"]:
+        s = series[key]
+        obs = pd.DataFrame({f"{key}_source_date": s.index,
+                            f"{key}_return": s.pct_change(fill_method=None).values})
+        frame = pd.merge_asof(frame.loc[frame.feature_cutoff.notna()].sort_values("feature_cutoff"),
+                              obs, left_on="feature_cutoff", right_on=f"{key}_source_date",
+                              direction="backward")
+        frame[f"{key}_age_days"] = (frame.origin - frame[f"{key}_source_date"]).dt.days
+    required = FEATURES + ["target_return", "target_date"]
+    missing = frame[required].isna().any(axis=1)
+    stale = frame[[f"{k}_age_days" for k in SERIES if k != "mgo"]].gt(max_age_days).any(axis=1)
+    frame["exclude"] = np.select([missing, stale], ["missing", "stale"], default="")
+    return frame.loc[frame.exclude.eq("")].copy().reset_index(drop=True)
 
 
-def build_features(series):
-    daily = daily_frame(series)
-    # pre-compute % changes on the forward-filled daily calendar
-    for s in DAILY_FEATURES:
-        for w in CHANGE_WINDOWS:
-            daily[f"{s}_chg{w}"] = daily[s].pct_change(w) * 100.0
+def split_time(frame):
+    first, second = int(len(frame) * 0.70), int(len(frame) * 0.85)
+    train_end = frame.iloc[first - 1].target_date
+    val_end = frame.iloc[second - 1].target_date
+    train = frame.loc[frame.target_date.le(train_end)].copy()
+    val = frame.loc[frame.origin.gt(train_end) & frame.target_date.le(val_end)].copy()
+    test = frame.loc[frame.origin.gt(val_end)].copy()
+    assert train.target_date.max() < val.origin.min()
+    assert val.target_date.max() < test.origin.min()
+    return {"train": train, "validation": val, "test": test}, train_end, val_end
 
-    mgo = series[TARGET].sort_index()
-    rows = []
-    for i, (t, y) in enumerate(mgo.items()):
-        asof = t - pd.Timedelta(days=LAG_DAYS)        # strictly before the quote
-        row = {"date": t, "mgo": y}
-        if asof in daily.index:
-            snap = daily.loc[asof]
-        else:
-            snap = daily.loc[:asof].iloc[-1]          # last available row <= asof
-        for c in daily.columns:
-            row[c] = snap[c]
-        # last observed bunker quotes strictly before t
-        for s in BUNKER_FEATURES:
-            prev = series[s].loc[:t - pd.Timedelta(days=1)]
-            row[s] = prev.iloc[-1] if len(prev) else np.nan
-        # persistence inputs: last MGO strictly before t
-        if i == 0:
-            row["lag_mgo"] = np.nan
-            row["days_since_mgo"] = np.nan
-        else:
-            prev_t, prev_y = mgo.index[i - 1], mgo.iloc[i - 1]
-            row["lag_mgo"] = prev_y
-            row["days_since_mgo"] = (t - prev_t).days
-        rows.append(row)
 
-    feat = pd.DataFrame(rows).set_index("date")
-    feat = feat.iloc[1:]           # drop first row (no persistence baseline)
-    return feat
+def scores(actual, estimate):
+    actual, estimate = np.asarray(actual, float), np.asarray(estimate, float)
+    if len(actual) == 0:
+        return {"n": 0, "mae": None, "rmse": None}
+    err = estimate - actual
+    return {"n": int(len(actual)), "mae": float(np.abs(err).mean()),
+            "rmse": float(np.sqrt((err ** 2).mean()))}
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--market", required=True)
-    ap.add_argument("--outdir", required=True)
+    ap.add_argument("--outdir", default="./output")
     args = ap.parse_args()
     os.makedirs(args.outdir, exist_ok=True)
 
-    series = load_series(args.market)
-    feat = build_features(series)
+    series = read_market(args.market)
+    frame = make_features(series)
+    folds, train_end, val_end = split_time(frame)
 
-    # Target = CHANGE from the last observed MGO quote, not the level.
-    # Rationale: tree models cannot extrapolate beyond the training price range,
-    # and MGO is sticky/near-daily, so modelling the level loses to persistence by
-    # construction. Predicting the delta makes the model "persistence + a learned
-    # adjustment": it can only beat persistence if market signals truly help.
-    feature_cols = [c for c in feat.columns if c not in ("mgo",)]
-    X = feat[feature_cols]
-    y = feat["mgo"] - feat["lag_mgo"]          # delta vs last quote
-
-    # ---- chronological split (no shuffling) ----
-    n = len(feat)
-    n_test = max(1, int(round(n * TEST_FRACTION)))
-    split = n - n_test
-    X_tr, X_te = X.iloc[:split], X.iloc[split:]
-    y_tr, y_te = y.iloc[:split], y.iloc[split:]
-    # time-based validation tail inside train, for early stopping
-    n_val = max(1, int(round(len(X_tr) * 0.15)))
-    X_fit, X_val = X_tr.iloc[:-n_val], X_tr.iloc[-n_val:]
-    y_fit, y_val = y_tr.iloc[:-n_val], y_tr.iloc[-n_val:]
-
-    model = CatBoostRegressor(
-        loss_function="MAE",       # robust, and matches how we judge it
-        iterations=1500,
-        learning_rate=0.03,
-        depth=4,                   # shallow: only ~160 training rows, avoid overfit
-        l2_leaf_reg=6.0,
-        random_seed=42,
-        verbose=False,
-    )
-    model.fit(Pool(X_fit, y_fit), eval_set=Pool(X_val, y_val),
+    model = CatBoostRegressor(loss_function="RMSE", iterations=1500, learning_rate=0.03,
+                              depth=4, l2_leaf_reg=6.0, random_seed=42, verbose=False)
+    model.fit(Pool(folds["train"][FEATURES], folds["train"].target_return),
+              eval_set=Pool(folds["validation"][FEATURES], folds["validation"].target_return),
               early_stopping_rounds=80, use_best_model=True)
 
-    # reconstruct price-level predictions = last quote + predicted change
-    persist = X_te["lag_mgo"].values              # baseline = last observed MGO
-    pred_delta = model.predict(X_te)
-    pred = persist + pred_delta                   # CatBoost level forecast
-    actual_level = y_te.values + persist          # true MGO level on test dates
+    for name, f in folds.items():
+        f = f.copy()
+        f["pred_return"] = model.predict(f[FEATURES])
+        f["gasoil_pred"] = f.gasoil_origin * (1 + f.pred_return)
+        f["split"] = name
+        folds[name] = f
 
-    def report(name, yhat):
-        mae = mean_absolute_error(actual_level, yhat)
-        rmse = float(np.sqrt(mean_squared_error(actual_level, yhat)))
-        return {"model": name, "MAE_usd_per_mt": round(mae, 2), "RMSE_usd_per_mt": round(rmse, 2)}
+    test = folds["test"]
+    g_reg = scores(test.gasoil_actual, test.gasoil_pred)
+    g_base = scores(test.gasoil_actual, test.gasoil_origin)
 
-    r_cat = report("CatBoost (predicts change)", pred)
-    r_base = report("Persistence (last MGO)", persist)
+    # experimental end-to-end MGO: apply predicted gasoil return to MGO where both ends are real quotes
+    preds = pd.concat(folds.values(), ignore_index=True)
+    preds["mgo_origin"] = preds.origin.map(series["mgo"])
+    preds["mgo_actual"] = preds.target_date.map(series["mgo"])
+    ete = preds.dropna(subset=["mgo_origin", "mgo_actual"]).copy()
+    ete["mgo_pred"] = ete.mgo_origin * (1 + ete.pred_return)
+    et = ete.loc[ete.split.eq("test")]
+    m_reg = scores(et.mgo_actual, et.mgo_pred)
+    m_base = scores(et.mgo_actual, et.mgo_origin)
 
-    # directional accuracy: did we get the direction of the move right?
-    actual_dir = np.sign(y_te.values)             # sign of true change
-    pred_dir = np.sign(pred_delta)
-    mask = actual_dir != 0
-    dir_acc = float((pred_dir[mask] == actual_dir[mask]).mean()) if mask.any() else float("nan")
+    table = [("Gasoil MAE (USD/barrel)", g_reg["mae"], g_base["mae"]),
+             ("Gasoil RMSE (USD/barrel)", g_reg["rmse"], g_base["rmse"]),
+             ("MGO MAE (USD/tonne)", m_reg["mae"], m_base["mae"]),
+             ("MGO RMSE (USD/tonne)", m_reg["rmse"], m_base["rmse"])]
+    print(f"{'Test metric':28s} {'CatBoost':>12s} {'Unchanged-price baseline':>26s}")
+    for name, c, b in table:
+        print(f"{name:28s} {c:>12.4f} {b:>26.4f}")
+    print(f"\ntest fold: gasoil={g_reg['n']} forecasts, MGO={m_reg['n']} quote-paired forecasts")
 
-    metrics = {
-        "n_total": int(n), "n_train": int(split), "n_test": int(n_test),
-        "test_period": [str(y_te.index.min().date()), str(y_te.index.max().date())],
-        "target_units": "USD/metric tonne",
-        "results": [r_cat, r_base],
-        "catboost_vs_baseline_MAE_improvement_pct": round(
-            100 * (r_base["MAE_usd_per_mt"] - r_cat["MAE_usd_per_mt"]) / r_base["MAE_usd_per_mt"], 1),
-        "directional_accuracy_vs_last_quote": round(dir_acc, 3),
-        "best_iteration": int(model.get_best_iteration()),
-    }
-
-    # feature importances
-    imp = pd.DataFrame({"feature": feature_cols,
-                        "importance": model.get_feature_importance()}
-                       ).sort_values("importance", ascending=False)
-
-    # ---- save outputs ----
-    feat.to_csv(os.path.join(args.outdir, "feature_table.csv"))
-    imp.to_csv(os.path.join(args.outdir, "feature_importance.csv"), index=False)
-    model.save_model(os.path.join(args.outdir, "catboost_mgo.cbm"))
-    with open(os.path.join(args.outdir, "metrics.json"), "w") as f:
-        json.dump(metrics, f, indent=2)
-
-    # ---- plot: actual vs CatBoost vs persistence on the test period ----
-    try:
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(figsize=(10, 4.5))
-        ax.plot(y_te.index, actual_level, "o-", ms=3, lw=1, label="Actual MGO", color="#0B2A4A")
-        ax.plot(y_te.index, pred, "o-", ms=3, lw=1, label="CatBoost", color="#0FB5AE")
-        ax.plot(y_te.index, persist, "--", lw=1, label="Persistence", color="#F87171")
-        ax.set_ylabel("MGO (USD/MT)"); ax.set_title("MGO: actual vs CatBoost vs persistence (test period)")
-        ax.legend(); fig.autofmt_xdate(); fig.tight_layout()
-        fig.savefig(os.path.join(args.outdir, "mgo_predictions.png"), dpi=130)
-    except Exception as e:
-        print("plot skipped:", e)
-
-    print(json.dumps(metrics, indent=2))
-    print("\nTop features:\n", imp.head(10).to_string(index=False))
+    out = {"protocol": "gasoil return model, chronological 70/15/15, test fold; "
+                       "MGO via predicted-gasoil-% applied to paired real MGO quotes",
+           "train_end": str(train_end.date()), "validation_end": str(val_end.date()),
+           "gasoil": {"catboost": g_reg, "unchanged_price": g_base},
+           "mgo": {"catboost": m_reg, "unchanged_price": m_base}}
+    with open(os.path.join(args.outdir, "metrics.json"), "w") as fh:
+        json.dump(out, fh, indent=2)
+    pd.DataFrame(table, columns=["metric", "catboost", "unchanged_price_baseline"]
+                 ).to_csv(os.path.join(args.outdir, "comparison_table.csv"), index=False)
+    ete.to_csv(os.path.join(args.outdir, "mgo_predictions.csv"), index=False)
+    preds.to_csv(os.path.join(args.outdir, "gasoil_predictions.csv"), index=False)
 
 
 if __name__ == "__main__":
