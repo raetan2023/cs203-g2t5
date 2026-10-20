@@ -1,18 +1,18 @@
 import React from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import StoredMarketPanel from './StoredMarketPanel';
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,
-  LineChart: ({ children }) => <div>{children}</div>,
+  LineChart: ({ children, data }) => <div data-testid="history-chart" data-dates={data.map(row => row.date).join(',')}>{children}</div>,
   CartesianGrid: () => null, Line: () => null, Tooltip: () => null, XAxis: () => null, YAxis: () => null,
 }));
 
 const series = (key, label, category, value, unit, date, currency = null) => ({
   category, ticker: { seriesKey: key, label, value, unit, observedDate: date, currency,
     source: 'Provider', valueType: 'OBSERVED', changeAbs: null, changePct: null },
-  history: [{ date, value }],
+  history: [{ date: new Date(Date.parse(`${date}T00:00:00Z`) - 86400000).toISOString().slice(0, 10), value }, { date, value }],
 });
 function serve(rows, missing = []) {
   const fetcher = vi.fn().mockResolvedValue({ ok: true, status: 200,
@@ -74,8 +74,77 @@ describe('stored market dashboard', () => {
     serve([item]);
     render(<StoredMarketPanel />);
     await screen.findByRole('region', { name: 'Stored observation history' });
-    fireEvent.click(screen.getByRole('button', { name: '15 obs' }));
-    expect(screen.getByRole('button', { name: '15 obs' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: '15 days' }));
+    expect(screen.getByRole('button', { name: '15 days' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText(/15 observations ·/)).toBeInTheDocument();
+    expect(screen.queryByText('Stored observations', { exact: true })).not.toBeInTheDocument();
   });
+  it('filters sparse dates by calendar days across a month boundary', async () => {
+    const item = series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-03-05', 'USD');
+    item.history = ['2026-01-04', '2026-01-05', '2026-02-03', '2026-02-04',
+      '2026-02-18', '2026-02-19', '2026-03-05'].map(date => ({ date, value: 120 }));
+    serve([item]);
+    render(<StoredMarketPanel />);
+    await screen.findByRole('region', { name: 'Stored observation history' });
+    const dates = () => screen.getByTestId('history-chart').getAttribute('data-dates').split(',');
+    expect(dates()).toEqual(item.history.slice(1).map(row => row.date));
+    fireEvent.click(screen.getByRole('button', { name: '30 days' }));
+    expect(dates()).toEqual(['2026-02-04', '2026-02-18', '2026-02-19', '2026-03-05']);
+    fireEvent.click(screen.getByRole('button', { name: '15 days' }));
+    expect(dates()).toEqual(['2026-02-19', '2026-03-05']);
+    expect(screen.getByText(/15 days ending/)).toBeInTheDocument();
+  });
+
+  it('refreshes on click and spins the icon until the request finishes', async () => {
+    const fetcher = serve([series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-10-14', 'USD')]);
+    render(<StoredMarketPanel />);
+    await screen.findByRole('region', { name: 'Stored observation history' });
+    let resolve;
+    fetcher.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    const button = screen.getByRole('button', { name: 'Refresh market data' });
+    fireEvent.click(button);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    expect(button.querySelector('svg')).toHaveClass('sm-spinning');
+    await act(async () => resolve({ ok: true, status: 200, json: async () => ({
+      storage: 'supabase', fetchedAt: '2026-10-20T05:01:00Z', missing: [],
+      series: [series('BRENT_CRUDE', 'Brent crude', 'prices', 125, 'USD/barrel', '2026-10-14', 'USD')],
+    }) }));
+    expect(button).toBeEnabled();
+    expect(button.querySelector('svg')).not.toHaveClass('sm-spinning');
+    expect(screen.getAllByText('$125.00').length).toBeGreaterThan(0);
+  });
+
+  it('offers only documented market price/index series with usable database history', async () => {
+    const priceKeys = ['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'BRENT_CRUDE', 'DUBAI_CRUDE', 'USD_INDEX'];
+    const items = priceKeys.map(key => series(key, key, 'prices', 120, 'index', '2026-10-14'));
+    const single = series('BRENT_CRUDE', 'Brent without history', 'prices', 120, 'USD/barrel', '2026-10-14');
+    single.history = [{ date: '2026-10-14', value: 120 }];
+    serve([...items.filter(item => item.ticker.seriesKey !== 'BRENT_CRUDE'), single,
+      series('MPA_BUNKER_SALES_MGO', 'Bunker sales: MGO', 'sales', 5, 'thousand tonnes', '2026-08-01'),
+      series('GDELT_ARTICLE_COUNT', 'GDELT daily article count', 'news', 5, 'articles', '2026-10-14'),
+      series('UNKNOWN_PRICE', 'Undocumented price', 'prices', 5, 'USD', '2026-10-14')]);
+    render(<StoredMarketPanel />);
+    const menu = await screen.findByRole('combobox', { name: 'Choose a series' });
+    expect(within(menu).getAllByRole('option').map(option => option.value))
+      .toEqual(['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'DUBAI_CRUDE', 'USD_INDEX']);
+    expect(menu).toHaveValue('SGP_MGO_OBSERVED');
+    fireEvent.change(menu, { target: { value: 'USD_INDEX' } });
+    expect(menu).toHaveValue('USD_INDEX');
+    expect(screen.getByRole('region', { name: 'Monthly bunker sales' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'GDELT daily aggregates' })).toBeInTheDocument();
+  });
+
+  it('omits the history chart when no supported series has multiple valid dates', async () => {
+    const item = series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-10-14');
+    item.history = [{ date: '2026-10-14', value: 120 }, { date: '2026-10-14', value: 121 },
+      { date: 'invalid', value: 122 }, { date: '2026-10-13', value: null }];
+    serve([item]);
+    render(<StoredMarketPanel />);
+    await screen.findByRole('region', { name: 'Stored prices and index' });
+    expect(screen.queryByRole('combobox', { name: 'Choose a series' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Stored observation history' })).not.toBeInTheDocument();
+  });
+
 });

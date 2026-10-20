@@ -17,7 +17,7 @@ const order = ['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'BRENT_CRUDE', 'DUBAI_CRUDE
 
 function Symbol({ name, ...props }) {
   const shapes = {
-    refresh: <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6.1 7a7 7 0 0 1 11.6-2L20 8M4 16l2.3 3A7 7 0 0 0 18 17" /></>,
+    refresh: <><path d="M3 11a9 9 0 0 1 15.4-6.4L21 7M21 3v4h-4" /><path d="M21 13a9 9 0 0 1-15.4 6.4L3 17M7 17H3v4" /></>,
     chart: <><path d="M4 4v16h16M7 14l4-4 4 2 5-7" /></>,
     layers: <><path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5" /></>,
     search: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></>,
@@ -59,8 +59,19 @@ export default function StoredMarketPanel() {
   const prices = series.filter(s => s.category === 'prices').sort((a, b) => order.indexOf(a.ticker.seriesKey) - order.indexOf(b.ticker.seriesKey));
   const sales = series.filter(s => s.category === 'sales').sort((a, b) => b.ticker.value - a.ticker.value || a.ticker.label.localeCompare(b.ticker.label));
   const news = series.filter(s => s.category === 'news');
-  const selected = series.find(s => s.ticker.seriesKey === selectedKey) || prices[0] || series[0];
-  const history = selected?.history.slice(-range) || [];
+  // This menu is for documented price/index histories, not monthly sales or news.
+  const chartSeries = prices.filter(s => order.includes(s.ticker.seriesKey)
+    && new Set(s.history.filter(row => Number.isFinite(row.value)
+      && /^\d{4}-\d{2}-\d{2}$/.test(row.date)
+      && Number.isFinite(Date.parse(`${row.date}T00:00:00Z`))).map(row => row.date)).size >= 2);
+  const selected = chartSeries.find(s => s.ticker.seriesKey === selectedKey) || chartSeries[0];
+  // Calendar-day windows include the latest observation day; missing days stay missing.
+  const endDate = selected ? Date.parse(`${selected.ticker.observedDate}T00:00:00Z`) : NaN;
+  const startDate = endDate - (range - 1) * 86400000;
+  const history = (selected?.history || []).filter(row => {
+    const date = Date.parse(`${row.date}T00:00:00Z`);
+    return date >= startDate && date <= endDate;
+  }).sort((a, b) => a.date.localeCompare(b.date));
   const filteredSales = sales.filter(s => fuelName(s.ticker.label).toLowerCase().includes(search.toLowerCase()));
   const visibleSales = showAllSales || search ? filteredSales : filteredSales.slice(0, 6);
   const salesMax = Math.max(0, ...sales.map(s => s.ticker.value));
@@ -71,8 +82,7 @@ export default function StoredMarketPanel() {
       <div><div className="sm-eyebrow"><span /> MARKET INTELLIGENCE</div><h1>Market overview<span>.</span></h1>
         <p>Your Singapore bunker market, in perspective.</p></div>
       <div className="sm-header-actions">
-        <span className="sm-snapshot"><span /> Stored observations</span>
-        <button className="sm-refresh" type="button" onClick={refresh} disabled={refreshing}>
+        <button className="sm-refresh" type="button" onClick={refresh} disabled={refreshing} aria-label="Refresh market data" aria-busy={refreshing}>
           <Symbol name="refresh" className={refreshing ? 'sm-spinning' : ''} />{refreshing ? 'Checking…' : 'Refresh market data'}
         </button>
       </div>
@@ -103,12 +113,12 @@ export default function StoredMarketPanel() {
     {selected && <section className="sm-panel sm-history" aria-label="Stored observation history">
       <div className="sm-panel-heading"><div><div className="sm-section-kicker">THE BIGGER PICTURE</div><h2>Market history</h2></div>
         <div className="sm-history-controls"><label className="sm-sr-only" htmlFor="market-history-series">Choose a series</label>
-          <select id="market-history-series" value={selected.ticker.seriesKey} onChange={event => setSelectedKey(event.target.value)}>{series.map(s => <option key={s.ticker.seriesKey} value={s.ticker.seriesKey}>{s.ticker.label}</option>)}</select>
-          <div className="sm-range" role="group" aria-label="History length">{[15, 30, 60].map(value => <button type="button" key={value} aria-pressed={range === value} onClick={() => setRange(value)}>{value} obs</button>)}</div>
+          <select id="market-history-series" value={selected.ticker.seriesKey} onChange={event => setSelectedKey(event.target.value)}>{chartSeries.map(s => <option key={s.ticker.seriesKey} value={s.ticker.seriesKey}>{s.ticker.label}</option>)}</select>
+          <div className="sm-range" role="group" aria-label="History length">{[15, 30, 60].map(value => <button type="button" key={value} aria-pressed={range === value} onClick={() => setRange(value)}>{value} days</button>)}</div>
         </div>
       </div>
       <div className="sm-history-summary"><span className="sm-history-price"><Price ticker={selected.ticker} /></span><Change ticker={selected.ticker} />
-        <span className="sm-history-date">As of {dateLabel(selected.ticker.observedDate)}</span></div>
+        <span className="sm-history-date">{range} days ending {dateLabel(selected.ticker.observedDate)}</span></div>
       <div className="sm-chart"><ResponsiveContainer width="100%" height={300}>
         <LineChart data={history} margin={{ top: 20, right: 16, bottom: 8, left: 0 }}>
           <CartesianGrid stroke="#203044" strokeDasharray="3 5" vertical={false} />
