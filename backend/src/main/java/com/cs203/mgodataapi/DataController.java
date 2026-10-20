@@ -30,9 +30,9 @@ public class DataController {
 
     private static final List<String> CSV_FIELDS = List.of("date", "value", "series", "source", "unit");
 
-    private final SnapshotStore store;
+    private final MarketDataStore store;
 
-    public DataController(SnapshotStore store) {
+    public DataController(MarketDataStore store) {
         this.store = store;
     }
 
@@ -61,15 +61,10 @@ public class DataController {
         if (!Source.ALL.containsKey(sourceId)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "Unknown source. See /api/v1/sources.");
         }
-        String startDate = start == null ? null : start.toString();
-        String endDate = end == null ? null : end.toString();
-        List<Map<String, Object>> matching = store.rows(sourceId).stream()
-                .filter(row -> startDate == null || SnapshotStore.date(row).compareTo(startDate) >= 0)
-                .filter(row -> endDate == null || SnapshotStore.date(row).compareTo(endDate) <= 0)
-                .filter(row -> series == null || series.equals(row.get("series")))
-                .toList();
-        // Keep the most recent rows when more than `limit` match.
-        List<Map<String, Object>> rows = matching.subList(Math.max(0, matching.size() - limit), matching.size());
+        if (start != null && end != null && start.isAfter(end)) {
+            throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "start must be on or before end.");
+        }
+        List<Map<String, Object>> rows = store.rows(sourceId, start, end, series, limit);
 
         if (format.equals("csv")) {
             return ResponseEntity.ok().contentType(new MediaType("text", "csv")).body(toCsv(rows));

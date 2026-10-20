@@ -12,7 +12,7 @@
 	<artifactId>mgo-data-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>mgo-data-api</name>
-	<description>Read-only Spring Boot service for the bundled MGO market-data snapshots</description>
+	<description>Spring Boot service for Supabase market data and purchase plans</description>
 	<properties>
 		<java.version>21</java.version>
 	</properties>
@@ -56,6 +56,11 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
