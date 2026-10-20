@@ -1,11 +1,11 @@
 import React from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import StoredMarketPanel from './StoredMarketPanel';
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,
-  LineChart: ({ children }) => <div>{children}</div>,
+  LineChart: ({ children, data }) => <div data-testid="history-chart" data-dates={data.map(row => row.date).join(',')}>{children}</div>,
   CartesianGrid: () => null, Line: () => null, Tooltip: () => null, XAxis: () => null, YAxis: () => null,
 }));
 
@@ -74,8 +74,46 @@ describe('stored market dashboard', () => {
     serve([item]);
     render(<StoredMarketPanel />);
     await screen.findByRole('region', { name: 'Stored observation history' });
-    fireEvent.click(screen.getByRole('button', { name: '15 obs' }));
-    expect(screen.getByRole('button', { name: '15 obs' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: '15 days' }));
+    expect(screen.getByRole('button', { name: '15 days' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText(/15 observations ·/)).toBeInTheDocument();
+    expect(screen.queryByText('Stored observations', { exact: true })).not.toBeInTheDocument();
   });
+  it('filters sparse dates by calendar days across a month boundary', async () => {
+    const item = series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-03-05', 'USD');
+    item.history = ['2026-01-04', '2026-01-05', '2026-02-03', '2026-02-04',
+      '2026-02-18', '2026-02-19', '2026-03-05'].map(date => ({ date, value: 120 }));
+    serve([item]);
+    render(<StoredMarketPanel />);
+    await screen.findByRole('region', { name: 'Stored observation history' });
+    const dates = () => screen.getByTestId('history-chart').getAttribute('data-dates').split(',');
+    expect(dates()).toEqual(item.history.slice(1).map(row => row.date));
+    fireEvent.click(screen.getByRole('button', { name: '30 days' }));
+    expect(dates()).toEqual(['2026-02-04', '2026-02-18', '2026-02-19', '2026-03-05']);
+    fireEvent.click(screen.getByRole('button', { name: '15 days' }));
+    expect(dates()).toEqual(['2026-02-19', '2026-03-05']);
+    expect(screen.getByText(/15 days ending/)).toBeInTheDocument();
+  });
+
+  it('refreshes on click and spins the icon until the request finishes', async () => {
+    const fetcher = serve([series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-10-14', 'USD')]);
+    render(<StoredMarketPanel />);
+    await screen.findByRole('region', { name: 'Stored observation history' });
+    let resolve;
+    fetcher.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    const button = screen.getByRole('button', { name: 'Refresh market data' });
+    fireEvent.click(button);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    expect(button.querySelector('svg')).toHaveClass('sm-spinning');
+    await act(async () => resolve({ ok: true, status: 200, json: async () => ({
+      storage: 'supabase', fetchedAt: '2026-10-20T05:01:00Z', missing: [],
+      series: [series('BRENT_CRUDE', 'Brent crude', 'prices', 125, 'USD/barrel', '2026-10-14', 'USD')],
+    }) }));
+    expect(button).toBeEnabled();
+    expect(button.querySelector('svg')).not.toHaveClass('sm-spinning');
+    expect(screen.getAllByText('$125.00').length).toBeGreaterThan(0);
+  });
+
 });
