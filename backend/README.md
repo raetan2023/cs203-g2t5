@@ -3,10 +3,11 @@
 The team's shared Spring Boot application. It exposes the historical market data
 the dashboard needs, and is the project other backend features are built in.
 
-Purchase plans and Clerk user mappings use PostgreSQL. Shared snapshot routes
-read bundled JSON from `data/snapshots`; the market dashboard has its own
-database/fallback path described below. Analysis uses a separate provider boundary
-and reports unavailable by default until normalized ML inputs are connected.
+Purchase plans, Clerk user mappings, and shared market-data routes use Supabase PostgreSQL.
+The historical data API and backend homepage read imported observations from
+`public.market_series` and `public.market_observations`; no bundled JSON files are required.
+Analysis uses a separate provider boundary and reports unavailable by default until
+normalized ML inputs are connected.
 
 ## Run
 
@@ -34,8 +35,9 @@ cd backend
 ```
 
 On startup the log reports which database it reached and the tables it found. If it
-says `Could not reach the database`, the market-data endpoints still work — only
-database-backed features are affected.
+says `Could not reach the database`, stored-data routes and the homepage return
+`503` until the connection is restored. `/health` remains a service-liveness check;
+it does not prove the database is reachable.
 
 If the app fails to start with `'url' must start with "jdbc"`, the `SUPABASE_*`
 variables are not set in that shell.
@@ -67,14 +69,21 @@ given. A missing, malformed or expired token returns 401.
 | --- | --- |
 | `GET /health` | Service status, for uptime checks |
 | `GET /api/v1/config` | Settings the frontend needs before it has data, currently the scenario date |
-| `GET /api/v1/sources` | Every series with its provider, unit, record count, and date range |
-| `GET /api/v1/data/{sourceId}` | Dated observations for one series |
+| `GET /api/v1/sources` | Known sources with provider/unit labels and current Supabase observation counts/date ranges |
+| `GET /api/v1/data/{sourceId}` | Imported observations for one source, in chronological order |
+| `GET /api/v1/market/stored` | Latest imported observations and bounded histories for the current React dashboard |
 | `GET /api/v1/market/dashboard` | Everything the historical dashboard shows for one scenario date |
 | `GET/POST/PUT/DELETE /api/v1/purchase-plan` | The caller's single saved purchase plan |
 
 `/api/v1/data/{sourceId}` accepts `start`, `end` (ISO dates), `series` (for
 sources holding several sub-series, such as bunker sales), `limit` (1–25000,
 default 5000, keeps the most recent rows), and `format` (`json` or `csv`).
+Date boundaries are inclusive; a reversed date range returns `422`. On equal dates,
+rows sort by series name, so limiting multi-series bunker data is deterministic.
+
+The current React dashboard uses `/api/v1/market/stored` and reads Supabase directly
+through the backend. The older scenario dashboard endpoint described below remains
+separate.
 
 Errors are returned as `{"detail": "..."}`, with `field_errors` added when a
 submitted field is rejected.
@@ -193,19 +202,40 @@ and paste either the API key or a session token, depending on the route.
 
 ## Available data
 
-| Source ID | Series | Records | Range |
-| --- | --- | --- | --- |
-| `mgo_singapore` | Singapore MGO prices (USD/MT) | 233 | 2020-03 – 2026-09 |
-| `brent` | Brent crude (USD/barrel) | 6,773 | 2000-01 – 2026-09 |
-| `usd_index` | Broad USD index | 5,188 | 2006-01 – 2026-09 |
-| `bunker_sales` | Singapore bunker sales, 16 fuel types | 6,080 | 1995-01 – 2026-08 |
-| `gdelt` | Oil and shipping news counts | 1 | 2026-09-13 |
-| `gasoil_singapore` | Singapore Gasoil futures | — | not yet sourced |
-| `dubai_crude` | Dubai Crude Oil futures | — | not yet sourced |
+The daily importer populates the UUID Supabase tables. See
+[market synchronization](../data-ingestion/MARKET_SYNC.md) for setup and schedules.
+All seven source IDs are supported:
 
-MGO quotes are sparse (roughly 2–3 per month) and are observed values only at
-their own dates. Gasoil and Dubai crude are login-gated at source and have no
-data yet; those endpoints return an empty list rather than failing.
+| Source ID | Stored series key(s) |
+| --- | --- |
+| `mgo_singapore` | `SGP_MGO_OBSERVED` |
+| `gasoil_singapore` | `SGP_GASOIL_FUT` |
+| `dubai_crude` | `DUBAI_CRUDE` |
+| `brent` | `BRENT_CRUDE` (overridable with `BRENT_SERIES_KEY`) |
+| `usd_index` | `USD_INDEX` |
+| `bunker_sales` | `MPA_BUNKER_SALES_*` |
+| `gdelt` | `GDELT_ARTICLE_COUNT`, paired with `GDELT_AVERAGE_TONE` |
+
+Counts and date ranges are queried on each request, rather than copied into this
+README. Only `value_type = 'OBSERVED'` is included. A source with no imported rows
+reports `available: false`, `records: 0`, and null dates; its data endpoint returns
+`count: 0` and `data: []`. Database errors return `503` with a generic message,
+without silently substituting local files or external API values.
+
+Data responses keep `source_id`, `count`, and `data`, with row fields `date`,
+`value`, `series`, `source`, and `unit`. Public series names are preserved, e.g.
+`brent` and `bunker_sales_marine_diesel_oil`. GDELT returns article counts with the
+same-date stored tone in `metadata.average_tone`, or null if absent. Tone is not
+counted as an extra article observation. CSV exports contain the five core fields.
+Other original snapshot metadata and `retrieved_at` were not stored by the importer
+and are not reconstructed. Source/provider/unit fields on individual rows come
+from the database; `/sources` retains the registry's descriptive labels. No unit
+conversion or inferred publication timestamp is applied.
+
+The backend no longer loads `data/snapshots`, and `MGO_SNAPSHOT_DIR` is removed.
+Model training datasets and the upstream API's snapshot mode are separate and
+remain unchanged. The importer still fetches that external API; it must not be
+pointed at this backend, which reads the import destination.
 
 ## Test
 
@@ -213,13 +243,16 @@ data yet; those endpoints return an empty list rather than failing.
 ./mvnw test
 ```
 
+The suite uses mocked identity/database boundaries for HTTP checks and an isolated
+in-memory database in PostgreSQL mode for historical-query tests. No shared
+Supabase credentials or writes are needed.
+
 ## Configuration
 
 | Environment variable | Default |
 | --- | --- |
 | `PORT` | `8000` |
 | `MGO_API_KEY` | `mgo_public_demo_2026` |
-| `MGO_SNAPSHOT_DIR` | `data/snapshots` (relative to the working directory) |
 | `FRONTEND_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173` — browser origins allowed to call the API |
 | `CLERK_ISSUER_URI` | the team's development tenant — the identity provider whose tokens are accepted |
 | `MGO_SCENARIO_DATE` | `2025-10-24` — the historical date every feature treats as "today" |
