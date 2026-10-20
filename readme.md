@@ -37,6 +37,29 @@ git clone https://github.com/raetan2023/cs203-g2t5.git
 cd cs203-g2t5
 ```
 
+### Single launcher (macOS/Linux)
+
+Create `backend/.env` with your actual connection settings:
+
+```bash
+SUPABASE_DB_URL='jdbc:postgresql://HOST:5432/postgres?sslmode=require'
+SUPABASE_DB_USER='your-database-user'
+SUPABASE_DB_PASSWORD='your-database-password'
+CLERK_ISSUER_URI='https://YOUR-CLERK-INSTANCE.clerk.accounts.dev'
+MGO_API_KEY='mgo_public_demo_2026'
+PORT='8000'
+```
+
+Configure `frontend/.env.local` as shown below, then run from the repository root:
+
+```bash
+./run.command
+```
+
+On macOS you can also double-click `run.command` in Finder. It loads the backend environment, runs `npm ci` if `frontend/node_modules` is missing, and starts both services in one terminal. Open **http://127.0.0.1:5173** after Vite is ready. Press **Ctrl+C** to stop both; if either service exits, the launcher stops the other. Port 5173 must be available. Changing the backend port also requires updating `VITE_API_URL` in the frontend environment.
+
+The launcher rejects missing backend values and `YOUR_...` placeholders. It does not verify credentials or wait for backend readiness. The manual two-terminal commands below remain available, including for Windows.
+
 ### 1. Start the backend
 
 Set database credentials in the terminal that will run Spring Boot. Replace the placeholders with the team's connection details:
@@ -101,6 +124,12 @@ Shared data routes (`/api/v1/data/{sourceId}`, `/api/v1/sources`) and the backen
 Keep database credentials and session tokens out of Git. Frontend `VITE_*` values are exposed to the browser, so they must not contain server secrets. The demo API key above is intentionally public. Confirm database setup with the owner using the [schema documentation](docs/database-schema.md) and [migration notes](docs/migrations/README.md); migration scripts are not automatically applied at startup.
 
 ## Checks and isolated preview
+
+Test the launcher from the repository root (Python 3, no database required):
+
+```bash
+python3 -m unittest discover -s tests -p 'test_run_launcher.py' -v
+```
 
 Run frontend checks from `frontend/`:
 
