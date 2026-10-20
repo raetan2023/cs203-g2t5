@@ -20,7 +20,7 @@ The normal app uses the backend analysis API, whose default provider reports una
 | Path | Purpose |
 | --- | --- |
 | [`frontend/`](frontend/README.md) | Main React app: authentication, navigation, dashboard, purchase plans and analysis UI |
-| [`backend/`](backend/README.md) | Shared Spring Boot API, snapshot data, token verification and PostgreSQL-backed purchase plans |
+| [`backend/`](backend/README.md) | Shared Spring Boot API, Supabase market data, token verification and PostgreSQL-backed purchase plans |
 | [`historical-market-dashboard/`](historical-market-dashboard/README.md) | Separate standalone market dashboard; has its own setup and ports |
 | [`models/linear-regression/`](models/linear-regression/README.md) | Gasoil regression and experimental gasoil-to-MGO mapping |
 | [`models/ridge-regression/`](models/ridge-regression/README.md) | Ridge MGO return forecasting and walk-forward evaluation |
@@ -90,14 +90,13 @@ These commands use macOS/Linux shell syntax. On Windows, use `copy .env.example 
 | `PORT` | Backend port; `8000` |
 | `MGO_SCENARIO_DATE` | Historical date treated as today; `2025-10-24` |
 | `MGO_API_KEY` | Market-data API key; intentionally public academic demo value `mgo_public_demo_2026` |
-| `MGO_SNAPSHOT_DIR` | Bundled data location; `data/snapshots` when running from `backend/` |
 | `FRONTEND_ORIGINS` | Allowed browser origins; `http://127.0.0.1:5173,http://localhost:5173` |
 | `CLERK_ISSUER_URI` | Identity provider used to verify session tokens; match the frontend instance |
 | `SUPABASE_DB_URL`, `SUPABASE_DB_USER`, `SUPABASE_DB_PASSWORD` | Required database connection settings |
 
 Market-data routes use `X-API-Key`; private purchase-plan and analysis routes use `Authorization: Bearer <Clerk session token>`. The backend resolves the authenticated user's ownership rather than trusting a user ID supplied by the browser.
 
-Shared data routes read bundled JSON snapshots. The dashboard has its own database/external-service fallback path: displaying market values alone does not prove the local backend or database is working. Its frontend fallback also includes fixed defaults and proxy calculations, so not every displayed value is an observed market quote. The external dashboard service is outside this repository. See the [backend dashboard documentation](backend/README.md#market-dashboard).
+Shared data routes (`/api/v1/data/{sourceId}`, `/api/v1/sources`) and the backend homepage read imported observations from Supabase. The current React dashboard uses `/api/v1/market/stored`, also backed by Supabase. No bundled backend JSON files are required. Empty sources return no observations; database failures return `503`. The legacy scenario dashboard has a separate database/external-service fallback path; see the [backend documentation](backend/README.md#market-dashboard).
 
 Keep database credentials and session tokens out of Git. Frontend `VITE_*` values are exposed to the browser, so they must not contain server secrets. The demo API key above is intentionally public. Confirm database setup with the owner using the [schema documentation](docs/database-schema.md) and [migration notes](docs/migrations/README.md); migration scripts are not automatically applied at startup.
 
@@ -122,7 +121,7 @@ Backend synthetic cost analysis requires both the `analysis-fixture` profile and
 
 ## Modelling experiments
 
-Each model folder has its own dependencies, input-data requirements and run instructions. Model datasets are separate from the backend's bundled dashboard snapshots; use the relevant model README to locate the required data. [modelcomparison.md](modelcomparison.md) explains the evaluation differences and limitations.
+Each model folder has its own dependencies, input-data requirements and run instructions. Model datasets remain separate from the Supabase-backed data API; use the relevant model README to locate the required training data. [modelcomparison.md](modelcomparison.md) explains the evaluation differences and limitations.
 
 Treat these results as research outputs. Sparse observed MGO quotes, publication timing and uncertainty calibration limit the evidence; the experiments do not establish validated purchasing recommendations.
 

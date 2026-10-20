@@ -17,9 +17,12 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -56,6 +59,25 @@ class MgoDataApiApplicationTests {
     @MockitoBean
     private PurchasePlanRepository plans;
 
+    @MockitoBean
+    private MarketDataStore marketData;
+
+    @BeforeEach
+    void storedMarketData() {
+        for (String source : Source.ALL.keySet()) {
+            when(marketData.availability(source)).thenReturn(Map.of(
+                    "available", true, "records", 2L, "start", "2026-10-13", "end", "2026-10-14"));
+        }
+        when(marketData.rows("brent", null, null, null, 2)).thenReturn(List.of(
+                Map.of("date", "2026-10-13", "value", new BigDecimal("125.78"),
+                        "series", "brent", "source", "FRED", "unit", "USD/barrel"),
+                Map.of("date", "2026-10-14", "value", new BigDecimal("126.55"),
+                        "series", "brent", "source", "FRED", "unit", "USD/barrel")));
+        when(marketData.rows("brent", null, null, null, 1)).thenReturn(List.of(
+                Map.of("date", "2026-10-14", "value", new BigDecimal("126.55"),
+                        "series", "brent", "source", "FRED, verified", "unit", "USD/barrel")));
+    }
+
     @Test
     void defaultAnalysisIsExplicitlyUnavailable() throws Exception {
         UUID owner = UUID.randomUUID(), planId = UUID.randomUUID();
@@ -82,14 +104,46 @@ class MgoDataApiApplicationTests {
     }
 
     @Test
-    void dataRequiresAKeyAndReturnsSnapshotData() throws Exception {
+    void dataRequiresAKeyAndReturnsStoredData() throws Exception {
         mvc.perform(get("/api/v1/sources")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/sources").header("X-API-Key", KEY))
                 .andExpect(jsonPath("$.sources[?(@.id == 'brent')].records").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.greaterThan(0))));
         mvc.perform(get("/api/v1/data/brent?limit=2").header("X-API-Key", KEY))
-                .andExpect(jsonPath("$.count").value(2));
+                .andExpect(jsonPath("$.count").value(2))
+                .andExpect(jsonPath("$.data[1].value").value(126.55));
         mvc.perform(get("/api/v1/data/brent?limit=1&format=csv").header("X-API-Key", KEY))
-                .andExpect(content().string(startsWith("date,value,series,source,unit\n")));
+                .andExpect(content().string(startsWith("date,value,series,source,unit\n")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("\"FRED, verified\"")));
+    }
+
+    @Test
+    void dataPassesFiltersToDatabaseAndRejectsReversedDates() throws Exception {
+        mvc.perform(get("/api/v1/data/bunker_sales?start=2026-01-01&end=2026-08-01"
+                + "&series=bunker_sales_marine_diesel_oil&limit=20").header("X-API-Key", KEY))
+                .andExpect(status().isOk());
+        verify(marketData).rows("bunker_sales", LocalDate.parse("2026-01-01"),
+                LocalDate.parse("2026-08-01"), "bunker_sales_marine_diesel_oil", 20);
+        mvc.perform(get("/api/v1/data/brent?start=2026-10-14&end=2026-10-13")
+                .header("X-API-Key", KEY)).andExpect(status().isUnprocessableContent());
+    }
+
+    @Test
+    void missingStoredSourceReturnsEmptyAndDatabaseOutageReturns503() throws Exception {
+        when(marketData.rows("gasoil_singapore", null, null, null, 5000)).thenReturn(List.of());
+        mvc.perform(get("/api/v1/data/gasoil_singapore").header("X-API-Key", KEY))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0))
+                .andExpect(jsonPath("$.data").isEmpty());
+        var unavailable = new ApiException(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                "Stored market data is unavailable. Check the backend database connection.");
+        when(marketData.rows("brent", null, null, null, 5000)).thenThrow(unavailable);
+        mvc.perform(get("/api/v1/data/brent").header("X-API-Key", KEY))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.detail").value(unavailable.getMessage()));
+        when(marketData.availability("brent")).thenThrow(unavailable);
+        mvc.perform(get("/api/v1/sources").header("X-API-Key", KEY))
+                .andExpect(status().isServiceUnavailable());
+        mvc.perform(get("/")).andExpect(status().isServiceUnavailable());
+        mvc.perform(get("/health")).andExpect(status().isOk());
     }
 
     @Test

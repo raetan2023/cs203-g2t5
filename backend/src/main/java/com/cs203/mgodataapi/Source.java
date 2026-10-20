@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** A commodity/source the API knows about, whether or not a snapshot is bundled. */
+/** A commodity/source the API knows about, whether or not observations have been imported. */
 public record Source(String id, String name, String provider, String unit) {
 
     public static final Map<String, Source> ALL;
