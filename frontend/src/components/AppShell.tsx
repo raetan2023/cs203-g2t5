@@ -14,7 +14,9 @@ export function AppShell({ children, path, scenarioDate, onSignOut, marketAvaila
     <a className="bb-skip" href="#app-content">Skip to content</a>
     <header className="bb-header">
       <button ref={trigger} className="bb-menu" aria-label="Open navigation" aria-expanded={open} aria-controls="app-navigation" onClick={() => setOpen(true)}><Icon name="menu" /></button>
-      <Brand /><time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>
+      <Brand />{path === '/market-dashboard'
+        ? <span className="bb-date">MARKET OVERVIEW</span>
+        : <time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>}
     </header>
     <div id="app-content" tabIndex={-1}>{children}</div>
     {open && <Navigation path={path} marketAvailable={marketAvailable} onSignOut={onSignOut} onClose={() => { setOpen(false); trigger.current?.focus(); }} />}
