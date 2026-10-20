@@ -36,4 +36,27 @@ public class BrentMarketRepository {
                         row.getString("currency_code"), row.getDate("observation_date").toLocalDate(),
                         row.getBigDecimal("value")), seriesKey);
     }
+
+    /** Bounded history per imported series, with no scenario/fill/conversion logic. */
+    public List<Observation> latestImported() {
+        return jdbc.query("""
+                WITH ranked AS (
+                  SELECT s.series_key, s.source_name, s.unit, s.currency_code,
+                         o.observation_date, o.value,
+                         ROW_NUMBER() OVER (PARTITION BY s.series_key ORDER BY o.observation_date DESC) AS position
+                  FROM public.market_observations o
+                  JOIN public.market_series s ON s.series_id = o.series_id
+                  WHERE o.value_type = 'OBSERVED'
+                    AND (s.series_key IN (?, 'SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT',
+                         'DUBAI_CRUDE', 'USD_INDEX', 'GDELT_ARTICLE_COUNT', 'GDELT_AVERAGE_TONE')
+                         OR LEFT(s.series_key, 11) = 'MPA_BUNKER_')
+                )
+                SELECT series_key, source_name, unit, currency_code, observation_date, value
+                FROM ranked WHERE position <= 60
+                ORDER BY series_key, observation_date DESC
+                """, (row, index) -> new Observation(row.getString("series_key"),
+                        row.getString("source_name"), row.getString("unit"),
+                        row.getString("currency_code"), row.getDate("observation_date").toLocalDate(),
+                        row.getBigDecimal("value")), seriesKey);
+    }
 }

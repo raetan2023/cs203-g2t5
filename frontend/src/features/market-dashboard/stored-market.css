@@ -1,0 +1,15 @@
+.stored-market { padding: 1px 0 32px; }
+.stored-market h1 { margin: 0 0 8px; font-size: 26px; }
+.stored-market-section { max-width: 1200px; width: calc(100% - 48px); margin: 24px auto; color: #e2e8f0; }
+.stored-market-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 16px; }
+.stored-market-card { padding: 20px; border: 1px solid #334155; border-radius: 16px; background: #101a28; }
+.stored-market-card h3 { margin: 0 0 16px; }
+.stored-market-card p { font-size: 13px; color: #b8c6d8; line-height: 1.6; }
+.stored-market-value { font-size: 27px; font-weight: 700; }
+.stored-market-value span { font-size: 13px; font-weight: 400; }
+.stored-market-warning, .stored-market-missing { color: #fbbf24 !important; }
+.stored-market-missing { font-size: 14px; line-height: 1.6; padding: 12px; border: 1px solid #66562d; border-radius: 8px; }
+.stored-market-table { overflow-x: auto; }
+.stored-market select { padding: 8px; border: 1px solid #64748b; border-radius: 6px; background: #101a28; color: #e2e8f0; max-width: 100%; }
+.stored-market-chart { margin: 20px 0; min-width: 0; }
+@media (max-width: 600px) { .stored-market-section { width: calc(100% - 24px); } }

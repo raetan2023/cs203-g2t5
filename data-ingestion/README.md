@@ -1,5 +1,7 @@
 # Brent API → Supabase importer
 
+For the expanded seven-source importer and database-only Market dashboard, see [MARKET_SYNC.md](MARKET_SYNC.md). The Brent-specific commands below remain available for compatibility.
+
 Python 3.10+; standard library only. Uses the actual UUID schema exported by the user (`series_id`, `observation_id`, `observation_date`), not the different Java entity schema. No database credentials are needed for preview mode.
 
 ## 1. Preview the supplied JSON
@@ -97,7 +99,7 @@ The new read-only endpoint `GET /api/v1/market/brent` reads up to 60 observed Br
 
 The endpoint is protected by the existing `X-API-Key` filter. It returns the latest stored price, its actual observation date, the change versus the previous stored observation, oldest-first recent history, and `fetchedAt` (database read time). No rows returns HTTP 204; an inaccessible database returns HTTP 503. There is no external or fabricated fallback for this endpoint. JDBC reads the exported UUID schema directly, leaving the legacy scenario ORM entities alone.
 
-On the Market dashboard page, **Latest stored Brent** loads independently of the historical dashboard. It checks the backend once per minute and provides a manual refresh button. On refresh failure, the last successful result is retained with an error notice. This panel replaces the legacy Brent ticker, so no second example Brent price is displayed. The MGO chart and other market cards retain their historical scope.
+The original **Latest stored Brent** component remains in the repository with its tests. The Market dashboard page now uses the expanded stored-market view documented in `MARKET_SYNC.md`, retaining the Brent endpoint and data behaviour while adding other imported series. It checks the backend every minute and retains marked previous data on refresh failure.
 
 For local development, `frontend/.env.local` uses `VITE_API_URL=/`; the Vite `/api` proxy forwards requests to port 8000. Start the backend using your existing local database settings, then run `npm run dev` from `frontend/`. Sign in and open **Market dashboard**. The Vite proxy is development-only; a production deployment needs its own API routing or an explicitly configured backend URL.
 

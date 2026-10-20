@@ -101,6 +101,11 @@ def apply_rows(source, rows, series_key, batch_size=500):
     series = {"series_key": series_key, "source_name": source["provider"],
               "source_url": source.get("source_url"), "currency_code": "USD", "unit": source["unit"],
               "price_definition": "FRED DCOILBRENTEU Brent-Europe spot benchmark"}
+    return write_series(series, rows, url, headers, batch_size)
+
+
+def write_series(series, rows, url, headers, batch_size=500):
+    """Upsert validated metadata/rows; callers must perform the schema preflight first."""
     saved = request_json(url + "/rest/v1/market_series?on_conflict=series_key", method="POST",
                          headers={**headers, "Prefer": "resolution=merge-duplicates,return=representation"}, payload=series)
     if not isinstance(saved, list) or len(saved) != 1:

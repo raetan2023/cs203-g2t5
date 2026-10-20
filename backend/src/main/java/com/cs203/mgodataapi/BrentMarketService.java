@@ -34,6 +34,10 @@ public class BrentMarketService {
                     "Stored Brent data is unavailable. Check the backend database connection.");
         }
         if (rows.isEmpty()) return Optional.empty();
+        return Optional.of(buildResponse(rows, "Brent crude"));
+    }
+
+    static Response buildResponse(List<BrentMarketRepository.Observation> rows, String label) {
         var latest = rows.getFirst();
         BigDecimal change = null;
         BigDecimal changePct = null;
@@ -44,11 +48,11 @@ public class BrentMarketService {
                 changePct = change.multiply(BigDecimal.valueOf(100)).divide(previous, 4, RoundingMode.HALF_UP);
             }
         }
-        var ticker = new MarketTickerDTO(latest.seriesKey(), "Brent crude", latest.unit(),
+        var ticker = new MarketTickerDTO(latest.seriesKey(), label, latest.unit(),
                 latest.currency(), latest.source(), "OBSERVED", latest.value(), change,
                 changePct, latest.date());
         var history = rows.stream().sorted(Comparator.comparing(BrentMarketRepository.Observation::date))
                 .map(row -> new ChartPointDTO(row.date(), row.value(), row.seriesKey())).toList();
-        return Optional.of(new Response(ticker, history, Instant.now(), "supabase"));
+        return new Response(ticker, history, Instant.now(), "supabase");
     }
 }
