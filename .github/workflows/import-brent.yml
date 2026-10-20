@@ -1,0 +1,77 @@
+name: Daily Brent data import
+
+on:
+  push:
+    branches:
+      - codex/test-daily-brent-import
+    paths:
+      - '.github/workflows/import-brent.yml'
+      - 'data-ingestion/**'
+  schedule:
+    # 23:17 UTC = 07:17 Singapore time the following day. Runs can be delayed.
+    - cron: '17 23 * * *'
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Write observations to Supabase (leave unchecked for preview)'
+        required: true
+        type: boolean
+        default: false
+      mode:
+        description: 'Provider mode: snapshot is verified; live is not yet verified'
+        required: true
+        type: choice
+        default: snapshot
+        options:
+          - snapshot
+          - live
+          - auto
+
+permissions:
+  contents: read
+
+concurrency:
+  group: brent-supabase-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out importer
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Run importer tests
+        run: python -m unittest discover -s data-ingestion -p 'test_*.py'
+
+      - name: Fetch, validate and optionally import Brent
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          IMPORT_MODE: ${{ inputs.mode || 'snapshot' }}
+          SERIES_KEY: ${{ vars.BRENT_SERIES_KEY || 'BRENT_CRUDE' }}
+          # Daily writes are enabled only after a successful manual test.
+          APPLY_IMPORT: ${{ (github.event_name == 'schedule' && vars.BRENT_DAILY_IMPORT_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.apply) }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--mode "$IMPORT_MODE" --series-key "$SERIES_KEY" --check-supabase)
+          if [[ "$APPLY_IMPORT" == "true" ]]; then
+            args+=(--apply)
+          fi
+          python data-ingestion/import_brent.py "${args[@]}"
+          {
+            echo '### Brent API synchronization'
+            echo "- Provider mode: $IMPORT_MODE"
+            echo "- Database writes enabled: $APPLY_IMPORT"
+            echo '- Check the logs for source coverage and latest observation date.'
+            echo '- A successful snapshot synchronization does not establish live prices.'
+          } >> "$GITHUB_STEP_SUMMARY"
