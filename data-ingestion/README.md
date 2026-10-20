@@ -80,7 +80,7 @@ python3 -m unittest discover -s data-ingestion -p 'test_*.py'
 
 The workflow `.github/workflows/import-brent.yml` fetches Brent daily, around **07:17 Singapore time** (23:17 UTC). Scheduled workflows run from the repository's default branch, so commit the workflow and this importer folder, and merge them into that branch (normally `main`). They do not run just because files exist locally. GitHub can delay scheduled runs.
 
-Pushes affecting this importer or workflow on `codex/test-daily-brent-import` also run a preview and read-only database check. These branch tests never apply records and do not enable a daily schedule. They let the workflow be tested before merging into `main`. The manual Run workflow control requires the workflow to exist on the default branch.
+Pushes affecting this importer or workflow on `test-daily-brent-import` also run a preview and read-only database check. These branch tests never apply records and do not enable a daily schedule. They let the workflow be tested before merging into `main`. The manual Run workflow control requires the workflow to exist on the default branch.
 
 1. Add repository Actions secrets `SUPABASE_URL` and `SUPABASE_SECRET_KEY`.
 2. Confirm the series/date unique index exists in Supabase. This index is not created by the workflow.

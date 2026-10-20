@@ -3,7 +3,7 @@ name: Daily Brent data import
 on:
   push:
     branches:
-      - codex/test-daily-brent-import
+      - test-daily-brent-import
     paths:
       - '.github/workflows/import-brent.yml'
       - 'data-ingestion/**'
