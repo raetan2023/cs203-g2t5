@@ -1,0 +1,25 @@
+name: Test local launcher
+on:
+  pull_request:
+    paths:
+      - run.command
+      - tests/test_run_launcher.py
+      - .github/workflows/test-launcher.yml
+  push:
+    paths:
+      - run.command
+      - tests/test_run_launcher.py
+      - .github/workflows/test-launcher.yml
+jobs:
+  launcher:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: bash -n run.command
+      - run: python3 -m unittest discover -s tests -p 'test_run_launcher.py' -v
