@@ -1,0 +1,94 @@
+{
+  "optimal_alpha": 8.161400793251826,
+  "features_count": 27,
+  "features": [
+    "days_since_prev_quote",
+    "gasoil_return_interval",
+    "sg_gasoil_investing_lag1",
+    "sg_gasoil_investing_ret1",
+    "sg_gasoil_investing_ret5",
+    "sg_gasoil_investing_ret20",
+    "sg_gasoil_investing_vol20",
+    "brent_fred_lag1",
+    "brent_fred_ret1",
+    "brent_fred_ret5",
+    "brent_fred_ret20",
+    "brent_fred_vol20",
+    "dubai_crude_investing_lag1",
+    "dubai_crude_investing_ret1",
+    "dubai_crude_investing_ret5",
+    "dubai_crude_investing_ret20",
+    "dubai_crude_investing_vol20",
+    "usd_index_fred_lag1",
+    "usd_index_fred_ret1",
+    "usd_index_fred_ret5",
+    "usd_index_fred_ret20",
+    "usd_index_fred_vol20",
+    "crack_gasoil_brent_lag1",
+    "spread_brent_dubai_lag1",
+    "vlsfo_lag1",
+    "hsfo_lag1",
+    "vlsfo_hsfo_spread_lag1"
+  ],
+  "train_metrics": {
+    "train_mae_price": 21.439755676253412,
+    "train_rmse_price": 35.280579292555714,
+    "train_r2_return": 0.7725896457457281,
+    "residual_std_price": 35.271231486959515,
+    "residual_std_return": 0.034482812464001804,
+    "optimal_alpha": 8.161400793251826,
+    "n_samples": 251
+  },
+  "top_features": [
+    {
+      "feature": "gasoil_return_interval",
+      "coefficient": 0.05113851045916016,
+      "abs_importance": 0.05113851045916016
+    },
+    {
+      "feature": "hsfo_lag1",
+      "coefficient": -0.018656577853187372,
+      "abs_importance": 0.018656577853187372
+    },
+    {
+      "feature": "vlsfo_lag1",
+      "coefficient": -0.016557670999379624,
+      "abs_importance": 0.016557670999379624
+    },
+    {
+      "feature": "sg_gasoil_investing_ret20",
+      "coefficient": 0.013789232322935432,
+      "abs_importance": 0.013789232322935432
+    },
+    {
+      "feature": "sg_gasoil_investing_ret1",
+      "coefficient": -0.01313436602183859,
+      "abs_importance": 0.01313436602183859
+    },
+    {
+      "feature": "brent_fred_lag1",
+      "coefficient": 0.012197264834921022,
+      "abs_importance": 0.012197264834921022
+    },
+    {
+      "feature": "dubai_crude_investing_lag1",
+      "coefficient": 0.011782674301059705,
+      "abs_importance": 0.011782674301059705
+    },
+    {
+      "feature": "sg_gasoil_investing_ret5",
+      "coefficient": 0.010500770330418723,
+      "abs_importance": 0.010500770330418723
+    },
+    {
+      "feature": "dubai_crude_investing_ret20",
+      "coefficient": -0.01015045711779284,
+      "abs_importance": 0.01015045711779284
+    },
+    {
+      "feature": "sg_gasoil_investing_lag1",
+      "coefficient": 0.007001945452011926,
+      "abs_importance": 0.007001945452011926
+    }
+  ]
+}

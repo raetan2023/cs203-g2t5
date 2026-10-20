@@ -1,0 +1,40 @@
+{
+  "evaluation_type": "Expanding-Window Walk-Forward Cross Validation",
+  "total_evaluated_samples": 201,
+  "start_evaluation_date": "2022-01-19",
+  "end_evaluation_date": "2026-10-05",
+  "target_unit": "USD/metric tonne",
+  "models": {
+    "ridge_regression": {
+      "mae": 31.56,
+      "rmse": 51.49,
+      "r2": 0.9555,
+      "mape_pct": 3.08
+    },
+    "persistence_baseline": {
+      "mae": 32.9,
+      "rmse": 65.34,
+      "r2": 0.9283,
+      "mape_pct": 3.34
+    },
+    "gasoil_transfer_baseline": {
+      "mae": 23.34,
+      "rmse": 46.03,
+      "r2": 0.9644,
+      "mape_pct": 2.31
+    }
+  },
+  "directional_accuracy_pct": 48.26,
+  "prediction_interval_coverage": {
+    "coverage_80pct": 77.61,
+    "coverage_90pct": 85.57,
+    "coverage_95pct": 89.55,
+    "mean_width_80pct": 79.52,
+    "mean_width_90pct": 102.04,
+    "mean_width_95pct": 121.58
+  },
+  "error_reduction_vs_persistence": {
+    "rmse_reduction_pct": 21.2,
+    "mae_reduction_pct": 4.07
+  }
+}

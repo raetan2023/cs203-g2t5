@@ -1,0 +1,2247 @@
+{
+  "source_heading": "BUNKER SALES (in '000 tonnes)",
+  "comparisons": [
+    {
+      "month": "2025-01",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Marine Gas Oil",
+      "csv_value": "3.14",
+      "mpa_value": "3.14",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "256.51",
+      "mpa_value": "256.51",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1655.35",
+      "mpa_value": "1655.35",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "15.97",
+      "mpa_value": "15.97",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2431.31",
+      "mpa_value": "2431.31",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "91.96",
+      "mpa_value": "91.96",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0.88",
+      "mpa_value": "0.88",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "B100",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "LNG",
+      "csv_value": "32.8",
+      "mpa_value": "32.8",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-01",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Marine Gas Oil",
+      "csv_value": "8.93",
+      "mpa_value": "8.93",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "305.71",
+      "mpa_value": "305.71",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1624.43",
+      "mpa_value": "1624.43",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "22.09",
+      "mpa_value": "22.09",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2065.1",
+      "mpa_value": "2065.1",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "85.05",
+      "mpa_value": "85.05",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "B100",
+      "csv_value": "3.77",
+      "mpa_value": "3.77",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "LNG",
+      "csv_value": "30.03",
+      "mpa_value": "30.03",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-02",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Marine Gas Oil",
+      "csv_value": "0.07",
+      "mpa_value": "0.07",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "333.52",
+      "mpa_value": "333.52",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1618.59",
+      "mpa_value": "1618.59",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "51.88",
+      "mpa_value": "51.88",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2331.88",
+      "mpa_value": "2331.88",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "93.71",
+      "mpa_value": "93.71",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0.5",
+      "mpa_value": "0.5",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "B100",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "LNG",
+      "csv_value": "39.03",
+      "mpa_value": "39.03",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-03",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "314.74",
+      "mpa_value": "314.74",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "1.21",
+      "mpa_value": "1.21",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1700.14",
+      "mpa_value": "1700.14",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "33.29",
+      "mpa_value": "33.29",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2236.49",
+      "mpa_value": "2236.49",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "75.56",
+      "mpa_value": "75.56",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0.71",
+      "mpa_value": "0.71",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "B100",
+      "csv_value": "0.3",
+      "mpa_value": "0.3",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "LNG",
+      "csv_value": "42",
+      "mpa_value": "42.0",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-04",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Marine Gas Oil",
+      "csv_value": "1.69",
+      "mpa_value": "1.69",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "342.38",
+      "mpa_value": "342.38",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "2.28",
+      "mpa_value": "2.28",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1892.76",
+      "mpa_value": "1892.76",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "40.89",
+      "mpa_value": "40.89",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2453.97",
+      "mpa_value": "2453.97",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "96.08",
+      "mpa_value": "96.08",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "1.2",
+      "mpa_value": "1.2",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "B100",
+      "csv_value": "1.89",
+      "mpa_value": "1.89",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "LNG",
+      "csv_value": "45",
+      "mpa_value": "45.0",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-05",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Marine Gas Oil",
+      "csv_value": "4.49",
+      "mpa_value": "4.49",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "362.02",
+      "mpa_value": "362.02",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "2.1",
+      "mpa_value": "2.1",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1703.78",
+      "mpa_value": "1703.78",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "38.75",
+      "mpa_value": "38.75",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2311.01",
+      "mpa_value": "2311.01",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "114.33",
+      "mpa_value": "114.33",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "1.9",
+      "mpa_value": "1.9",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "B100",
+      "csv_value": "1",
+      "mpa_value": "1.0",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "LNG",
+      "csv_value": "55.35",
+      "mpa_value": "55.35",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-06",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Marine Gas Oil",
+      "csv_value": "3.87",
+      "mpa_value": "3.87",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "416.02",
+      "mpa_value": "416.02",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "1.75",
+      "mpa_value": "1.75",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1949.42",
+      "mpa_value": "1949.42",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "50.29",
+      "mpa_value": "50.29",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2372.12",
+      "mpa_value": "2372.12",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "80.45",
+      "mpa_value": "80.45",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "B100",
+      "csv_value": "2.59",
+      "mpa_value": "2.59",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "LNG",
+      "csv_value": "41.53",
+      "mpa_value": "41.53",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-07",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Marine Gas Oil",
+      "csv_value": "1.75",
+      "mpa_value": "1.75",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "368.56",
+      "mpa_value": "368.56",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "1.9",
+      "mpa_value": "1.9",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1891.84",
+      "mpa_value": "1891.84",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "34.69",
+      "mpa_value": "34.69",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2500.97",
+      "mpa_value": "2500.97",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "93.8",
+      "mpa_value": "93.8",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "B100",
+      "csv_value": "4.79",
+      "mpa_value": "4.79",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "LNG",
+      "csv_value": "66.96",
+      "mpa_value": "66.96",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-08",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Marine Gas Oil",
+      "csv_value": "0.31",
+      "mpa_value": "0.31",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "373.56",
+      "mpa_value": "373.56",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1872.95",
+      "mpa_value": "1872.95",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "43.11",
+      "mpa_value": "43.11",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2350.48",
+      "mpa_value": "2350.48",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "71.7",
+      "mpa_value": "71.7",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "B100",
+      "csv_value": "4.52",
+      "mpa_value": "4.52",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "LNG",
+      "csv_value": "48.45",
+      "mpa_value": "48.45",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-09",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Marine Gas Oil",
+      "csv_value": "2.25",
+      "mpa_value": "2.25",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "392",
+      "mpa_value": "392.0",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1866.53",
+      "mpa_value": "1866.53",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "11.14",
+      "mpa_value": "11.14",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2433.38",
+      "mpa_value": "2433.38",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "50.03",
+      "mpa_value": "50.03",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "B100",
+      "csv_value": "1.8",
+      "mpa_value": "1.8",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "LNG",
+      "csv_value": "60.6",
+      "mpa_value": "60.6",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-10",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Marine Gas Oil",
+      "csv_value": "2.99",
+      "mpa_value": "2.99",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "366.41",
+      "mpa_value": "366.41",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0.45",
+      "mpa_value": "0.45",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1818.67",
+      "mpa_value": "1818.67",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "11.08",
+      "mpa_value": "11.08",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2512.38",
+      "mpa_value": "2512.38",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "45.81",
+      "mpa_value": "45.81",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "B100",
+      "csv_value": "4.84",
+      "mpa_value": "4.84",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "LNG",
+      "csv_value": "55.04",
+      "mpa_value": "55.04",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Methanol",
+      "csv_value": "3.01",
+      "mpa_value": "3.01",
+      "equal": true
+    },
+    {
+      "month": "2025-11",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Marine Gas Oil",
+      "csv_value": "3.18",
+      "mpa_value": "3.18",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "410.55",
+      "mpa_value": "410.55",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Marine Fuel Oil",
+      "csv_value": "2117.58",
+      "mpa_value": "2117.58",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "20.35",
+      "mpa_value": "20.35",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2830.32",
+      "mpa_value": "2830.32",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "70.72",
+      "mpa_value": "70.72",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "1.36",
+      "mpa_value": "1.36",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "B100",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "LNG",
+      "csv_value": "54.57",
+      "mpa_value": "54.57",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2025-12",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Marine Gas Oil",
+      "csv_value": "2.01",
+      "mpa_value": "2.01",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "402.06",
+      "mpa_value": "402.06",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Marine Fuel Oil",
+      "csv_value": "2159.67",
+      "mpa_value": "2159.67",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "14.26",
+      "mpa_value": "14.26",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2561.23",
+      "mpa_value": "2561.23",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "45.95",
+      "mpa_value": "45.95",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "B100",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "LNG",
+      "csv_value": "42.59",
+      "mpa_value": "42.59",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Methanol",
+      "csv_value": "0.3",
+      "mpa_value": "0.3",
+      "equal": true
+    },
+    {
+      "month": "2026-01",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Marine Gas Oil",
+      "csv_value": "3.57",
+      "mpa_value": "3.57",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "371.72",
+      "mpa_value": "371.72",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1833.57",
+      "mpa_value": "1833.57",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "13.96",
+      "mpa_value": "13.96",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2310.01",
+      "mpa_value": "2310.01",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "77.46",
+      "mpa_value": "77.46",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "1.56",
+      "mpa_value": "1.56",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "B100",
+      "csv_value": "1.3",
+      "mpa_value": "1.3",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "LNG",
+      "csv_value": "59.01",
+      "mpa_value": "59.01",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Methanol",
+      "csv_value": "6.01",
+      "mpa_value": "6.01",
+      "equal": true
+    },
+    {
+      "month": "2026-02",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Marine Gas Oil",
+      "csv_value": "5.7",
+      "mpa_value": "5.7",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "346.87",
+      "mpa_value": "346.87",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0.4",
+      "mpa_value": "0.4",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1934.22",
+      "mpa_value": "1934.22",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "14.39",
+      "mpa_value": "14.39",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2338.69",
+      "mpa_value": "2338.69",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "77.55",
+      "mpa_value": "77.55",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "B100",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "LNG",
+      "csv_value": "49.02",
+      "mpa_value": "49.02",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-03",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "256.25",
+      "mpa_value": "256.25",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0.8",
+      "mpa_value": "0.8",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1787.93",
+      "mpa_value": "1787.93",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "18.3",
+      "mpa_value": "18.3",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2192.51",
+      "mpa_value": "2192.51",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "48.82",
+      "mpa_value": "48.82",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "B100",
+      "csv_value": "8.03",
+      "mpa_value": "8.03",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "LNG",
+      "csv_value": "42.43",
+      "mpa_value": "42.43",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-04",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Marine Gas Oil",
+      "csv_value": "0.64",
+      "mpa_value": "0.64",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "328.7",
+      "mpa_value": "328.7",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1795.83",
+      "mpa_value": "1795.83",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "11.58",
+      "mpa_value": "11.58",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2296.76",
+      "mpa_value": "2296.76",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "37.05",
+      "mpa_value": "37.05",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "B100",
+      "csv_value": "12.83",
+      "mpa_value": "12.83",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "LNG",
+      "csv_value": "70.27",
+      "mpa_value": "70.27",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-05",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Marine Gas Oil",
+      "csv_value": "1.87",
+      "mpa_value": "1.87",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "343.8",
+      "mpa_value": "343.8",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Marine Fuel Oil",
+      "csv_value": "2034.55",
+      "mpa_value": "2034.55",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "8.08",
+      "mpa_value": "8.08",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2197",
+      "mpa_value": "2197.0",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "30.72",
+      "mpa_value": "30.72",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "B100",
+      "csv_value": "1.5",
+      "mpa_value": "1.5",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "LNG",
+      "csv_value": "54.97",
+      "mpa_value": "54.97",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-06",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Marine Gas Oil",
+      "csv_value": "0.72",
+      "mpa_value": "0.72",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "358.87",
+      "mpa_value": "358.87",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Marine Fuel Oil",
+      "csv_value": "1952.9",
+      "mpa_value": "1952.9",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "8.23",
+      "mpa_value": "8.23",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2327.9",
+      "mpa_value": "2327.9",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "29.92",
+      "mpa_value": "29.92",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "1.55",
+      "mpa_value": "1.55",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "B100",
+      "csv_value": "1.36",
+      "mpa_value": "1.36",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "LNG",
+      "csv_value": "58.69",
+      "mpa_value": "58.69",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-07",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Bio-Blended Marine Diesel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Bio-Blended Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Low Sulphur Marine Gas Oil",
+      "csv_value": "367.73",
+      "mpa_value": "367.73",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Bio-Blended Low Sulphur Marine Gas Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Marine Fuel Oil",
+      "csv_value": "2095.18",
+      "mpa_value": "2095.18",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Bio-Blended Marine Fuel Oil",
+      "csv_value": "8.65",
+      "mpa_value": "8.65",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Low Sulphur Fuel Oil",
+      "csv_value": "2193.8",
+      "mpa_value": "2193.8",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Bio-Blended Low Sulphur Fuel Oil",
+      "csv_value": "47.87",
+      "mpa_value": "47.87",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Bio-Blended Ultra Low Sulphur Fuel Oil",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "B100",
+      "csv_value": "0.81",
+      "mpa_value": "0.81",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "LNG",
+      "csv_value": "58.64",
+      "mpa_value": "58.64",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Methanol",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    },
+    {
+      "month": "2026-08",
+      "series": "Ammonia",
+      "csv_value": "0",
+      "mpa_value": "0.0",
+      "equal": true
+    }
+  ],
+  "exact_matches": 320,
+  "comparison_count": 320
+}
