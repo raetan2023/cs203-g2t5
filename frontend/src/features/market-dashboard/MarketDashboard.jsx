@@ -4,6 +4,7 @@ import { useMarketDashboard } from './useMarketDashboard';
 import TickerCards from './TickerCards';
 import MGOChart from './MGOChart';
 import IndicatorsTable from './IndicatorsTable';
+import BrentMarketPanel from './BrentMarketPanel';
 
 function formatScenarioDateBadge(dateStr) {
   if (!dateStr) return 'OCT 24, 2025';
@@ -24,7 +25,7 @@ function formatScenarioDateBadge(dateStr) {
  * - MGO History & Forecast Line Chart
  * - Selected Indicators Table
  */
-export default function MarketDashboard({ scenarioDate, onToggleNav = undefined }) {
+function HistoricalMarketDashboard({ scenarioDate, onToggleNav = undefined }) {
   const { status, data, error, retry } = useMarketDashboard(scenarioDate);
 
   // Loading state
@@ -89,10 +90,17 @@ export default function MarketDashboard({ scenarioDate, onToggleNav = undefined 
 
       {/* Main Historical Dashboard Area */}
       <main className="dashboard-content">
-        <TickerCards tickers={data.tickers} />
+        <TickerCards tickers={data.tickers.filter(ticker => ticker.seriesKey !== 'BRENT_CRUDE')} />
         <MGOChart chartSeries={data.chartSeries} scenarioDate={data.scenarioDate} />
         <IndicatorsTable indicators={data.indicators} />
       </main>
     </div>
   );
+}
+
+export default function MarketDashboard(props) {
+  return <>
+    <BrentMarketPanel />
+    <HistoricalMarketDashboard {...props} />
+  </>;
 }
