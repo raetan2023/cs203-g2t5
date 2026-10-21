@@ -73,7 +73,8 @@ given. A missing, malformed or expired token returns 401.
 | `GET /api/v1/data/{sourceId}` | Imported observations for one source, in chronological order |
 | `GET /api/v1/market/stored` | Latest imported observations and bounded histories for the current React dashboard |
 | `GET /api/v1/market/dashboard` | Everything the historical dashboard shows for one scenario date |
-| `GET/POST/PUT/DELETE /api/v1/purchase-plan` | The caller's single saved purchase plan |
+| `GET/POST /api/v1/purchase-plans` | List the caller's plans / create another plan |
+| `GET/PUT/DELETE /api/v1/purchase-plans/{planId}` | Read, edit or delete one owned plan |
 
 `/api/v1/data/{sourceId}` accepts `start`, `end` (ISO dates), `series` (for
 sources holding several sub-series, such as bunker sales), `limit` (1–25000,
@@ -120,85 +121,37 @@ service when this backend is unreachable. Seeing numbers on the page is therefor
 by itself evidence that this backend, or the database, is working. The browser console
 logs a message when the frontend falls back.
 
-### Purchase plan
+### Purchase plans
 
-One plan per user, stored in `purchase_plans`. The backend supplies
-`scenario_as_of_date` from `MGO_SCENARIO_DATE` and derives `days_remaining` as
-calendar days from that date to the deadline.
+Apply the database migration in `migrations/20261021_multiple_purchase_plans.sql`
+if the unique constraint on `purchase_plans.user_id` has not already been removed.
+Existing rows are preserved. The backend does not run this migration automatically.
 
-The owner comes from the verified token, never from anything the caller sends,
-so a signed-in user can only reach their own plan. The token's subject is matched
-against `users.clerk_user_id`, and the row is created on that account's first
-request, so signing up needs no extra step. `email` is stored only when the
-provider includes it in the token.
+Every route requires `Authorization: Bearer <session token>`. The owner comes
+from the verified token, never a client-supplied user ID.
 
-Every call below needs the one header:
+| Method and route | Response |
+| --- | --- |
+| `GET /api/v1/purchase-plans` | `200 {"plans": [...]}`; empty accounts receive `{"plans": []}` |
+| `POST /api/v1/purchase-plans` | `201 {"plan": {...}}`; each call creates a new plan |
+| `GET /api/v1/purchase-plans/{planId}` | `200 {"plan": {...}}` |
+| `PUT /api/v1/purchase-plans/{planId}` | `200 {"plan": {...}}`; changes only this owned plan |
+| `DELETE /api/v1/purchase-plans/{planId}` | `204`, no body |
 
-```
-Authorization: Bearer <session token>
-```
+POST and PUT accept `{"quantity_mt": 500, "purchase_deadline": "2025-11-15"}`.
+Plan responses contain `plan_id`, `quantity_mt`, `purchase_deadline`,
+`scenario_as_of_date` and derived `days_remaining`. Lists are ordered by deadline,
+then plan ID. Scenario-date behavior is unchanged.
 
-**Read — `GET /api/v1/purchase-plan`** → `200`
+Missing plans and other users' plans both return `404`. Missing or invalid tokens
+return `401`. Invalid quantities and deadlines return `422` with `field_errors`.
+There is no conflict merely because a user already has a plan.
 
-```json
-{
-  "plan": {
-    "plan_id": "8a9d4260-9070-4bb1-b5af-a71f458a3f47",
-    "quantity_mt": 500,
-    "purchase_deadline": "2025-11-15",
-    "scenario_as_of_date": "2025-10-24",
-    "days_remaining": 22
-  }
-}
-```
-
-With no saved plan, still `200`:
-
-```json
-{ "plan": null }
-```
-
-**Create — `POST /api/v1/purchase-plan`** → `201`, body as above
-
-```json
-{ "quantity_mt": 500, "purchase_deadline": "2025-11-15" }
-```
-
-**Edit — `PUT /api/v1/purchase-plan`** → `200`, with `days_remaining` recalculated
-
-```json
-{ "quantity_mt": 600, "purchase_deadline": "2025-11-20" }
-```
-
-**Delete — `DELETE /api/v1/purchase-plan`** → `204`, no body
-
-#### Errors
-
-| Case | Status | Body |
-| --- | --- | --- |
-| Quantity of zero or less, or a missing or invalid field | `422` | `{"detail": "Please check your inputs.", "field_errors": {"quantity_mt": "Quantity must be greater than zero."}}` |
-| Deadline earlier than the scenario date | `422` | `{"detail": "Please check your inputs.", "field_errors": {"purchase_deadline": "Purchase deadline cannot be before 2025-10-24."}}` |
-| Missing or unknown caller | `401` | `{"detail": "Please sign in again."}` |
-| Creating a second plan | `409` | `{"detail": "You already have a saved plan. Edit or delete it first."}` |
-| Editing or deleting a plan that does not exist | `404` | `{"detail": "No saved purchase plan was found."}` |
-
-#### Try it
-
-Copy a session token from the running frontend, then:
-
-```bash
-curl -s localhost:8000/api/v1/purchase-plan -H "Authorization: Bearer $TOKEN"
-```
-
-```bash
-curl -s -X POST localhost:8000/api/v1/purchase-plan \
-  -H "Authorization: Bearer $TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{"quantity_mt": 500, "purchase_deadline": "2025-11-15"}'
-```
-
-`/docs` has the same endpoints with a **Try it out** button: click **Authorize**
-and paste either the API key or a session token, depending on the route.
+This replaces the singular `/api/v1/purchase-plan` endpoints. Frontend callers
+use the plural collection, read `plans` as an array, and supply the
+selected `plan_id` when reading, editing or deleting an individual plan. The old
+ID-less PUT/DELETE routes are intentionally unavailable to prevent changes to
+all of a user's plans. The frontend lists all plans and carries the selected plan ID into recommendations.
 
 ## Available data
 
@@ -264,7 +217,7 @@ Supabase credentials or writes are needed.
 
 ### Sprint 4 analysis integration
 
-Authenticated GET `/api/v1/purchase-plan/recommendation` and `/api/v1/purchase-plan/cost-impact` now expose independent guidance and cost availability. Both require saved-context query preconditions; see [the complete API/provider contract](../docs/sprint-4-purchase-plan-api-contract.md). Ownership uses the existing verified Clerk subject mapping. Saved-plan GET derives days from the active configured scenario, including previously saved/overdue plans, without updating stored rows.
+Authenticated GET `/api/v1/purchase-plans/recommendation` and `/api/v1/purchase-plans/cost-impact` now expose independent guidance and cost availability. Both select an owned plan using the `plan_id` query parameter and require saved-context query preconditions; see [the complete API/provider contract](../docs/sprint-4-purchase-plan-api-contract.md). Ownership uses the existing verified Clerk subject mapping. Saved-plan GET derives days from the active configured scenario, including previously saved/overdue plans, without updating stored rows.
 
 `PlanAnalysisProvider` is Wunna's normalized ML boundary. Default output is explicitly unavailable; no policy or model adapter is implemented. Register a real provider bean when ready. To test synthetic cost calculations locally, both profile `analysis-fixture` and property `mgo.analysis.fixture-enabled=true` are required. All fixture responses are labelled and authentication remains enabled. Do not enable this profile for real-model output. Forecasts exist independently of plans; calculations are on demand, with no persisted totals or recommendation FK/table changes.
 

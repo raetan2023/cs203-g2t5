@@ -38,11 +38,12 @@ class PlanAnalysisHttpTests {
         when(decoder.decode("other-token")).thenReturn(Jwt.withTokenValue("other-token").header("alg", "RS256").subject("other").build());
         when(users.resolve("owner", null)).thenReturn(owner);
         when(users.resolve("other", null)).thenReturn(other);
-        when(plans.findByUser(owner)).thenReturn(Optional.of(plan));
-        when(plans.findByUser(other)).thenReturn(Optional.empty());
+        when(plans.findByIdAndUser(planId, owner)).thenReturn(Optional.of(plan));
+        when(plans.findByIdAndUser(planId, other)).thenReturn(Optional.empty());
+        when(plans.findByUser(owner)).thenReturn(java.util.List.of(plan));
     }
     String path(String endpoint) {
-        return "/api/v1/purchase-plan/" + endpoint + "?plan_id=" + planId + "&quantity_mt=100&purchase_deadline=2025-11-15&scenario_as_of_date=2025-10-24";
+        return "/api/v1/purchase-plans/" + endpoint + "?plan_id=" + planId + "&quantity_mt=100&purchase_deadline=2025-11-15&scenario_as_of_date=2025-10-24";
     }
     HttpResponse<String> get(String path, String token) throws Exception {
         var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path));
@@ -68,19 +69,19 @@ class PlanAnalysisHttpTests {
             assertEquals(401, get(path(endpoint), null).statusCode());
             assertEquals(404, get(path(endpoint), "other-token").statusCode());
         }
-        verify(plans, never()).findByUser(planId);
+        verify(plans, never()).findByUser(any());
     }
     @Test void rejectsOldInputsAndScenario() throws Exception {
         for (String stale : new String[]{path("cost-impact").replace("quantity_mt=100", "quantity_mt=101"),
-                path("cost-impact").replace("2025-10-24", "2025-10-25"), path("cost-impact").replace(planId.toString(), UUID.randomUUID().toString()),
+                path("cost-impact").replace("2025-10-24", "2025-10-25"),
                 path("recommendation").replace("2025-11-15", "2025-11-16")})
             assertEquals(409, get(stale, "owner-token").statusCode());
     }
     @Test void anotherAccountWithItsOwnPlanCannotSelectTheFirstAccountsPlan() throws Exception {
         UUID otherPlanId = UUID.randomUUID();
-        when(plans.findByUser(other)).thenReturn(Optional.of(new PurchasePlan(otherPlanId, other, new BigDecimal("250"),
+        when(plans.findByIdAndUser(otherPlanId, other)).thenReturn(Optional.of(new PurchasePlan(otherPlanId, other, new BigDecimal("250"),
                 plan.purchaseDeadline(), plan.scenarioAsOfDate())));
-        assertEquals(409, get(path("cost-impact"), "other-token").statusCode());
+        assertEquals(404, get(path("cost-impact"), "other-token").statusCode());
         var response = get(path("cost-impact").replace(planId.toString(), otherPlanId.toString()).replace("quantity_mt=100", "quantity_mt=250"), "other-token");
         assertEquals(200, response.statusCode());
         var body = new JsonMapper().readTree(response.body());
@@ -88,12 +89,26 @@ class PlanAnalysisHttpTests {
         assertEquals(175000, body.path("cost_impact").path("value").path("reference_total").asInt());
     }
     @Test void detectsDeletionDuringAnalysis() throws Exception {
-        when(plans.findByUser(owner)).thenReturn(Optional.of(plan), Optional.empty());
+        when(plans.findByIdAndUser(planId, owner)).thenReturn(Optional.of(plan), Optional.empty());
         assertEquals(409, get(path("cost-impact"), "owner-token").statusCode());
     }
     @Test void readsActiveScenarioInsteadOfStoredScenario() throws Exception {
-        var body = new JsonMapper().readTree(get("/api/v1/purchase-plan", "owner-token").body());
-        assertEquals(22, body.path("plan").path("days_remaining").asInt());
-        assertEquals("2025-10-24", body.path("plan").path("scenario_as_of_date").asText());
+        var body = new JsonMapper().readTree(get("/api/v1/purchase-plans", "owner-token").body());
+        assertEquals(22, body.path("plans").get(0).path("days_remaining").asInt());
+        assertEquals("2025-10-24", body.path("plans").get(0).path("scenario_as_of_date").asText());
+    }
+    @Test void selectsAnotherPlanOfTheSameOwner() throws Exception {
+        UUID secondId = UUID.randomUUID();
+        PurchasePlan second = new PurchasePlan(secondId, owner, new BigDecimal("250"),
+                plan.purchaseDeadline(), plan.scenarioAsOfDate());
+        when(plans.findByIdAndUser(secondId, owner)).thenReturn(Optional.of(second));
+        var response = get(path("cost-impact").replace(planId.toString(), secondId.toString())
+                .replace("quantity_mt=100", "quantity_mt=250"), "owner-token");
+        assertEquals(200, response.statusCode());
+        var body = new JsonMapper().readTree(response.body());
+        assertEquals(secondId.toString(), body.path("context").path("plan_id").asText());
+        assertEquals(175000, body.path("cost_impact").path("value").path("reference_total").asInt());
+        assertEquals(404, get(path("cost-impact").replace(planId.toString(), UUID.randomUUID().toString()),
+                "owner-token").statusCode());
     }
 }

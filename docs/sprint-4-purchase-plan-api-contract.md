@@ -1,3 +1,10 @@
+> Multiple-plan update (21 October 2026): CRUD now uses `GET/POST /api/v1/purchase-plans`
+> and `GET/PUT/DELETE /api/v1/purchase-plans/{planId}`. Collection GET returns
+> `{"plans": [...]}`. Analysis uses the plural paths below and selects the owned
+> plan by the existing `plan_id` query parameter. Missing/foreign plans return
+> 404; stale inputs or a plan changed during analysis return 409. This supersedes
+> the single-plan CRUD assumptions below. The frontend now uses this contract, including selected-plan recommendation links.
+
 # Sprint 4 purchase-plan analysis API contract
 
 Updated: 11 October 2026. Feature HTTP contract implemented on `rae/sprint-4-recommendations`. Rae owns these endpoints and calculations; Wunna owns the real ML provider. Recommendation policy and production source semantics remain unapproved. No model integration or shared database migration is claimed.
@@ -20,8 +27,8 @@ GET now returns the active configured `mgo.scenario-date` and derives numeric `d
 
 ## Independent authenticated analysis reads
 
-- GET `/api/v1/purchase-plan/recommendation`
-- GET `/api/v1/purchase-plan/cost-impact`
+- GET `/api/v1/purchase-plans/recommendation`
+- GET `/api/v1/purchase-plans/cost-impact`
 
 Both require all four query parameters: `plan_id` (UUID), `quantity_mt` (decimal), `purchase_deadline` and `scenario_as_of_date` (ISO dates). These are preconditions, not analysis inputs trusted from the browser. The server resolves the caller's saved plan, checks the tuple against saved inputs and active configuration, then computes only from that authoritative context. Decimal scale is ignored when comparing quantity (`100` equals `100.00`).
 
