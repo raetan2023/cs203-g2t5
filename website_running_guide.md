@@ -19,10 +19,6 @@ The local configuration files are `frontend/.env.local` (Vite settings) and
 covered by Git ignore rules and must not be force-added or committed. They are
 machine-local; teammates need to create their own files using the setup below.
 
-**Repository note:** `frontend/.env.local` is currently tracked. Ignore rules do
-not stop Git tracking an existing file, so check your staged changes and do not
-include local configuration edits in commits.
-
 For the backend, save the `export ...` assignments shown in the manual backend
 setup below in `backend/.env.local`, using your actual configuration values.
 From the repository root, start the backend in one Bash terminal:
