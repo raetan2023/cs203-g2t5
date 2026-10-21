@@ -14,8 +14,6 @@ class PredictResponse(BaseModel):
     as_of_date: date
     anchor_quote_date: date
     anchor_price: float
-    nowcast_price: Optional[float] = None
-    nowcast_return: Optional[float] = None
     quote_age_days: int
     forecast: float
     low: float
@@ -43,3 +41,21 @@ class NowcastResponse(BaseModel):
     status: Literal["fresh_quote", "nowcasted"]
     explanation: str
 
+class NowcastRequest(BaseModel):
+    as_of_date: Optional[date] = None      # default: latest date with market data
+
+
+class NowcastResponse(BaseModel):
+    as_of_date: date
+    status: Literal["observed", "estimated", "carried_forward"]
+    last_quote_date: date
+    last_quote_price: float
+    gap_days: int
+    estimate: float
+    low: Optional[float] = None     # null when status is carried_forward (no calibrated range)
+    high: Optional[float] = None
+    unit: str
+    evidence: Literal["supported", "weak", "no_edge"]
+    mae_skill_vs_persistence: float
+    backtest_rows: int
+    model_version: str

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from . import config
 from .config import SEED
 
 
@@ -15,40 +16,63 @@ def _block_bootstrap_ci(d: np.ndarray, block: int = 7, reps: int = 2000, seed: i
     for r in range(reps):
         idx = np.concatenate([np.arange(s, s + block) for s in rng.choice(starts, k)])[:n]
         means[r] = d[idx].mean()
-    return tuple(np.quantile(means, [0.025, 0.975]).astype(float))
+    return tuple(float(x) for x in np.quantile(means, [0.025, 0.975]))
+
+
+_mae = lambda e: float(np.mean(np.abs(e)))
+_rmse = lambda e: float(np.sqrt(np.mean(np.square(e))))
+
+
+def baseline_prices(res: pd.DataFrame) -> dict:
+    out = {"persist": res["mgo_t"].to_numpy()}                      # no change
+    if "drift_ret" in res:
+        out["drift"] = (res["mgo_t"] * np.exp(res["drift_ret"])).to_numpy()   # average past return
+    for name, col in (("sma5", "sma5_price"), ("sma10", "sma10_price"), ("ema10", "ema10_price"),
+                      ("gasoil_transfer", "gasoil_transfer_price")):
+        if col in res:
+            out[name] = res[col].to_numpy()
+    return out
 
 
 def score(res: pd.DataFrame) -> dict:
-    """res needs mgo_t, mgo_target, y, pred_ret, pred_price (persistence = no change)."""
-    e_model = (res["mgo_target"] - res["pred_price"]).to_numpy()
-    e_pers = (res["mgo_target"] - res["mgo_t"]).to_numpy()
-    mae = lambda e: float(np.mean(np.abs(e)))
-    rmse = lambda e: float(np.sqrt(np.mean(e ** 2)))
-    nz = (res["y"] != 0).to_numpy()
-    d = np.abs(e_pers) - np.abs(e_model)           # > 0 means the model beat persistence on that row
-    lo, hi = _block_bootstrap_ci(d)
-    ret_for_dir = res["pred_ret_raw"] if "pred_ret_raw" in res.columns else res["pred_ret"]
-    nz_dir = (res["y"] != 0).to_numpy() & (ret_for_dir != 0).to_numpy()
+    """res needs mgo_t, mgo_target, y, pred_ret, pred_price. A model 'beats' a baseline when MAE_skill > 0."""
+    truth = res["mgo_target"].to_numpy()
+    e_model = truth - res["pred_price"].to_numpy()
+    baselines = {}
+    for name, b in baseline_prices(res).items():
+        e_b = truth - b
+        d = np.abs(e_b) - np.abs(e_model)                           # > 0: model better on that row
+        lo, hi = _block_bootstrap_ci(d)
+        baselines[name] = {"MAE": _mae(e_b), "RMSE": _rmse(e_b),
+                           "MAE_skill": float(1 - _mae(e_model) / _mae(e_b)) if _mae(e_b) > 0 else float("nan"),
+                           "paired_gain_CI95": [lo, hi]}
+    e_pers = truth - res["mgo_t"].to_numpy()
+    d_p = np.abs(e_pers) - np.abs(e_model)
+    ret_dir = res["pred_ret_raw"] if "pred_ret_raw" in res else res["pred_ret"]
+    nz = ((res["y"] != 0) & (ret_dir != 0)).to_numpy()
     out = {
         "n": int(len(res)),
-        "model_MAE": mae(e_model), "persist_MAE": mae(e_pers),
-        "model_RMSE": rmse(e_model), "persist_RMSE": rmse(e_pers),
-        "MAE_skill_vs_persist": 1 - mae(e_model) / mae(e_pers),
-        "RMSE_skill_vs_persist": 1 - rmse(e_model) / rmse(e_pers),
-        "paired_MAE_gain_mean": float(d.mean()),
-        "paired_MAE_gain_CI95": [lo, hi],
-        "direction_acc": float((np.sign(ret_for_dir[nz_dir]) == np.sign(res["y"][nz_dir])).mean()) if nz_dir.any() else float("nan"),
-        "n_nonzero_moves": int(nz.sum()),
+        "model_MAE": _mae(e_model), "model_RMSE": _rmse(e_model),
+        "persist_MAE": _mae(e_pers), "persist_RMSE": _rmse(e_pers),
+        "MAE_skill_vs_persist": baselines["persist"]["MAE_skill"],
+        "RMSE_skill_vs_persist": float(1 - _rmse(e_model) / _rmse(e_pers)) if _rmse(e_pers) > 0 else float("nan"),
+        "paired_MAE_gain_mean": float(d_p.mean()),
+        "paired_MAE_gain_CI95": baselines["persist"]["paired_gain_CI95"],
+        "direction_acc": float((np.sign(ret_dir[nz]) == np.sign(res["y"][nz])).mean()) if nz.any() else float("nan"),
+        "n_direction": int(nz.sum()),
+        "baselines": baselines,
     }
     if "oracle_gasoil_ret" in res:
-        e_or = (res["mgo_target"] - res["mgo_t"] * np.exp(res["oracle_gasoil_ret"])).to_numpy()
-        out["oracle_gasoil_MAE"] = mae(e_or)   # ceiling: uses realised gasoil, NOT a forecast
-    for b_col in ("sma5_price", "sma10_price", "ema10_price"):
-        if b_col in res.columns:
-            b_name = b_col.replace("_price", "")
-            e_b = (res["mgo_target"] - res[b_col]).to_numpy()
-            b_mae = mae(e_b)
-            out[f"{b_name}_MAE"] = b_mae
-            out[f"{b_name}_RMSE"] = rmse(e_b)
-            out[f"MAE_skill_vs_{b_name}"] = float(1.0 - mae(e_model) / b_mae) if b_mae > 0 else float("nan")
+        e_or = truth - (res["mgo_t"] * np.exp(res["oracle_gasoil_ret"])).to_numpy()
+        out["oracle_gasoil_MAE"] = _mae(e_or)   # ceiling: uses realised gasoil, NOT a forecast
+    return out
+
+
+def score_splits(res: pd.DataFrame, dev_end=None, min_rows: int = 14) -> dict:
+    """Score all rows, the development rows and the holdout rows separately."""
+    cut = pd.Timestamp(dev_end or config.DEV_END)
+    out = {"all": score(res)}
+    for name, mask in (("dev", res["origin"] < cut), ("holdout", res["origin"] >= cut)):
+        if int(mask.sum()) >= min_rows:
+            out[name] = score(res[mask])
     return out
