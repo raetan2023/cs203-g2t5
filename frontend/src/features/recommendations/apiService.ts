@@ -88,7 +88,7 @@ export function createApiRecommendationService(options: ApiOptions = {}): Recomm
       purchase_deadline: context.purchase_deadline, scenario_as_of_date: context.scenario_as_of_date });
     let response: Response;
     try {
-      response = await fetch(`${base}/api/v1/purchase-plan/${endpoint}?${query}`, {
+      response = await fetch(`${base}/api/v1/purchase-plans/${endpoint}?${query}`, {
         headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
       });
     } catch { throw new PlanError('Could not reach the analysis service. Please retry.', {}, 0); }

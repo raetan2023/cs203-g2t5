@@ -16,12 +16,12 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 
 describe('Clerk API wiring', () => {
   it('mounts both real adapters and refreshes backend configuration after a scenario conflict', async () => {
-    window.history.replaceState(null, '', '/purchase-plans/recommendation');
+    window.history.replaceState(null, '', `/purchase-plans/recommendation?plan_id=${ANALYSIS_DEMO_PLAN.plan_id}`);
     let scenario = '2025-10-24';
     const unavailable = { status: 'unavailable', reason: 'missing_forecast', message: 'No ML provider connected.' };
     const fetcher = vi.fn(async (url: string, _init?: RequestInit) => {
       if (url.endsWith('/config')) return reply({ scenario_as_of_date: scenario });
-      if (url.endsWith('/purchase-plan')) return reply({ plan: { ...ANALYSIS_DEMO_PLAN, scenario_as_of_date: scenario, days_remaining: scenario === '2025-10-24' ? 22 : 21 } });
+      if (url.endsWith(`/purchase-plans/${ANALYSIS_DEMO_PLAN.plan_id}`)) return reply({ plan: { ...ANALYSIS_DEMO_PLAN, scenario_as_of_date: scenario, days_remaining: scenario === '2025-10-24' ? 22 : 21 } });
       if (scenario === '2025-10-24') return reply({ detail: 'The backend scenario changed.' }, 409);
       return reply({ provenance: 'unavailable', context: { ...ANALYSIS_DEMO_PLAN, scenario_as_of_date: scenario },
         reference: unavailable, forecast: unavailable, cost_impact: unavailable, recommendation: { ...unavailable, reason: 'recommendation_unavailable' } });

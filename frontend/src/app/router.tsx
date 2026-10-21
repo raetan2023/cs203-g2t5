@@ -25,3 +25,7 @@ export function AppLink({ href, onClick, ...props }: AnchorHTMLAttributes<HTMLAn
     navigate(href);
   }} />;
 }
+
+export function useSearch() {
+  return useSyncExternalStore(subscribe, () => window.location.search, () => '');
+}
