@@ -37,18 +37,19 @@ const messages: Record<string, string> = {
   DELETE: "We couldn't delete your purchase plan. Please try again.",
 };
 
-/** Talks to the backend's /api/v1/purchase-plan endpoints. */
+/** Talks to the backend's /api/v1/purchase-plans endpoints. */
 export function createApiPlanService(options: ApiOptions = {}): PurchasePlanService {
   const baseUrl = (options.baseUrl ?? env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
   const getToken = options.getToken;
 
-  async function request(method: string, body?: PlanInput) {
+  async function request(method: string, body?: PlanInput, planId?: string) {
     // Plan routes are per-user, so the session token is the only credential they take.
     const token = getToken ? await getToken() : null;
     let response: Response;
     try {
-      response = await fetch(`${baseUrl}/api/v1/purchase-plan`, {
+      response = await fetch(`${baseUrl}/api/v1/purchase-plans${planId ? `/${encodeURIComponent(planId)}` : ''}`, {
         method,
+        cache: 'no-store',
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
           ...(body && { 'Content-Type': 'application/json' }),
@@ -62,7 +63,7 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
 
     if (response.status === 204) return undefined;
 
-    let payload: { plan?: unknown; detail?: string; field_errors?: Record<string, string> } = {};
+    let payload: { plan?: unknown; plans?: unknown; detail?: string; field_errors?: Record<string, string> } = {};
     try {
       const data: unknown = await response.json();
       if (data && typeof data === 'object' && !Array.isArray(data)) payload = data;
@@ -77,17 +78,31 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
   }
 
   return {
-    async read() {
-      return parsePlan(await request('GET'));
+    async list() {
+      const payload = await request('GET');
+      if (!Array.isArray(payload?.plans)) throw new PlanError('The purchase-plan response was invalid. Please retry.', {}, 502);
+      const plans = payload.plans.map(plan => parsePlan({ plan }, true).plan);
+      if (new Set(plans.map(plan => plan.plan_id)).size !== plans.length) throw new PlanError('The purchase-plan response was invalid. Please retry.', {}, 502);
+      return { plans };
+    },
+    async read(planId) {
+      if (!planId) throw new PlanError('Select a purchase plan first.', {}, 400);
+      try { return parsePlan(await request('GET', undefined, planId), true); }
+      catch (error) {
+        if (error instanceof PlanError && error.status === 404) return { plan: null };
+        throw error;
+      }
     },
     async create(input) {
       return parsePlan(await request('POST', input), true);
     },
-    async update(input) {
-      return parsePlan(await request('PUT', input), true);
+    async update(planId, input) {
+      if (!planId) throw new PlanError('Select a purchase plan first.', {}, 400);
+      return parsePlan(await request('PUT', input, planId), true);
     },
-    async delete() {
-      await request('DELETE');
+    async delete(planId) {
+      if (!planId) throw new PlanError('Select a purchase plan first.', {}, 400);
+      await request('DELETE', undefined, planId);
     },
   };
 }

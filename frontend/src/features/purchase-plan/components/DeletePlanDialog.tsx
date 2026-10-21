@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { requestError } from '../types';
 import { Icon, PlanButton } from './Primitives';
 
-export function DeletePlanDialog({ onCancel, onDelete }: { onCancel(): void; onDelete(): Promise<void> }) {
+export function DeletePlanDialog({ onCancel, onDelete, description }: { description?: string; onCancel(): void; onDelete(): Promise<void> }) {
   const id = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const cancel = useRef<HTMLButtonElement>(null);
@@ -53,6 +53,7 @@ export function DeletePlanDialog({ onCancel, onDelete }: { onCancel(): void; onD
       <h2 id={`${id}-title`}>{pending ? 'Deleting your purchase plan' : error ? 'Deletion failed' : 'Delete your purchase plan?'}</h2>
       <p id={`${id}-description`}>{pending ? "We're removing your saved purchase plan. This action is currently in progress and cannot be repeated until it finishes." : error || 'This will permanently delete your saved purchase plan. You can create a new one afterwards.'}</p>
     </div>
+    {description && <p>{description}</p>}
     <div className="pp-dialog-actions">
       <PlanButton ref={cancel} variant="secondary" disabled={pending} onClick={onCancel}>Cancel</PlanButton>
       <PlanButton variant={pending || error ? 'primary' : 'danger'} disabled={pending} onClick={remove}>{pending ? 'Deleting plan' : error ? 'Retry' : 'Delete plan'}</PlanButton>

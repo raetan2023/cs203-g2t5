@@ -2,23 +2,24 @@ import { AppLink } from '../../../app/router';
 import { formatDate } from '../dates';
 import type { PurchasePlan } from '../types';
 import { PlanButton } from './Primitives';
-import type { RefObject } from 'react';
+import { useId, type RefObject } from 'react';
 
 export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef, busy = false }: {
   plan: PurchasePlan;
   busy?: boolean;
   onEdit(): void;
   onDelete(): void;
-  editRef: RefObject<HTMLButtonElement | null>;
-  deleteRef: RefObject<HTMLButtonElement | null>;
+  editRef?: RefObject<HTMLButtonElement | null>;
+  deleteRef?: RefObject<HTMLButtonElement | null>;
 }) {
+  const headingId = useId();
   const timeRemaining =
     plan.days_remaining < 0
       ? `Overdue by ${Math.abs(plan.days_remaining)} ${Math.abs(plan.days_remaining) === 1 ? 'day' : 'days'}`
       : `${plan.days_remaining} ${plan.days_remaining === 1 ? 'day' : 'days'}`;
       
-  return <section className="pp-card pp-summary" aria-labelledby="pp-summary-heading">
-    <h2 id="pp-summary-heading">Your purchase plan</h2>
+  return <section className="pp-card pp-summary" aria-labelledby={headingId}>
+    <h2 id={headingId}>Your purchase plan</h2>
     <p className="pp-card-description">Your saved purchase quantity and deadline.</p>
     <dl className="pp-details">
       <div><dt>Quantity</dt><dd>{new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt)} MT</dd></div>
@@ -29,7 +30,7 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
     <div className="pp-actions">
       <PlanButton ref={deleteRef} variant="danger-outline" disabled={busy} onClick={onDelete}>Delete</PlanButton>
       <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>
-      {!busy && <AppLink className="pp-button pp-button--primary" style={{ textDecoration: 'none' }} href="/purchase-plans/recommendation">View recommendation &rarr;</AppLink>}
+      {!busy && <AppLink className="pp-button pp-button--primary" style={{ textDecoration: 'none' }} href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>View recommendation &rarr;</AppLink>}
     </div>
   </section>;
 }

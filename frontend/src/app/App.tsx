@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
-import { AppLink, navigate, usePath } from './router';
+import { AppLink, navigate, usePath, useSearch } from './router';
 import { AppShell } from '../components/AppShell';
 import { StatusPage } from '../components/StatusPage';
 import { AuthPage } from '../features/auth/AuthPage';
@@ -26,6 +26,8 @@ export interface AppProps {
 
 export function App({ auth, createPlanService, scenarioDate, refreshScenario, mock = false, renderAuthPage, MarketDashboard, createRecommendationService }: AppProps) {
   const path = usePath();
+  const search = useSearch();
+  const selectedPlanId = new URLSearchParams(search).get('plan_id');
   const [session, setSession] = useState<Session>({ state: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [notice, setNotice] = useState('');
@@ -61,7 +63,7 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, mo
   useEffect(() => {
     if (session.state !== 'ready') return;
     if (path === '/') navigate(user ? '/home' : '/login', true);
-    else if (!user && privateRoutes.includes(path)) { returnPath.current = path; navigate('/login', true); }
+    else if (!user && privateRoutes.includes(path)) { returnPath.current = path + search; navigate('/login', true); }
     else if (user && (path === '/login' || path === '/signup')) navigate(returnPath.current, true);
   }, [path, session, user]);
 
@@ -86,6 +88,6 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, mo
   return <AppShell path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
     await auth.signOut(); acceptUser(null); returnPath.current = '/home'; setNotice(''); navigate('/login', true);
   }}>
-    {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? <RecommendationsPage refreshScenario={refreshScenario} key={user.id} planService={planStore.current.service} service={planStore.current.recommendations} scenarioDate={scenarioDate} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
+    {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? <RecommendationsPage planId={selectedPlanId} refreshScenario={refreshScenario} key={user.id} planService={planStore.current.service} service={planStore.current.recommendations} scenarioDate={scenarioDate} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
   </AppShell>;
 }

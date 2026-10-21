@@ -23,8 +23,8 @@ describe('real analysis adapter', () => {
     const service = createApiRecommendationService({ baseUrl: 'https://backend.test/', getToken });
     expect((await service.read(context)).source).toBe('api');
     expect((await service.readImpact!(context)).provenance).toBe('fixture');
-    expect(fetcher.mock.calls[0][0]).toContain('/api/v1/purchase-plan/recommendation?');
-    expect(fetcher.mock.calls[1][0]).toContain('/api/v1/purchase-plan/cost-impact?');
+    expect(fetcher.mock.calls[0][0]).toContain('/api/v1/purchase-plans/recommendation?');
+    expect(fetcher.mock.calls[1][0]).toContain('/api/v1/purchase-plans/cost-impact?');
     expect(new URL(fetcher.mock.calls[0][0]).searchParams.get('quantity_mt')).toBe(String(context.quantity_mt));
     expect(fetcher.mock.calls[0][1]).toEqual({ headers: { Authorization: 'Bearer first' }, cache: 'no-store' });
     expect(fetcher.mock.calls[1][1].headers.Authorization).toBe('Bearer second');
@@ -75,13 +75,13 @@ describe('real analysis adapter', () => {
     const body = payload();
     body.recommendation = { status: 'unavailable', reason: 'recommendation_unavailable', message: 'Policy not connected.' };
     const fetcher = vi.fn().mockImplementation(async (url: string) => {
-      if (url.endsWith('/purchase-plan')) return response({ plan: ANALYSIS_DEMO_PLAN });
+      if (url.endsWith(`/purchase-plans/${ANALYSIS_DEMO_PLAN.plan_id}`)) return response({ plan: ANALYSIS_DEMO_PLAN });
       if (url.includes('/cost-impact?') && ++impactCalls === 1) return response({ detail: 'Provider temporarily unavailable' }, 503);
       return response(body);
     });
     vi.stubGlobal('fetch', fetcher);
     const options = { baseUrl: 'https://backend.test', getToken: () => 'session' };
-    render(<RecommendationsPage planService={createApiPlanService(options)} service={createApiRecommendationService(options)} scenarioDate={context.scenario_as_of_date} />);
+    render(<RecommendationsPage planId={ANALYSIS_DEMO_PLAN.plan_id} planService={createApiPlanService(options)} service={createApiRecommendationService(options)} scenarioDate={context.scenario_as_of_date} />);
     expect(await screen.findByText('Policy not connected.')).toBeInTheDocument();
     await userEvent.click(await screen.findByRole('button', { name: 'Retry cost impact' }));
     expect(await screen.findByText('USD 70,000')).toBeInTheDocument();
@@ -107,11 +107,11 @@ describe('real analysis adapter', () => {
   it('reloads the saved plan after a conflict instead of repeatedly requesting stale inputs', async () => {
     let reads = 0;
     vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: string) => {
-      if (url.endsWith('/purchase-plan')) return response({ plan: ++reads === 1 ? ANALYSIS_DEMO_PLAN : null });
+      if (url.endsWith(`/purchase-plans/${ANALYSIS_DEMO_PLAN.plan_id}`)) return ++reads === 1 ? response({ plan: ANALYSIS_DEMO_PLAN }) : response({ detail: 'Not found' }, 404);
       return response({ detail: 'Your saved plan changed.' }, 409);
     }));
     const options = { getToken: () => 'session' };
-    render(<RecommendationsPage planService={createApiPlanService(options)} service={createApiRecommendationService(options)} scenarioDate={context.scenario_as_of_date} />);
+    render(<RecommendationsPage planId={ANALYSIS_DEMO_PLAN.plan_id} planService={createApiPlanService(options)} service={createApiRecommendationService(options)} scenarioDate={context.scenario_as_of_date} />);
     const guidance = await screen.findByRole('region', { name: 'Recommendation' });
     await userEvent.click(await within(guidance).findByRole('button', { name: 'Reload saved plan' }));
     await waitFor(() => expect(screen.getByText('No saved purchase plan')).toBeInTheDocument());

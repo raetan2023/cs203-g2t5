@@ -27,10 +27,10 @@ describe('createApiPlanService', () => {
     const plan = { plan_id: 'p1', quantity_mt: 500, purchase_deadline: '2025-11-15', scenario_as_of_date: '2025-10-24', days_remaining: 22 };
     const fetchMock = mockFetch(200, { plan });
 
-    await expect(service.read()).resolves.toEqual({ plan });
+    await expect(service.read('p1')).resolves.toEqual({ plan });
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe('http://backend.test/api/v1/purchase-plan');
+    expect(url).toBe('http://backend.test/api/v1/purchase-plans/p1');
     expect(init.method).toBe('GET');
     expect(init.headers).toMatchObject({ Authorization: 'Bearer session-token' });
     expect(init.headers).not.toHaveProperty('X-API-Key');
@@ -40,7 +40,7 @@ describe('createApiPlanService', () => {
     const fetchMock = mockFetch(401, { detail: 'Please sign in again.' });
     const anonymous = createApiPlanService({ baseUrl: 'http://backend.test', getToken: () => null });
 
-    const error = await anonymous.read().catch(e => e);
+    const error = await anonymous.read('p1').catch(e => e);
     expect(error.status).toBe(401);
     expect(fetchMock.mock.calls[0][1].headers).not.toHaveProperty('Authorization');
   });
@@ -49,18 +49,18 @@ describe('createApiPlanService', () => {
     const tokens = ['first-token', 'second-token'];
     const getToken = vi.fn(() => tokens.shift() ?? null);
     const service = createApiPlanService({ baseUrl: 'http://backend.test', getToken });
-    const fetchMock = mockFetch(200, { plan: null });
+    const fetchMock = mockFetch(404, { detail: 'No saved purchase plan was found.' });
 
-    await service.read();
-    await service.read();
+    await service.read('p1');
+    await service.read('p1');
 
     expect(getToken).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe('Bearer second-token');
   });
 
   it('returns a null plan without treating it as an error', async () => {
-    mockFetch(200, { plan: null });
-    await expect(service.read()).resolves.toEqual({ plan: null });
+    mockFetch(404, { detail: 'No saved purchase plan was found.' });
+    await expect(service.read('p1')).resolves.toEqual({ plan: null });
   });
 
   it('sends the input as JSON when creating', async () => {
@@ -75,7 +75,7 @@ describe('createApiPlanService', () => {
 
   it('sends the input as JSON when updating', async () => {
     const fetchMock = mockFetch(200, { plan: { ...DEMO_PLAN, quantity_mt: 750, purchase_deadline: '2025-12-01' } });
-    await service.update({ quantity_mt: 750, purchase_deadline: '2025-12-01' });
+    await service.update('p1', { quantity_mt: 750, purchase_deadline: '2025-12-01' });
 
     const [, init] = fetchMock.mock.calls[0];
     expect(init.method).toBe('PUT');
@@ -94,18 +94,17 @@ describe('createApiPlanService', () => {
 
   it.each([
     [409, 'You already have a saved plan. Edit or delete it first.'],
-    [404, 'No saved purchase plan was found.'],
     [401, 'Please sign in again.'],
   ])('passes through the %i message from the backend', async (status, detail) => {
     mockFetch(status, { detail });
-    const error = await service.read().catch(e => e);
+    const error = await service.read('p1').catch(e => e);
     expect(error.status).toBe(status);
     expect(error.detail).toBe(detail);
   });
 
   it('falls back to a friendly message when an error response has no body', async () => {
     mockFetch(500);
-    const error = await service.read().catch(e => e);
+    const error = await service.read('p1').catch(e => e);
     expect(error).toBeInstanceOf(PlanError);
     expect(error.status).toBe(500);
     expect(error.detail).toContain("couldn't load");
@@ -113,13 +112,13 @@ describe('createApiPlanService', () => {
 
   it('accepts an empty 204 body when deleting', async () => {
     mockFetch(204);
-    await expect(service.delete()).resolves.toBeUndefined();
+    await expect(service.delete('p1')).resolves.toBeUndefined();
   });
 
   it('reports a friendly message when the backend cannot be reached', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
 
-    const error = await service.read().catch(e => e);
+    const error = await service.read('p1').catch(e => e);
     expect(error).toBeInstanceOf(PlanError);
     expect(error.status).toBe(0);
     expect(error.detail).toContain("couldn't load");
@@ -127,7 +126,7 @@ describe('createApiPlanService', () => {
 
   it.each([{ plan: { ...DEMO_PLAN, days_remaining: '22' } }, { plan: { ...DEMO_PLAN, quantity_mt: Infinity } }, {}, null])('rejects invalid saved context %#', async body => {
     mockFetch(200, body);
-    await expect(service.read()).rejects.toMatchObject({ status: 502 });
+    await expect(service.read('p1')).rejects.toMatchObject({ status: 502 });
   });
 });
 
@@ -146,5 +145,31 @@ describe('fetchScenarioDate', () => {
     const error = await fetchScenarioDate(options).catch(e => e);
     expect(error).toBeInstanceOf(PlanError);
     expect(error.status).toBe(500);
+  });
+});
+
+describe('multiple-plan transport', () => {
+  it('lists all plans and accepts an empty collection', async () => {
+    const second = { ...DEMO_PLAN, plan_id: 'second', quantity_mt: 250 };
+    const fetcher = mockFetch(200, { plans: [DEMO_PLAN, second] });
+    expect(await service.list()).toEqual({ plans: [DEMO_PLAN, second] });
+    expect(fetcher.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans');
+    mockFetch(200, { plans: [] });
+    expect(await service.list()).toEqual({ plans: [] });
+  });
+  it.each([{}, { plans: null }, { plans: [DEMO_PLAN, DEMO_PLAN] }, { plans: [{ ...DEMO_PLAN, quantity_mt: -1 }] }])('rejects malformed collections %#', async payload => {
+    mockFetch(200, payload);
+    await expect(service.list()).rejects.toMatchObject({ status: 502 });
+  });
+  it('targets the selected plan for mutations and refuses an empty ID', async () => {
+    const fetcher = mockFetch(200, { plan: { ...DEMO_PLAN, plan_id: 'second' } });
+    await service.update('second', { quantity_mt: 250, purchase_deadline: '2025-11-15' });
+    expect(fetcher.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/second');
+    const deletion = mockFetch(204);
+    await service.delete('second');
+    expect(deletion.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/second');
+    deletion.mockClear();
+    await expect(service.delete('')).rejects.toMatchObject({ status: 400 });
+    expect(deletion).not.toHaveBeenCalled();
   });
 });
