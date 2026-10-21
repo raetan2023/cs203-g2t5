@@ -1,0 +1,72 @@
+﻿{
+    "name":  "Frozen Ridge model baseline",
+    "captured_at":  "2026-10-21T09:35:38+08:00",
+    "source":  "Current artifacts and reports after python -m src.train",
+    "files":  [
+                  {
+                      "path":  "artifacts\\ridge_14d.joblib",
+                      "sha256":  "B60A6CF8C4CDE4EDF6A5CC30B1426B7A2503EE2418A098FBDB6561AFFFC2BDC1",
+                      "bytes":  2509
+                  },
+                  {
+                      "path":  "artifacts\\ridge_14d.json",
+                      "sha256":  "E704813735833CEC099EC11080EDAAA53A0D5D76CD5A0DC841BDEBC986DFABE6",
+                      "bytes":  8852
+                  },
+                  {
+                      "path":  "artifacts\\ridge_30d.joblib",
+                      "sha256":  "D0832DC376FE080D00C22A9428091B04830711C70F76FFE6AF0AC964A77D4E43",
+                      "bytes":  2509
+                  },
+                  {
+                      "path":  "artifacts\\ridge_30d.json",
+                      "sha256":  "52119BD96BA4F0C322636E6DB06A68C2104A11EBBF549118C16FBD822937A567",
+                      "bytes":  8780
+                  },
+                  {
+                      "path":  "artifacts\\ridge_7d.joblib",
+                      "sha256":  "2DF6A1E574A7F337509748F52D5BD82C55CD11C4608A2A7ACE9214FACBC37B76",
+                      "bytes":  2509
+                  },
+                  {
+                      "path":  "artifacts\\ridge_7d.json",
+                      "sha256":  "E617FDCC244331D5A0A0186A1D9342AB2E5D2F4CF4EF87CF0B6129B427FDBE32",
+                      "bytes":  8740
+                  },
+                  {
+                      "path":  "artifacts\\ridge_nowcast.joblib",
+                      "sha256":  "61F841A516B8FF1F2BB04B63DB7AA2734840D6E85BB584E31FE1B3602D1C69ED",
+                      "bytes":  1989
+                  },
+                  {
+                      "path":  "artifacts\\ridge_nowcast.json",
+                      "sha256":  "5172B59B90DA8AAFA945589AFEF8EED1953F07CC815EA6B7BDB3DAE3BA8F0C20",
+                      "bytes":  17341
+                  },
+                  {
+                      "path":  "reports\\backtest_14d.csv",
+                      "sha256":  "4D485819928DF71205CB2E24EAFF795893F28EA3B0C8DE36909CDA068BD4B44C",
+                      "bytes":  55773
+                  },
+                  {
+                      "path":  "reports\\backtest_30d.csv",
+                      "sha256":  "524F76FA98F4C012CE1F452C7C0235707C5AC63913DF29417502104D381F5A38",
+                      "bytes":  47870
+                  },
+                  {
+                      "path":  "reports\\backtest_7d.csv",
+                      "sha256":  "A7A951C058C9A62A8283848E4389C26875C1F43FD5120374571AB9B9BA003BF5",
+                      "bytes":  68304
+                  },
+                  {
+                      "path":  "reports\\backtest_nowcast.csv",
+                      "sha256":  "711CADE71A6B1DADEF44A39806E24BAA0B4865036BA9A35299480149FC3A790C",
+                      "bytes":  72054
+                  },
+                  {
+                      "path":  "reports\\metrics_summary.json",
+                      "sha256":  "0AB898E6726679FEF6B3CBDACF8318E516763408AA2409BED134A54EBCFDB4F2",
+                      "bytes":  33974
+                  }
+              ]
+}

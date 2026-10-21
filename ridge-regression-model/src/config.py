@@ -29,7 +29,14 @@ HORIZONS = (7, 14, 30)
 TOLERANCE_DAYS = 3        # target quote must be within +/- this of origin + h
 MIN_TRAIN = 50            # rows before the first walk-forward prediction
 MIN_RESID = 20            # residuals needed before an interval is issued
-QUANTILES = (0.10, 0.90)  # 80% range
-ALPHAS = np.logspace(-1, 6, 8)
+QUANTILES = (0.10, 0.90)  # kept for compatibility
+INTERVAL_COVERAGE = 0.80  # target coverage of the range
+MIN_INTERVAL_ROWS = 40    # below this the coverage figure is not reliable
+DEV_END = "2026-07-31"    # gamma is chosen on rows before this; later rows are the holdout
+GAMMAS = np.linspace(0, 1, 21)
+ALPHAS = np.logspace(-2, 3, 20)
 CLIP_RET5, CLIP_RET20, CLIP_DAILY = 0.25, 0.50, 0.25
+VOL_FLOOR = 0.003         # minimum daily volatility used to scale ranges
 SEED = 42
+
+MIN_GAP_DAYS = 2          # nowcast adjusts the last quote only if it is at least this many days old

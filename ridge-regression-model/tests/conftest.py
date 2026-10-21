@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from src import config
 
 
 def make_long_csv(path, seed=0):
@@ -8,12 +9,10 @@ def make_long_csv(path, seed=0):
     days = pd.bdate_range("2019-06-01", "2026-06-30")
     n = len(days)
     base = {"gasoil": 70, "brent": 65, "dubai": 63, "usd": 120}
-    rows = []
-    series = {}
-    for k, v in base.items():
-        series[k] = v * np.exp(np.cumsum(rng.normal(0, 0.012, n)))
+    series = {k: v * np.exp(np.cumsum(rng.normal(0, 0.012, n))) for k, v in base.items()}
     names = {"gasoil": "sg_gasoil_investing", "brent": "brent_fred",
              "dubai": "dubai_crude_investing", "usd": "usd_index_fred"}
+    rows = []
     for k, s in series.items():
         for d, x in zip(days, s):
             rows.append((d, "daily", names[k], float(x), "observed"))
@@ -23,6 +22,13 @@ def make_long_csv(path, seed=0):
     for d in mgo_days[keep]:
         rows.append((d, "daily", "sg_mgo_themaritime", float(7.5 * g[d] * np.exp(rng.normal(0, 0.02))), "observed"))
     pd.DataFrame(rows, columns=["date", "frequency", "series", "value", "value_status"]).to_csv(path, index=False)
+
+
+@pytest.fixture(autouse=True)
+def fast_config(monkeypatch):
+    """Small alpha grid for speed; a development/holdout split that fits the synthetic data."""
+    monkeypatch.setattr(config, "ALPHAS", np.logspace(-1, 3, 5))
+    monkeypatch.setattr(config, "DEV_END", "2025-06-30")
 
 
 @pytest.fixture(scope="session")

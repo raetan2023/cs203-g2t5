@@ -1,0 +1,1091 @@
+{
+  "7d": {
+    "gamma": 0.0,
+    "rows_total": 164,
+    "range_mode": "scaled",
+    "n_with_interval": 87,
+    "interval_reliable": true,
+    "coverage_80": 0.7816091954022989,
+    "coverage_80_flat": 0.896551724137931,
+    "mean_log_width_scaled": 0.22522634335074218,
+    "mean_log_width_flat": 0.2481669431389487,
+    "holdout_coverage_80": 0.765625,
+    "holdout_coverage_80_flat": 0.953125,
+    "holdout_n_with_interval": 64,
+    "splits": {
+      "all": {
+        "n": 114,
+        "model_MAE": 77.23245614035088,
+        "model_RMSE": 95.3793097023576,
+        "persist_MAE": 77.23245614035088,
+        "persist_RMSE": 95.3793097023576,
+        "MAE_skill_vs_persist": 0.0,
+        "RMSE_skill_vs_persist": 0.0,
+        "paired_MAE_gain_mean": 0.0,
+        "paired_MAE_gain_CI95": [
+          0.0,
+          0.0
+        ],
+        "direction_acc": 0.415929203539823,
+        "n_direction": 113,
+        "baselines": {
+          "persist": {
+            "MAE": 77.23245614035088,
+            "RMSE": 95.3793097023576,
+            "MAE_skill": 0.0,
+            "paired_gain_CI95": [
+              0.0,
+              0.0
+            ]
+          },
+          "drift": {
+            "MAE": 81.96822411380734,
+            "RMSE": 99.37894081391352,
+            "MAE_skill": 0.0577756566603318,
+            "paired_gain_CI95": [
+              -1.561955166886909,
+              10.242211356171321
+            ]
+          },
+          "sma5": {
+            "MAE": 90.55350877192981,
+            "RMSE": 109.99132780807065,
+            "MAE_skill": 0.1471069736803866,
+            "paired_gain_CI95": [
+              3.4269298245614084,
+              22.55184210526315
+            ]
+          },
+          "sma10": {
+            "MAE": 97.36096491228072,
+            "RMSE": 119.2378640520041,
+            "MAE_skill": 0.2067410567475889,
+            "paired_gain_CI95": [
+              4.0347478070175455,
+              42.64385964912279
+            ]
+          },
+          "ema10": {
+            "MAE": 88.33569296252637,
+            "RMSE": 108.17994428660558,
+            "MAE_skill": 0.12569366300081763,
+            "paired_gain_CI95": [
+              -1.68530353655432,
+              28.799650950534392
+            ]
+          }
+        },
+        "oracle_gasoil_MAE": 53.63971443223558
+      },
+      "dev": {
+        "n": 50,
+        "model_MAE": 82.61,
+        "model_RMSE": 105.365055877174,
+        "persist_MAE": 82.61,
+        "persist_RMSE": 105.365055877174,
+        "MAE_skill_vs_persist": 0.0,
+        "RMSE_skill_vs_persist": 0.0,
+        "paired_MAE_gain_mean": 0.0,
+        "paired_MAE_gain_CI95": [
+          0.0,
+          0.0
+        ],
+        "direction_acc": 0.28,
+        "n_direction": 50,
+        "baselines": {
+          "persist": {
+            "MAE": 82.61,
+            "RMSE": 105.365055877174,
+            "MAE_skill": 0.0,
+            "paired_gain_CI95": [
+              0.0,
+              0.0
+            ]
+          },
+          "drift": {
+            "MAE": 89.3510484871012,
+            "RMSE": 110.95269592179886,
+            "MAE_skill": 0.07544453703947684,
+            "paired_gain_CI95": [
+              0.12106236525019076,
+              10.428488253774445
+            ]
+          },
+          "sma5": {
+            "MAE": 104.07599999999998,
+            "RMSE": 128.78359522858491,
+            "MAE_skill": 0.20625312271801366,
+            "paired_gain_CI95": [
+              5.147849999999997,
+              34.50319999999997
+            ]
+          },
+          "sma10": {
+            "MAE": 114.53800000000001,
+            "RMSE": 141.45237078253584,
+            "MAE_skill": 0.27875464911208514,
+            "paired_gain_CI95": [
+              14.482300000000006,
+              71.43634999999999
+            ]
+          },
+          "ema10": {
+            "MAE": 102.87339479808941,
+            "RMSE": 127.84787570702218,
+            "MAE_skill": 0.19697410431395368,
+            "paired_gain_CI95": [
+              6.390114230541903,
+              52.90492242843281
+            ]
+          }
+        },
+        "oracle_gasoil_MAE": 61.295739675967035
+      },
+      "holdout": {
+        "n": 64,
+        "model_MAE": 73.03125,
+        "model_RMSE": 86.78209960873268,
+        "persist_MAE": 73.03125,
+        "persist_RMSE": 86.78209960873268,
+        "MAE_skill_vs_persist": 0.0,
+        "RMSE_skill_vs_persist": 0.0,
+        "paired_MAE_gain_mean": 0.0,
+        "paired_MAE_gain_CI95": [
+          0.0,
+          0.0
+        ],
+        "direction_acc": 0.5238095238095238,
+        "n_direction": 63,
+        "baselines": {
+          "persist": {
+            "MAE": 73.03125,
+            "RMSE": 86.78209960873268,
+            "MAE_skill": 0.0,
+            "paired_gain_CI95": [
+              0.0,
+              0.0
+            ]
+          },
+          "drift": {
+            "MAE": 76.20039257217155,
+            "RMSE": 89.29924983901643,
+            "MAE_skill": 0.0415895832711094,
+            "paired_gain_CI95": [
+              -7.913844715644611,
+              11.351291415046322
+            ]
+          },
+          "sma5": {
+            "MAE": 79.98906250000002,
+            "RMSE": 92.69588970795847,
+            "MAE_skill": 0.08698454866876348,
+            "paired_gain_CI95": [
+              -5.841015624999981,
+              19.12839843750002
+            ]
+          },
+          "sma10": {
+            "MAE": 83.94140625,
+            "RMSE": 98.45490064459717,
+            "MAE_skill": 0.12997347480106103,
+            "paired_gain_CI95": [
+              -14.48849609374999,
+              33.41054687499998
+            ]
+          },
+          "ema10": {
+            "MAE": 76.97811340349273,
+            "RMSE": 89.86766949306475,
+            "MAE_skill": 0.051272540063493466,
+            "paired_gain_CI95": [
+              -15.829516184976235,
+              22.295727660589346
+            ]
+          }
+        },
+        "oracle_gasoil_MAE": 47.65844471057038
+      }
+    },
+    "evidence": "no_edge"
+  },
+  "14d": {
+    "gamma": 0.0,
+    "rows_total": 144,
+    "range_mode": "scaled",
+    "n_with_interval": 60,
+    "interval_reliable": true,
+    "coverage_80": 0.8333333333333334,
+    "coverage_80_flat": 1.0,
+    "mean_log_width_scaled": 0.37892426541626456,
+    "mean_log_width_flat": 0.4665390629395919,
+    "holdout_coverage_80": 0.8245614035087719,
+    "holdout_coverage_80_flat": 1.0,
+    "holdout_n_with_interval": 57,
+    "splits": {
+      "all": {
+        "n": 94,
+        "model_MAE": 120.0,
+        "model_RMSE": 148.83422879020293,
+        "persist_MAE": 120.0,
+        "persist_RMSE": 148.83422879020293,
+        "MAE_skill_vs_persist": 0.0,
+        "RMSE_skill_vs_persist": 0.0,
+        "paired_MAE_gain_mean": 0.0,
+        "paired_MAE_gain_CI95": [
+          0.0,
+          0.0
+        ],
+        "direction_acc": 0.3723404255319149,
+        "n_direction": 94,
+        "baselines": {
+          "persist": {
+            "MAE": 120.0,
+            "RMSE": 148.83422879020293,
+            "MAE_skill": 0.0,
+            "paired_gain_CI95": [
+              0.0,
+              0.0
+            ]
+          },
+          "drift": {
+            "MAE": 131.67048634756122,
+            "RMSE": 155.82440312423742,
+            "MAE_skill": 0.08863403387723101,
+            "paired_gain_CI95": [
+              -7.70002851490853,
+              28.277718497078972
+            ]
+          },
+          "sma5": {
+            "MAE": 119.25851063829786,
+            "RMSE": 153.74179064746633,
+            "MAE_skill": -0.006217496409552048,
+            "paired_gain_CI95": [
+              -13.290452127659579,
+              11.421117021276592
+            ]
+          },
+          "sma10": {
+            "MAE": 116.7723404255319,
+            "RMSE": 156.1847686814726,
+            "MAE_skill": -0.027640617313193783,
+            "paired_gain_CI95": [
+              -28.0822606382979,
+              19.82902925531912
+            ]
+          },
+          "ema10": {
+            "MAE": 114.07370076208812,
+            "RMSE": 151.15451471896384,
+            "MAE_skill": -0.05195149450153935,
+            "paired_gain_CI95": [
+              -25.292177455638168,
+              13.858411966480633
+            ]
+          }
+        },
+        "oracle_gasoil_MAE": 73.62426827066727
+      },
+      "dev": {
+        "n": 37,
+        "model_MAE": 155.8918918918919,
+        "model_RMSE": 185.84809257432133,
+        "persist_MAE": 155.8918918918919,
+        "persist_RMSE": 185.84809257432133,
+        "MAE_skill_vs_persist": 0.0,
+        "RMSE_skill_vs_persist": 0.0,
+        "paired_MAE_gain_mean": 0.0,
+        "paired_MAE_gain_CI95": [
+          0.0,
+          0.0
+        ],
+        "direction_acc": 0.13513513513513514,
+        "n_direction": 37,
+        "baselines": {
+          "persist": {
+            "MAE": 155.8918918918919,
+            "RMSE": 185.84809257432133,
+            "MAE_skill": 0.0,
+            "paired_gain_CI95": [
+              0.0,
+              0.0
+            ]
+          },
+          "drift": {
+            "MAE": 169.1455012325392,
+            "RMSE": 197.41233994970324,
+            "MAE_skill": 0.07835626276826835,
+            "paired_gain_CI95": [
+              -1.4834167119179555,
+              26.742139611189863
+            ]
+          },
+          "sma5": {
+            "MAE": 164.6513513513513,
+            "RMSE": 196.56614662754114,
+            "MAE_skill": 0.05320004596116257,
+            "paired_gain_CI95": [
+              -10.550810810810802,
+              32.72912162162159
+            ]
+          },
+          "sma10": {
+            "MAE": 170.477027027027,
+            "RMSE": 206.86730389048654,
+            "MAE_skill": 0.08555484213613607,
+            "paired_gain_CI95": [
+              -23.111520270270294,
+              65.97469594594594
+            ]
+          },
+          "ema10": {
+            "MAE": 163.58334612890877,
+            "RMSE": 199.61440070358134,
+            "MAE_skill": 0.04701856526981518,
+            "paired_gain_CI95": [
+              -26.809699696609417,
+              53.50638968141001
+            ]
+          }
+        },
+        "oracle_gasoil_MAE": 104.94694043174322
+      },
+      "holdout": {
+        "n": 57,
+        "model_MAE": 96.70175438596492,
+        "model_RMSE": 118.78707177573085,
+        "persist_MAE": 96.70175438596492,
+        "persist_RMSE": 118.78707177573085,
+        "MAE_skill_vs_persist": 0.0,
+        "RMSE_skill_vs_persist": 0.0,
+        "paired_MAE_gain_mean": 0.0,
+        "paired_MAE_gain_CI95": [
+          0.0,
+          0.0
+        ],
+        "direction_acc": 0.5263157894736842,
+        "n_direction": 57,
+        "baselines": {
+          "persist": {
+            "MAE": 96.70175438596492,
+            "RMSE": 118.78707177573085,
+            "MAE_skill": 0.0,
+            "paired_gain_CI95": [
+              0.0,
+              0.0
+            ]
+          },
+          "drift": {
+            "MAE": 107.34459949240009,
+            "RMSE": 121.43055271519414,
+            "MAE_skill": 0.09914653514719829,
+            "paired_gain_CI95": [
+              -20.724859333555933,
+              32.04221039493019
+            ]
+          },
+          "sma5": {
+            "MAE": 89.79298245614036,
+            "RMSE": 117.89225976407741,
+            "MAE_skill": -0.07694111210972587,
+            "paired_gain_CI95": [
+              -21.930307017543864,
+              5.015964912280706
+            ]
+          },
+          "sma10": {
+            "MAE": 81.91140350877191,
+            "RMSE": 111.57760987902451,
+            "MAE_skill": -0.18056522344424364,
+            "paired_gain_CI95": [
+              -41.948201754385984,
+              4.398026315789471
+            ]
+          },
+          "ema10": {
+            "MAE": 81.93586078713443,
+            "RMSE": 108.69109424998304,
+            "MAE_skill": -0.18021283302547575,
+            "paired_gain_CI95": [
+              -34.97611742175034,
+              0.3233473564322793
+            ]
+          }
+        },
+        "oracle_gasoil_MAE": 53.29200739417936
+      }
+    },
+    "evidence": "no_edge"
+  },
+  "30d": {
+    "gamma": 0.0,
+    "rows_total": 131,
+    "range_mode": "scaled",
+    "n_with_interval": 31,
+    "interval_reliable": false,
+    "coverage_80": 1.0,
+    "coverage_80_flat": 1.0,
+    "mean_log_width_scaled": 0.7236205035658801,
+    "mean_log_width_flat": 0.6258666420990577,
+    "holdout_coverage_80": 1.0,
+    "holdout_coverage_80_flat": 1.0,
+    "holdout_n_with_interval": 31,
+    "splits": {
+      "all": {
+        "n": 81,
+        "model_MAE": 154.679012345679,
+        "model_RMSE": 186.079732014711,
+        "persist_MAE": 154.679012345679,
+        "persist_RMSE": 186.079732014711,
+        "MAE_skill_vs_persist": 0.0,
+        "RMSE_skill_vs_persist": 0.0,
+        "paired_MAE_gain_mean": 0.0,
+        "paired_MAE_gain_CI95": [
+          0.0,
+          0.0
+        ],
+        "direction_acc": 0.5925925925925926,
+        "n_direction": 81,
+        "baselines": {
+          "persist": {
+            "MAE": 154.679012345679,
+            "RMSE": 186.079732014711,
+            "MAE_skill": 0.0,
+            "paired_gain_CI95": [
+              0.0,
+              0.0
+            ]
+          },
+          "drift": {
+            "MAE": 128.8054532050343,
+            "RMSE": 172.2262998698662,
+            "MAE_skill": -0.20087316566837288,
+            "paired_gain_CI95": [
+              -63.158863872102586,
+              4.407351960670489
+            ]
+          },
+          "sma5": {
+            "MAE": 163.00123456790126,
+            "RMSE": 192.03021977970545,
+            "MAE_skill": 0.05105619134900152,
+            "paired_gain_CI95": [
+              -3.85432098765432,
+              20.90716049382713
+            ]
+          },
+          "sma10": {
+            "MAE": 169.7296296296296,
+            "RMSE": 196.23700208588164,
+            "MAE_skill": 0.08867407132621952,
+            "paired_gain_CI95": [
+              -6.570493827160507,
+              42.52375
+            ]
+          },
+          "ema10": {
+            "MAE": 165.21188567862276,
+            "RMSE": 191.4115310422695,
+            "MAE_skill": 0.06375372625086273,
+            "paired_gain_CI95": [
+              -8.399240304523413,
+              33.40759202213257
+            ]
+          }
+        },
+        "oracle_gasoil_MAE": 89.4170695373161
+      },
+      "dev": {
+        "n": 40,
+        "model_MAE": 197.7375,
+        "model_RMSE": 232.07066542327144,
+        "persist_MAE": 197.7375,
+        "persist_RMSE": 232.07066542327144,
+        "MAE_skill_vs_persist": 0.0,
+        "RMSE_skill_vs_persist": 0.0,
+        "paired_MAE_gain_mean": 0.0,
+        "paired_MAE_gain_CI95": [
+          0.0,
+          0.0
+        ],
+        "direction_acc": 0.325,
+        "n_direction": 40,
+        "baselines": {
+          "persist": {
+            "MAE": 197.7375,
+            "RMSE": 232.07066542327144,
+            "MAE_skill": 0.0,
+            "paired_gain_CI95": [
+              0.0,
+              0.0
+            ]
+          },
+          "drift": {
+            "MAE": 208.30252958152397,
+            "RMSE": 236.1488867182262,
+            "MAE_skill": 0.050719641296478324,
+            "paired_gain_CI95": [
+              -1.7402868102991171,
+              20.941612090732665
+            ]
+          },
+          "sma5": {
+            "MAE": 213.275,
+            "RMSE": 240.25201455971188,
+            "MAE_skill": 0.07285195170554448,
+            "paired_gain_CI95": [
+              1.1290624999999928,
+              34.03287499999998
+            ]
+          },
+          "sma10": {
+            "MAE": 223.7675,
+            "RMSE": 244.04557386889852,
+            "MAE_skill": 0.11632609740020339,
+            "paired_gain_CI95": [
+              -0.9108750000000054,
+              71.22284375
+            ]
+          },
+          "ema10": {
+            "MAE": 217.95695201263865,
+            "RMSE": 238.99457707638697,
+            "MAE_skill": 0.09276809858979018,
+            "paired_gain_CI95": [
+              -4.892340934499081,
+              60.56728247038842
+            ]
+          }
+        },
+        "oracle_gasoil_MAE": 129.9239581244591
+      },
+      "holdout": {
+        "n": 41,
+        "model_MAE": 112.67073170731707,
+        "model_RMSE": 125.95075015026562,
+        "persist_MAE": 112.67073170731707,
+        "persist_RMSE": 125.95075015026562,
+        "MAE_skill_vs_persist": 0.0,
+        "RMSE_skill_vs_persist": 0.0,
+        "paired_MAE_gain_mean": 0.0,
+        "paired_MAE_gain_CI95": [
+          0.0,
+          0.0
+        ],
+        "direction_acc": 0.8536585365853658,
+        "n_direction": 41,
+        "baselines": {
+          "persist": {
+            "MAE": 112.67073170731707,
+            "RMSE": 125.95075015026562,
+            "MAE_skill": 0.0,
+            "paired_gain_CI95": [
+              0.0,
+              0.0
+            ]
+          },
+          "drift": {
+            "MAE": 51.247329910898095,
+            "RMSE": 64.76258702137834,
+            "MAE_skill": -1.1985678454509467,
+            "paired_gain_CI95": [
+              -112.11969876136746,
+              -43.08072689237584
+            ]
+          },
+          "sma5": {
+            "MAE": 113.95365853658538,
+            "RMSE": 128.6025082257388,
+            "MAE_skill": 0.011258320669506383,
+            "paired_gain_CI95": [
+              -16.046524390243903,
+              18.508780487804884
+            ]
+          },
+          "sma10": {
+            "MAE": 117.009756097561,
+            "RMSE": 134.0637048243092,
+            "MAE_skill": 0.03708258640096729,
+            "paired_gain_CI95": [
+              -29.045701219512186,
+              30.060152439024392
+            ]
+          },
+          "ema10": {
+            "MAE": 113.75328437714384,
+            "RMSE": 129.0653074066371,
+            "MAE_skill": 0.00951667176692339,
+            "paired_gain_CI95": [
+              -22.657921864384758,
+              20.897808643869983
+            ]
+          }
+        },
+        "oracle_gasoil_MAE": 49.898153842542435
+      }
+    },
+    "evidence": "no_edge"
+  },
+  "nowcast": {
+    "rows_total": 249,
+    "range_mode": "flat",
+    "n_with_interval": 179,
+    "interval_reliable": true,
+    "coverage_80": 0.7150837988826816,
+    "coverage_80_flat": 0.8603351955307262,
+    "mean_log_width_scaled": 0.06770116449844352,
+    "mean_log_width_flat": 0.08571253306287567,
+    "holdout_coverage_80": 0.6911764705882353,
+    "holdout_coverage_80_flat": 0.8970588235294118,
+    "holdout_n_with_interval": 68,
+    "by_gap": {
+      "1d": {
+        "n": 123,
+        "persist_MAE": 15.910569105691057,
+        "transfer_MAE": 17.179997531528407,
+        "ridge_MAE": 24.22053922445915,
+        "transfer_skill": -0.07978523064792742,
+        "ridge_skill": -0.5222924499787815
+      },
+      "2-6d": {
+        "n": 18,
+        "persist_MAE": 58.361111111111114,
+        "transfer_MAE": 30.881824288788533,
+        "ridge_MAE": 21.60774763617156,
+        "transfer_skill": 0.47084927444246216,
+        "ridge_skill": 0.6297577749156706
+      },
+      "7d+": {
+        "n": 58,
+        "persist_MAE": 61.73275862068966,
+        "transfer_MAE": 36.13768280239777,
+        "ridge_MAE": 30.198858568213712,
+        "transfer_skill": 0.4146109195533947,
+        "ridge_skill": 0.5108130716502177
+      }
+    },
+    "splits": {
+      "ungated": {
+        "all": {
+          "n": 199,
+          "model_MAE": 25.726631050331456,
+          "model_RMSE": 40.2858743758402,
+          "persist_MAE": 33.10552763819096,
+          "persist_RMSE": 65.6392799730229,
+          "MAE_skill_vs_persist": 0.22289016711961762,
+          "RMSE_skill_vs_persist": 0.38625356048394643,
+          "paired_MAE_gain_mean": 7.3788965878595025,
+          "paired_MAE_gain_CI95": [
+            -2.374161881724482,
+            15.937405167093354
+          ],
+          "direction_acc": 0.7708333333333334,
+          "n_direction": 144,
+          "baselines": {
+            "persist": {
+              "MAE": 33.10552763819096,
+              "RMSE": 65.6392799730229,
+              "MAE_skill": 0.22289016711961762,
+              "paired_gain_CI95": [
+                -2.374161881724482,
+                15.937405167093354
+              ]
+            },
+            "drift": {
+              "MAE": 37.315364738948524,
+              "RMSE": 67.28266102187123,
+              "MAE_skill": 0.3105619835070549,
+              "paired_gain_CI95": [
+                1.8074930906606774,
+                20.35261887636275
+              ]
+            },
+            "gasoil_transfer": {
+              "MAE": 23.944714251835467,
+              "RMSE": 46.77873847646584,
+              "MAE_skill": -0.07441796046321159,
+              "paired_gain_CI95": [
+                -6.78190912488874,
+                3.097032354831836
+              ]
+            }
+          },
+          "oracle_gasoil_MAE": 25.50740555278142
+        },
+        "dev": {
+          "n": 131,
+          "model_MAE": 26.678920021432248,
+          "model_RMSE": 44.67479920336086,
+          "persist_MAE": 42.76335877862596,
+          "persist_RMSE": 78.47861574831065,
+          "MAE_skill_vs_persist": 0.3761266471246655,
+          "RMSE_skill_vs_persist": 0.43073920484737216,
+          "paired_MAE_gain_mean": 16.084438757193706,
+          "paired_MAE_gain_CI95": [
+            3.5610783289954204,
+            27.13220075002583
+          ],
+          "direction_acc": 0.8165137614678899,
+          "n_direction": 109,
+          "baselines": {
+            "persist": {
+              "MAE": 42.76335877862596,
+              "RMSE": 78.47861574831065,
+              "MAE_skill": 0.3761266471246655,
+              "paired_gain_CI95": [
+                3.5610783289954204,
+                27.13220075002583
+              ]
+            },
+            "drift": {
+              "MAE": 46.695858900836676,
+              "RMSE": 80.28597432335663,
+              "MAE_skill": 0.4286662532948028,
+              "paired_gain_CI95": [
+                7.22067953868814,
+                31.676577460193176
+              ]
+            },
+            "gasoil_transfer": {
+              "MAE": 27.72188331039169,
+              "RMSE": 54.55648827818665,
+              "MAE_skill": 0.03762238219105707,
+              "paired_gain_CI95": [
+                -3.977317294210821,
+                8.356190554922392
+              ]
+            }
+          },
+          "oracle_gasoil_MAE": 29.483994303468684
+        },
+        "holdout": {
+          "n": 68,
+          "model_MAE": 23.892074356004926,
+          "model_RMSE": 30.076531447300113,
+          "persist_MAE": 14.5,
+          "persist_RMSE": 27.27299353702465,
+          "MAE_skill_vs_persist": -0.6477292659313743,
+          "RMSE_skill_vs_persist": -0.1027953864495843,
+          "paired_MAE_gain_mean": -9.392074356004926,
+          "paired_MAE_gain_CI95": [
+            -12.744537434838419,
+            -4.2727923023264465
+          ],
+          "direction_acc": 0.6285714285714286,
+          "n_direction": 35,
+          "baselines": {
+            "persist": {
+              "MAE": 14.5,
+              "RMSE": 27.27299353702465,
+              "MAE_skill": -0.6477292659313743,
+              "paired_gain_CI95": [
+                -12.744537434838419,
+                -4.2727923023264465
+              ]
+            },
+            "drift": {
+              "MAE": 19.244118632958106,
+              "RMSE": 28.814723358896778,
+              "MAE_skill": -0.2415260377311632,
+              "paired_gain_CI95": [
+                -7.663518153664959,
+                -0.5468532790770737
+              ]
+            },
+            "gasoil_transfer": {
+              "MAE": 16.66810915373451,
+              "RMSE": 25.882102657159468,
+              "MAE_skill": -0.43340040166774885,
+              "paired_gain_CI95": [
+                -10.570867431820778,
+                -3.7570348969790555
+              ]
+            }
+          },
+          "oracle_gasoil_MAE": 17.84662428307506
+        }
+      },
+      "ridge_gated": {
+        "all": {
+          "n": 199,
+          "model_MAE": 20.590317861344136,
+          "model_RMSE": 38.76644907927233,
+          "persist_MAE": 33.10552763819096,
+          "persist_RMSE": 65.6392799730229,
+          "MAE_skill_vs_persist": 0.37803988245180886,
+          "RMSE_skill_vs_persist": 0.40940167084092083,
+          "paired_MAE_gain_mean": 12.515209776846818,
+          "paired_MAE_gain_CI95": [
+            4.385540084071638,
+            19.74032416123754
+          ],
+          "direction_acc": 0.8533333333333334,
+          "n_direction": 75,
+          "baselines": {
+            "persist": {
+              "MAE": 33.10552763819096,
+              "RMSE": 65.6392799730229,
+              "MAE_skill": 0.37803988245180886,
+              "paired_gain_CI95": [
+                4.385540084071638,
+                19.74032416123754
+              ]
+            },
+            "drift": {
+              "MAE": 37.315364738948524,
+              "RMSE": 67.28266102187123,
+              "MAE_skill": 0.44820805034627853,
+              "paired_gain_CI95": [
+                8.36768069676133,
+                24.374581579695604
+              ]
+            },
+            "gasoil_transfer": {
+              "MAE": 23.944714251835467,
+              "RMSE": 46.77873847646584,
+              "MAE_skill": 0.14008922199746865,
+              "paired_gain_CI95": [
+                -0.43243114069509125,
+                7.289023278311571
+              ]
+            }
+          },
+          "oracle_gasoil_MAE": 25.50740555278142
+        },
+        "dev": {
+          "n": 131,
+          "model_MAE": 23.751704232118193,
+          "model_RMSE": 43.55265105899721,
+          "persist_MAE": 42.76335877862596,
+          "persist_RMSE": 78.47861574831065,
+          "MAE_skill_vs_persist": 0.44457814094832504,
+          "RMSE_skill_vs_persist": 0.44503798080899837,
+          "paired_MAE_gain_mean": 19.011654546507764,
+          "paired_MAE_gain_CI95": [
+            7.1220978013045375,
+            28.84641277783315
+          ],
+          "direction_acc": 0.8533333333333334,
+          "n_direction": 75,
+          "baselines": {
+            "persist": {
+              "MAE": 42.76335877862596,
+              "RMSE": 78.47861574831065,
+              "MAE_skill": 0.44457814094832504,
+              "paired_gain_CI95": [
+                7.1220978013045375,
+                28.84641277783315
+              ]
+            },
+            "drift": {
+              "MAE": 46.695858900836676,
+              "RMSE": 80.28597432335663,
+              "MAE_skill": 0.491353092304024,
+              "paired_gain_CI95": [
+                10.597183370265405,
+                33.51049274781426
+              ]
+            },
+            "gasoil_transfer": {
+              "MAE": 27.72188331039169,
+              "RMSE": 54.55648827818665,
+              "MAE_skill": 0.14321462340133484,
+              "paired_gain_CI95": [
+                -0.6816462616791896,
+                9.925922106284332
+              ]
+            }
+          },
+          "oracle_gasoil_MAE": 29.483994303468684
+        },
+        "holdout": {
+          "n": 68,
+          "model_MAE": 14.5,
+          "model_RMSE": 27.27299353702465,
+          "persist_MAE": 14.5,
+          "persist_RMSE": 27.27299353702465,
+          "MAE_skill_vs_persist": 0.0,
+          "RMSE_skill_vs_persist": 0.0,
+          "paired_MAE_gain_mean": 0.0,
+          "paired_MAE_gain_CI95": [
+            0.0,
+            0.0
+          ],
+          "direction_acc": NaN,
+          "n_direction": 0,
+          "baselines": {
+            "persist": {
+              "MAE": 14.5,
+              "RMSE": 27.27299353702465,
+              "MAE_skill": 0.0,
+              "paired_gain_CI95": [
+                0.0,
+                0.0
+              ]
+            },
+            "drift": {
+              "MAE": 19.244118632958106,
+              "RMSE": 28.814723358896778,
+              "MAE_skill": 0.24652304028271643,
+              "paired_gain_CI95": [
+                2.2084946358822806,
+                6.48991754698915
+              ]
+            },
+            "gasoil_transfer": {
+              "MAE": 16.66810915373451,
+              "RMSE": 25.882102657159468,
+              "MAE_skill": 0.130075291308537,
+              "paired_gain_CI95": [
+                -2.573549837048195,
+                4.982884739032002
+              ]
+            }
+          },
+          "oracle_gasoil_MAE": 17.84662428307506
+        }
+      },
+      "transfer_gated": {
+        "all": {
+          "n": 199,
+          "model_MAE": 23.160092661996302,
+          "model_RMSE": 47.21179596540066,
+          "persist_MAE": 33.10552763819096,
+          "persist_RMSE": 65.6392799730229,
+          "MAE_skill_vs_persist": 0.30041614454504195,
+          "RMSE_skill_vs_persist": 0.28073866768794153,
+          "paired_MAE_gain_mean": 9.945434976194653,
+          "paired_MAE_gain_CI95": [
+            2.803273846160647,
+            16.335085090655117
+          ],
+          "direction_acc": 0.7866666666666666,
+          "n_direction": 75,
+          "baselines": {
+            "persist": {
+              "MAE": 33.10552763819096,
+              "RMSE": 65.6392799730229,
+              "MAE_skill": 0.30041614454504195,
+              "paired_gain_CI95": [
+                2.803273846160647,
+                16.335085090655117
+              ]
+            },
+            "drift": {
+              "MAE": 37.315364738948524,
+              "RMSE": 67.28266102187123,
+              "MAE_skill": 0.379341651246877,
+              "paired_gain_CI95": [
+                6.78314437529036,
+                20.89012980510392
+              ]
+            },
+            "gasoil_transfer": {
+              "MAE": 23.944714251835467,
+              "RMSE": 46.77873847646584,
+              "MAE_skill": 0.03276804983291959,
+              "paired_gain_CI95": [
+                -1.1542651976990086,
+                2.3013223099696294
+              ]
+            }
+          },
+          "oracle_gasoil_MAE": 25.50740555278142
+        },
+        "dev": {
+          "n": 131,
+          "model_MAE": 27.65540793692568,
+          "model_RMSE": 54.77102105967565,
+          "persist_MAE": 42.76335877862596,
+          "persist_RMSE": 78.47861574831065,
+          "MAE_skill_vs_persist": 0.353291960061181,
+          "RMSE_skill_vs_persist": 0.30208986820903927,
+          "paired_MAE_gain_mean": 15.107950841700273,
+          "paired_MAE_gain_CI95": [
+            4.503723918592691,
+            24.143976821909153
+          ],
+          "direction_acc": 0.7866666666666666,
+          "n_direction": 75,
+          "baselines": {
+            "persist": {
+              "MAE": 42.76335877862596,
+              "RMSE": 78.47861574831065,
+              "MAE_skill": 0.353291960061181,
+              "paired_gain_CI95": [
+                4.503723918592691,
+                24.143976821909153
+              ]
+            },
+            "drift": {
+              "MAE": 46.695858900836676,
+              "RMSE": 80.28597432335663,
+              "MAE_skill": 0.40775459349286836,
+              "paired_gain_CI95": [
+                7.8261616323540935,
+                28.770868710658867
+              ]
+            },
+            "gasoil_transfer": {
+              "MAE": 27.72188331039169,
+              "RMSE": 54.55648827818665,
+              "MAE_skill": 0.0023979385787649132,
+              "paired_gain_CI95": [
+                -1.584705991312522,
+                2.1047812326703523
+              ]
+            }
+          },
+          "oracle_gasoil_MAE": 29.483994303468684
+        },
+        "holdout": {
+          "n": 68,
+          "model_MAE": 14.5,
+          "model_RMSE": 27.27299353702465,
+          "persist_MAE": 14.5,
+          "persist_RMSE": 27.27299353702465,
+          "MAE_skill_vs_persist": 0.0,
+          "RMSE_skill_vs_persist": 0.0,
+          "paired_MAE_gain_mean": 0.0,
+          "paired_MAE_gain_CI95": [
+            0.0,
+            0.0
+          ],
+          "direction_acc": NaN,
+          "n_direction": 0,
+          "baselines": {
+            "persist": {
+              "MAE": 14.5,
+              "RMSE": 27.27299353702465,
+              "MAE_skill": 0.0,
+              "paired_gain_CI95": [
+                0.0,
+                0.0
+              ]
+            },
+            "drift": {
+              "MAE": 19.244118632958106,
+              "RMSE": 28.814723358896778,
+              "MAE_skill": 0.24652304028271643,
+              "paired_gain_CI95": [
+                2.2084946358822806,
+                6.48991754698915
+              ]
+            },
+            "gasoil_transfer": {
+              "MAE": 16.66810915373451,
+              "RMSE": 25.882102657159468,
+              "MAE_skill": 0.130075291308537,
+              "paired_gain_CI95": [
+                -2.573549837048195,
+                4.982884739032002
+              ]
+            }
+          },
+          "oracle_gasoil_MAE": 17.84662428307506
+        }
+      }
+    },
+    "evidence": "weak"
+  }
+}
