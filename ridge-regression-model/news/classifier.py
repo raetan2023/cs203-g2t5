@@ -1,4 +1,4 @@
-"""Label an oil-market headline with ONE event category (the library's categories plus 'other').
+"""Label an oil-market headline with one event category and its expected oil-price direction.
 
 The category definitions below were written from the category names and sample headlines in the event library;
 the library's own screening rules were not available. Bump PROMPT_VERSION when you change them."""
@@ -7,7 +7,7 @@ import math
 import re
 from concurrent.futures import ThreadPoolExecutor
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 CATEGORIES = {
     "sanctions": "sanctions, embargoes, export/import bans or other trade restrictions on oil, oil companies or tankers, or their lifting",
     "shipping_disruption": "attacks on, delays, suspensions or rerouting of tankers, ports, straits, pipelines or shipping routes, or their restoration",
@@ -20,14 +20,20 @@ CATEGORIES = {
     "other": "not about any of the events above (for example general business, politics or unrelated energy news)",
 }
 LABELS = list(CATEGORIES)
+MARKET_BIASES = {"bullish", "bearish", "neutral"}
 
 SYSTEM = (
-    "You label oil-market news headlines. Choose exactly ONE category from the list.\n\n"
+    "You label oil-market news headlines. Choose exactly ONE category and one market bias.\n"
+    "Market bias means the expected direction of oil prices, not whether the article sounds positive or negative: "
+    "bullish means upward price pressure, bearish means downward price pressure, and neutral means no clear direction "
+    "or mixed implications. Judge market bias only from the headline; use neutral when its price implication is unclear. "
+    "Do not output article tone.\n\n"
     + "\n".join(f"- {k}: {v}" for k, v in CATEGORIES.items())
     + "\n\nIf a headline fits two categories, choose the one that names the physical thing affected "
       "(tanker or route -> shipping_disruption, refinery -> refinery_outage, oil field or output -> production_disruption). "
       "Judge only from the headline text. Reply with ONLY a JSON object: "
-      '{"category": "<one of the category names>", "confidence": <0 to 1>, "reason": "<at most 15 words>"}'
+      '{"category": "<one of the category names>", "market_bias": "<bullish|bearish|neutral>", '
+      '"confidence": <0 to 1>, "reason": "<at most 15 words>"}'
 )
 
 
@@ -38,7 +44,8 @@ def build_user(text: str) -> str:
 def parse_response(raw: str) -> dict:
     """Return invalid unless the reply contains the complete expected JSON result."""
     if not isinstance(raw, str):
-        return {"category": "invalid", "confidence": None, "reason": "unparseable reply", "valid": False}
+        return {"category": "invalid", "market_bias": "invalid", "confidence": None,
+                "reason": "unparseable reply", "valid": False}
     m = re.search(r"\{.*?\}", raw, re.S)
     try:
         obj = json.loads(m.group(0)) if m else {}
@@ -48,8 +55,13 @@ def parse_response(raw: str) -> dict:
         if cat not in CATEGORIES:
             reason = obj.get("reason")
             if cat == "invalid" and isinstance(reason, str) and reason.strip():
-                return {"category": "invalid", "confidence": None, "reason": reason.strip()[:120], "valid": False}
-            return {"category": "invalid", "confidence": None, "reason": f"unrecognised: {cat[:40]!r}", "valid": False}
+                return {"category": "invalid", "market_bias": "invalid", "confidence": None,
+                        "reason": reason.strip()[:120], "valid": False}
+            return {"category": "invalid", "market_bias": "invalid", "confidence": None,
+                    "reason": f"unrecognised: {cat[:40]!r}", "valid": False}
+        market_bias = str(obj.get("market_bias", "")).strip().lower()
+        if market_bias not in MARKET_BIASES:
+            raise ValueError("missing or invalid market bias")
         conf = obj.get("confidence")
         if not isinstance(conf, (int, float)) or isinstance(conf, bool):
             raise ValueError("missing or invalid confidence")
@@ -62,11 +74,14 @@ def parse_response(raw: str) -> dict:
         reason = reason.strip()
         if len(reason.split()) > 15:
             raise ValueError("reason exceeds 15 words")
-        return {"category": cat, "confidence": conf, "reason": reason, "valid": True}
+        return {"category": cat, "market_bias": market_bias, "confidence": conf,
+                "reason": reason, "valid": True}
     except ValueError as exc:
-        return {"category": "invalid", "confidence": None, "reason": str(exc)[:120], "valid": False}
+        return {"category": "invalid", "market_bias": "invalid", "confidence": None,
+                "reason": str(exc)[:120], "valid": False}
     except Exception:
-        return {"category": "invalid", "confidence": None, "reason": "unparseable reply", "valid": False}
+        return {"category": "invalid", "market_bias": "invalid", "confidence": None,
+                "reason": "unparseable reply", "valid": False}
 
 
 def classify(texts, llm, workers=1):
@@ -74,7 +89,7 @@ def classify(texts, llm, workers=1):
         try:
             return parse_response(llm.complete(SYSTEM, build_user(text)))
         except Exception as exc:
-            return {"category": "invalid", "confidence": None,
+            return {"category": "invalid", "market_bias": "invalid", "confidence": None,
                     "reason": f"LLM request failed: {type(exc).__name__}", "valid": False}
 
     if workers <= 1:

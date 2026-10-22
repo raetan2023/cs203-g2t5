@@ -13,24 +13,28 @@ from news.types import NewsItem
 
 def test_parse_response_requires_valid_complete_json():
     valid = parse_response(
-        '{"category":"sanctions","confidence":0.8,"reason":"Trade restrictions were announced."}'
+        '{"category":"sanctions","market_bias":"bullish","confidence":0.8,'
+        '"reason":"Trade restrictions may limit oil supply."}'
     )
     assert valid == {
         "category": "sanctions",
+        "market_bias": "bullish",
         "confidence": 0.8,
-        "reason": "Trade restrictions were announced.",
+        "reason": "Trade restrictions may limit oil supply.",
         "valid": True,
     }
     assert len(CATEGORIES) == 9
 
     invalid_replies = [
         "not JSON",
-        '{"category":"unknown","confidence":0.8,"reason":"Unknown label."}',
-        '{"category":"sanctions","reason":"Missing confidence."}',
-        '{"category":"sanctions","confidence":true,"reason":"Boolean confidence."}',
-        '{"category":"sanctions","confidence":1.1,"reason":"Out of range."}',
-        '{"category":"sanctions","confidence":0.8}',
-        '{"category":"sanctions","confidence":0.8,"reason":"one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen"}',
+        '{"category":"unknown","market_bias":"neutral","confidence":0.8,"reason":"Unknown label."}',
+        '{"category":"sanctions","market_bias":"neutral","reason":"Missing confidence."}',
+        '{"category":"sanctions","market_bias":"neutral","confidence":true,"reason":"Boolean confidence."}',
+        '{"category":"sanctions","market_bias":"neutral","confidence":1.1,"reason":"Out of range."}',
+        '{"category":"sanctions","market_bias":"neutral","confidence":0.8}',
+        '{"category":"sanctions","market_bias":"neutral","confidence":0.8,"reason":"one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen"}',
+        '{"category":"sanctions","confidence":0.8,"reason":"Missing market bias."}',
+        '{"category":"sanctions","market_bias":"positive","confidence":0.8,"reason":"Invalid market bias."}',
     ]
     for reply in invalid_replies:
         assert parse_response(reply)["category"] == "invalid"
@@ -43,6 +47,7 @@ def test_classify_converts_llm_exceptions_to_invalid_result():
 
     result = classify(["Tanker delays reported"], FailingLLM())[0]
     assert result["category"] == "invalid"
+    assert result["market_bias"] == "invalid"
     assert result["valid"] is False
     assert result["reason"] == "LLM request failed: TimeoutError"
 
@@ -58,7 +63,7 @@ def test_cached_llm_retries_and_reuses_successful_disk_response(tmp_path):
             self.calls += 1
             if self.calls < 3:
                 raise TimeoutError
-            return '{"category":"other","confidence":0.7,"reason":"Unrelated headline."}'
+            return '{"category":"other","market_bias":"neutral","confidence":0.7,"reason":"Unrelated headline."}'
 
     path = tmp_path / "cache.jsonl"
     llm = SometimesFails()
@@ -83,7 +88,7 @@ def test_cached_llm_returns_invalid_after_retries_and_retries_again_later(tmp_pa
             self.calls += 1
             if self.fail:
                 raise TimeoutError
-            return '{"category":"other","confidence":0.7,"reason":"Unrelated headline."}'
+            return '{"category":"other","market_bias":"neutral","confidence":0.7,"reason":"Unrelated headline."}'
 
     path = tmp_path / "cache.jsonl"
     llm = Recovers()
@@ -147,20 +152,110 @@ def test_news_tags_request_limits_and_zero_inclusive_counts(monkeypatch):
         service.TagRequest(max_items=251)
 
     item = NewsItem("Tanker delays reported", "https://example.test/news", date(2026, 10, 21))
-    monkeypatch.setattr(service, "fetch_headlines", lambda max_records: [item])
+    requested = date(2026, 10, 21)
+    monkeypatch.setattr(
+        service,
+        "fetch_headlines",
+        lambda max_records, target_date: [item] if target_date == requested else [],
+    )
     monkeypatch.setattr(service, "build_llm", lambda: object())
     monkeypatch.setattr(
         service,
         "classify",
         lambda titles, llm, workers: [
-            {"category": "shipping_disruption", "confidence": 0.9, "reason": "Tanker delays.", "valid": True}
+            {"category": "shipping_disruption", "market_bias": "bullish", "confidence": 0.9,
+             "reason": "Tanker delays constrain supply.", "valid": True}
         ],
     )
     monkeypatch.setattr(service, "_llm_agreement", lambda: None)
 
-    result = service.news_tags_route(service.TagRequest(max_items=1))
+    result = service.news_tags_route(service.TagRequest(target_date=requested, max_items=1))
 
+    assert result["target_date"] == requested
     assert result["counts"]["shipping_disruption"] == 1
     assert result["counts"]["sanctions"] == 0
     assert result["counts"]["invalid"] == 0
     assert set(result["counts"]) == {*CATEGORIES, "invalid"}
+    assert result["items"][0]["market_bias"] == "bullish"
+    assert result["daily_summary"] == {
+        "status": "ok",
+        "date": requested,
+        "n_classified": 1,
+        "market_bias": "bullish",
+        "confidence_weighted_shares": {"bullish": 1.0, "bearish": 0.0, "neutral": 0.0},
+    }
+
+
+def test_daily_summary_weights_confidence_and_ties_to_neutral():
+    from news.service import _daily_market_summary
+
+    target = date(2026, 10, 21)
+    results = [
+        {"valid": True, "market_bias": "bullish", "confidence": 0.9},
+        {"valid": True, "market_bias": "bearish", "confidence": 0.3},
+        {"valid": False, "market_bias": "bullish", "confidence": None},
+    ]
+    summary = _daily_market_summary(target, results)
+
+    assert summary["market_bias"] == "bullish"
+    assert summary["n_classified"] == 2
+    assert summary["confidence_weighted_shares"] == pytest.approx(
+        {"bullish": 0.75, "bearish": 0.25, "neutral": 0.0}
+    )
+
+    tied = _daily_market_summary(
+        target,
+        [
+            {"valid": True, "market_bias": "bullish", "confidence": 0.8},
+            {"valid": True, "market_bias": "bearish", "confidence": 0.8},
+        ],
+    )
+    assert tied["market_bias"] == "neutral"
+
+
+def test_daily_summary_is_insufficient_without_confidence_weight():
+    from news.service import _daily_market_summary
+
+    summary = _daily_market_summary(
+        date(2026, 10, 21),
+        [{"valid": False, "market_bias": "invalid", "confidence": None}],
+    )
+
+    assert summary["status"] == "insufficient"
+    assert summary["market_bias"] == "neutral"
+    assert summary["confidence_weighted_shares"] == {
+        "bullish": None,
+        "bearish": None,
+        "neutral": None,
+    }
+
+
+def test_fetch_headlines_requests_the_selected_date(monkeypatch):
+    from news.gdelt_source import fetch_headlines
+
+    calls = []
+
+    class Response:
+        status_code = 200
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "articles": [
+                    {"title": "Selected date headline", "seendate": "20261021120000", "url": ""},
+                    {"title": "Next date headline", "seendate": "20261022000000", "url": ""},
+                ]
+            }
+
+    def fake_get(url, params, timeout):
+        calls.append(params)
+        return Response()
+
+    headlines = fetch_headlines(target_date=date(2026, 10, 21), get=fake_get)
+
+    assert calls[0]["startdatetime"] == "20261021000000"
+    assert calls[0]["enddatetime"] == "20261022000000"
+    assert "timespan" not in calls[0]
+    assert [item.title for item in headlines] == ["Selected date headline"]

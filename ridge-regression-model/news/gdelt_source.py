@@ -6,8 +6,9 @@ OFFLINE DEMO: the downloaded gdelt_documents.csv has NO headline text (only url,
 Oct 2016 - Jan 2017. slug_headline() recovers rough text from the URL; use it for demos only."""
 import re
 import time
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from urllib.parse import urlparse, unquote
+from typing import Optional
 import requests
 from . import config
 from .types import NewsItem
@@ -15,9 +16,16 @@ from .types import NewsItem
 DOC_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 
 
-def fetch_headlines(query=None, timespan=None, max_records=75, get=requests.get, sleep=time.sleep, retries=3):
+def fetch_headlines(query=None, timespan=None, max_records=75, target_date: Optional[date] = None,
+                    get=requests.get, sleep=time.sleep, retries=3):
     params = {"query": query or config.GDELT_QUERY, "mode": "ArtList", "format": "json", "sort": "DateDesc",
-              "maxrecords": min(int(max_records), 250), "timespan": timespan or config.GDELT_TIMESPAN}
+              "maxrecords": min(int(max_records), 250)}
+    if target_date is None:
+        params["timespan"] = timespan or config.GDELT_TIMESPAN
+    else:
+        next_day = target_date + timedelta(days=1)
+        params["startdatetime"] = target_date.strftime("%Y%m%d") + "000000"
+        params["enddatetime"] = next_day.strftime("%Y%m%d") + "000000"
     for attempt in range(retries):
         r = get(DOC_URL, params=params, timeout=30)
         if r.status_code == 429:
@@ -37,6 +45,8 @@ def fetch_headlines(query=None, timespan=None, max_records=75, get=requests.get,
             try:
                 d = datetime.strptime(a["seendate"][:8], "%Y%m%d").date()
             except Exception:
+                continue
+            if target_date is not None and d != target_date:
                 continue
             items.append(NewsItem(title, a.get("url", ""), d, a.get("domain", ""), a.get("language", ""), a.get("sourcecountry", "")))
         return items
