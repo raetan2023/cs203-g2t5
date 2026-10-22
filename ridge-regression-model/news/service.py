@@ -1,7 +1,8 @@
 """POST /news-impact: recent headlines -> similar past events -> impact summary. Separate from the Ridge model."""
 import json
+import math
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import List, Literal, Optional
 import numpy as np
 from fastapi import APIRouter, HTTPException
@@ -98,13 +99,16 @@ def news_impact_route(req: NewsRequest):
 
 
 class TagRequest(BaseModel):
+    target_date: date
     max_items: int = Field(default=20, gt=0, le=250)
 
 
 class TagResponse(BaseModel):
+    target_date: date
     n_headlines: int
     counts: dict
     items: List[dict]
+    daily_summary: dict
     agreement_with_library_labels: Optional[float] = None
     note: str
 
@@ -117,12 +121,49 @@ def _llm_agreement() -> Optional[float]:
         return None
 
 
+def _daily_market_summary(target_date: date, results: List[dict]) -> dict:
+    biases = ("bullish", "bearish", "neutral")
+    weights = {bias: 0.0 for bias in biases}
+    n_classified = 0
+    for result in results:
+        if not result["valid"] or result["market_bias"] not in weights:
+            continue
+        confidence = result["confidence"]
+        if not isinstance(confidence, (int, float)) or isinstance(confidence, bool):
+            continue
+        if not math.isfinite(confidence) or not 0 <= confidence <= 1:
+            continue
+        weights[result["market_bias"]] += confidence
+        n_classified += 1
+
+    total_weight = sum(weights.values())
+    if total_weight == 0:
+        return {
+            "status": "insufficient",
+            "date": target_date,
+            "n_classified": n_classified,
+            "market_bias": "neutral",
+            "confidence_weighted_shares": {bias: None for bias in biases},
+        }
+
+    shares = {bias: weight / total_weight for bias, weight in weights.items()}
+    highest_share = max(shares.values())
+    leaders = [bias for bias, share in shares.items() if math.isclose(share, highest_share, abs_tol=1e-12)]
+    return {
+        "status": "ok",
+        "date": target_date,
+        "n_classified": n_classified,
+        "market_bias": leaders[0] if len(leaders) == 1 else "neutral",
+        "confidence_weighted_shares": shares,
+    }
+
+
 @router.post("/news-tags", response_model=TagResponse)
 def news_tags_route(req: TagRequest):
-    """Recent headlines, each labelled with an event category by an LLM. Labels are context, not a price signal."""
+    """Label headlines for a requested date and summarize their confidence-weighted market bias."""
     try:
-        items = fetch_headlines(max_records=req.max_items)[:req.max_items]
-        res = classify([i.title for i in items], build_llm(), workers=4)
+        items = fetch_headlines(max_records=req.max_items, target_date=req.target_date)[:req.max_items]
+        res = classify([i.title for i in items], build_llm(), workers=4) if items else []
     except KeyError as e:
         raise HTTPException(503, f"LLM not configured: {e}")
     except Exception as e:
@@ -130,7 +171,9 @@ def news_tags_route(req: TagRequest):
     counts = {category: 0 for category in (*CATEGORIES, "invalid")}
     for r in res:
         counts[r["category"]] = counts.get(r["category"], 0) + 1
-    return {"n_headlines": len(items), "counts": counts,
+    return {"target_date": req.target_date, "n_headlines": len(items), "counts": counts,
             "items": [{"title": i.title, "url": i.url, "seen_date": i.seen_date, **r} for i, r in zip(items, res)],
+            "daily_summary": _daily_market_summary(req.target_date, res),
             "agreement_with_library_labels": _llm_agreement(),
-            "note": "Category labels describe the headline. They are not a price forecast."}
+            "note": "The daily bias is a confidence-weighted summary of returned headlines, capped by max_items (up to 250). "
+                    "It is not a price forecast or a complete census of all news that day."}
