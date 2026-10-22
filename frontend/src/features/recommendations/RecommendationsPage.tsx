@@ -7,26 +7,26 @@ import { useAnalysis } from './useAnalysis';
 import { PurchaseImpact } from './PurchaseImpact';
 import './recommendations.css';
 
-export function RecommendationsPage({ planService, service, scenarioDate, refreshScenario }: {
-  planService: PurchasePlanService; service?: RecommendationService; scenarioDate: string; refreshScenario?: () => void;
+export function RecommendationsPage({ planService, service, scenarioDate, refreshScenario, planId }: {
+  planId?: string | null; planService: PurchasePlanService; service?: RecommendationService; scenarioDate: string; refreshScenario?: () => void;
 }) {
   const [attempt, setAttempt] = useState(0);
   const reload = () => { refreshScenario?.(); setAttempt(value => value + 1); };
-  const scope = useMemo(() => ({}), [planService, service, scenarioDate, attempt]);
+  const scope = useMemo(() => ({}), [planService, service, scenarioDate, attempt, planId]);
   const [result, setResult] = useState<{ scope: object; plan: PurchasePlan | null; error?: boolean }>();
   const requests = useRef<{ scope: object; promise: ReturnType<PurchasePlanService['read']> } | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus(); }, []);
   useEffect(() => {
     let current = true;
-    if (requests.current?.scope !== scope) requests.current = { scope, promise: planService.read() };
+    if (requests.current?.scope !== scope) requests.current = { scope, promise: planId ? planService.read(planId) : Promise.resolve({ plan: null }) };
     requests.current.promise.then(({ plan }) => {
       if (!current) return;
       if (plan && plan.scenario_as_of_date !== scenarioDate) throw new Error('Stale plan');
       setResult({ scope, plan });
     }).catch(() => { if (current) setResult({ scope, plan: null, error: true }); });
     return () => { current = false; };
-  }, [scope, planService, scenarioDate]);
+  }, [scope, planService, scenarioDate, planId]);
   const active = result?.scope === scope ? result : undefined;
   const plan = active?.plan;
   return <main className="recommendations">
@@ -39,7 +39,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
     </dl></section>}
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or scenario changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the active historical scenario.</p><button className="bb-button" onClick={reload}>Retry</button></section>
-      : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Create a purchase plan to view plan-specific guidance.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>
+      : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Choose a saved purchase plan from your plans, or create a new one.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>
       : <section className="rec-card rec-analysis" aria-label="Purchase analysis">
         <Recommendation plan={plan} service={service} reload={reload} />
         {service?.readImpact && <PurchaseImpact plan={plan} service={service} reload={reload} />}

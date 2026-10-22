@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,13 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * The one saved purchase plan per user.
+ * The saved purchase plans belonging to the signed-in user.
  *
  * <p>The owner comes from the verified session token, so a signed-in user can only ever
- * reach their own plan.
+ * reach their own plans.
  */
 @RestController
-@RequestMapping("/api/v1/purchase-plan")
+@RequestMapping("/api/v1/purchase-plans")
 @Tag(name = "Purchase plan")
 @SecurityRequirement(name = "bearerAuth")
 public class PurchasePlanController {
@@ -48,11 +50,16 @@ public class PurchasePlanController {
     }
 
     @GetMapping
-    public Map<String, Object> get(@AuthenticationPrincipal Jwt token) {
+    public Map<String, List<Map<String, Object>>> get(@AuthenticationPrincipal Jwt token) {
         UUID userId = ownerOf(token);
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("plan", plans.findByUser(userId).map(plan -> plan.toResponse(scenarioDate)).orElse(null));
-        return body;
+        return Map.of("plans", plans.findByUser(userId).stream().map(plan -> plan.toResponse(scenarioDate)).toList());
+    }
+
+    @GetMapping("/{planId}")
+    public Map<String, Object> getOne(@AuthenticationPrincipal Jwt token, @PathVariable UUID planId) {
+        PurchasePlan plan = plans.findByIdAndUser(planId, ownerOf(token))
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
+        return Map.of("plan", plan.toResponse(scenarioDate));
     }
 
     @GetMapping({"/recommendation", "/cost-impact"})
@@ -63,7 +70,7 @@ public class PurchasePlanController {
             @RequestParam("scenario_as_of_date") LocalDate scenario,
             jakarta.servlet.http.HttpServletRequest request) {
         UUID owner = ownerOf(token);
-        PurchasePlan plan = plans.findByUser(owner).orElseThrow(() ->
+        PurchasePlan plan = plans.findByIdAndUser(planId, owner).orElseThrow(() ->
                 new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         PlanAnalysisService.Context context = PlanAnalysisService.Context.of(plan, scenarioDate);
         if (!context.matches(new PlanAnalysisService.Context(planId, quantity, deadline, scenario))) {
@@ -71,7 +78,7 @@ public class PurchasePlanController {
         }
         Map<String, Object> result = analysis.read(context, request.getRequestURI().endsWith("/cost-impact"));
         // A slow provider must not publish results for inputs edited/deleted during its request.
-        if (!plans.findByUser(owner).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate))).orElse(false)) {
+        if (!plans.findByIdAndUser(planId, owner).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate))).orElse(false)) {
             throw new ApiException(HttpStatus.CONFLICT, "Your saved plan changed while analysis was loading. Reload the purchase plan.");
         }
         return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(result);
@@ -83,29 +90,26 @@ public class PurchasePlanController {
             @RequestBody PurchasePlanRequest request) {
         UUID userId = ownerOf(token);
         validate(request);
-        if (plans.findByUser(userId).isPresent()) {
-            throw new ApiException(HttpStatus.CONFLICT,
-                    "You already have a saved plan. Edit or delete it first.");
-        }
         PurchasePlan saved = plans.insert(userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("plan", saved.toResponse()));
     }
 
-    @PutMapping
+    @PutMapping("/{planId}")
     public Map<String, Object> update(
+            @PathVariable UUID planId,
             @AuthenticationPrincipal Jwt token,
             @RequestBody PurchasePlanRequest request) {
         UUID userId = ownerOf(token);
         validate(request);
-        PurchasePlan updated = plans.update(userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate)
+        PurchasePlan updated = plans.update(planId, userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         return Map.of("plan", updated.toResponse());
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> delete(@AuthenticationPrincipal Jwt token) {
+    @DeleteMapping("/{planId}")
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal Jwt token, @PathVariable UUID planId) {
         UUID userId = ownerOf(token);
-        if (!plans.delete(userId)) {
+        if (!plans.delete(planId, userId)) {
             throw new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found.");
         }
         return ResponseEntity.noContent().build();

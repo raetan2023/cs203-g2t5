@@ -120,7 +120,7 @@ The latest mockups include cost-impact cards on this page. `RecommendationServic
 
 `ClerkApp` injects the real `createApiRecommendationService` using a fresh Clerk token per request. The existing desktop design and collapsed Price basis and uncertainty disclosure are retained. No browser mocks are imported by the real adapter.
 
-The adapter calls authenticated GET `/api/v1/purchase-plan/recommendation` and `/api/v1/purchase-plan/cost-impact` independently, sending the saved plan ID, quantity, deadline and backend scenario as preconditions. It validates numeric/date/range/basis/context/provenance data before exposing results. CRUD and configuration reads also validate the saved context. See [the feature contract](../docs/sprint-4-purchase-plan-api-contract.md) for JSON fields, unavailable reasons, arithmetic, provider integration and fixture opt-ins.
+The adapter calls authenticated GET `/api/v1/purchase-plans/recommendation` and `/api/v1/purchase-plans/cost-impact` independently, sending the saved plan ID, quantity, deadline and backend scenario as preconditions. It validates numeric/date/range/basis/context/provenance data before exposing results. CRUD and configuration reads also validate the saved context. See [the feature contract](../docs/sprint-4-purchase-plan-api-contract.md) for JSON fields, unavailable reasons, arithmetic, provider integration and fixture opt-ins.
 
 403/401 and provider/network failures remain errors; no synthetic fallback is used. 404/409 analysis failures offer Reload saved plan, which refreshes backend configuration and saved inputs. Ordinary section retries leave the other section intact. Scope guards continue to discard old results across edits, scenario changes, navigation, logout and account switches. Configuration is read at sign-in/account change and explicit context recovery; there is no background polling.
 
@@ -129,3 +129,21 @@ The backend's default provider reports unavailable prices/guidance. For local fi
 The existing dashboard remains mounted. Its optional `onToggleNav` control is rendered only when a callback is supplied; the normal app already supplies navigation through AppShell. This resolves the previous required-prop build mismatch without redesigning the dashboard.
 
 Verification distinction: frontend tests exercise real adapters and ClerkApp injection with mocked fetch/Clerk hooks. Backend socket HTTP tests use the real Spring server/security filter/controller/calculator with deterministic prices and stubbed token decoder/user repository/plan repository. These do not establish deployed Clerk/Supabase access or actual ML integration. Browser desktop acceptance and live two-account persistence remain separate checks.
+
+## Testing multiple purchase plans
+
+Run the updated backend and this frontend together after removing the database's
+unique constraint on `purchase_plans.user_id` (migration in `backend/migrations`).
+With your existing environment configured, start `./mvnw spring-boot:run` in
+`backend` and `npm run dev` in `frontend`, then open http://127.0.0.1:5173.
+
+Sign in, open Purchase plans, and create two plans with different quantities.
+Both should remain after a page refresh. Edit one and check the other is unchanged.
+Open View recommendation on each: the selected summary and URL `plan_id` should
+match that card. Cancel a deletion, then delete one test plan; the other should
+remain after refresh. Check another account cannot see these plans.
+
+An unavailable recommendation is expected if no ML provider is connected; saving
+plans does not require forecasts. Tests use isolated mocks, not live Supabase.
+For a mock-only visual preview, open `/preview.html` and select
+`Purchase plans - multiple` in Demo controls.

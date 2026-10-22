@@ -82,10 +82,10 @@ class MgoDataApiApplicationTests {
     void defaultAnalysisIsExplicitlyUnavailable() throws Exception {
         UUID owner = UUID.randomUUID(), planId = UUID.randomUUID();
         when(users.resolve("analysis_owner", null)).thenReturn(owner);
-        when(plans.findByUser(owner)).thenReturn(Optional.of(new PurchasePlan(planId, owner,
+        when(plans.findByIdAndUser(planId, owner)).thenReturn(Optional.of(new PurchasePlan(planId, owner,
                 new BigDecimal("100"), LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"))));
         for (String section : new String[]{"recommendation", "cost-impact"}) {
-            mvc.perform(get("/api/v1/purchase-plan/" + section)
+            mvc.perform(get("/api/v1/purchase-plans/" + section)
                     .param("plan_id", planId.toString()).param("quantity_mt", "100")
                     .param("purchase_deadline", "2025-11-15").param("scenario_as_of_date", "2025-10-24")
                     .with(jwt().jwt(token -> token.subject("analysis_owner"))))
@@ -156,15 +156,15 @@ class MgoDataApiApplicationTests {
     /** Without a valid token the plan routes say so in the API's own error shape. */
     @Test
     void purchasePlanRejectsRequestsWithoutAValidToken() throws Exception {
-        mvc.perform(get("/api/v1/purchase-plan"))
+        mvc.perform(get("/api/v1/purchase-plans"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.detail").value("Please sign in again."));
         // A shared key is not a substitute for signing in.
-        mvc.perform(get("/api/v1/purchase-plan").header("X-API-Key", KEY))
+        mvc.perform(get("/api/v1/purchase-plans").header("X-API-Key", KEY))
                 .andExpect(status().isUnauthorized());
         // An unreadable or expired token is rejected by the decoder, as in production.
         when(jwtDecoder.decode("not-a-token")).thenThrow(new BadJwtException("malformed token"));
-        mvc.perform(get("/api/v1/purchase-plan").header("Authorization", "Bearer not-a-token"))
+        mvc.perform(get("/api/v1/purchase-plans").header("Authorization", "Bearer not-a-token"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.detail").value("Please sign in again."));
     }
@@ -174,13 +174,13 @@ class MgoDataApiApplicationTests {
     void purchasePlanUsesTheUserBehindTheToken() throws Exception {
         UUID userId = UUID.fromString("8a9d4260-9070-4bb1-b5af-a71f458a3f47");
         when(users.resolve("user_2abc", null)).thenReturn(userId);
-        when(plans.findByUser(userId)).thenReturn(Optional.of(new PurchasePlan(
+        when(plans.findByUser(userId)).thenReturn(List.of(new PurchasePlan(
                 UUID.randomUUID(), userId, new BigDecimal("500"),
                 LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"))));
 
-        mvc.perform(get("/api/v1/purchase-plan").with(jwt().jwt(token -> token.subject("user_2abc"))))
+        mvc.perform(get("/api/v1/purchase-plans").with(jwt().jwt(token -> token.subject("user_2abc"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.plan.days_remaining").value(22));
+                .andExpect(jsonPath("$.plans[0].days_remaining").value(22));
     }
 
     /** Somebody signing in for the first time gets a user record rather than a failure. */
@@ -188,11 +188,11 @@ class MgoDataApiApplicationTests {
     void firstRequestFromANewAccountCreatesItsUserRecord() throws Exception {
         UUID userId = UUID.randomUUID();
         when(users.resolve("user_new", null)).thenReturn(userId);
-        when(plans.findByUser(userId)).thenReturn(Optional.empty());
+        when(plans.findByUser(userId)).thenReturn(List.of());
 
-        mvc.perform(get("/api/v1/purchase-plan").with(jwt().jwt(token -> token.subject("user_new"))))
+        mvc.perform(get("/api/v1/purchase-plans").with(jwt().jwt(token -> token.subject("user_new"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.plan").doesNotExist());
+                .andExpect(jsonPath("$.plans").isEmpty());
         verify(users).resolve("user_new", null);
     }
 
@@ -201,12 +201,12 @@ class MgoDataApiApplicationTests {
     void createSavesAgainstTheTokensUser() throws Exception {
         UUID userId = UUID.randomUUID();
         when(users.resolve("user_2abc", null)).thenReturn(userId);
-        when(plans.findByUser(userId)).thenReturn(Optional.empty());
+        when(plans.findByUser(userId)).thenReturn(List.of());
         when(plans.insert(any(), any(), any(), any())).thenReturn(new PurchasePlan(
                 UUID.randomUUID(), userId, new BigDecimal("500"),
                 LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24")));
 
-        mvc.perform(post("/api/v1/purchase-plan")
+        mvc.perform(post("/api/v1/purchase-plans")
                         .with(jwt().jwt(token -> token.subject("user_2abc")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity_mt\": 500, \"purchase_deadline\": \"2025-11-15\"}"))
@@ -220,7 +220,7 @@ class MgoDataApiApplicationTests {
     void rejectsAQuantityOfZeroOrLess() throws Exception {
         when(users.resolve("user_2abc", null)).thenReturn(UUID.randomUUID());
 
-        mvc.perform(post("/api/v1/purchase-plan")
+        mvc.perform(post("/api/v1/purchase-plans")
                         .with(jwt().jwt(token -> token.subject("user_2abc")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity_mt\": -5, \"purchase_deadline\": \"2025-11-15\"}"))
@@ -237,13 +237,13 @@ class MgoDataApiApplicationTests {
     /** The browser's preflight must pass the API key filter and be answered for the dev origin. */
     @Test
     void allowsTheFrontendDevServerOrigin() throws Exception {
-        mvc.perform(options("/api/v1/purchase-plan")
+        mvc.perform(options("/api/v1/purchase-plans")
                         .header("Origin", "http://127.0.0.1:5173")
                         .header("Access-Control-Request-Method", "POST")
                         .header("Access-Control-Request-Headers", "content-type,x-api-key,x-user-id"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://127.0.0.1:5173"));
-        mvc.perform(options("/api/v1/purchase-plan")
+        mvc.perform(options("/api/v1/purchase-plans")
                         .header("Origin", "http://evil.example.com")
                         .header("Access-Control-Request-Method", "POST"))
                 .andExpect(status().isForbidden());
@@ -253,5 +253,100 @@ class MgoDataApiApplicationTests {
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Access-Control-Allow-Origin", "https://example.app.github.dev"));
+    }
+
+    @Test
+    void listsMultiplePlansAndAllowsAnotherCreation() throws Exception {
+        UUID owner = UUID.randomUUID();
+        PurchasePlan first = plan(owner);
+        PurchasePlan second = plan(owner);
+        when(users.resolve("buyer", null)).thenReturn(owner);
+        when(plans.findByUser(owner)).thenReturn(List.of(first, second));
+        when(plans.insert(any(), any(), any(), any())).thenReturn(plan(owner));
+
+        mvc.perform(get("/api/v1/purchase-plans").with(jwt().jwt(t -> t.subject("buyer"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.plans.length()").value(2))
+                .andExpect(jsonPath("$.plans[0].plan_id").value(first.planId().toString()))
+                .andExpect(jsonPath("$.plans[1].plan_id").value(second.planId().toString()));
+        mvc.perform(post("/api/v1/purchase-plans").with(jwt().jwt(t -> t.subject("buyer")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"quantity_mt\":500,\"purchase_deadline\":\"2025-11-15\"}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void individualOperationsUseBothSelectedPlanAndAuthenticatedOwner() throws Exception {
+        UUID owner = UUID.randomUUID();
+        PurchasePlan selected = plan(owner);
+        UUID id = selected.planId();
+        when(users.resolve("buyer", null)).thenReturn(owner);
+        when(plans.findByIdAndUser(id, owner)).thenReturn(java.util.Optional.of(selected));
+        when(plans.update(id, owner, new BigDecimal("500"), LocalDate.parse("2025-11-15"),
+                LocalDate.parse("2025-10-24"))).thenReturn(java.util.Optional.of(selected));
+        when(plans.delete(id, owner)).thenReturn(true);
+        String url = "/api/v1/purchase-plans/" + id;
+
+        mvc.perform(get(url).with(jwt().jwt(t -> t.subject("buyer"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.plan.plan_id").value(id.toString()));
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(url)
+                        .with(jwt().jwt(t -> t.subject("buyer")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"quantity_mt\":500,\"purchase_deadline\":\"2025-11-15\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(url)
+                        .with(jwt().jwt(t -> t.subject("buyer"))))
+                .andExpect(status().isNoContent());
+        verify(plans).findByIdAndUser(id, owner);
+        verify(plans).update(id, owner, new BigDecimal("500"), LocalDate.parse("2025-11-15"),
+                LocalDate.parse("2025-10-24"));
+        verify(plans).delete(id, owner);
+    }
+
+    @Test
+    void anotherAccountCannotReadEditOrDeleteAnOwnedPlan() throws Exception {
+        UUID owner = UUID.randomUUID();
+        UUID other = UUID.randomUUID();
+        PurchasePlan selected = plan(owner);
+        when(users.resolve("other", null)).thenReturn(other);
+        when(plans.findByIdAndUser(selected.planId(), other)).thenReturn(java.util.Optional.empty());
+        when(plans.update(any(), any(), any(), any(), any())).thenReturn(java.util.Optional.empty());
+        String url = "/api/v1/purchase-plans/" + selected.planId();
+        mvc.perform(get(url).with(jwt().jwt(t -> t.subject("other"))))
+                .andExpect(status().isNotFound());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(url)
+                        .with(jwt().jwt(t -> t.subject("other")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"quantity_mt\":500,\"purchase_deadline\":\"2025-11-15\"}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(url)
+                        .with(jwt().jwt(t -> t.subject("other"))))
+                .andExpect(status().isNotFound());
+        verify(plans).findByIdAndUser(selected.planId(), other);
+        verify(plans).update(selected.planId(), other, new BigDecimal("500"),
+                LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"));
+        verify(plans).delete(selected.planId(), other);
+    }
+
+    @Test
+    void individualRoutesRequireAuthenticationAndIdlessWritesAreUnavailable() throws Exception {
+        String url = "/api/v1/purchase-plans/" + UUID.randomUUID();
+        mvc.perform(get(url)).andExpect(status().isUnauthorized());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(url)
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(url))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/purchase-plans")
+                        .with(jwt())).andExpect(status().isMethodNotAllowed());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/purchase-plan")
+                        .with(jwt())).andExpect(status().isNotFound());
+        org.mockito.Mockito.verifyNoInteractions(plans);
+    }
+
+    private static PurchasePlan plan(UUID owner) {
+        return new PurchasePlan(UUID.randomUUID(), owner, new BigDecimal("500"),
+                LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"));
     }
 }

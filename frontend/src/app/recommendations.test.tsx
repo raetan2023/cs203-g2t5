@@ -26,13 +26,13 @@ describe('recommendations app integration', () => {
     expect(read).toHaveBeenLastCalledWith(expect.objectContaining({ quantity_mt: 200 }));
     await act(async () => navigate('/purchase-plans'));
     await screen.findByText('200 MT');
-    await act(async () => planService.delete());
-    await act(async () => { window.history.pushState(null, '', '/purchase-plans/recommendation'); window.dispatchEvent(new PopStateEvent('popstate')); });
+    await act(async () => planService.delete(plan.plan_id));
+    await act(async () => { window.history.pushState(null, '', `/purchase-plans/recommendation?plan_id=${plan.plan_id}`); window.dispatchEvent(new PopStateEvent('popstate')); });
     expect(await screen.findByText('No saved purchase plan')).toBeVisible();
   });
 
   it('protects the direct route and discards a late reply after session expiry', async () => {
-    window.history.replaceState(null, '', '/purchase-plans/recommendation');
+    window.history.replaceState(null, '', `/purchase-plans/recommendation?plan_id=${plan.plan_id}`);
     const auth = createMockAuthService({ user: DEMO_USER, delayMs: 0 });
     let resolve!: (value: PlanAnalysis) => void;
     const service = { read: vi.fn(() => new Promise<PlanAnalysis>(done => { resolve = done; })) };
@@ -42,7 +42,21 @@ describe('recommendations app integration', () => {
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeVisible();
     await act(async () => resolve(await createMockRecommendationService({ delayMs: 0 }).read(plan)));
     expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();
-    await act(async () => navigate('/purchase-plans/recommendation'));
+    await act(async () => navigate(`/purchase-plans/recommendation?plan_id=${plan.plan_id}`));
     await waitFor(() => expect(window.location.pathname).toBe('/login'));
   });
+});
+
+it('changes recommendation selection when only the URL plan ID changes', async () => {
+  const second = { ...plan, plan_id: 'second-plan', quantity_mt: 250 };
+  window.history.replaceState(null, '', `/purchase-plans/recommendation?plan_id=${plan.plan_id}`);
+  const planService = createMockPlanService({ initialPlans: [plan, second], delayMs: 0 });
+  const read = vi.spyOn(planService, 'read');
+  render(<App auth={createMockAuthService({ user: DEMO_USER, delayMs: 0 })}
+    scenarioDate={plan.scenario_as_of_date} createPlanService={() => planService} />);
+  await screen.findByText('100 MT');
+  await act(async () => navigate('/purchase-plans/recommendation?plan_id=second-plan'));
+  expect(await screen.findByText('250 MT')).toBeVisible();
+  expect(screen.queryByText('100 MT')).not.toBeInTheDocument();
+  expect(read).toHaveBeenLastCalledWith('second-plan');
 });
