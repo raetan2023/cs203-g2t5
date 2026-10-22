@@ -8,7 +8,7 @@ The app uses **React + TypeScript + Vite**, a **Java Spring Boot API**, **Clerk 
 
 - Clerk sign-in, signup, session handling and logout.
 - A historical market dashboard with prices, charts and indicators.
-- One saved purchase plan per user: create, view, edit and delete a quantity in metric tonnes and a purchase deadline.
+- Multiple saved purchase plans per user: create, view, edit and delete a quantity in metric tonnes and a purchase deadline.
 - Days remaining calculated from the configured **historical scenario date**, rather than today's date.
 - Authenticated recommendation and cost-impact interfaces with independent loading, error and unavailable states.
 - Standalone linear regression, CatBoost and Random Forest experiments, with a [model comparison](modelcomparison.md).

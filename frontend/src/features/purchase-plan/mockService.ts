@@ -5,6 +5,7 @@ import { validateDraft } from './validation';
 
 type Operation = 'read' | 'create' | 'update' | 'delete';
 interface MockOptions {
+  initialPlans?: PurchasePlan[];
   initialPlan?: PurchasePlan | null;
   scenarioDate?: string;
   /** Preview-owned active historical date; does not change the real API contract. */
@@ -15,7 +16,7 @@ interface MockOptions {
 
 /** Isolated in-memory store. Recreating the service/refreshing resets the demo. */
 export function createMockPlanService(options: MockOptions = {}): PurchasePlanService {
-  let plan = options.initialPlan ? { ...options.initialPlan } : null;
+  let plans = (options.initialPlans ?? (options.initialPlan ? [options.initialPlan] : [])).map(plan => ({ ...plan }));
   const failures = { ...options.failOnce };
   const getScenarioDate = options.getScenarioDate ?? (() => options.scenarioDate ?? DEMO_SCENARIO_DATE);
   const messages: Record<Operation, string> = {
@@ -31,38 +32,46 @@ export function createMockPlanService(options: MockOptions = {}): PurchasePlanSe
       throw new PlanError(messages[operation]);
     }
   }
-  function save(input: PlanInput) {
+  function save(input: PlanInput, planId: string = crypto.randomUUID()) {
     const scenarioDate = getScenarioDate();
     const errors = validateDraft({ quantity: String(input.quantity_mt), deadline: input.purchase_deadline }, scenarioDate);
     if (Object.keys(errors).length) throw new PlanError('Please check your inputs.', errors, 422);
-    plan = {
-      plan_id: plan?.plan_id ?? crypto.randomUUID(),
+    const plan = {
+      plan_id: planId,
       ...input,
       scenario_as_of_date: scenarioDate,
       days_remaining: calendarDays(scenarioDate, input.purchase_deadline),
     };
+    plans = [...plans.filter(saved => saved.plan_id !== planId), plan];
     return { plan: { ...plan } };
   }
   return {
-    async read() {
+    async list() {
       await wait('read');
-      const scenarioDate = getScenarioDate();
-      return { plan: plan ? { ...plan, scenario_as_of_date: scenarioDate, days_remaining: calendarDays(scenarioDate, plan.purchase_deadline) } : null };
+      return { plans: plans.map(active).sort((a, b) => a.purchase_deadline.localeCompare(b.purchase_deadline) || a.plan_id.localeCompare(b.plan_id)) };
+    },
+    async read(planId) {
+      await wait('read');
+      const plan = plans.find(plan => plan.plan_id === planId);
+      return { plan: plan ? active(plan) : null };
     },
     async create(input) {
       await wait('create');
-      if (plan) throw new PlanError('You already have a saved plan. Edit or delete it first.', {}, 409);
       return save(input);
     },
-    async update(input) {
+    async update(planId, input) {
       await wait('update');
-      if (!plan) throw new PlanError('No saved purchase plan was found.', {}, 404);
-      return save(input);
+      if (!plans.some(plan => plan.plan_id === planId)) throw new PlanError('No saved purchase plan was found.', {}, 404);
+      return save(input, planId);
     },
-    async delete() {
+    async delete(planId) {
       await wait('delete');
-      if (!plan) throw new PlanError('No saved purchase plan was found.', {}, 404);
-      plan = null;
+      if (!plans.some(plan => plan.plan_id === planId)) throw new PlanError('No saved purchase plan was found.', {}, 404);
+      plans = plans.filter(plan => plan.plan_id !== planId);
     },
   };
+  function active(plan: PurchasePlan): PurchasePlan {
+    const scenarioDate = getScenarioDate();
+    return { ...plan, scenario_as_of_date: scenarioDate, days_remaining: calendarDays(scenarioDate, plan.purchase_deadline) };
+  }
 }

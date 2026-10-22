@@ -26,7 +26,7 @@ describe('purchase plan journeys', () => {
     await user.click(screen.getByRole('button', { name: 'Save plan' }));
     expect(await screen.findByText('500 MT')).toBeVisible();
     expect(screen.getByText('22 days')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Create plan' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Create plan' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
 
     await user.click(screen.getByRole('button', { name: 'Edit' }));
@@ -85,7 +85,7 @@ describe('purchase plan journeys', () => {
   it('never flashes empty during loading and allows retry after an initial error in StrictMode', async () => {
     let rejectRead!: (reason: unknown) => void;
     const service = createMockPlanService({ delayMs: 0 });
-    const read = vi.spyOn(service, 'read').mockImplementationOnce(() => new Promise((_, reject) => { rejectRead = reject; }));
+    const read = vi.spyOn(service, 'list').mockImplementationOnce(() => new Promise((_, reject) => { rejectRead = reject; }));
     const user = setup(service);
     expect(screen.getByText('Loading your purchase plans...')).toBeVisible();
     expect(screen.queryByText("You haven't created a purchase plan yet.")).not.toBeInTheDocument();
@@ -159,5 +159,38 @@ describe('purchase plan journeys', () => {
     fireEvent(screen.getByRole('dialog'), new Event('cancel', { bubbles: true, cancelable: true }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByText('500 MT')).toBeVisible();
+  });
+});
+
+describe('multiple purchase plans', () => {
+  it('creates another plan and edits or deletes only the selected card', async () => {
+    const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0 });
+    const update = vi.spyOn(service, 'update');
+    const remove = vi.spyOn(service, 'delete');
+    const user = setup(service);
+    await screen.findByText('500 MT');
+    await createDraft(user, '250');
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByText('500 MT')).toBeVisible();
+    await createDraft(user, '250');
+    await user.click(screen.getByRole('button', { name: 'Save plan' }));
+    await screen.findByText('250 MT');
+    expect(screen.getByText('500 MT')).toBeVisible();
+    const second = (await service.list()).plans.find(plan => plan.quantity_mt === 250)!;
+    const card = screen.getByText('250 MT').closest('section')!;
+    expect(within(card).getByRole('link', { name: /View recommendation/ }))
+      .toHaveAttribute('href', `/purchase-plans/recommendation?plan_id=${second.plan_id}`);
+    await user.click(within(card).getByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '300' } });
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+    await screen.findByText('300 MT');
+    expect(update).toHaveBeenCalledWith(second.plan_id, { quantity_mt: 300, purchase_deadline: '2025-11-15' });
+    expect(screen.getByText('500 MT')).toBeVisible();
+    await user.click(within(screen.getByText('300 MT').closest('section')!).getByRole('button', { name: 'Delete' }));
+    await user.click(screen.getByRole('button', { name: 'Delete plan' }));
+    await waitFor(() => expect(screen.queryByText('300 MT')).not.toBeInTheDocument());
+    expect(remove).toHaveBeenCalledWith(second.plan_id);
+    expect(screen.getByText('500 MT')).toBeVisible();
+    expect((await service.list()).plans).toEqual([DEMO_PLAN]);
   });
 });

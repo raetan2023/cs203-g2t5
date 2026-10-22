@@ -12,7 +12,7 @@ const examples = {
   'rec-empty': 'Recommendation - no saved plan',
   login: 'Sign in', signup: 'Create account', home: 'Home', 'home-loading': 'Home loading (8 seconds)',
   'session-error': 'Session load fails once', 'login-error': 'Sign-in fails once', 'signup-error': 'Signup fails once', 'logout-error': 'Sign-out fails once',
-  empty: 'Purchase plans - empty', saved: 'Purchase plans - saved', loading: 'Plan loading (8 seconds)',
+  multiple: 'Purchase plans - multiple', empty: 'Purchase plans - empty', saved: 'Purchase plans - saved', loading: 'Plan loading (8 seconds)',
   'load-error': 'Plan load fails once', 'save-error': 'Create / save fails once',
   'edit-error': 'Edit / save fails once', 'delete-error': 'Delete fails once',
 };
@@ -33,13 +33,14 @@ export function PreviewApp() {
   }), [example, revision, slow]);
 
   function select(next: Example) {
-    navigate(next.startsWith('rec-') ? '/purchase-plans/recommendation' : next.startsWith('signup') ? '/signup' : publicExamples.includes(next) ? '/login' : ['home', 'home-loading', 'session-error', 'logout-error'].includes(next) ? '/home' : '/purchase-plans', true);
+    navigate(next.startsWith('rec-') ? `/purchase-plans/recommendation?plan_id=${RECOMMENDATION_DEMO_PLAN.plan_id}` : next.startsWith('signup') ? '/signup' : publicExamples.includes(next) ? '/login' : ['home', 'home-loading', 'session-error', 'logout-error'].includes(next) ? '/home' : '/purchase-plans', true);
     setExample(next); setRevision(value => value + 1);
     setScenarioDate(DEMO_SCENARIO_DATE);
   }
 
   return <>
     <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock createRecommendationService={() => createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} createPlanService={() => createMockPlanService({
+      initialPlans: example === 'multiple' ? [DEMO_PLAN, { ...DEMO_PLAN, plan_id: 'second-demo-plan', quantity_mt: 250 }] : undefined,
       initialPlan: example === 'rec-empty' ? null : example.startsWith('rec-') ? RECOMMENDATION_DEMO_PLAN : ['saved', 'edit-error', 'delete-error'].includes(example) ? DEMO_PLAN : null,
       getScenarioDate: () => activeDate.current,
       delayMs: example === 'loading' ? 8000 : slow ? 3500 : 700,

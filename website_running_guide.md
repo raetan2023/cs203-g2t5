@@ -12,6 +12,42 @@ Terminal 1: Spring Boot backend
 Terminal 2: React frontend
 ```
 
+## Local configuration with Bash
+
+The local configuration files are `frontend/.env.local` (Vite settings) and
+`backend/.env.local` (Bash environment settings for Spring Boot). Both paths are
+covered by Git ignore rules and must not be force-added or committed. They are
+machine-local; teammates need to create their own files using the setup below.
+
+For the backend, save the `export ...` assignments shown in the manual backend
+setup below in `backend/.env.local`, using your actual configuration values.
+From the repository root, start the backend in one Bash terminal:
+
+```bash
+cd backend
+source .env.local
+./mvnw spring-boot:run
+```
+
+Run `source` in the same terminal as Maven. Spring Boot does not automatically
+read this environment file. If the wrapper lacks execute permission, use
+`bash ./mvnw spring-boot:run`.
+
+Start the frontend in a second Bash terminal, also from the repository root:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Vite automatically reads its `.env.local`. Restart it after changing that file.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). Stop any old server on the same
+port before restarting.
+
+On Windows these Bash commands are intended for Git Bash; PowerShell users can
+use the manual environment assignments in the [Windows section](#windows).
+WSL needs its own Java and Node installation.
+
 ## Values to get from the team first
 
 Ask the team privately for:

@@ -22,6 +22,7 @@ export interface PurchasePlanPageProps {
 
 export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }: PurchasePlanPageProps) {
   const [state, setState] = useState<PageState>({ mode: 'loading' });
+  const [plans, setPlans] = useState<PurchasePlan[]>([]);
   const [attempt, setAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -43,7 +44,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
     return () => { activeContext.current = null; };
   }, [context]);
   // Sharing this promise avoids consuming fail-once fixtures twice in StrictMode.
-  const readRequest = useRef<{ context: typeof context; attempt: number; promise: ReturnType<PurchasePlanService['read']> } | null>(null);
+  const readRequest = useRef<{ context: typeof context; attempt: number; promise: ReturnType<PurchasePlanService['list']> } | null>(null);
 
   function scenarioError(plan: PurchasePlan | null): string | null {
     return plan && plan.scenario_as_of_date !== scenarioDate
@@ -59,12 +60,13 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
     setAnnouncement('');
     focusAfterRender.current = null;
     if (!readRequest.current || readRequest.current.context !== context || readRequest.current.attempt !== attempt) {
-      readRequest.current = { context, attempt, promise: service.read() };
+      readRequest.current = { context, attempt, promise: service.list() };
     }
-    readRequest.current.promise.then(({ plan }) => {
+    readRequest.current.promise.then(({ plans }) => {
       if (!current) return;
-      const message = scenarioError(plan);
-      setState(message ? { mode: 'error', message } : { mode: 'view', plan });
+      const message = plans.map(scenarioError).find(Boolean);
+      setPlans(plans);
+      setState(message ? { mode: 'error', message } : { mode: 'view', plan: null });
     }).catch(error => {
       if (current) setState({ mode: 'error', message: requestError(error).detail });
     });
@@ -83,7 +85,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
     setWritingServices(previous => new Set(previous).add(service));
     let response;
     try {
-      response = await (state.plan ? service.update(input) : service.create(input));
+      response = await (state.plan ? service.update(state.plan.plan_id, input) : service.create(input));
     } catch (error) {
       if (activeContext.current !== context) { reconcilePreviousWrite(); return; }
       throw error;
@@ -95,14 +97,18 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
     const message = scenarioError(response.plan);
     if (message) { setState({ mode: 'error', message }); return; }
     focusAfterRender.current = 'edit';
+    setPlans(previous => [...previous.filter(plan => plan.plan_id !== response.plan.plan_id), response.plan]
+      .sort((a, b) => a.purchase_deadline.localeCompare(b.purchase_deadline) || a.plan_id.localeCompare(b.plan_id)));
     setState({ mode: 'view', plan: response.plan });
     setAnnouncement('Purchase plan saved.');
   }
 
   async function remove() {
+    if (state.mode !== 'view' || !state.plan) return;
+    const planId = state.plan.plan_id;
     setWritingServices(previous => new Set(previous).add(service));
     try {
-      await service.delete();
+      await service.delete(planId);
     } catch (error) {
       if (activeContext.current !== context) { reconcilePreviousWrite(); return; }
       throw error;
@@ -113,6 +119,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
     invalidate.current?.();
     focusAfterRender.current = 'create';
     setShowDelete(false);
+    setPlans(previous => previous.filter(plan => plan.plan_id !== planId));
     setState({ mode: 'view', plan: null });
     setAnnouncement('Purchase plan deleted.');
   }
@@ -134,15 +141,13 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
     setAttempt(value => value + 1);
   }
 
-  const plan = state.mode === 'view' || state.mode === 'form' ? state.plan : null;
   return <main className="purchase-plan">
     <div className="pp-sr-only" role="status">{announcement}</div>
     {state.mode === 'loading' ? <LoadingState /> : <>
       <header className="pp-heading">
         <div><h1>Purchase plans</h1><p>{saving ? 'Saving your purchase plan...' : 'Manage your purchase quantity and deadline.'}</p></div>
         <div className="pp-create">
-          {plan && state.mode === 'view' && <span id="pp-one-plan">You can save one purchase plan.</span>}
-          <PlanButton ref={createRef} disabled={writing || state.mode !== 'view' || !!plan} aria-describedby={plan && state.mode === 'view' ? 'pp-one-plan' : undefined} onClick={() => {
+          <PlanButton ref={createRef} disabled={writing || state.mode !== 'view'} onClick={() => {
             setAnnouncement(''); setState({ mode: 'form', plan: null });
           }}><Icon name="plus" />Create plan</PlanButton>
         </div>
@@ -153,19 +158,21 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
         <ErrorBanner>{state.message}</ErrorBanner>
         <PlanButton onClick={() => setAttempt(value => value + 1)}>Retry</PlanButton>
       </section>}
-      {state.mode === 'view' && !state.plan && <section className="pp-empty" aria-label="No purchase plan">
+      {state.mode === 'view' && plans.length === 0 && <section className="pp-empty" aria-label="No purchase plan">
         <p>You haven't created a purchase plan yet.</p>
       </section>}
-      {state.mode === 'view' && state.plan && <PurchasePlanSummary plan={state.plan} busy={writing} editRef={editRef} deleteRef={deleteRef} onEdit={() => {
-        setAnnouncement(''); setState({ mode: 'form', plan: state.plan });
-      }} onDelete={() => { setAnnouncement(''); setShowDelete(true); }} />}
+      {state.mode === 'view' && plans.map(plan => <PurchasePlanSummary key={plan.plan_id} plan={plan} busy={writing}
+        editRef={state.plan?.plan_id === plan.plan_id ? editRef : undefined}
+        deleteRef={state.plan?.plan_id === plan.plan_id ? deleteRef : undefined} onEdit={() => {
+          setAnnouncement(''); setState({ mode: 'form', plan });
+        }} onDelete={() => { setAnnouncement(''); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}
       {state.mode === 'form' && <PurchasePlanForm plan={state.plan} scenarioDate={scenarioDate} onSave={save} onBusyChange={busy => {
         if (activeContext.current === context) setSaving(busy);
       }} onCancel={() => {
         focusAfterRender.current = state.plan ? 'edit' : 'create';
         setState({ mode: 'view', plan: state.plan });
       }} />}
-      {showDelete && <DeletePlanDialog onCancel={() => setShowDelete(false)} onDelete={remove} />}
+      {showDelete && <DeletePlanDialog description={state.mode === 'view' && state.plan ? `${state.plan.quantity_mt.toLocaleString('en-GB')} MT - Due ${state.plan.purchase_deadline}` : undefined} onCancel={() => setShowDelete(false)} onDelete={remove} />}
     </>}
   </main>;
 }

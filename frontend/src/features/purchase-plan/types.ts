@@ -11,6 +11,7 @@ export interface PlanInput {
   purchase_deadline: string;
 }
 
+export interface PlansResponse { plans: PurchasePlan[] }
 export interface PlanResponse { plan: PurchasePlan | null }
 export interface SavedPlanResponse { plan: PurchasePlan }
 
@@ -102,10 +103,11 @@ export type FieldErrors = Partial<Record<keyof PlanInput, string>>;
 
 /** Wunna's future request-helper adapter can implement this interface. */
 export interface PurchasePlanService {
-  read(): Promise<PlanResponse>;
+  list(): Promise<PlansResponse>;
+  read(planId: string): Promise<PlanResponse>;
   create(input: PlanInput): Promise<SavedPlanResponse>;
-  update(input: PlanInput): Promise<SavedPlanResponse>;
-  delete(): Promise<void>;
+  update(planId: string, input: PlanInput): Promise<SavedPlanResponse>;
+  delete(planId: string): Promise<void>;
 }
 
 export class PlanError extends Error {

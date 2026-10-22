@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PurchasePlanPage } from './PurchasePlanPage';
 import { DEMO_PLAN, DEMO_SCENARIO_DATE } from './fixtures';
 import { createMockPlanService } from './mockService';
-import type { PlanResponse, SavedPlanResponse } from './types';
+import type { PlansResponse, SavedPlanResponse } from './types';
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -38,7 +38,7 @@ describe('active historical scenario', () => {
   it('does not display a backend response for an obsolete scenario as current and can retry', async () => {
     const user = userEvent.setup();
     const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0 });
-    vi.spyOn(service, 'read').mockResolvedValueOnce({ plan: DEMO_PLAN }).mockResolvedValueOnce({ plan: refreshed });
+    vi.spyOn(service, 'list').mockResolvedValueOnce({ plans: [DEMO_PLAN] }).mockResolvedValueOnce({ plans: [refreshed] });
     render(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
     expect(await screen.findByRole('alert')).toHaveTextContent('active historical scenario');
     expect(screen.queryByText('22 days')).not.toBeInTheDocument();
@@ -47,16 +47,16 @@ describe('active historical scenario', () => {
   });
 
   it('ignores late reads, including an A to B to A scenario transition', async () => {
-    const first = deferred<PlanResponse>();
-    const second = deferred<PlanResponse>();
+    const first = deferred<PlansResponse>();
+    const second = deferred<PlansResponse>();
     const service = createMockPlanService({ delayMs: 0 });
-    vi.spyOn(service, 'read').mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
-      .mockResolvedValueOnce({ plan: { ...DEMO_PLAN, quantity_mt: 700 } });
+    vi.spyOn(service, 'list').mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
+      .mockResolvedValueOnce({ plans: [{ ...DEMO_PLAN, quantity_mt: 700 }] });
     const view = render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} />);
     view.rerender(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
     view.rerender(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} />);
     expect(await screen.findByText('700 MT')).toBeVisible();
-    await act(async () => { first.resolve({ plan: DEMO_PLAN }); second.resolve({ plan: refreshed }); });
+    await act(async () => { first.resolve({ plans: [DEMO_PLAN] }); second.resolve({ plans: [refreshed] }); });
     expect(screen.getByText('700 MT')).toBeVisible();
     expect(screen.queryByText('500 MT')).not.toBeInTheDocument();
   });
@@ -65,9 +65,9 @@ describe('active historical scenario', () => {
     const user = userEvent.setup();
     const pending = deferred<SavedPlanResponse>();
     const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0 });
-    const read = vi.spyOn(service, 'read').mockResolvedValueOnce({ plan: DEMO_PLAN })
-      .mockResolvedValueOnce({ plan: refreshed })
-      .mockResolvedValue({ plan: { ...refreshed, quantity_mt: 600 } });
+    const read = vi.spyOn(service, 'list').mockResolvedValueOnce({ plans: [DEMO_PLAN] })
+      .mockResolvedValueOnce({ plans: [refreshed] })
+      .mockResolvedValue({ plans: [{ ...refreshed, quantity_mt: 600 }] });
     vi.spyOn(service, 'update').mockReturnValue(pending.promise);
     const view = render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} />);
     await user.click(await screen.findByRole('button', { name: 'Edit' }));
@@ -105,8 +105,8 @@ describe('active historical scenario', () => {
     const user = userEvent.setup();
     const pending = deferred<void>();
     const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0 });
-    vi.spyOn(service, 'read').mockResolvedValueOnce({ plan: DEMO_PLAN })
-      .mockResolvedValueOnce({ plan: refreshed }).mockResolvedValue({ plan: null });
+    vi.spyOn(service, 'list').mockResolvedValueOnce({ plans: [DEMO_PLAN] })
+      .mockResolvedValueOnce({ plans: [refreshed] }).mockResolvedValue({ plans: [] });
     vi.spyOn(service, 'delete').mockReturnValue(pending.promise);
     const view = render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} />);
     await user.click(await screen.findByRole('button', { name: 'Delete' }));

@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-/** Reads and writes purchase_plans. One plan per user is enforced by a unique key on user_id. */
+/** Reads and writes purchase_plans. Every lookup and mutation is scoped to the authenticated owner. */
 @Repository
 public class PurchasePlanRepository {
 
@@ -27,11 +27,18 @@ public class PurchasePlanRepository {
         this.jdbc = jdbc;
     }
 
-    public Optional<PurchasePlan> findByUser(UUID userId) {
-        List<PurchasePlan> found = jdbc.query("""
+    public List<PurchasePlan> findByUser(UUID userId) {
+        return jdbc.query("""
                 select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date
-                from purchase_plans where user_id = ?""", MAPPER, userId);
-        return found.stream().findFirst();
+                from purchase_plans where user_id = ?
+                order by purchase_deadline, plan_id""", MAPPER, userId);
+    }
+
+    public Optional<PurchasePlan> findByIdAndUser(UUID planId, UUID userId) {
+        return jdbc.query("""
+                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date
+                from purchase_plans where plan_id = ? and user_id = ?""", MAPPER, planId, userId)
+                .stream().findFirst();
     }
 
     public PurchasePlan insert(UUID userId, BigDecimal quantityMt, LocalDate deadline, LocalDate scenarioDate) {
@@ -42,17 +49,17 @@ public class PurchasePlanRepository {
                 MAPPER, userId, quantityMt, deadline, scenarioDate);
     }
 
-    public Optional<PurchasePlan> update(UUID userId, BigDecimal quantityMt, LocalDate deadline, LocalDate scenarioDate) {
+    public Optional<PurchasePlan> update(UUID planId, UUID userId, BigDecimal quantityMt, LocalDate deadline, LocalDate scenarioDate) {
         List<PurchasePlan> updated = jdbc.query("""
                 update purchase_plans
                 set quantity_mt = ?, purchase_deadline = ?, scenario_as_of_date = ?
-                where user_id = ?
+                where plan_id = ? and user_id = ?
                 returning plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date""",
-                MAPPER, quantityMt, deadline, scenarioDate, userId);
+                MAPPER, quantityMt, deadline, scenarioDate, planId, userId);
         return updated.stream().findFirst();
     }
 
-    public boolean delete(UUID userId) {
-        return jdbc.update("delete from purchase_plans where user_id = ?", userId) > 0;
+    public boolean delete(UUID planId, UUID userId) {
+        return jdbc.update("delete from purchase_plans where plan_id = ? and user_id = ?", planId, userId) > 0;
     }
 }

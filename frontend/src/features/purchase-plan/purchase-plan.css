@@ -97,3 +97,5 @@
   .pp-spinner { animation: none; }
   .pp-button { transition: none; }
 }
+
+.pp-summary + .pp-summary { margin-top: 24px; }
