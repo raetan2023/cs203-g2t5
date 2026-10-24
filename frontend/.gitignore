@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist-oris/
+dist-wireframe/
 *.local
 test-results/
 .env.local

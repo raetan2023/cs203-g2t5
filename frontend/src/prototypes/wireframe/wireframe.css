@@ -1,0 +1,33 @@
+/* Theme-only overrides; controls and form behavior belong to the shared preview. */
+body { background: #0c0d0e; }
+.wireframe-theme { --oris-text: #eeede7; --oris-muted: #aaa9a5; --oris-border: #ffffff26; --oris-accent: #e5e2d9; background: #0c0d0e; }
+.wireframe-scene { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.wireframe-vessel { position: absolute; left: -3%; bottom: 3%; width: 71%; color: #eeede3; }
+.wireframe-theme .oris-intro { align-self: start; padding-top: clamp(32px, 6vh, 70px); padding-bottom: 310px; }
+.wireframe-theme .oris-intro p { color: #b9b8b3; }
+.wireframe-theme .oris-card { background: #1a1b1c; box-shadow: 0 16px 60px #00000026; }
+.wireframe-theme .oris-field input { background: #121314; }
+.wireframe-theme .oris-field label { color: #e1dfd8; }
+.wireframe-theme .oris-field input::placeholder, .wireframe-theme .oris-password button, .wireframe-theme .oris-preview-note { color: #a6a5a0; }
+.wireframe-theme .oris-submit { color: #171818; }
+.wireframe-theme .oris-submit:hover:not(:disabled) { background: #fffdf5; }
+.wireframe-theme :focus-visible { outline-color: #eeeadd; }
+.wireframe-theme .oris-field input:focus { border-color: #eeeadd; }
+.wireframe-theme .oris-field input[aria-invalid=true] { border-color: #e3b3a9; }
+.wireframe-theme .oris-field-error { color: #efb9af; }
+.wireframe-theme .oris-error { background: #382b29; color: #f2d9d2; }
+/* One quiet establishing movement, then still: no added playback controls. */
+.wireframe-drift { animation: vessel-drift 5s ease-out both; }
+.wireframe-sweep { animation: vessel-light 5s ease-in-out both; }
+@keyframes vessel-drift { from { transform: translate(-7px, 4px); } to { transform: translate(0, 0); } }
+@keyframes vessel-light { from { transform: translateX(0); } to { transform: translateX(1120px); } }
+@media (max-width: 1000px) and (min-width: 761px) { .wireframe-vessel { left: -10%; width: 75%; bottom: 9%; } }
+@media (max-width: 760px) {
+  .wireframe-theme .oris-intro { padding-top: 0; padding-bottom: 220px; }
+  .wireframe-vessel { width: 100%; left: 0; top: 320px; bottom: auto; }
+}
+@media (max-width: 420px) { .wireframe-vessel { top: 365px; width: 116%; left: -8%; } }
+@media (prefers-reduced-motion: reduce) {
+  .wireframe-drift, .wireframe-sweep { animation: none; transform: none; }
+  .wireframe-highlight { display: none; }
+}
