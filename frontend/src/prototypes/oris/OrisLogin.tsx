@@ -34,7 +34,7 @@ function ProviderMark({ provider }: { provider: 'Google' | 'Microsoft' }) {
     : <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.8 12.2c0-.7-.1-1.5-.2-2.2H12v4.2h5.5c-.3 1.3-1 2.4-2.1 3.1-1 .7-2.1 1-3.4 1a6.3 6.3 0 1 1 0-12.6c1.5 0 2.8.5 3.8 1.5l3.1-3.1A10.4 10.4 0 1 0 12 22.5c3 0 5.5-1 7.3-2.8 1.7-1.8 2.5-4.3 2.5-7.5Z" /></svg>;
 }
 
-export function OrisLogin({ background, className = '' }: { background?: ReactNode; className?: string } = {}) {
+export function OrisLogin({ background, introVisual, className = '' }: { background?: ReactNode; introVisual?: ReactNode; className?: string } = {}) {
   const [auth] = useState(() => createMockAuthService());
   const [signup, setSignup] = useState(false);
   const [name, setName] = useState('');
@@ -95,6 +95,7 @@ export function OrisLogin({ background, className = '' }: { background?: ReactNo
       <section className="oris-intro" aria-labelledby="oris-title">
         <h1 id="oris-title">A clearer course.<br />A smarter purchase.</h1>
         <p>Navigate MGO price uncertainty with forecasts<br className="oris-desktop-break" /> and a purchase plan built around you.</p>
+        {introVisual}
       </section>
       <section className="oris-card" aria-labelledby="oris-form-title">
         <h2 ref={heading} tabIndex={-1} id="oris-form-title">{complete ? 'You’re signed in.' : signup ? 'Create your account.' : 'Welcome back.'}</h2>

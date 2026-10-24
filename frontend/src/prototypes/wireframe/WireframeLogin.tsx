@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type CSSProperties } from 'react';
 import { OrisLogin } from '../oris/OrisLogin';
 
 type Point = [number, number, number];
@@ -6,14 +6,25 @@ type Point = [number, number, number];
 const project = ([x, y, z]: Point) => `${(450 + x * 1.23 + z * .7).toFixed(2)},${(275 - y * .92 - x * .28 + z * .42).toFixed(2)}`;
 const line = (points: Point[], close = false) => `M${points.map(project).join('L')}${close ? 'Z' : ''}`;
 const beam = (x: number) => 62 * Math.pow(Math.sin(Math.PI * (x + 276) / 562), .38);
-const stations = Array.from({ length: 45 }, (_, i) => -270 + i * 12.5);
+const stations = Array.from({ length: 37 }, (_, i) => -270 + i * (550 / 36));
 const hullPoint = (x: number, level: number): Point => {
-  const angle = Math.PI * level / 12;
-  return [x, 34 - Math.sin(angle) * 83, Math.cos(angle) * beam(x)];
+  const angle = Math.PI * level / 20;
+  const depth = Math.pow(Math.sin(angle), .55) * 96;
+  // A raked stem pulls the lower bow inward; no projecting bulb below it.
+  const rake = Math.max(0, (x - 190) / 90) * depth * .48;
+  const width = Math.sign(Math.cos(angle)) * Math.pow(Math.abs(Math.cos(angle)), .55) * beam(x);
+  return [x - rake, 34 - depth, width];
 };
-const paths: string[] = [];
-for (const x of stations) paths.push(line(Array.from({ length: 13 }, (_, i) => hullPoint(x, i)), true));
-for (let level = 0; level <= 12; level++) paths.push(line(stations.map(x => hullPoint(x, level))));
+const outline = [line(stations.map(x => hullPoint(x, 10))), line([
+  ...stations.map(x => hullPoint(x, 0)), ...stations.slice().reverse().map(x => hullPoint(x, 20)),
+], true)];
+const hull: string[] = [];
+const deck: string[] = [];
+const structure: string[] = [];
+let paths = hull;
+for (const x of stations) paths.push(line(Array.from({ length: 21 }, (_, i) => hullPoint(x, i)), true));
+for (let level = 0; level <= 20; level++) paths.push(line(stations.map(x => hullPoint(x, level))));
+paths = deck;
 for (let z = -48; z <= 48; z += 12) paths.push(line(stations.filter(x => beam(x) > Math.abs(z)).map(x => [x, 34, z])));
 function box(x: number, y: number, z: number, length: number, height: number, width: number) {
   const bottom: Point[] = [[x,y,z],[x+length,y,z],[x+length,y,z+width],[x,y,z+width]];
@@ -21,45 +32,67 @@ function box(x: number, y: number, z: number, length: number, height: number, wi
   paths.push(line(bottom,true),line(top,true));
   bottom.forEach((p,i) => paths.push(line([p,top[i]])));
 }
-// Aft accommodation, bridge, funnel and mast distinguish a tanker from a cargo ship.
-box(-225,34,-44,72,56,88);
-box(-231,90,-51,80,22,102);
-box(-211,112,-32,46,13,64);
-box(-244,34,-22,18,80,33);
-for (let y = 48; y < 110; y += 14) paths.push(line([[-225,y,-44],[-153,y,-44],[-153,y,44]]));
-for (let x = -222; x < -157; x += 11) box(x,96,-51,7,9,1);
-paths.push(line([[-186,125,0],[-186,181,0]]),line([[-200,160,0],[-172,160,0]]));
-// Deck pipes, manifolds, tank hatches and perimeter rails.
-for (const z of [-30,-20,20,30]) {
-  paths.push(line([[-145,39,z],[220,39,z],[230,34,z]]));
-  paths.push(line([[-145,42,z],[220,42,z],[230,34,z]]));
+// Broad aft bridge and mast rise above the container stacks.
+paths = structure;
+box(-225,34,-44,62,83,88);
+box(-237,117,-56,85,17,112);
+box(-211,134,-32,46,11,64);
+box(-248,34,-22,18,100,33);
+for (let y = 52; y < 117; y += 16) paths.push(line([[-225,y,-44],[-163,y,-44],[-163,y,44]]));
+for (let x = -230; x < -157; x += 10) box(x,121,-56,6,8,1);
+paths.push(line([[-186,145,0],[-186,192,0]]),line([[-200,173,0],[-172,173,0]]));
+// Staggered container bays leave an open working foredeck at the bow.
+paths = deck;
+for (let bay = 0; bay < 7; bay++) {
+  const x = -150 + bay * 45;
+  for (let row = 0; row < 4; row++) {
+    const z = -44 + row * 22;
+    const tiers = bay === 6 ? 3 : (bay + row) % 3 === 0 ? 3 : 4;
+    // Draw only the outside edges of each stack, with horizontal tier seams.
+    box(x,34,z,42,tiers*19,20);
+    for (let tier = 1; tier < tiers; tier++) paths.push(line([
+      [x,34+tier*19,z],[x+42,34+tier*19,z],
+      [x+42,34+tier*19,z+20],[x,34+tier*19,z+20],
+    ],true));
+  }
 }
-for (let x = -115; x < 210; x += 48) {
-  box(x,34,-10,21,8,20);
-  paths.push(line([[x,34,-42],[x,50,-42],[x,50,42],[x,34,42]]));
-}
+box(200,34,-22,18,11,14);
+box(225,34,14,16,9,12);
+paths.push(line([[194,34,0],[194,108,0]]),line([[177,34,0],[194,83,0],[210,34,0]]));
 for (const side of [-1,1]) {
   paths.push(line(stations.map(x => [x,44,side * beam(x)])));
   stations.filter((_,i) => i % 2 === 0).forEach(x => paths.push(line([[x,34,side*beam(x)],[x,44,side*beam(x)]])));
 }
-const mesh = paths.join('');
+const stages = [
+  { name: 'outline', paths: outline, start: 0, stagger: .12, duration: .8 },
+  { name: 'hull', paths: hull, start: .45, stagger: .017, duration: .8 },
+  { name: 'deck', paths: deck, start: 1.65, stagger: .7 / deck.length, duration: .7 },
+  { name: 'structure', paths: structure, start: 2.35, stagger: .009, duration: .75 },
+];
+const mesh = stages.flatMap(stage => stage.paths).join('');
 
 function WireframeBackground() {
   const id = useId().replace(/:/g, '');
   return <div className="wireframe-scene" aria-hidden="true">
-    <svg className="wireframe-vessel" data-wireframe-vessel viewBox="0 0 900 440" fill="none" focusable="false">
+    <svg className="wireframe-vessel" data-wireframe-vessel viewBox="75 50 750 370" fill="none" focusable="false">
       <defs>
         <path id={`${id}-mesh`} d={mesh} />
-        <clipPath id={`${id}-light`}><rect className="wireframe-sweep" x="-180" y="0" width="140" height="440" /></clipPath>
+        <linearGradient id={`${id}-glow`}><stop stopColor="white" stopOpacity="0" /><stop offset=".5" stopColor="white" /><stop offset="1" stopColor="white" stopOpacity="0" /></linearGradient>
+        <mask id={`${id}-light`} maskUnits="userSpaceOnUse" x="0" y="0" width="900" height="440"><rect className="wireframe-sweep" x="-180" y="0" width="180" height="440" fill={`url(#${id}-glow)`} /></mask>
       </defs>
-      <g className="wireframe-drift">
-        <use href={`#${id}-mesh`} stroke="currentColor" strokeWidth=".65" opacity=".48" />
-        <use className="wireframe-highlight" href={`#${id}-mesh`} stroke="currentColor" strokeWidth="1" opacity=".65" clipPath={`url(#${id}-light)`} />
+      <g stroke="currentColor" strokeLinejoin="round" strokeLinecap="round">
+        {stages.map(stage => <g key={stage.name} opacity={stage.name === 'outline' ? .65 : .48} strokeWidth={stage.name === 'outline' ? .85 : .65}>
+          {stage.paths.map((d, index) => <path key={index} className="wireframe-build" d={d} pathLength="1" style={{
+            '--build-delay': `${(stage.start + index * stage.stagger).toFixed(3)}s`,
+            '--build-duration': `${stage.duration}s`,
+          } as CSSProperties} />)}
+        </g>)}
+        <use className="wireframe-highlight" href={`#${id}-mesh`} strokeWidth="1" opacity=".55" mask={`url(#${id}-light)`} />
       </g>
     </svg>
   </div>;
 }
 
 export function WireframeLogin() {
-  return <OrisLogin className="wireframe-theme" background={<WireframeBackground />} />;
+  return <OrisLogin className="wireframe-theme" background={<></>} introVisual={<WireframeBackground />} />;
 }
