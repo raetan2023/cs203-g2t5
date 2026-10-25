@@ -289,3 +289,15 @@
     display: none;
   }
 }
+
+.forecast-interval {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border: 1px solid #1c2d46;
+  border-radius: 8px;
+  color: #9cb1c9;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.forecast-interval p { margin: 4px 0; }

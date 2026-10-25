@@ -16,10 +16,12 @@ describe('buildMockForecast', () => {
     expect(f.history.length).toBeGreaterThan(0);
   });
 
-  it('history ends at the anchor price on the as-of date', () => {
+  it('history ends at the actual anchor quote, before the request date', () => {
     const f = buildMockForecast(7);
     const last = f.history[f.history.length - 1];
-    expect(last.date).toBe(f.as_of_date);
+    expect(last.date).toBe(f.anchor_quote_date);
+    expect(last.date).not.toBe(f.as_of_date);
+    expect(f.target_date).toBe(addDays(f.anchor_quote_date, 7));
     expect(last.price).toBe(f.anchor_price);
   });
 
@@ -66,5 +68,17 @@ describe('evidenceMeta', () => {
 describe('addDays', () => {
   it('advances a date by the given number of days', () => {
     expect(addDays('2026-10-05', 7)).toBe('2026-10-12');
+  });
+});
+
+
+describe('interval preview provenance', () => {
+  it('does not invent measured calibration results', () => {
+    const f = buildMockForecast(7);
+    expect(f.synthetic).toBe(true);
+    expect(f.interval.nominal_coverage).toBe(0.8);
+    expect(f.interval.empirical_coverage).toBeNull();
+    expect(f.interval.baseline_coverage).toBeNull();
+    expect(f.interval.evaluation_rows).toBe(0);
   });
 });

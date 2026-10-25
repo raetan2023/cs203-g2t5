@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from src.predict import predict, nowcast
+from src.predict import predict, nowcast, IntervalArtifactUnavailable
 from .schemas import PredictRequest, PredictResponse, NowcastRequest, NowcastResponse
 
 from news.service import router as news_router
@@ -11,7 +11,7 @@ app.include_router(news_router)
 def _call(fn, *args):
     try:
         return fn(*args)
-    except FileNotFoundError:
+    except (FileNotFoundError, IntervalArtifactUnavailable):
         raise HTTPException(503, "Model artifacts not found; run `python -m src.train`.")
     except ValueError as e:
         raise HTTPException(422, str(e))
