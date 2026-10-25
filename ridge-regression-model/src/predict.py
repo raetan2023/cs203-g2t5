@@ -39,6 +39,23 @@ def _margin(meta, vol, scale):
     return float(meta["q_scale"]) * max(float(vol), VOL_FLOOR) * scale
 
 
+def _top_drivers(model, X: pd.DataFrame, gamma: float, limit: int = 5) -> list[dict]:
+    """Return signed feature contributions to the shrunk predicted log return."""
+    scaler = model.named_steps["standardscaler"]
+    ridge = model.named_steps["ridgecv"]
+    scaled_values = scaler.transform(X)[0]
+    contributions = ridge.coef_ * scaled_values * gamma
+    ranked = sorted(
+        zip(X.columns, contributions),
+        key=lambda item: abs(item[1]),
+        reverse=True,
+    )
+    return [
+        {"feature": feature, "contribution": float(contribution)}
+        for feature, contribution in ranked[:limit]
+    ]
+
+
 def predict(h: int, as_of=None, wide: pd.DataFrame = None) -> dict:
     meta, model = _load(f"{h}d")
     p = prepare(wide if wide is not None else load_wide())
@@ -50,7 +67,9 @@ def predict(h: int, as_of=None, wide: pd.DataFrame = None) -> dict:
     X = origin_features(p, [origin])[meta["features"]]
     if X.isna().any(axis=None):
         raise ValueError("Features unavailable for this date (insufficient history).")
-    ret = float(model.predict(X)[0]) * float(meta.get("gamma", 1.0))
+    gamma = float(meta.get("gamma", 1.0))
+    ret = float(model.predict(X)[0]) * gamma
+    top_drivers = _top_drivers(model, X, gamma)
     margin = _margin(meta, X["gasoil_vol20"].iloc[0], np.sqrt(h))
     anchor = float(p.mgo[origin])
     bt = meta["backtest"]
@@ -62,6 +81,7 @@ def predict(h: int, as_of=None, wide: pd.DataFrame = None) -> dict:
         "unit": "USD/metric tonne", "evidence": evidence_label(bt),
         "mae_skill_vs_persistence": bt["MAE_skill_vs_persist"], "backtest_rows": bt["n"],
         "model_version": f"ridge-{h}d-alpha{meta['alpha']:.3g}-gamma{meta.get('gamma', 1.0):.2f}-to-{meta['trained_to_origin']}",
+        "top_drivers": top_drivers,
     }
 
 
