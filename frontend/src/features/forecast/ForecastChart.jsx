@@ -15,7 +15,7 @@ import { formatShortDate, formatDate, addDays } from './utils';
 // Builds the chart series: observed history up to the anchor, then a forecast
 // point at the horizon, with an uncertainty cone (band) fanning out from the
 // anchor (zero width) to the horizon (low..high).
-function buildSeries(data) {
+export function buildSeries(data) {
   const { history = [], as_of_date, anchor_price, forecast, low, high, horizon_days = 7 } = data;
 
   const pts = history.map((h) => ({
@@ -34,7 +34,7 @@ function buildSeries(data) {
 
   // Forecast endpoint at the horizon.
   pts.push({
-    date: addDays(as_of_date, horizon_days),
+    date: data.target_date || addDays(data.anchor_quote_date || as_of_date, horizon_days),
     observed: null,
     forecast,
     band: [low, high],

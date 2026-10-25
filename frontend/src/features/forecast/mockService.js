@@ -15,6 +15,7 @@ function isoDaysFrom(baseIso, offset) {
 
 const AS_OF = '2026-10-05';
 const ANCHOR_PRICE = 1297;
+const ANCHOR_DATE = isoDaysFrom(AS_OF, -1);
 
 // Last 10 observed MGO quotes leading up to the as-of date (ends at the anchor).
 const HISTORY_PRICES = [1278, 1285, 1281, 1290, 1288, 1294, 1292, 1299, 1295, ANCHOR_PRICE];
@@ -41,14 +42,16 @@ export function buildMockForecast(horizonDays = 7) {
   const cfg = BY_HORIZON[h];
 
   const history = HISTORY_PRICES.map((price, i) => ({
-    date: isoDaysFrom(AS_OF, -(HISTORY_PRICES.length - 1) + i),
+    date: isoDaysFrom(ANCHOR_DATE, -(HISTORY_PRICES.length - 1) + i),
     price,
   }));
 
   return {
     horizon_days: h,
     as_of_date: AS_OF,
-    anchor_quote_date: isoDaysFrom(AS_OF, -1),
+    anchor_quote_date: ANCHOR_DATE,
+    target_date: isoDaysFrom(ANCHOR_DATE, h),
+    synthetic: true,
     anchor_price: ANCHOR_PRICE,
     quote_age_days: 1,
     forecast: cfg.forecast,
@@ -59,6 +62,17 @@ export function buildMockForecast(horizonDays = 7) {
     mae_skill_vs_persistence: cfg.skill,
     backtest_rows: 201,
     model_version: 'ridge-mock-2026.10',
+    interval: {
+      method: 'synthetic_preview',
+      nominal_coverage: 0.8,
+      empirical_coverage: null,
+      evaluation_rows: 0,
+      evaluation_scope: 'Synthetic preview; not evaluated',
+      baseline_coverage: null,
+      baseline_mean_width: null,
+      mean_width: null,
+      limitations: 'Illustrative prices and ranges. No measured coverage or model performance.',
+    },
     top_drivers: TOP_DRIVERS,
     history,
   };

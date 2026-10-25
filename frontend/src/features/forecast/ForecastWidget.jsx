@@ -39,8 +39,9 @@ export default function ForecastWidget({ defaultHorizon = 7, showDrivers = true 
       <div className="forecast-header">
         <div>
           <h2 className="forecast-title">MGO price forecast</h2>
+          <p className="forecast-muted"><strong>Synthetic preview</strong> · Illustrative data, not a live forecast.</p>
           <p className="forecast-subtitle">
-            {horizon}-day outlook from the ridge model, with expected range
+            {horizon}-day outlook with a price range
           </p>
         </div>
         <div className="forecast-header-right">
