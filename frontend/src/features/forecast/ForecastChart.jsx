@@ -16,21 +16,23 @@ import { formatShortDate, formatDate, addDays } from './utils';
 // point at the horizon, with an uncertainty cone (band) fanning out from the
 // anchor (zero width) to the horizon (low..high).
 function buildSeries(data) {
-  const { history = [], as_of_date, anchor_price, forecast, low, high, horizon_days = 7 } = data;
+  const { history, as_of_date, anchor_price, forecast, low, high, horizon_days = 7 } = data;
 
-  const pts = history.map((h) => ({
-    date: h.date,
-    observed: h.price,
-    forecast: null,
-    band: null,
-  }));
+  // Any observed history strictly before the anchor date (optional; the real
+  // /predict response has none, so this is usually empty and the chart just
+  // shows the anchor-to-horizon cone).
+  const hist = Array.isArray(history) ? history : [];
+  const pts = hist
+    .filter((h) => h && h.date && h.date < as_of_date)
+    .map((h) => ({ date: h.date, observed: h.price, forecast: null, band: null }));
 
-  // The last observed point is the anchor: start the forecast line + cone here.
-  if (pts.length > 0) {
-    const last = pts[pts.length - 1];
-    last.forecast = anchor_price;
-    last.band = [anchor_price, anchor_price];
-  }
+  // Anchor point (today): the forecast line and the cone both start here.
+  pts.push({
+    date: as_of_date,
+    observed: anchor_price,
+    forecast: anchor_price,
+    band: [anchor_price, anchor_price],
+  });
 
   // Forecast endpoint at the horizon.
   pts.push({

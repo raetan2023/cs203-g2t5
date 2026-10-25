@@ -1,39 +1,24 @@
 // Forecast data source for the dashboard widget.
 //
-// RIGHT NOW: returns mock data so the widget renders on its own.
+// Calls our Spring backend's GET /api/v1/market/forecast, which proxies the
+// ridge /predict model. Same base URL + X-API-Key pattern as useMarketDashboard.
+// The response matches the shape in mockService.js (the ridge PredictResponse
+// plus top_drivers). It does NOT include price history, so the chart draws the
+// anchor-to-horizon cone from the forecast itself.
 //
-// TO GO LIVE: the data flows frontend -> Spring Boot backend -> FastAPI /predict.
-// So this calls a Spring endpoint (e.g. POST /api/v1/forecast) with the Clerk
-// Bearer token, exactly like features/purchase-plan/apiService.ts does. That
-// Spring endpoint has to exist and proxy to the Python /predict. Until it does,
-// keep using the mock.
-//
-// The response must match the shape in mockService.js (PredictResponse
-// plus top_drivers and history). If the backend returns a different shape, map it
-// to that here in one place.
+// To develop offline without the backend, swap the import below back to the mock:
+//   import { fetchForecastMock } from './mockService';
+//   export function fetchForecast(h) { return fetchForecastMock(h); }
 
-import { fetchForecastMock } from './mockService';
+const env = import.meta.env ?? {};
+const API_BASE = (env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
+const API_KEY = env.VITE_API_KEY ?? 'mgo_public_demo_2026';
 
-// --- Live implementation (uncomment + adapt once the Spring endpoint exists) ---
-//
-// export function createForecastService({ baseUrl, getToken, apiKey } = {}) {
-//   async function fetchForecast(horizonDays = 7) {
-//     const token = getToken ? getToken() : null;
-//     const headers = { 'Content-Type': 'application/json' };
-//     if (token) headers.Authorization = `Bearer ${token}`;
-//     if (apiKey) headers['X-API-Key'] = apiKey;
-//
-//     const res = await fetch(`${baseUrl}/api/v1/forecast`, {
-//       method: 'POST',
-//       headers,
-//       body: JSON.stringify({ horizon_days: horizonDays }),
-//     });
-//     if (!res.ok) throw new Error(`FORECAST_${res.status}`);
-//     return res.json(); // must already match the mock shape, or map it here
-//   }
-//   return { fetchForecast };
-// }
-
-export function fetchForecast(horizonDays = 7) {
-  return fetchForecastMock(horizonDays);
+export async function fetchForecast(horizonDays = 7) {
+  const res = await fetch(`${API_BASE}/api/v1/market/forecast?horizon=${horizonDays}`, {
+    headers: { ...(API_KEY && { 'X-API-Key': API_KEY }) },
+  });
+  if (res.status === 503) throw new Error('FORECAST_UNAVAILABLE');
+  if (!res.ok) throw new Error(`FORECAST_${res.status}`);
+  return res.json();
 }
