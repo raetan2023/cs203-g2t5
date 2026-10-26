@@ -2,7 +2,7 @@
 
 ## Goal and agreed behaviour
 
-Keep Ridge responsible for central forecasts and use the previous completed UTC day's GDELT news to learn forecast-error q10/q90 bounds (nominal 80%, not q25/q75 quartiles). Display real forecasts on the dashboard and purchase recommendations. Normal application dates and deadlines use today's Singapore date. Daily GitHub Actions inference publishes to Supabase; Spring Boot reads it without an always-on Python service. Retrain weekly, not every day.
+Keep Ridge responsible for central forecasts and use the latest available GDELT news window to learn forecast-error q10/q90 bounds (nominal 80%, not q25/q75 quartiles). Display real forecasts on the dashboard and purchase recommendations. Normal application dates and deadlines use today's Singapore date. Daily GitHub Actions inference publishes to Supabase; Spring Boot reads it without an always-on Python service. Retrain weekly, not every day.
 
 ## Training and news
 
@@ -14,11 +14,11 @@ Keep Ridge responsible for central forecasts and use the previous completed UTC 
 
 ## Daily workflow and storage
 
-Run at 08:17 Singapore (00:17 UTC), with manual dispatch. Synchronize validated market snapshots using existing ingestion code; archive/classify yesterday's news; check identity, units, completeness and freshness; retrain Monday or manual request; otherwise load last validated immutable bundle; infer 3 horizons; atomically publish a complete batch. Record status/source dates/actual completion and failure reasons. A schedule does not make manual upstream feeds fresh.
+Run at 08:17 Singapore (00:17 UTC), with manual dispatch. Synchronize validated market snapshots using existing ingestion code; archive/classify the latest rolling 24-hour news window; check identity, units, completeness and freshness; retrain Monday or manual request; otherwise load last validated immutable bundle; infer 3 horizons; atomically publish a complete batch. Record status/source dates/actual completion and failure reasons. A schedule does not make manual upstream feeds fresh.
 
 Migrate news_daily_features, immutable forecast_runs, per-horizon forecast_values and one active-run pointer. Store immutable bundles/reports/news in private Supabase Storage. Browser never receives credentials or serialized models. Only completed transactions activate a batch; rejected/failed runs cannot mix with ready rows.
 
-Require exact previous UTC news window and <=7-day market/MGO age, preserving stricter feature rules. Reject expired targets, invalid units, nonfinite/unordered bounds. Show last successful metadata while unavailable. Missing news is unknown, not low uncertainty.
+Require the latest complete verified 24-hour news window within seven days and <=7-day market/MGO age, preserving stricter feature rules. Reject expired targets, invalid units, nonfinite/unordered bounds. Show last successful metadata while unavailable. Missing news is unknown, not low uncertainty.
 
 ## Backend and frontend
 
@@ -38,3 +38,11 @@ Roll out data/history validation, model evaluation, migrations/publication, back
 - Same-day MGO quotes are conservatively excluded from morning features because historical publication timestamps are unknown. Existing source-specific market lags remain.
 - Classifier provider is the repository's existing configured implementation. No credential values are stored, generated or changed by this work.
 - Infrastructure activation requires the team's existing Supabase database/storage permissions, GitHub secrets and default-branch publication; tests must not pretend these external changes happened.
+
+## Accepted update: OpenAI and latest available GDELT
+
+Use the existing OpenAI adapter and encrypted OPENAI_API_KEY Actions secret.
+Collect the latest rolling 24-hour window, fall back to the freshest complete
+verified archive within seven days, and show its actual UTC start/end. Do not
+require yesterday's exact date. Keep historical daily windows separate to avoid
+future-informed training, and retain training/evaluation evidence gates.

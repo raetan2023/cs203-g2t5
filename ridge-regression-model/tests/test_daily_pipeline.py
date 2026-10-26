@@ -68,12 +68,16 @@ def test_manual_retraining_and_history_archive_publication(tmp_path, monkeypatch
     assert {a["news_date"] for a in store.archived} == {"2026-10-25", "2026-10-26"}
 
 
-def test_before_utc_day_close_fails_closed(tmp_path):
+def test_before_utc_day_close_can_use_an_older_complete_archive(tmp_path, monkeypatch):
     store = Store()
     now = datetime(2026, 10, 26, 19, tzinfo=timezone.utc)  # Singapore next day
+    payload = build_daily_payload(date(2026, 10, 25), [], complete=True,
+        retrieved_at=now, classification_version="v2", classifier_id="test-fixture")
+    save_archive(payload, tmp_path / "news")
+    monkeypatch.setattr(pipeline, "market_snapshot", lambda *a, **k: pd.DataFrame({"mgo": [100.]}))
+    monkeypatch.setattr(pipeline, "source_dates", lambda *a: {k: "2026-10-25" for k in ("mgo", "gasoil", "brent", "dubai", "usd")})
     _, forecasts = pipeline.run(tmp_path, fetch=False, client=store, now=now)
-    assert all(f["status"] == "unavailable" for f in forecasts)
-    assert "08:00" in forecasts[0]["message"]
+    assert all(f["reason"] == "insufficient_or_incompatible_evidence" for f in forecasts)
 
 
 def test_snapshot_reuses_existing_identity_checks_and_rejects_unresolved_units(tmp_path):
@@ -186,3 +190,17 @@ def test_read_only_remote_verification_never_publishes_or_uploads(tmp_path, monk
     run, values = pipeline.run(tmp_path, fetch=False, read_published=True, now=NOW)
     assert run["model_version"] == "weekly" and len(values) == 3
     assert reader.published == [] and reader.archived == [] and reader.saved == []
+
+
+def test_latest_rolling_archive_does_not_replace_daily_training_history(tmp_path, monkeypatch):
+    daily = news(tmp_path)
+    rolling = build_daily_payload(date(2026,10,26), [], complete=True, retrieved_at=NOW,
+        classification_version="v2", classifier_id="test-fixture",
+        window_start="2026-10-26T00:45:00Z", window_end="2026-10-27T00:45:00Z")
+    save_archive(rolling,tmp_path / "news")
+    monkeypatch.setattr(pipeline, "market_snapshot", lambda *a, **k: pd.DataFrame({"mgo": [100.]}))
+    monkeypatch.setattr(pipeline, "source_dates", lambda *a: {k: "2026-10-26" for k in ("mgo", "gasoil", "brent", "dubai", "usd")})
+    run, _ = pipeline.run(tmp_path, fetch=False, client=Store(), now=NOW)
+    assert run["payload"]["news_window_end"] == rolling["end"]
+    assert ':rolling24h:' in run["payload"]["news_feature_version"]
+    assert pipeline.read_archives(tmp_path / 'news') == {daily['news_date']: daily}

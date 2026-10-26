@@ -52,7 +52,9 @@ export function parseForecast(payload: unknown, horizon: Horizon): Forecast {
     method: text(i.method), evaluation_scope: text(i.evaluation_scope), limitations: text(i.limitations) };
   if ((interval.empirical_coverage != null || interval.baseline_coverage != null) && rows === 0) throw invalid();
   const start = timestamp(v.news_window_start), end = timestamp(v.news_window_end);
-  if (Date.parse(end) !== Date.parse(`${origin}T00:00:00Z`) || Date.parse(end) - Date.parse(start) !== 86_400_000) throw invalid();
+  const published = timestamp(v.published_at);
+  if (Date.parse(end) > Date.parse(published) || Date.parse(published) - Date.parse(end) > 7 * 86_400_000
+      || Date.parse(end) - Date.parse(start) !== 86_400_000) throw invalid();
   const sourceDates = object(v.source_dates);
   const source_dates = Object.fromEntries(Object.entries(sourceDates).map(([key, value]) => [key, value == null ? null : date(value)]));
   if (Object.values(source_dates).some(value => value != null && value > origin)) throw invalid();

@@ -93,10 +93,11 @@ public class ForecastService {
                 || !today.equals(v.forecast_origin_date()) || !today.equals(v.as_of_date())
                 || v.target_date() == null || !v.target_date().equals(today.plusDays(horizon))
                 || !v.target_date().isAfter(today) || run.publishedAt().isAfter(clock.instant().plusSeconds(60))) return "invalid_dates";
-        LocalDate utcToday = LocalDate.now(clock.withZone(ZoneOffset.UTC));
-        Instant newsStart = utcToday.minusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
-        Instant newsEnd = utcToday.atStartOfDay(ZoneOffset.UTC).toInstant();
-        if (!newsStart.equals(v.news_window_start()) || !newsEnd.equals(v.news_window_end())) return "stale_news";
+        Instant newsStart = v.news_window_start(), newsEnd = v.news_window_end();
+        if (newsStart == null || newsEnd == null
+                || !newsStart.plusSeconds(86400).equals(newsEnd)
+                || newsEnd.isAfter(clock.instant()) || newsEnd.isAfter(run.publishedAt())
+                || newsEnd.isBefore(clock.instant().minusSeconds(7 * 86400))) return "stale_news";
         if (v.source_dates() == null || !v.source_dates().keySet().containsAll(Set.of("mgo", "gasoil", "brent", "dubai", "usd"))) return "missing_sources";
         for (String source : Set.of("mgo", "gasoil", "brent", "dubai", "usd")) {
             LocalDate date = v.source_dates().get(source);
@@ -114,7 +115,7 @@ public class ForecastService {
                 || !probability(i.empirical_coverage()) || !probability(i.baseline_coverage())
                 || !nonnegative(i.mean_width()) || !nonnegative(i.baseline_mean_width())) return "invalid_interval";
         if (v.history() == null || v.top_drivers() == null || v.backtest_rows() == null || v.backtest_rows() < 40
-                || !Set.of("weak", "no_edge", "supported").contains(v.evidence() == null ? "" : v.evidence())) return "missing_context";
+                || !Set.of("weak", "no_edge", "supported", "unevaluated").contains(v.evidence() == null ? "" : v.evidence())) return "missing_context";
         for (History point : v.history())
             if (point.date() == null || point.date().isAfter(today) || !positive(point.price())) return "invalid_history";
         for (Driver driver : v.top_drivers())

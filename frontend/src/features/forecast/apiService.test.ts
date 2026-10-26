@@ -39,6 +39,13 @@ describe('live forecast adapter', () => {
     expect(() => parseForecast(body, 7)).toThrow('invalid');
   });
 
+  it('accepts a rolling or older complete window without requiring yesterday', () => {
+    const body = payload();
+    body.news_window_start = '2026-10-02T00:30:00Z';
+    body.news_window_end = '2026-10-03T00:30:00Z';
+    expect(parseForecast(body, 7)).toMatchObject({ status: 'ready', news_window_end: body.news_window_end });
+  });
+
   it('retains only validated last-success metadata while a forecast is unavailable', () => {
     expect(parseForecast({ status: 'unavailable', reason: 'stale', message: 'No current run.', last_successful_run: {
       run_id: 'old', origin_date: '2026-10-03', published_at: '2026-10-03T01:00:00Z', model_version: 'v1',

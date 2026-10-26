@@ -7,7 +7,7 @@ query's successfully enumerated API results, not all world news or final GDELT
 indexing. Archives retain headline evidence and classification provenance.
 
 python -m news.daily_features --archive-dir PATH [--start YYYY-MM-DD --end YYYY-MM-DD]
-Dates are inclusive. Default: previous completed UTC day. Historical backfill
+Dates are inclusive. Default: latest rolling 24-hour window. Historical backfill
 outside DOC retention requires genuine archived evidence, never URL-slug text.
 """
 import argparse
@@ -75,6 +75,26 @@ def previous_completed_utc_day(now=None):
     return _utc_now(now).date() - timedelta(days=1)
 
 
+def archive_name(payload):
+    if payload.get("window_type") == "rolling_24h":
+        return "latest-" + _parse_stamp(payload["end"]).strftime("%Y%m%dT%H%M%SZ")
+    return payload["news_date"]
+
+
+def latest_available(payloads, now=None, max_age_days=7):
+    """Pick the freshest complete bounded window; never invent empty coverage."""
+    now = _utc_now(now)
+    eligible = []
+    for payload in payloads:
+        if payload.get("status") != "complete":
+            continue
+        start, end = _parse_stamp(payload["start"]), _parse_stamp(payload["end"])
+        if (end - start == timedelta(days=1) and now - timedelta(days=max_age_days) <= end <= now
+                and _parse_stamp(payload["retrieved_at"]) <= now):
+            eligible.append(payload)
+    return max(eligible, key=lambda p: (_parse_stamp(p["end"]), _parse_stamp(p["retrieved_at"]))) if eligible else None
+
+
 def _hash(records):
     encoded = json.dumps(records, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
     return hashlib.sha256(encoded).hexdigest()
@@ -111,7 +131,7 @@ def _normalise_record(record, start, end):
 
 def build_daily_payload(news_date, records, *, complete, retrieved_at=None,
                         classification_version=PROMPT_VERSION, classifier_id="unspecified",
-                        query=None, error=None):
+                        query=None, error=None, window_start=None, window_end=None):
     """Build an archive from actual classified evidence; never infer coverage.
 
     Offline importers must explicitly attest enumeration completeness. Records
@@ -119,6 +139,11 @@ def build_daily_payload(news_date, records, *, complete, retrieved_at=None,
     An empty, explicitly complete day is distinct from absent/incomplete data.
     """
     start, end = day_window(news_date)
+    rolling = window_start is not None or window_end is not None
+    if rolling:
+        start, end = _parse_stamp(window_start), _parse_stamp(window_end)
+        if end - start != timedelta(days=1) or start.date() != _day(news_date):
+            raise ValueError("A rolling archive requires a full 24-hour window and its start date")
     normalised = [_normalise_record(r, start, end) for r in records]
     by_url = {}
     for record in sorted(normalised, key=lambda r: (r["seen_at"], r["url"], r["title"])):
@@ -143,7 +168,7 @@ def build_daily_payload(news_date, records, *, complete, retrieved_at=None,
     features = dict(zip(FEATURE_NAMES,
         [float(len(retained)), float(n), float(sources)] + list(cats.values())
         + list(biases.values()) + [disagreement, tone_std, float(len(tones) >= 2)])) if complete else None
-    return {"version": VERSION, "news_date": _day(news_date).isoformat(),
+    payload = {"version": VERSION, "news_date": _day(news_date).isoformat(),
             "start": _stamp(start), "end": _stamp(end),
             "status": "complete" if complete else "incomplete", "retrieved_at": _stamp(retrieved),
             "query": query or config.GDELT_QUERY, "source": "gdelt_doc_2_artlist",
@@ -158,10 +183,13 @@ def build_daily_payload(news_date, records, *, complete, retrieved_at=None,
             "classification_fingerprint": hashlib.sha256(f"{classification_version}\n{classifier_id}".encode()).hexdigest(),
             "features": features, "records": retained,
             "records_sha256": _hash(retained), "error": error}
+    if rolling:
+        payload["window_type"] = "rolling_24h"
+    return payload
 
 
 def save_archive(payload, archive_dir):
-    path = Path(archive_dir) / f"{payload['news_date']}.json"
+    path = Path(archive_dir) / f"{archive_name(payload)}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     # Never replace previously complete evidence with a failed retry.
     if path.exists() and payload["status"] != "complete":
@@ -189,15 +217,28 @@ def load_archive(path, news_date=None):
     rebuilt = build_daily_payload(payload["news_date"], payload["records"],
         complete=payload["status"] == "complete", retrieved_at=payload["retrieved_at"],
         classification_version=payload["classification_version"], classifier_id=payload["classifier_id"],
-        query=payload["query"], error=payload.get("error"))
+        query=payload["query"], error=payload.get("error"),
+        **({"window_start": payload["start"], "window_end": payload["end"]}
+           if payload.get("window_type") == "rolling_24h" else {}))
     for key in rebuilt:
         if payload.get(key) != rebuilt[key]:
             raise ValueError(f"Archive evidence/metadata mismatch: {key}")
     return payload
 
 
-def collect_day(news_date, *, classify_fn=None, llm=None, get=None, sleep=time.sleep,
-                now=None, archive_dir=None, query=None):
+def collect_day(news_date, **kwargs):
+    return _collect_window(*day_window(news_date), **kwargs)
+
+
+def collect_latest(*, now=None, **kwargs):
+    """Latest 24 hours through the last completed 15-minute indexing boundary."""
+    now = _utc_now(now)
+    end = now.replace(minute=(now.minute // 15) * 15, second=0, microsecond=0)
+    return _collect_window(end - timedelta(days=1), end, now=now, rolling=True, **kwargs)
+
+
+def _collect_window(start, end, *, classify_fn=None, llm=None, get=None, sleep=time.sleep,
+                    now=None, archive_dir=None, query=None, rolling=False):
     """Collect one closed day. Failure returns incomplete with no usable features.
 
     classify_fn: batch list[str] -> existing classifier list[dict]. With no
@@ -207,7 +248,7 @@ def collect_day(news_date, *, classify_fn=None, llm=None, get=None, sleep=time.s
     import requests
     get = get or requests.get
     now = _utc_now(now)
-    start, end = day_window(news_date)
+    news_date = start.date()
     if end > now:
         raise ValueError("Only completed UTC days may be collected")
     # Conservative 89-day live retention; older days need genuine archives.
@@ -273,7 +314,8 @@ def collect_day(news_date, *, classify_fn=None, llm=None, get=None, sleep=time.s
         # Persist safe evidence/error type, never provider exception text (may contain credentials).
         error = f"{type(exc).__name__}: " + (str(exc) if isinstance(exc, CollectionError) else "collection or classification failed")
     payload = build_daily_payload(news_date, records, complete=error is None,
-        retrieved_at=now, classifier_id=classifier_id, query=query, error=error)
+        retrieved_at=now, classifier_id=classifier_id, query=query, error=error,
+        **({"window_start": _stamp(start), "window_end": _stamp(end)} if rolling else {}))
     if archive_dir is not None:
         save_archive(payload, archive_dir)
     return payload
@@ -297,7 +339,12 @@ def main(argv=None):
         return 0
     if args.end and not args.start:
         parser.error("--end requires --start")
-    start = args.start or previous_completed_utc_day()
+    if not args.start:
+        payload = collect_latest(archive_dir=args.archive_dir)
+        print(json.dumps({"start": payload["start"], "end": payload["end"], "status": payload["status"],
+                          "article_count": payload["article_count"], "error": payload["error"]}))
+        return int(payload["status"] != "complete")
+    start = args.start
     end = args.end or start
     if end < start:
         parser.error("--end must be on or after --start")

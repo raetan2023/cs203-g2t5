@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 
 work/
+artifacts/llm_cache_*.jsonl

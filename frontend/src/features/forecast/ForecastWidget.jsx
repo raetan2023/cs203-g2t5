@@ -86,7 +86,7 @@ export default function ForecastWidget({ showDrivers = true } = {}) {
         <>
           <div className="forecast-provenance">
             <p>Forecast origin: {data.forecast_origin_date} · Published: {data.published_at}</p>
-            <p>News window (UTC, end exclusive): {data.news_window_start} to {data.news_window_end}</p>
+            <p>Latest available GDELT window (UTC, end exclusive): {data.news_window_start} to {data.news_window_end}</p>
             <p>Market observations: {Object.entries(data.source_dates || {}).map(([key, date]) => `${key}: ${date || 'unavailable'}`).join(' · ')}</p>
             <p>Source observations may predate the forecast origin; this is not a live fuel quote.</p>
             <details><summary>Forecast details</summary><p>Run: {data.run_id}</p><p>Model: {data.model_version}</p></details>
