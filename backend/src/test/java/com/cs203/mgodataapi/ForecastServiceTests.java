@@ -152,8 +152,10 @@ class ForecastServiceTests {
                 LocalDate.parse("2026-10-30"), service.today());
         var response = analysis.read(context, false, 7, run);
         @SuppressWarnings("unchecked") var guidance = (Result<Guidance>) response.get("recommendation");
-        assertTrue(guidance.value().action().contains("deadline"));
-        assertTrue(guidance.value().explanation().contains("70,000 to 82,000"));
+        assertTrue(guidance.value().action().contains("purchase window"));
+        assertFalse(guidance.value().explanation().contains("70,000 to 82,000"));
+        assertTrue(guidance.value().explanation().contains("after your deadline"));
+        assertEquals("unavailable", ((Result<?>) analysis.read(context, true, 7, run).get("cost_impact")).status());
         assertEquals(HttpStatus.CONFLICT, assertThrows(ApiException.class,
                 () -> analysis.read(context, false, 7, UUID.randomUUID())).status());
         value.put("news_window_start", "2026-10-24T00:00:00Z");

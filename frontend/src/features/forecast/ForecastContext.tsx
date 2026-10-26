@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Forecast, ForecastService, Horizon } from './apiService';
 
 type Result = { status: 'success'; data: Forecast } | { status: 'error'; error: string };
-type ForecastState = { connected: boolean; horizon: Horizon; setHorizon(h: Horizon): void; retry(): void; status: 'loading' | 'success' | 'error'; data?: Forecast; error?: string };
+type ForecastState = { refreshKey?: number; service?: ForecastService; connected: boolean; horizon: Horizon; setHorizon(h: Horizon): void; retry(): void; status: 'loading' | 'success' | 'error'; data?: Forecast; error?: string };
 const missing: ForecastState = { connected: false, horizon: 7, setHorizon() {}, retry() {}, status: 'success', data: { status: 'unavailable', reason: 'not_connected', message: 'The forecast service is not connected.' } };
 const Context = createContext<ForecastState>(missing);
 
@@ -13,6 +13,18 @@ export function ForecastProvider({ service, scenarioDate, revision, children }: 
   const scope = useMemo(() => ({}), [service, scenarioDate, revision]);
   const cache = useRef<{ scope: object; entries: Map<Horizon, Promise<Result>>; runId?: string }>({ scope, entries: new Map() });
   const [result, setResult] = useState<{ scope: object; horizon: Horizon; attempt: number; value: Result }>();
+  // The comparison shares in-flight horizon reads with the selected estimate.
+  const comparisonService = useMemo<ForecastService | undefined>(() => service ? { async read(h) {
+    if (cache.current.scope !== scope) cache.current = { scope, entries: new Map() };
+    let pending = cache.current.entries.get(h);
+    if (!pending) {
+      pending = service.read(h).then(data => ({ status: 'success' as const, data }), error => ({ status: 'error' as const, error: error instanceof Error ? error.message : 'Could not load the forecast.' }));
+      cache.current.entries.set(h, pending);
+    }
+    const value = await pending;
+    if (value.status === 'error') throw new Error(value.error);
+    return value.data;
+  } } : undefined, [service, scope]);
   const retry = useCallback(() => {
     cache.current.entries.clear();
     cache.current.runId = undefined;
@@ -56,7 +68,7 @@ export function ForecastProvider({ service, scenarioDate, revision, children }: 
     return () => { active = false; };
   }, [scope, horizon, attempt, service]);
   const current = result?.scope === scope && result.horizon === horizon && result.attempt === attempt ? result.value : undefined;
-  const value: ForecastState = !service ? { ...missing, horizon, setHorizon } : { connected: true, horizon, setHorizon, retry, ...(current ?? { status: 'loading' }) };
+  const value: ForecastState = !service ? { ...missing, horizon, setHorizon } : { refreshKey: attempt, service: comparisonService, connected: true, horizon, setHorizon, retry, ...(current ?? { status: 'loading' }) };
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useForecastContext() { return useContext(Context); }

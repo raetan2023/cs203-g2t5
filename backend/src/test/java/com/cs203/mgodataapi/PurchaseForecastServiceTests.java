@@ -38,11 +38,11 @@ class PurchaseForecastServiceTests {
             int h = call.getArgument(0);
             return tools.jackson.databind.json.JsonMapper.builder().build().readTree("""
                 {"status":"ready","horizon_days":%s,"unit":"USD/metric tonne","anchor_quote_date":"2026-10-25","as_of_date":"2026-10-26",
-                 "anchor_price":800,"forecast":850,"low":750,"high":950,"raw_q10_price":760,"raw_q90_price":940,
-                 "execution":"src.predict.predict:standardscaler+ridgecv",
+                 "anchor_price":%s,"forecast":850,"low":750,"high":950,"raw_q10_price":760,"raw_q90_price":940,
+                 "execution":"src.predict.predict:standardscaler+ridgecv","input_source":"supabase",
                  "artifact_sha256":"%s","input_snapshot":"%s","inference_snapshot":"%s",
                  "model_version":"ridge-%sd-executed","target_date":"%s"}
-                """.formatted(h, "a".repeat(64), "b".repeat(64), "c".repeat(64), h, origin.minusDays(1).plusDays(h)));
+                """.formatted(h, rows.stream().filter(r -> r.series().equals("SGP_MGO_OBSERVED") && r.date().equals(origin.minusDays(1))).map(r -> r.value().toPlainString()).findFirst().orElse("800"), "a".repeat(64), "b".repeat(64), "c".repeat(64), h, origin.minusDays(1).plusDays(h)));
         });
     }
     PurchaseForecastRepository.Observation row(String series, LocalDate date, double value) {
@@ -77,8 +77,7 @@ class PurchaseForecastServiceTests {
     }
     @Test void datedReferenceIsExplicitAndVeryOldReferenceRemainsUnavailable() {
         rows.removeIf(r -> r.series().equals("SGP_MGO_OBSERVED") && r.date().isAfter(origin.minusDays(8)));
-        Ready dated = assertInstanceOf(Ready.class, service.read(7));
-        assertEquals(origin.minusDays(1), dated.data().forecast_origin_date());
+        assertEquals("invalid_ridge_response", assertInstanceOf(Unavailable.class, service.read(7)).reason());
         rows.removeIf(r -> r.series().equals("SGP_MGO_OBSERVED") && r.date().isAfter(origin.minusDays(31)));
         assertEquals("stale_reference", assertInstanceOf(Unavailable.class, service.read(7)).reason());
     }

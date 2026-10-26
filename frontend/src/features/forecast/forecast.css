@@ -313,3 +313,8 @@
 
 .market-forecast { max-width: 1560px; margin: 0 auto; padding: 0 40px 38px; }
 @media (max-width: 640px) { .market-forecast { padding: 0 16px 24px; } }
+
+.forecast-seg button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}

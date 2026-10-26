@@ -63,8 +63,8 @@ class PlanAnalysisServiceTests {
 
     @Test void rejectsFutureReferencesAndUnsupportedTargets() {
         assertEquals("unsupported_horizon", calculate(forecast("680", "740", basis, date.minusDays(1), null)).reason());
-        // A cost estimate's explicit target is not a recommended purchase date or assumed deadline.
-        assertEquals("ready", calculate(forecast("680", "740", basis, date.plusDays(23), null)).status());
+        // Estimates beyond the saved deadline must not be used for this purchase window.
+        assertEquals("unsupported_horizon", calculate(forecast("680", "740", basis, date.plusDays(23), null)).reason());
         assertEquals("unsupported_horizon", PlanAnalysisService.calculate(context,
                 Result.ready(new Reference(reference.price(), date.plusDays(1), basis)),
                 Result.ready(forecast("680", "740", basis, date, null))).reason());

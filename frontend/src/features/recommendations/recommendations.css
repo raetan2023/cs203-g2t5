@@ -25,6 +25,9 @@
 .rec-horizon-bar .forecast-seg button { min-height: 44px; padding: 9px 16px; }
 .rec-badge { display: inline-block; flex-shrink: 0; border: 1px solid #36475b; color: #bfccdc; background: #142234; border-radius: 20px; font-size: 11px; padding: 5px 10px; white-space: nowrap; }
 .rec-card { border: 1px solid #25394c; border-radius: 14px; background: #0c1a29; padding: 24px; margin-bottom: 16px; }
+.rec-deadline-notice { display: grid; gap: 16px; }
+.recommendations .rec-deadline-notice p { margin: 0; max-width: 90ch; }
+.rec-deadline-notice .bb-button { justify-self: start; margin-top: 8px; }
 .rec-analysis { padding: 0; border: 1px solid #2e465c; border-radius: 14px; background: #0c1a29; overflow: hidden; }
 .rec-impact { padding: 26px 28px; }
 .rec-result-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
@@ -98,3 +101,23 @@
   .rec-forecast dl { grid-template-columns: 1fr; }
   .rec-result-heading { align-items: flex-start; }
 }
+
+.timing-comparison { margin: 24px 0 32px; padding: 28px; border: 1px solid #2c4b59; border-radius: 20px; background: linear-gradient(145deg, #102c36, #0b1928 65%); }
+.timing-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+.timing-heading h2 { font-size: clamp(22px, 3vw, 30px); margin: 8px 0 10px; }
+.timing-heading p { color: #afc2cf; max-width: 65ch; line-height: 1.6; }
+.timing-heading .bb-button { flex-shrink: 0; }
+.timing-legend { display: flex; gap: 22px; flex-wrap: wrap; color: #adc2cd; font-size: 12px; margin-top: 28px; }
+.timing-legend span { display: flex; gap: 8px; align-items: center; }
+.timing-legend i { width: 8px; height: 8px; background: #e4fff9; border-radius: 50%; }
+.timing-legend .timing-band-key { width: 14px; height: 14px; border-radius: 3px; background: #2dd4bf44; border: 1px solid #5eead4; }
+.timing-chart { display: block; width: 100%; max-height: 370px; margin: 12px 0; }
+.timing-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.timing-option { text-align: left; color: #dceaf2; background: #0c1c2b; border: 1px solid #2e4657; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; min-width: 0; }
+.timing-option:disabled { cursor: default; opacity: .7; }
+.timing-option strong { font-size: 24px; }
+.timing-option small { font-size: 12px; color: #9bb3c5; margin-left: 4px; }
+.timing-option span:not(.rec-eyebrow), .timing-footnote { color: #9fb7c8; font-size: 12px; line-height: 1.5; }
+.timing-best { border-color: #5eead4; background: #103c3c; }
+.timing-footnote { margin-top: 20px; }
+@media (max-width: 600px) { .timing-comparison { padding: 18px 12px; } .timing-heading { flex-direction: column; gap: 12px; } .timing-options { grid-template-columns: 1fr; } .timing-option { padding: 16px; } .timing-chart { min-height: 200px; } }

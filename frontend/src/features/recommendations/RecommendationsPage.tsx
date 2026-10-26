@@ -4,9 +4,11 @@ import { formatDate } from '../purchase-plan/dates';
 import type { PurchasePlan, PurchasePlanService } from '../purchase-plan/types';
 import type { RecommendationService } from './service';
 import { useAnalysis } from './useAnalysis';
+import { TimingComparison } from './TimingComparison';
 import { PurchaseImpact } from './PurchaseImpact';
 import './recommendations.css';
 import '../forecast/forecast.css';
+import type { Horizon } from '../forecast/apiService';
 import { useForecastContext } from '../forecast/ForecastContext';
 
 export function RecommendationsPage({ planService, service, scenarioDate, refreshScenario, planId }: {
@@ -36,6 +38,17 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
   const experimental = forecast?.interval.method === 'experimental_gdelt_scaled_quantiles';
   const quoteAge = forecast ? Math.round((Date.parse(scenarioDate) - Date.parse(forecast.anchor_quote_date)) / 86_400_000) : 0;
   const executedRidge = experimental && forecast?.model_version.includes('-sha256-');
+  const targetFor = (h: Horizon) => {
+    const base = forecast ? Date.parse(forecast.target_date) - forecastState.horizon * 86_400_000 : Date.parse(scenarioDate);
+    return new Date(base + h * 86_400_000).toISOString().slice(0, 10);
+  };
+  const horizons = [7, 14, 30] as const;
+  const fittingHorizons = plan ? horizons.filter(h => targetFor(h) <= plan.purchase_deadline && targetFor(h) > scenarioDate) : [];
+  const noHorizonFits = !!plan && !!forecast && forecastState.connected && fittingHorizons.length === 0;
+  const fitsSelected = fittingHorizons.includes(forecastState.horizon);
+  useEffect(() => {
+    if (plan && forecast && !fitsSelected && fittingHorizons.length > 0) forecastState.setHorizon(fittingHorizons[0]);
+  }, [plan, forecast, fitsSelected, fittingHorizons[0], forecastState.setHorizon]);
   const afterDeadline = !!(plan && forecast && forecast.target_date > plan.purchase_deadline);
   return <main className="recommendations">
     <header className="rec-header"><div><p className="rec-eyebrow">Purchase planning</p><h1 tabIndex={-1} ref={heading}>Purchase estimate</h1><p>Compare possible costs for your saved plan.</p></div><AppLink className="rec-back" href="/purchase-plans">Back to purchase plans</AppLink></header>
@@ -44,17 +57,25 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       <div><dt>Purchase deadline</dt><dd>{formatDate(plan.purchase_deadline)}</dd></div>
       <div><dt>Time remaining</dt><dd>{plan.days_remaining < 0 ? `Overdue by ${Math.abs(plan.days_remaining)} days` : `${plan.days_remaining} ${plan.days_remaining === 1 ? 'day' : 'days'}`}</dd></div>
     </dl></section>}
-    {experimental && plan && <aside className="rec-notice" aria-label="Estimate limitations">
+    {plan && forecastState.service && <TimingComparison service={forecastState.service} today={scenarioDate} deadline={plan.purchase_deadline} revision={String(forecastState.refreshKey)} selectedRun={forecast?.run_id} refresh={forecastState.retry} select={forecastState.setHorizon} />}
+    {experimental && plan && !noHorizonFits && fitsSelected && <aside className="rec-notice" aria-label="Estimate limitations">
       <span className="rec-notice-icon" aria-hidden="true">!</span><div>
       <h2>{plan && plan.days_remaining < 0 ? 'Your purchase deadline has passed' : afterDeadline ? 'This estimate is after your purchase deadline' : executedRidge ? 'Dated Ridge estimate' : 'Timing guidance unavailable'}</h2>
       <p>{afterDeadline ? 'Choose a shorter horizon if one fits your deadline. ' : ''}{quoteAge > 7 ? `The ${executedRidge ? "model anchor" : "latest price"} quote is ${quoteAge} days old (${formatDate(forecast!.anchor_quote_date)}). ` : executedRidge ? `The model targets ${formatDate(forecast!.target_date)} from its ${formatDate(forecast!.forecast_origin_date)} quote anchor. ` : 'No current Ridge forecast is available. '}{executedRidge && quoteAge > 7 ? `The ${forecastState.horizon}-day model targets ${formatDate(forecast!.target_date)} from that anchor. ` : ''}Compare this scenario with a current supplier quote before deciding when to buy.</p>
       <span className="rec-source-label">{executedRidge ? 'Executed Ridge · experimental bounds' : 'Last-quote fallback · Ridge unavailable'}</span>
       </div></aside>}
     {forecastState.connected && plan && <section className="rec-horizon-bar" aria-label="Estimate horizon">
-      <div><span className="rec-eyebrow">Estimate date</span><p>{forecast ? formatDate(forecast.target_date) : 'Choose a horizon'}</p></div>
-      <div className="forecast-seg" role="group" aria-label="Forecast horizon">{([7, 14, 30] as const).map(h =>
-        <button key={h} className={h === forecastState.horizon ? 'active' : ''} aria-pressed={h === forecastState.horizon} onClick={() => forecastState.setHorizon(h)}>{h} days</button>)}</div>
+      <div><span className="rec-eyebrow">Estimate date</span><p>{noHorizonFits ? 'No supported horizon fits your deadline' : forecast ? formatDate(forecast.target_date) : 'Choose a horizon'}</p></div>
+      <div className="forecast-seg" role="group" aria-label="Forecast horizon">{horizons.map(h =>
+        <button key={h} className={h === forecastState.horizon && !noHorizonFits ? 'active' : ''} aria-pressed={h === forecastState.horizon && !noHorizonFits} disabled={!!forecast && !fittingHorizons.includes(h)} title={!fittingHorizons.includes(h) ? `Targets ${formatDate(targetFor(h))}, outside your purchase window` : undefined} onClick={() => forecastState.setHorizon(h)}>{h} days</button>)}</div>
       {!experimental && forecast && <span className="rec-badge">{forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast'}</span>}
+    </section>}
+    {noHorizonFits && plan && <section className="rec-card rec-deadline-notice" role="status" aria-label="Purchase deadline guidance">
+      <h2>{plan.days_remaining < 0 ? 'Your purchase deadline has passed' : 'Your deadline is before the available forecasts'}</h2>
+      <p>The model supports 7, 14 and 30 days from its observed quote. The 7-day estimate targets {formatDate(targetFor(7))}, outside your purchase window ending {formatDate(plan.purchase_deadline)}. A shorter forecast is not available.</p>
+      {forecast && <p>Reference cost for {plan.quantity_mt.toLocaleString('en-GB')} MT: <strong>USD {(plan.quantity_mt * forecast.anchor_price).toLocaleString('en-GB', { maximumFractionDigits: 0 })}</strong>, using the observed {formatDate(forecast.anchor_quote_date)} quote of USD {forecast.anchor_price.toLocaleString('en-GB')}/MT. This is a reference, not a forecast or supplier offer.</p>}
+      <p>{plan.days_remaining < 0 ? 'Update your purchase plan and obtain a current supplier quote.' : 'Obtain a current supplier quote for your purchase window. You can edit the deadline in your saved plan if your requirements change.'}</p>
+      <AppLink className="bb-button" href="/purchase-plans">Review purchase plan</AppLink>
     </section>}
     {forecastState.connected && plan && !forecast && <section className="rec-card" role={forecastState.status === 'error' ? 'alert' : 'status'}>
       <h2>{forecastState.status === 'loading' ? 'Updating estimate…' : 'Price estimate unavailable'}</h2>
@@ -64,7 +85,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or scenario changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current application date.</p><button className="bb-button" onClick={reload}>Retry</button></section>
       : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Choose a saved purchase plan from your plans, or create a new one.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>
-      : forecastState.connected && !forecast ? null : <section className="rec-card rec-analysis" aria-label="Purchase analysis">
+      : forecastState.connected && (!forecast || !fitsSelected) ? null : <section className="rec-card rec-analysis" aria-label="Purchase analysis">
         {service?.readImpact && (!forecastState.connected || forecast) ? <PurchaseImpact plan={plan} service={service!} reload={reload} horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={forecast?.run_id} published={forecast} /> : forecastState.connected && <p>Cost impact is unavailable until a current forecast is ready for the selected horizon.</p>}
         {(!forecastState.connected || forecast) && <Recommendation plan={plan} service={service} reload={reload} experimental={experimental && !executedRidge}
           horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={forecast?.run_id} />}
