@@ -1,8 +1,14 @@
 import React from 'react';
 import StoredMarketPanel from './StoredMarketPanel';
+import { ForecastWidget } from '../forecast';
 
-// This page now reads only imported Supabase observations. Historical scenario
-// dates remain available elsewhere in the app; they do not relabel latest prices.
 export default function MarketDashboard() {
-  return <StoredMarketPanel />;
+  return (
+    <>
+      <StoredMarketPanel />
+      <div style={{ maxWidth: 1560, margin: '0 auto', padding: '8px 40px 48px' }}>
+        <ForecastWidget />
+      </div>
+    </>
+  );
 }
