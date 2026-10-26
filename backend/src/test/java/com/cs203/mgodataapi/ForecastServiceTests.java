@@ -153,7 +153,7 @@ class ForecastServiceTests {
         var response = analysis.read(context, false, 7, run);
         @SuppressWarnings("unchecked") var guidance = (Result<Guidance>) response.get("recommendation");
         assertTrue(guidance.value().action().contains("deadline"));
-        assertTrue(guidance.value().explanation().contains("70000.00 to 82000.00"));
+        assertTrue(guidance.value().explanation().contains("70,000 to 82,000"));
         assertEquals(HttpStatus.CONFLICT, assertThrows(ApiException.class,
                 () -> analysis.read(context, false, 7, UUID.randomUUID())).status());
         value.put("news_window_start", "2026-10-24T00:00:00Z");

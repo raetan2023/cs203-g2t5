@@ -70,9 +70,9 @@ public class PublishedForecastAnalysisProvider implements PlanAnalysisProvider {
         }
         String explanation = reason + " For " + context.quantity_mt().stripTrailingZeros().toPlainString()
                 + " MT, the estimated cost at " + f.target_date() + " is USD "
-                + f.prices().lower().multiply(context.quantity_mt()).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString() + " to "
-                + f.prices().upper().multiply(context.quantity_mt()).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString()
-                + ". This is an experimental comparison against the latest observed quote, not a live supplier offer or a proven purchasing advantage.";
+                + String.format(java.util.Locale.ROOT, "%,.0f", f.prices().lower().multiply(context.quantity_mt())) + " to "
+                + String.format(java.util.Locale.ROOT, "%,.0f", f.prices().upper().multiply(context.quantity_mt()))
+                + ". This is an experimental comparison against the dated reference quote, not a live supplier offer or a proven purchasing advantage.";
         String identity = context.toString() + ":" + f.run_id() + ":" + f.target_date();
         return new Recommendation(context, Result.ready(new Guidance(
                 java.util.UUID.nameUUIDFromBytes(identity.getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString(), action, explanation)));

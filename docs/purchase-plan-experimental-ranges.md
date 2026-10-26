@@ -1,33 +1,42 @@
-# Purchase-plan experimental news ranges
+# Purchase-plan executed Ridge and experimental news bounds
 
-The signed-in purchase recommendation page uses `GET /api/v1/purchase-plans/forecast?horizon_days=7|14|30`. This endpoint, the recommendation endpoint, and cost impact use the same `PurchaseForecastService`. The dashboard keeps its existing `/api/v1/forecast` endpoint and state.
+The authenticated purchase page calls `/api/v1/purchase-plans/forecast?horizon_days=7|14|30`. `PurchaseForecastService` executes the repository's original `src.predict.predict` through `RidgeInference`, a private Python subprocess. It loads the existing `ridge_*d.joblib` StandardScaler + RidgeCV pipeline, metadata, and compatible `quantile_*d.joblib`. It does not read a published result, substitute `daily_model.py`, train another model, or fall back to the last quote. The dashboard still uses its existing `/api/v1/forecast` publication path.
 
-The feature requires only the app's existing database and Clerk configuration. There is no new migration, scheduler, Python server, OpenAI request, or user setup step. It reads the existing `market_series` / `market_observations` tables on each request. The page revalidates every minute in the foreground and on tab visibility changes. Singapore midnight refreshes the application date. The browser never receives database credentials.
+## Data and honest dates
 
-## Range calculation
+The model uses its existing audited `ridge-regression-model/data/market_observations.csv` (or the existing `MGO_DATA_DIR` override), its original feature order and publication lags, and its original gamma shrinkage. No news enters Ridge inference. Model/data/code hashes identify the serving snapshot. Files changing during inference cause rejection.
 
-An available current published model forecast with the correct completed UTC news window remains preferred and unchanged. When none is available, the explicitly experimental fallback:
+This is a **dated model scenario**, not a live market forecast. The original trained convention anchors each horizon at an observed MGO quote. Target = model quote date + horizon, never application date + horizon. The application date remains the actual current Singapore date; the news day is the previous completed UTC day. Expired model targets remain unavailable. Do not backdate the app, carry inputs beyond the existing seven-day limit, or relabel these horizons.
 
-1. Uses the latest completed **UTC** GDELT day, paired article count and average tone. It never fills a missing day or tone with zero. Before 08:00 Singapore, this is two Singapore calendar dates earlier; its exact window is displayed.
-2. Compares `log(1 + article_count)` and `abs(average_tone)` with paired observations in the preceding 90 calendar days. At least 14 prior paired days are required. Each rank is the proportion of prior values strictly below yesterday's value.
-3. Sets `multiplier = 1 + (activity_rank + absolute_tone_rank) / 2`, bounded from 1 to 2. This is an explicit heuristic. More activity or more extreme absolute tone expands the range; these proxies do not directly measure global uncertainty.
-4. Computes empirical q10/q90 log returns using exact-date observed MGO pairs from the last 400 days. At least 20 pairs are required. The return span is the selected horizon **plus the age of the reference quote**, because the forecast target is today plus the selected horizon. No target prices are interpolated.
-5. Uses `q10_deviation = min(q10, 0)` and `q90_deviation = max(q90, 0)`, then `lower = reference × exp(q10_deviation × multiplier)` and `upper = reference × exp(q90_deviation × multiplier)`. The fallback point is persistence, equal to the last quote, and does not move when news changes. This is labelled explicitly; it is not a new Ridge prediction.
+Verified on 26 October 2026: bundled model inputs end with MGO on 6 October; the original 7- and 14-day targets have expired. The supported 30-day result targets **5 November**, central **USD 1,278.50/MT**. The saved gamma is zero, so this executed Ridge result numerically equals its anchor. Invocation tests observe `Pipeline.predict`; artifact hashes establish identity independently of the number. Supporting current 7/14-day results requires genuine newer, compatible model inputs. Stored gasoil/Dubai rows currently declare `source-defined` units and no currency; they are not silently fed into USD/barrel spread features. The unimplemented original Supabase loader is not presented as working.
 
-These expanded empirical bounds are **not measured conditional quantiles, calibrated confidence, or guaranteed 80% coverage**. Experimental responses set nominal/empirical coverage to null and evaluation rows to zero. The purchase-only display does not render the dashboard confidence card. Historical return-pair counts are labelled as historical pairs, not out-of-sample coverage observations.
+## Bounds only
 
-## Synchronization and safeguards
+1. Read actual stored `GDELT_ARTICLE_COUNT` and `GDELT_AVERAGE_TONE` for the previous completed UTC day. Missing, partial, duplicate, future or wrong-day data fails closed. Never invent a neutral day.
+2. Compare `log1p(count)` and `abs(tone)` against paired days in the prior 90 days, requiring at least 14 pairs. Rank = fraction strictly below yesterday's value.
+3. Set `multiplier = 1 + (activity_rank + absolute_tone_rank)/2`, between 1 and 2.
+4. Take the original compatible calibrated quantile-artifact endpoints `L, U` and the executed Ridge central price `C`. Set `dL=min(0,log(L/C))`, `dU=max(0,log(U/C))`. Return `C*exp(multiplier*dL)` and `C*exp(multiplier*dU)`. This includes C if the independent quantile models put it outside their interval. It does not add quote-age scaling: the original horizon already runs from the quote anchor to the actual target.
 
-- A deterministic run ID fingerprints the current origin, calculation version, and observed database inputs. It is stable across horizons and changes when source observations change.
-- Recommendation and impact requests carry both selected horizon and run ID. A source revision between requests returns 409; old values clear and the shared page refresh/retry loads the new inputs.
-- Cost totals use backend decimal multiplication of the same bounds by the selected saved plan's quantity. Plans remain authenticated and ownership/context checks remain in the existing controller.
-- The fallback reads only MGO in verified USD/MT and GDELT counts/tone. It does not guess units for gasoil or Dubai and does not change the dashboard's central model.
-- Reference quotes up to 30 days old can support an explicitly dated experimental scenario. Quotes older than seven days carry a visible stale-price warning and guidance to compare against a current supplier quote. Beyond 30 days, no fallback range is served.
-- Overdue plans and targets beyond the purchase deadline receive explicit guidance. No advice promises a purchasing advantage or treats an old observed price as a live supplier offer.
-- Missing previous-day news, missing MGO, incompatible provenance/units, duplicate observations, nonfinite values and insufficient history remain unavailable. Database errors are 503; unsupported horizons are 422. The endpoint requires Clerk authentication and uses `Cache-Control: no-store`.
+These are **experimental q10/q90-based bounds**, not news-conditioned calibrated quantiles or guaranteed 80% confidence. Nominal/empirical conditional coverage is null; evaluation rows are zero. The original artifact evaluation does not establish coverage after news widening. No purchasing advantage is claimed.
+
+## Synchronization and startup
+
+The run ID fingerprints application date, calculation version, stored database observations and the full inference snapshot across horizons. News/source/artifact revisions invalidate previous run IDs. Recommendation and impact re-run the same provider and reject a mismatched requested ID with 409. Backend decimal multiplication uses the same bounds and saved quantity; controllers retain owner/context checks and no-store. Existing foreground/minute/date-rollover refresh, retries and obsolete-response protection remain.
+
+Run `./run.command` from this checkout. In addition to existing ignored env files, install the Python runtime once:
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -r ridge-regression-model/requirements.txt
+```
+
+The launcher checks dependencies and sets absolute `MGO_RIDGE_ROOT` and `MGO_RIDGE_PYTHON`; both can be overridden. Direct Maven launches resolve defaults relative to `backend/`. No new listening service, port, OpenAI key, headline fetch or database migration is required. Alternative review ports: `PORT=8001 FRONTEND_PORT=5174 ./run.command`; ensure `VITE_API_URL` and `FRONTEND_ORIGINS` match these ports. Do not stop services belonging to another checkout.
 
 ## Verification
 
-Automated service tests cover news-driven widening with a fixed central point, horizon/run identity, changed-news conflicts, exact-day news, UTC/Singapore rollover, stale quote policy, preserved published forecasts, and quantity multiplication. Authenticated controller tests cover the separate endpoint. Frontend tests cover the normal Clerk adapters, separated dashboard/purchase URLs, horizon synchronization, experimental labels, and rejection of confidence claims in experimental responses.
+- Python real-artifact tests compare the adapter with standalone original inference, observe the Ridge estimator invocation, verify SHA-256 identity, exercise the actual subprocess and reject expired horizons.
+- Backend unit tests cover unchanged central price under changed news, bounds widening, run revisions, missing/partial/future news, duplicates, UTC rollover, explicit inference failure and quantity costs.
+- `RidgeLiveIntegrationTests` is opt-in (`RUN_RIDGE_LIVE=true ./mvnw -Dtest=RidgeLiveIntegrationTests test`, with the normal backend environment exported). It reads an existing saved plan and genuine market/news rows, executes actual Python artifacts through the normal Spring controllers, compares the standalone central price, provenance and costs, and checks recommendation availability. It changes news only in memory to prove invariance. Identity resolution/JWT verification alone are replaced in this test; it makes no database writes.
+- Frontend tests validate anchor horizons with newer stored news/history, expired and falsely relabelled targets, experimental no-coverage claims, normal authenticated adapters, retries and stale-response handling. Production build is required.
 
-A read-only smoke test against the actual connected database returned ready ranges, cost impact and recommendation for 7/14/30 days using GDELT through 25 October 2026 and the actual 18 October MGO quote. The original dashboard endpoint stayed unavailable, demonstrating that the experimental fallback does not publish to or replace dashboard forecasts. This verifies integration, not forecasting accuracy.
+Final validation on 26 October: 77 backend tests including the opt-in real-data integration, 157 frontend tests and production build, 13 targeted Python prediction/feature/adapter tests, and six launcher checks passed. The normal signed-in Helium browser at `http://127.0.0.1:5174` was also verified with the existing 2,000 MT plan: 30-day model target 5 November, central USD 1,278.50/MT, bounds USD 1,185.25–1,743.70/MT, total USD 2.37m–3.49m. Its disclosure shows artifact `6ba92d4257ca…`, the 6 October anchor and 25 October UTC news. Expired seven-day inference displays unavailable. No market observations, forecasts or saved plans were created by the validation.

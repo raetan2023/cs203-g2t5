@@ -22,7 +22,8 @@ export function PurchaseImpact({ plan, service, reload, horizonDays, runId, publ
   const ready = impact && forecast && impact.target_date && forecast.target_date === impact.target_date;
   const experimental = published?.interval.method === 'experimental_gdelt_scaled_quantiles';
   const newsDate = published?.source_dates.gdelt ?? published?.news_window_start.slice(0, 10);
-  const source = experimental ? 'Last observed quote (persistence)' : published?.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression (published)' : published ? 'Published model forecast' : 'Source-supplied estimate';
+  const executedRidge = experimental && published?.model_version.includes('-sha256-');
+  const source = executedRidge ? 'Ridge regression (executed repository artifact)' : experimental ? 'Last observed quote (persistence)' : published?.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression (published)' : published ? 'Published model forecast' : 'Source-supplied estimate';
   return <section className="rec-impact" aria-label="Estimated impact" aria-busy={loading}>
     <div className="rec-result-heading"><div><p className="rec-eyebrow">Cost scenario</p><h2>{ready ? `Estimated cost on ${formatDate(impact.target_date!)}` : 'Estimated purchase cost'}</h2></div>
       {ready && <span className="rec-badge">{experimental ? 'Experimental range' : 'Forecast range'}</span>}</div>
@@ -44,13 +45,15 @@ export function PurchaseImpact({ plan, service, reload, horizonDays, runId, publ
     {forecast && <details className="rec-forecast"><summary>Data sources and calculation</summary>
       <div className="rec-details-body"><dl>
         <div><dt>Estimate source</dt><dd>{source}</dd></div>
+        {executedRidge && <div><dt>Ridge artifact SHA-256</dt><dd>{published!.model_version.split('-sha256-')[1]?.slice(0, 12)}…</dd></div>}
+        {executedRidge && <div><dt>Model horizon</dt><dd>{published!.horizon_days} days from {formatDate(published!.anchor_quote_date)}</dd></div>}
         {reference && <div><dt>Reference price · {formatDate(reference.observation_date)}</dt><dd>{reference.basis.currency} {price(reference.price)}/{reference.basis.unit}</dd></div>}
         <div><dt>Estimate date</dt><dd>{formatDate(forecast.target_date)}</dd></div>
         {newsDate && <div><dt>News used</dt><dd>{formatDate(newsDate)} · UTC day</dd></div>}
-        {forecast.central_estimate !== undefined && !experimental && <div><dt>Model central estimate</dt><dd>{forecast.basis.currency} {price(forecast.central_estimate)}/{forecast.basis.unit}</dd></div>}
+        {forecast.central_estimate !== undefined && (!experimental || executedRidge) && <div><dt>Model central estimate</dt><dd>{forecast.basis.currency} {price(forecast.central_estimate)}/{forecast.basis.unit}</dd></div>}
         <div><dt>Full cost range · rounded to dollars</dt><dd>{impact ? `USD ${amount(impact.forecast_total.lower)} to USD ${amount(impact.forecast_total.upper)}` : 'Unavailable'}</dd></div>
       </dl>
-      {experimental ? <div className="rec-method"><h3>How news changes the range</h3><p>Historical MGO price changes provide the base range. Higher article activity or more extreme average tone increases its width. News does not move the reference-based estimate.</p><p>This experimental adjustment has no measured confidence coverage. Ridge is unavailable for this result; the centre uses the last observed quote.</p></div>
+      {experimental && !executedRidge ? <div className="rec-method"><h3>How news changes the range</h3><p>Historical MGO price changes provide the base range. Higher article activity or more extreme average tone increases its width. News does not move the reference-based estimate.</p><p>This experimental adjustment has no measured confidence coverage. Ridge is unavailable for this result; the centre uses the last observed quote.</p></div>
         : <p className="rec-method">{forecast.range_description}</p>}
       <p className="rec-source-note">{forecast.basis.commodity} · Price range: {forecast.basis.currency} {price(forecast.prices.lower)}–{price(forecast.prices.upper)}/{forecast.basis.unit}</p>
       </div>
