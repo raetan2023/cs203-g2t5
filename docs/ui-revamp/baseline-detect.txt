@@ -1,0 +1,14 @@
+
+56 files scanned with regex matching only (.css, .js, .jsx, .ts, .tsx).
+Rules that need a parsed page (tiny-text, low-contrast and other element rules) did not run on them; findings are an undercount, not a clean bill of health.
+For the full check, scan the running dev server (npx impeccable detect http://localhost:PORT) or a static site's built .html.
+
+C:\Users\Rae\Downloads\CS203 CSD\project\cs203-g2t5\frontend\src\features\purchase-plan\purchase-plan.css (imported by PurchasePlanPage.tsx)
+  line 17: [overused-font] font-family: Inter
+    → Inter, Roboto, Fraunces, Geist, Plus Jakarta Sans, and Space Grotesk are used on so many sites they no longer feel distinctive. Each new wave of AI-generated UIs converges on the same handful of faces. Choose a face that gives your interface personality.
+
+C:\Users\Rae\Downloads\CS203 CSD\project\cs203-g2t5\frontend\src\features\recommendations\recommendations.css (imported by RecommendationsPage.tsx)
+  line 32: [side-tab] border-right: 2px solid #4cdddd
+    → Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it entirely.
+
+2 anti-patterns found.

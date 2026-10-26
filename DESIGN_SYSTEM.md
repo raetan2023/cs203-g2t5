@@ -1,4 +1,4 @@
-# Bunker Buddy — black-and-white design system
+# Bunker Buddy — dark-and-beige design system
 
 Extracted 2026-10-24 from `frontend/src/prototypes/wireframe/wireframe.css`
 and its inherited `../oris/oris.css`. This is a source-based specification, not a
@@ -7,32 +7,66 @@ Read alongside `frontend/AGENTS.md` and `docs/frontend-design-guidelines.md`.
 
 ## Semantic colours
 
-Names below are proposed shared tokens; values are taken from the prototype.
-Only four colours currently use `--oris-*` variables; most remain literals.
+Names below describe the current shared palette, revised to light beige as requested.
+The original prototype remains a reference; production shared tokens now live in frontend/src/styles/tokens.css.
 
 | Token | Value | Use |
 | --- | --- | --- |
 | `canvas` | `#0c0d0e` | Page background |
 | `surface` | `#1a1b1c` | Cards |
 | `surface-input` | `#121314` | Inputs |
-| `text-primary` | `#eeede7` | Main text |
-| `text-secondary` | `#aaa9a5` | Subtitles, dividers |
-| `text-supporting` | `#b9b8b3` | Intro description |
-| `text-label` | `#e1dfd8` | Input labels |
-| `text-placeholder` | `#a6a5a0` | Placeholders, auxiliary controls |
-| `border-subtle` | `#ffffff26` | Cards and dividers |
-| `border-control` | `#ffffff40` | Input outlines |
-| `action-primary` / `action-hover` | `#e5e2d9` / `#fffdf5` | Primary button |
+| `text-primary` | `#f0e6d2` | Main text |
+| `text-secondary` | `#b5ac9b` | Subtitles, dividers |
+| `text-supporting` | `#c5bba7` | Intro description |
+| `text-label` | `#e4d8c0` | Input labels |
+| `text-placeholder` | `#b6ac99` | Placeholders, auxiliary controls |
+| `border-subtle` | `#e8dcc426` | Cards and dividers |
+| `border-control` | `#e8dcc466` | Input outlines; 40% beige; contrast-preserving implementation choice |
+| `action-primary` / `action-hover` | `#e8dcc4` / `#f4e8d1` | Primary button |
 | `text-on-action` | `#171818` | Primary button text |
-| `focus` | `#eeeadd` | Focus ring and focused input border |
+| `focus` | `#f4e8d1` | Focus ring and focused input border |
 | `error-text` / `error-surface` | `#efb9af` / `#382b29` | Inline error / alert surface |
 | `error-border` / `error-alert-text` | `#e3b3a9` / `#f2d9d2` | Invalid input / alert text |
 
 The theme is predominantly neutral, not strictly colourless: errors retain muted
-warm colour. Provider hover uses white at approximately 7% opacity. No success,
+warm colour. Provider hover uses beige at approximately 7% opacity. No success,
 warning or financial-series palette has been established; do not invent one as
 an allegedly approved token. Validate actual composited contrast before rollout.
 
+### Pending tokens (names reserved, values not decided)
+
+These are placeholders for the revamp. Do not give them values in code until the
+owning phase decides them (see `docs/UI_REVAMP_PLAN.md` §4.1 and §6).
+
+| Token | Decided in | Notes |
+| --- | --- | --- |
+| `price-up` / `price-up-surface`, `price-down` / `price-down-surface`, `price-flat` | Phase 5 (recommendations) | Direction, not good/bad: a rise is unfavourable for a fuel buyer. Always paired with a sign, arrow or word |
+| `success-text` / `success-surface` | Phase 4 (purchase plans) | May stay neutral text plus a check icon |
+| `warning-text` / `warning-surface` | Phase 5 | Stale/unavailable data; must differ from error by more than hue |
+| `chart-grid`, `chart-axis`, `chart-series-1..n`, `chart-forecast`, `chart-band` | Phase 6 (dashboard) | Solid actual vs dashed forecast; confidence bands subdued and labelled |
+
+### Contrast check — final beige revision (2026-10-26)
+
+Computed from current token values using WCAG relative luminance, compositing alpha borders
+on each surface. These replace earlier white-palette figures.
+
+| Pair | canvas | surface | input | Result |
+| --- | --- | --- | --- | --- |
+| `text-primary` | 15.7 | 13.9 | 15.0 | pass |
+| `text-secondary` | 8.7 | 7.7 | 8.3 | pass |
+| `text-supporting` | 10.2 | 9.1 | 9.8 | pass |
+| `text-label` | 13.8 | 12.2 | 13.2 | pass |
+| `text-placeholder` | 8.7 | 7.7 | 8.3 | pass |
+| `error-text` | 11.3 | 10.0 | 10.8 | pass |
+| `error-alert-text` on `error-surface` | n/a | n/a | 10.1 | pass |
+| `text-on-action` on `action-primary` | n/a | n/a | 13.1 | pass |
+| `focus` | 16.0 | 14.2 | 15.3 | pass |
+| `border-control` (`#e8dcc466`) | 3.1 | 3.1 | 3.1 | pass |
+
+Owner requested light beige instead of white. Implementer selected exact beige values.
+The earlier approved 35% white border became 40% beige to retain at least 3:1 contrast;
+35% beige gives only about 2.6–2.7:1. Subtle borders are decorative separators,
+not control outlines. The header date chip now uses 12px text.
 ## Typography, spacing and shape
 
 - Family: `'Segoe UI', 'Helvetica Neue', Arial, sans-serif`; no downloaded font.
@@ -50,8 +84,17 @@ an allegedly approved token. Validate actual composited contrast before rollout.
 
 ## Components and layout
 
+Phase 2 decisions (2026-10-26): retain the existing menu-button/modal sidebar on desktop;
+no persistent rail. Desktop is the delivery and review target; no separate mobile redesign
+or mobile acceptance gate is required. Retain existing responsive behavior where practical.
+Shared page container: `--bb-page-max: 1440px`, `--bb-page-pad: clamp(16px, 3vw, 40px)`;
+implementation defaults for a centered content area. Modal backdrop uses
+`--bb-backdrop: #000000b8` (neutral 72% black). Shared loading indicators stay static,
+with their existing status text, consistent with motion being reserved for authentication.
+Implemented-token reference: `frontend/DESIGN.md` (maintained from source).
+
 - **Primary button:** full-width in login, minimum 50px high, 13px 20px padding,
-  off-white fill/dark text, 150ms background transition. Social buttons: minimum
+  light beige fill/dark text, 150ms background transition. Social buttons: minimum
   46px, subtle border and translucent fill. Pending controls use opacity .65.
 - **Inputs:** 48px high, 12px 14px padding, 15px text (16px on mobile), visible
   label, explicit invalid state. Password toggle remains a 44px control.
