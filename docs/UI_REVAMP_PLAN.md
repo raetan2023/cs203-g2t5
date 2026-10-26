@@ -11,7 +11,7 @@ Status: **active prototype plan; checkpoint commits stay on feature/ui-revamp-wi
   screenshots in `docs/ui-revamp/before/`, then regenerated all 17 desktop baselines with Playwright.
   Mobile baselines remain historical. Desktop baseline update: 17/17 passed.
 - Frontend checks before checkpoint: 115/115 tests; production build passed (existing chunk-size warning).
-- Commit includes the Phase 1/2 sources, design documents, browser-check tooling and screenshot evidence;
+- Commit `744aa71` includes the Phase 1/2 sources, design documents, browser-check tooling and screenshot evidence;
   unrelated graphify/Impeccable local artifacts are excluded.
 - Phase 3 discovery: `ConfigController` and `PurchasePlanController` capture a fixed date from
   `mgo.scenario-date`; changing the header alone cannot implement today. Existing plan summaries already
@@ -334,7 +334,7 @@ Deferred by design:
 
 ### Phase 2 — Shell and shared primitives (`ui/02-shell`)
 
-**Status (2026-10-26): beige scheme accepted; desktop baselines refreshed; prototype checkpoint prepared.**
+**Status (2026-10-26): beige scheme accepted; desktop baselines refreshed; committed as 744aa71 on the prototype branch.**
 
 Completed:
 - [x] Neutral header, 44px ghost menu control, bordered 12px date chip.
@@ -364,7 +364,7 @@ existing `PlanButton` secondary styling covers its consumers.
 Still outstanding:
 - [x] Owner accepts the current desktop beige colour scheme and authorizes continuation (2026-10-26).
 - [x] Refreshed 17 desktop baselines after acceptance; 34 originals preserved in `docs/ui-revamp/before/`.
-- [ ] Commit this Phase 1/2 checkpoint on `feature/ui-revamp-wireframe`. PR/merge removed from scope: prototype branch only.
+- [x] Phase 1/2 checkpoint committed as `744aa71` on `feature/ui-revamp-wireframe`. No push, PR or merge; prototype branch only.
 - [ ] Real Clerk and live dashboard browser validation remain Phases 3 and 6. Preview cannot
       establish that those integrations are visually complete.
 
@@ -377,9 +377,13 @@ Impeccable passes were not run; direct source review, browser screenshots and ax
 
 - [ ] **Owner request:** replace the historical scenario date with the actual current date.
       Compute it at runtime; do not hard-code the date of this discussion (2026-10-26).
-- [ ] Trace the authoritative scenario source through backend configuration, `ClerkApp`, hooks,
+- [x] Traced the authoritative scenario source through backend configuration, `ClerkApp`, hooks,
       plan validation, remaining-day calculations and recommendation requests before editing.
       Changing only the displayed label while calculations retain the old date is not sufficient.
+      Findings: ConfigController and PurchasePlanController use startup-injected LocalDate; plan reads
+      recompute remaining days against that date. ClerkApp fetches config on sign-in/retry, not at midnight.
+      Analysis compares the requested scenario with the active date; retain that consistency check.
+      A runtime backend clock plus frontend rollover refresh is the proposed implementation, pending date-policy choice.
 - [ ] Resolve the product date/timezone policy with the owner. Proposed default: calendar date in
       `Asia/Singapore`, with consistent frontend/backend behavior and a defined midnight refresh policy.
 - [ ] Keep the operational date distinct from market observation/forecast dates. Historical observations
