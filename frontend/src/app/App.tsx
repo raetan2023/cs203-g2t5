@@ -73,7 +73,7 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, da
   }, [path, session, user]);
 
   useEffect(() => {
-    document.title = `${({ '/login': 'Sign in', '/signup': 'Create account', '/home': 'Home', '/purchase-plans': 'Purchase plans', '/purchase-plans/recommendation': 'Purchase recommendation', '/market-dashboard': 'Market dashboard' } as Record<string, string>)[path] ?? 'Bunker Buddy'} · Bunker Buddy`;
+    document.title = `${({ '/login': 'Sign in', '/signup': 'Create account', '/home': 'Home', '/purchase-plans': 'Purchase plans', '/purchase-plans/recommendation': 'Purchase estimate', '/market-dashboard': 'Market dashboard' } as Record<string, string>)[path] ?? 'Bunker Buddy'} · Bunker Buddy`;
   }, [path]);
 
   if (session.state === 'loading') return <StatusPage message={privateRoutes.includes(path) ? 'Loading your home...' : 'Loading your session...'} />;
