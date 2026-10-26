@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,16 +39,19 @@ public class MarketDashboardService {
     private static final String API_BASE = "https://mgo-data-api.vercel.app";
 
     private final HttpClient httpClient;
+    private final String forecastBase;
     private final ObjectMapper objectMapper;
     private final MarketObservationRepository observationRepository;
     private final MarketIndicatorRepository indicatorRepository;
 
     public MarketDashboardService(
         ObjectMapper objectMapper,
+        @Value("${mgo.forecast.base-url}") String forecastBase,
         @Autowired(required = false) MarketObservationRepository observationRepository,
         @Autowired(required = false) MarketIndicatorRepository indicatorRepository
     ) {
         this.objectMapper = objectMapper;
+        this.forecastBase = forecastBase;
         this.observationRepository = observationRepository;
         this.indicatorRepository = indicatorRepository;
         this.httpClient = HttpClient.newBuilder()
@@ -78,6 +82,29 @@ public class MarketDashboardService {
             log.error("Failed to fetch live market data from {}. Using fallback mock fixtures. Error: {}", API_BASE, e.getMessage());
             return buildFallbackResponse(date);
         }
+    }
+
+    /** Proxies the ridge forecast service's POST /predict for the given horizon.
+    * Returns the raw JSON body so it passes through to the frontend unchanged. */
+    public String getForecast(int horizonDays) {
+        try {
+            String body = "{\"horizon_days\": " + horizonDays + "}";
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(forecastBase + "/predict"))
+                .timeout(Duration.ofSeconds(10))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                return response.body();
+            }
+            log.warn("Forecast service {} returned {}: {}", forecastBase, response.statusCode(), response.body());
+        } catch (Exception e) {
+            log.error("Could not reach forecast service {}: {}", forecastBase, e.getMessage());
+        }
+        return null;
     }
 
     private DashboardResponse fetchFromDatabase(LocalDate scenarioDate) {

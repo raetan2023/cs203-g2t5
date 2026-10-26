@@ -9,6 +9,20 @@ export default function DriversPanel({ drivers }) {
   const list = Array.isArray(drivers) ? drivers : [];
   if (list.length === 0) return null;
 
+  // When the model has no edge, every contribution is ~0. Show an honest note
+  // instead of a row of empty bars.
+  const totalWeight = list.reduce((s, d) => s + Math.abs(d.contribution || 0), 0);
+  if (totalWeight < 1e-9) {
+    return (
+      <div className="forecast-drivers">
+        <div className="forecast-drivers-title">What is moving the forecast</div>
+        <p className="forecast-drivers-note">
+          No single market signal is moving the forecast right now (the model shows no edge at this horizon).
+        </p>
+      </div>
+    );
+  }
+
   const sorted = [...list].sort((a, b) => Math.abs(b.contribution || 0) - Math.abs(a.contribution || 0));
   const maxC = Math.abs(sorted[0] && sorted[0].contribution ? sorted[0].contribution : 1) || 1;
 
