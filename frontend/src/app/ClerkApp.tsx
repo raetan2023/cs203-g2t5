@@ -86,6 +86,10 @@ export function ClerkApp() {
     () => createApiForecastService({ getToken: () => authState.getToken() }),
     [authState.getToken],
   );
+  const createPurchaseForecastService = useCallback(
+    () => createApiForecastService({ getToken: () => authState.getToken(), path: '/api/v1/purchase-plans/forecast' }),
+    [authState.getToken],
+  );
   const createRecommendationService = useCallback(
     () => createApiRecommendationService({ getToken: () => authState.getToken() }),
     [authState.getToken],
@@ -103,6 +107,7 @@ export function ClerkApp() {
     createPlanService={createPlanService}
     createRecommendationService={createRecommendationService}
     createForecastService={createForecastService}
+    createPurchaseForecastService={createPurchaseForecastService}
     dataRevision={scenarioAttempt}
     refreshScenario={() => setScenarioAttempt(value => value + 1)}
     scenarioDate={scenario.state === 'ready' ? scenario.date : ''}

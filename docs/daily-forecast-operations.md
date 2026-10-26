@@ -1,5 +1,7 @@
 # Daily GDELT-informed ranges: operations and verification
 
+For the current **purchase-plan-only experimental range**, see [purchase-plan experimental ranges](purchase-plan-experimental-ranges.md). It reads stored GDELT/MGO directly through Spring and does not depend on this legacy calibrated batch pipeline.
+
 ## What runs where
 
 GitHub Actions executes `ridge-regression-model/src/daily_pipeline.py` at 00:17 UTC (08:17 Singapore), with best-effort timing. Ridge supplies the central forecast. Independent quantile models learn chronological out-of-sample log-price errors from market and historical GDELT classification features. Inference collects the latest rolling 24-hour window (through the last 15-minute indexing boundary) and falls back to the newest complete verified archive within 7 days. Actual UTC window dates are shown; yesterday's exact date is not required. Inference runs daily; model retraining runs Mondays or explicit `--retrain`.

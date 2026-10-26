@@ -145,6 +145,38 @@ class ForecastServiceTests {
         assertEquals(last, unavailable.last_successful_run());
         assertFalse(mapper.readTree(mapper.writeValueAsString(unavailable)).has("forecast"));
     }
+    @Test void purchaseGuidanceAndCostsPinTheSameRunAndRespectDeadline() {
+        var provider = new PublishedForecastAnalysisProvider(service);
+        var analysis = new PlanAnalysisService(provider);
+        var context = new PlanAnalysisService.Context(UUID.randomUUID(), new BigDecimal("100"),
+                LocalDate.parse("2026-10-30"), service.today());
+        var response = analysis.read(context, false, 7, run);
+        @SuppressWarnings("unchecked") var guidance = (Result<Guidance>) response.get("recommendation");
+        assertTrue(guidance.value().action().contains("deadline"));
+        assertTrue(guidance.value().explanation().contains("70000.00 to 82000.00"));
+        assertEquals(HttpStatus.CONFLICT, assertThrows(ApiException.class,
+                () -> analysis.read(context, false, 7, UUID.randomUUID())).status());
+        value.put("news_window_start", "2026-10-24T00:00:00Z");
+        value.put("news_window_end", "2026-10-25T00:00:00Z");
+        publish(value, service.today());
+        assertEquals("unavailable", provider.prices(service.today(), 7).forecast().status());
+        assertEquals("unavailable", provider.recommendation(context).recommendation().status());
+    }
+    @Test void purchaseGuidanceExplainsIntervalDirectionWithoutInventingCertainty() {
+        var provider = new PublishedForecastAnalysisProvider(service);
+        var context = new PlanAnalysisService.Context(UUID.randomUUID(), new BigDecimal("100"),
+                LocalDate.parse("2026-11-03"), service.today());
+        assertEquals("No clear price advantage from waiting", provider.recommendation(context).recommendation().value().action());
+        value.put("high", 790); value.put("raw_q90_price", 780);
+        publish(value, service.today());
+        assertTrue(provider.recommendation(context).recommendation().value().action().contains("lower prices"));
+        value.put("low", 810).put("high", 900).put("raw_q10_price", 820).put("raw_q90_price", 880);
+        publish(value, service.today());
+        assertTrue(provider.recommendation(context).recommendation().value().action().contains("earlier"));
+        var overdue = new PlanAnalysisService.Context(context.plan_id(), context.quantity_mt(), service.today().minusDays(1), service.today());
+        assertTrue(provider.recommendation(overdue).recommendation().value().action().contains("overdue"));
+    }
+
     @Test void storageFailureIs503AndUnsupportedHorizonIs422() {
         when(repository.active(7)).thenThrow(new DataAccessResourceFailureException("missing table"));
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, assertThrows(ApiException.class, () -> service.read(7)).status());
@@ -162,6 +194,6 @@ class ForecastServiceTests {
         assertEquals(HttpStatus.CONFLICT, assertThrows(ApiException.class, () -> analysis.read(context, true, 7, UUID.randomUUID())).status());
         verify(repository, times(2)).active(7);
         var recommendation = analysis.read(context, false);
-        assertEquals("unavailable", ((Result<?>) recommendation.get("recommendation")).status());
+        assertEquals("ready", ((Result<?>) recommendation.get("recommendation")).status());
     }
 }

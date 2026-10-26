@@ -13,7 +13,7 @@ export function useAnalysis(service: RecommendationService | undefined, context:
   useEffect(() => {
     if (!operation) return;
     let current = true;
-    if (request.current?.scope !== scope) request.current = { scope, promise: kind === 'readImpact' && horizonDays != null ? operation.call(service, context, horizonDays, runId) : operation.call(service, context) };
+    if (request.current?.scope !== scope) request.current = { scope, promise: horizonDays != null ? operation.call(service, context, horizonDays, runId) : operation.call(service, context) };
     request.current.promise.then(analysis => {
       if (!current) return;
       if (!sameContext(analysis.context, context)) throw new Error('Stale result');

@@ -1,5 +1,8 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { ForecastProvider } from '../forecast/ForecastContext';
+import { buildMockForecast } from '../forecast/mockService';
+import type { ReadyForecast } from '../forecast/apiService';
 import { RecommendationsPage } from './RecommendationsPage';
 import { createMockRecommendationService, RECOMMENDATION_DEMO_PLAN as plan } from './mockService';
 import { createMockPlanService } from '../purchase-plan/mockService';
@@ -115,4 +118,42 @@ describe('recommendation page', () => {
     expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();
     expect(await screen.findByText('No saved purchase plan')).toBeVisible();
   });
+});
+
+it('pins guidance and impact to the selected publication and clears both when it fails', async () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+  let current = true;
+  const forecasts = { read: vi.fn(async (h: 7 | 14 | 30) => current
+    ? { ...buildMockForecast(h), run_id: 'published-run' } as ReadyForecast
+    : { status: 'unavailable' as const, reason: 'missing_news', message: 'Previous day news unavailable' }) };
+  const service = ready();
+  const guidance = vi.spyOn(service, 'read'), impact = vi.spyOn(service, 'readImpact');
+  render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
+    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />
+  </ForecastProvider>);
+  await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
+  expect(impact).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run');
+  fireEvent.click(screen.getByRole('button', { name: '14d' }));
+  await waitFor(() => expect(guidance).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 14, 'published-run'));
+  expect(impact).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 14, 'published-run');
+  current = false;
+  fireEvent.click(screen.getByRole('button', { name: '30d' }));
+  expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
+  expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();
+  expect(screen.queryByText('USD 67,000–70,000')).not.toBeInTheDocument();
+});
+
+it('labels experimental plan ranges without displaying confidence coverage claims', async () => {
+  const data = { ...buildMockForecast(7), run_id: 'experimental-run',
+    interval: { method: 'experimental_gdelt_scaled_quantiles', nominal_coverage: null,
+      empirical_coverage: null, evaluation_rows: 0, baseline_coverage: null, baseline_mean_width: null,
+      mean_width: null, evaluation_scope: '50 historical pairs; no measured coverage.',
+      limitations: 'Experimental news-adjusted range, not calibrated confidence. Price data is stale.' } } as ReadyForecast;
+  render(<ForecastProvider service={{ read: async () => data }} scenarioDate={plan.scenario_as_of_date}>
+    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
+  </ForecastProvider>);
+  expect(await screen.findByRole('heading', { name: 'Experimental news-adjusted price range' })).toBeVisible();
+  expect(screen.getByText('Experimental estimate, not calibrated confidence. Coverage has not been measured.')).toBeVisible();
+  expect(screen.queryByText(/Target coverage:/)).not.toBeInTheDocument();
+  expect(screen.getByText(/Central estimate:.*last observed quote/)).toBeVisible();
 });

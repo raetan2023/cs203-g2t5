@@ -66,6 +66,9 @@ class MgoDataApiApplicationTests {
     @MockitoBean
     private ForecastRepository forecasts;
 
+    @MockitoBean
+    private PurchaseForecastRepository purchaseForecasts;
+
 
     @Test void publishedForecastRequiresClerkAndFailsClosedWithoutPublication() throws Exception {
         mvc.perform(get("/api/v1/forecast")).andExpect(status().isUnauthorized());
@@ -76,6 +79,18 @@ class MgoDataApiApplicationTests {
                 .andExpect(jsonPath("$.reason").value("missing_run"))
                 .andExpect(jsonPath("$.forecast").doesNotExist());
         mvc.perform(get("/api/v1/forecast?horizon_days=5").with(jwt()))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test void experimentalPurchaseForecastUsesAnAuthenticatedSeparateRoute() throws Exception {
+        mvc.perform(get("/api/v1/purchase-plans/forecast")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/purchase-plans/forecast").header("X-API-Key", KEY)).andExpect(status().isUnauthorized());
+        // No stored news is supplied by this test repository; do not fabricate a range.
+        mvc.perform(get("/api/v1/purchase-plans/forecast").with(jwt()))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.status").value("unavailable"))
+                .andExpect(jsonPath("$.reason").value("missing_previous_day_news"));
+        mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=5").with(jwt()))
                 .andExpect(status().isUnprocessableEntity());
     }
 
