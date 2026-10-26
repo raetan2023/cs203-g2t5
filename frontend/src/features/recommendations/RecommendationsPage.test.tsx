@@ -45,14 +45,14 @@ describe('recommendation page', () => {
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />);
     expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
     expect(screen.getAllByText(/Synthetic demo data/).length).toBeGreaterThan(0);
-    const disclosure = await screen.findByText('Price basis and uncertainty');
+    const disclosure = await screen.findByText('Data sources and calculation');
     expect(disclosure.closest('details')).not.toHaveAttribute('open');
     fireEvent.click(disclosure);
     expect(disclosure.closest('details')).toHaveAttribute('open');
-    expect(await screen.findByText(/Forecast bounds: MGO · USD 670–700\/MT/)).toBeVisible();
+    expect(await screen.findByText(/Price range: USD 670–700\/MT/)).toBeVisible();
     expect(screen.getByRole('link', { name: 'Back to purchase plans' })).toHaveAttribute('href', '/purchase-plans');
     expect(screen.getByText('USD 67,000–70,000')).toBeVisible();
-    expect(screen.getByText('USD 0 to 3,000')).toBeVisible();
+    expect(screen.getByText('USD 3,000 less to no change')).toBeVisible();
     fireEvent.click(disclosure);
     expect(disclosure.closest('details')).not.toHaveAttribute('open');
   });
@@ -67,8 +67,8 @@ describe('recommendation page', () => {
   it('retains forecasts when recommendations are unavailable', async () => {
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={createMockRecommendationService({ delayMs: 0, example: 'unavailable' })} scenarioDate={plan.scenario_as_of_date} />);
     expect(await screen.findByText('No recommendation available')).toBeVisible();
-    fireEvent.click(await screen.findByText('Price basis and uncertainty'));
-    expect(await screen.findByText(/Forecast bounds: MGO · USD 670–700\/MT/)).toBeVisible();
+    fireEvent.click(await screen.findByText('Data sources and calculation'));
+    expect(await screen.findByText(/Price range: USD 670–700\/MT/)).toBeVisible();
   });
 
   it('retries failed reads without replacing them with mock success', async () => {
@@ -133,11 +133,11 @@ it('pins guidance and impact to the selected publication and clears both when it
   </ForecastProvider>);
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
   expect(impact).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run');
-  fireEvent.click(screen.getByRole('button', { name: '14d' }));
+  fireEvent.click(screen.getByRole('button', { name: '14 days' }));
   await waitFor(() => expect(guidance).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 14, 'published-run'));
   expect(impact).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 14, 'published-run');
   current = false;
-  fireEvent.click(screen.getByRole('button', { name: '30d' }));
+  fireEvent.click(screen.getByRole('button', { name: '30 days' }));
   expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
   expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();
   expect(screen.queryByText('USD 67,000–70,000')).not.toBeInTheDocument();
@@ -152,8 +152,43 @@ it('labels experimental plan ranges without displaying confidence coverage claim
   render(<ForecastProvider service={{ read: async () => data }} scenarioDate={plan.scenario_as_of_date}>
     <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
-  expect(await screen.findByRole('heading', { name: 'Experimental news-adjusted price range' })).toBeVisible();
-  expect(screen.getByText('Experimental estimate, not calibrated confidence. Coverage has not been measured.')).toBeVisible();
+  expect(await screen.findByRole('complementary', { name: 'Estimate limitations' })).toBeVisible();
+  expect(screen.getByText('Last-quote fallback · Ridge unavailable')).toBeVisible();
+  expect(await screen.findByText(/Coverage has not been measured/)).toBeVisible();
   expect(screen.queryByText(/Target coverage:/)).not.toBeInTheDocument();
-  expect(screen.getByText(/Central estimate:.*last observed quote/)).toBeVisible();
+  fireEvent.click(screen.getByText('Data sources and calculation'));
+  expect(screen.getByText('Last observed quote (persistence)')).toBeVisible();
+});
+
+it('makes large experimental totals readable and describes both cost directions neutrally', async () => {
+  const largePlan = { ...plan, quantity_mt: 2000 };
+  const data = { ...buildMockForecast(7), run_id: 'large-range',
+    interval: { ...buildMockForecast(7).interval, method: 'experimental_gdelt_scaled_quantiles',
+      nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0 } } as ReadyForecast;
+  const body = await ready().read(plan);
+  body.context = largePlan;
+  body.cost_impact = { status: 'ready', value: { currency: 'USD', target_date: '2025-10-29',
+    reference_total: 2508000, forecast_total: { lower: 2225018.24, upper: 3233053.47 },
+    difference_total: { lower: -282981.76, upper: 725053.47 }, central_total: 2508000 } };
+  render(<ForecastProvider service={{ read: async () => data }} scenarioDate={plan.scenario_as_of_date}>
+    <RecommendationsPage planId={largePlan.plan_id} scenarioDate={largePlan.scenario_as_of_date}
+      planService={createMockPlanService({ initialPlan: largePlan, delayMs: 0 })}
+      service={{ read: async () => body, readImpact: async () => body }} />
+  </ForecastProvider>);
+  expect(await screen.findByText('USD 2.23m–3.23m')).toBeVisible();
+  expect(screen.getByText('USD 283k less to USD 725k more')).toBeVisible();
+  expect(screen.queryByText(/Central estimated cost:/)).not.toBeInTheDocument();
+  expect(screen.queryByText('Potential savings')).not.toBeInTheDocument();
+});
+
+it('identifies a published Ridge result separately from the last-quote fallback', async () => {
+  const data = { ...buildMockForecast(7), interval: { ...buildMockForecast(7).interval,
+    method: 'gdelt_error_quantiles' } } as ReadyForecast;
+  render(<ForecastProvider service={{ read: async () => data }} scenarioDate={plan.scenario_as_of_date}>
+    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
+  </ForecastProvider>);
+  expect(await screen.findByText('Ridge regression')).toBeVisible();
+  expect(screen.queryByText('Last-quote fallback · Ridge unavailable')).not.toBeInTheDocument();
+  fireEvent.click(await screen.findByText('Data sources and calculation'));
+  expect(screen.getByText('Ridge regression (published)')).toBeVisible();
 });
