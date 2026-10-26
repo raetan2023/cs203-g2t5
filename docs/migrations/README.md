@@ -97,3 +97,12 @@ PostgreSQL/PGlite checks for atomicity, rollback, source/news validation, run
 ordering and role privileges, including a Python-generated test-only contract.
 Never run fixture scripts on the shared database. See
 [the operations guide](../daily-forecast-operations.md) for activation and backfill.
+
+### Latest available news windows — 26 October 2026
+
+`20261026_latest_news_windows.sql` is a follow-on CREATE OR REPLACE migration,
+applied after the initial forecast schema. It accepts complete 24-hour windows
+ending within the last seven days, including rolling/latest archives, without
+requiring the previous UTC date. Stored evidence must match the exact bounds
+and feature version. Browser permissions and atomic publication are preserved.
+`20261026_latest_news_windows_test.sql` validates this on disposable databases.

@@ -92,6 +92,21 @@ class ForecastServiceTests {
         publish(missing, LocalDate.parse("2026-10-26"));
         assertEquals("missing_sources", assertInstanceOf(ForecastService.Unavailable.class, service.read(7)).reason());
     }
+    @Test void latestRollingAndOlderAvailableWindowsAreAccepted() {
+        value.put("news_window_start", "2026-10-25T00:45:00Z");
+        value.put("news_window_end", "2026-10-26T00:45:00Z");
+        value.put("evidence", "unevaluated");
+        publish(value, LocalDate.parse("2026-10-26"));
+        assertInstanceOf(ForecastService.Ready.class, service.read(7));
+        value.put("news_window_start", "2026-10-22T12:00:00Z");
+        value.put("news_window_end", "2026-10-23T12:00:00Z");
+        publish(value, LocalDate.parse("2026-10-26"));
+        assertInstanceOf(ForecastService.Ready.class, service.read(7));
+        value.put("news_window_start", "2026-10-18T00:00:00Z");
+        value.put("news_window_end", "2026-10-19T00:00:00Z");
+        publish(value, LocalDate.parse("2026-10-26"));
+        assertInstanceOf(ForecastService.Unavailable.class, service.read(7));
+    }
     @Test void staleRunNewsAndUnorderedBoundsAreUnavailable() {
         publish(value, LocalDate.parse("2026-10-25"));
         assertEquals("stale_run", assertInstanceOf(ForecastService.Unavailable.class, service.read(7)).reason());

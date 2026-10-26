@@ -2,7 +2,7 @@
 
 The normal app uses the **batch pipeline**, not an always-on Python API. Run `python -m src.daily_pipeline --work-dir work` for daily inference and add `--retrain` for explicit weekly training; `--apply` atomically publishes to Supabase. GitHub Actions orchestrates this at 08:17 Singapore, with schedules disabled until setup/manual verification. See [operations and historical backfill](../docs/daily-forecast-operations.md) and the approved [root plan](../plan.md).
 
-`src/daily_model.py` trains chronological out-of-sample Ridge centres at actual decision dates and q10/q90 models on log-price errors conditioned on market features and previous-day GDELT features. Genuine complete older news archives are required; recent DOC retention alone cannot satisfy the evaluation gates. Insufficient/stale inputs yield explicit unavailable results, never example or market-only substitutes. Dashboard and recommendation screens read the same published run through Java; buy/wait advice remains a separate unavailable policy.
+`src/daily_model.py` trains chronological out-of-sample Ridge centres at actual decision dates and q10/q90 models on log-price errors conditioned on market features and historical GDELT features, with the latest complete 24-hour window used for live inference. Genuine complete older news archives are required; recent DOC retention alone cannot satisfy the evaluation gates. Insufficient/stale inputs yield explicit unavailable results, never example or market-only substitutes. Dashboard and recommendation screens read the same published run through Java; buy/wait advice remains a separate unavailable policy.
 
 ## Legacy quote-origin experiments
 

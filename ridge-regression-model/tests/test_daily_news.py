@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta, timezone
 import json
 import pytest
 from news.daily_features import (FEATURE_NAMES, build_daily_payload, collect_day,
-    load_archive, save_archive, previous_completed_utc_day)
+    load_archive, save_archive, previous_completed_utc_day, collect_latest, latest_available)
 
 UTC = timezone.utc
 DAY = date(2026, 10, 24)
@@ -32,6 +32,33 @@ class Response:
 
 def classifier(texts):
     return [label() for _ in texts]
+
+
+def test_latest_rolling_window_rounds_to_last_index_boundary_and_keeps_daily_history(tmp_path):
+    now = datetime(2026, 10, 25, 12, 43, tzinfo=UTC)
+    daily = collect_day(DAY, get=lambda *a, **k: Response([]), now=now, archive_dir=tmp_path)
+    calls = []
+    def get(url, **kwargs):
+        calls.append(kwargs["params"])
+        return Response([article(0, "20261025T100000Z")])
+    out = collect_latest(now=now, get=get, classify_fn=classifier, archive_dir=tmp_path)
+    assert out["status"] == "complete" and out["window_type"] == "rolling_24h"
+    assert out["start"] == "2026-10-24T12:30:00Z" and out["end"] == "2026-10-25T12:30:00Z"
+    assert calls[0]["enddatetime"] == "20261025123000"
+    assert load_archive(tmp_path, DAY) == daily
+    rolling = next(tmp_path.glob("latest-*.json"))
+    assert load_archive(rolling) == out
+    assert latest_available([daily, out], now=now) == out
+
+
+def test_latest_fallback_ignores_incomplete_future_and_old_windows():
+    now = datetime(2026, 10, 25, 12, tzinfo=UTC)
+    older = build_daily_payload(date(2026,10,22), [], complete=True, retrieved_at=now)
+    incomplete = build_daily_payload(date(2026,10,24), [], complete=False, retrieved_at=now)
+    assert latest_available([incomplete, older], now=now) == older
+    assert latest_available([older], now=now + timedelta(days=8)) is None
+    future = build_daily_payload(date(2026,10,25), [], complete=True, retrieved_at=now+timedelta(days=1))
+    assert latest_available([future, older], now=now) == older
 
 
 def test_previous_day_is_utc_even_when_local_day_is_different():

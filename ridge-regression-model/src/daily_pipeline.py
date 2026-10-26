@@ -17,8 +17,8 @@ from zoneinfo import ZoneInfo
 import joblib
 import pandas as pd
 import requests
-from news.daily_features import (FEATURE_NAMES, collect_day, load_archive,
-                                 previous_completed_utc_day, save_archive)
+from news.daily_features import (FEATURE_NAMES, collect_latest, load_archive,
+                                 archive_name, latest_available, save_archive)
 from .daily_model import source_dates, train_horizon, predict_day
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -45,7 +45,10 @@ def digest(value):
 
 
 def feature_version(news):
-    return f"{news['version']}:{news['classification_version']}:{news['classifier_id']}"
+    version = f"{news['version']}:{news['classification_version']}:{news['classifier_id']}"
+    if news.get("window_type") == "rolling_24h":
+        version += ":rolling24h:" + news["end"]
+    return version
 
 
 class Supabase:
@@ -78,10 +81,8 @@ class Supabase:
             for row in rows:
                 payload = row["payload"]
                 if payload.get("status") == "complete":
-                    old = result.get(payload["news_date"])
-                    if old and feature_version(old) != feature_version(payload):
-                        raise ValueError("Multiple historical classifier versions; explicitly curate/reclassify archives")
-                    result[payload["news_date"]] = payload
+                    identity = archive_name(payload)
+                    result[identity] = payload
             if len(rows) < 500:
                 return result
             offset += len(rows)
@@ -185,7 +186,7 @@ def read_archives(directory):
     archives = {}
     for path in sorted(Path(directory).glob("*.json")):
         payload = load_archive(path)
-        if payload["status"] == "complete":
+        if payload["status"] == "complete" and payload.get("window_type") != "rolling_24h":
             archives[payload["news_date"]] = payload
     return archives
 
@@ -215,7 +216,6 @@ def run(work_dir, *, apply=False, retrain=False, fetch=True, now=None, client=No
         raise ValueError("Run timestamp must be timezone-aware")
     now = now.astimezone(timezone.utc)
     origin = now.astimezone(ZoneInfo("Asia/Singapore")).date()
-    day = previous_completed_utc_day(now)
     work = Path(work_dir); work.mkdir(parents=True, exist_ok=True)
     news_dir = work / "news"; news_dir.mkdir(exist_ok=True)
     store = client or (Supabase() if apply else None)
@@ -227,29 +227,33 @@ def run(work_dir, *, apply=False, retrain=False, fetch=True, now=None, client=No
     forecasts = [unavailable(h, "pipeline_incomplete", "The daily forecast run did not complete.") for h in (7, 14, 30)]
     failure = None
     try:
-        if now.date() != origin:
-            raise ValueError("Run after 08:00 Singapore so yesterday's full UTC news window is available")
         remote_archives = reader.archives() if reader else {}
         if reader:
             for payload in remote_archives.values():
-                path = news_dir / f"{payload['news_date']}.json"
+                path = news_dir / f"{archive_name(payload)}.json"
                 if not path.exists() or load_archive(path)["status"] != "complete":
                     save_archive(payload, news_dir)
-        try:
-            news = load_archive(news_dir, day)
-        except FileNotFoundError:
-            news = None
-        if not news or news["status"] != "complete":
-            if not fetch:
-                raise ValueError("Exact previous-day news archive is missing/incomplete")
-            news = collect_day(day, now=now, archive_dir=news_dir)
+        if fetch:
+            attempted = collect_latest(now=now, archive_dir=news_dir)
+            if store:
+                store.archive(attempted)
+        candidates = [load_archive(path) for path in news_dir.glob("*.json")]
+        news = latest_available(candidates, now=now)
+        if not news:
+            failed = attempted if fetch else max(candidates, key=lambda p: p["retrieved_at"], default={})
+            detail = f" Latest collection: {failed['error'].split(': ', 1)[-1]}" if failed.get("error") else ""
+            raise ValueError("No complete latest GDELT window is available within the last 7 days." + detail)
         if store:
             store.archive(news)
         metadata.update(news_window_start=news["start"], news_window_end=news["end"],
-                        news_feature_version=feature_version(news))
-        if news["status"] != "complete":
-            raise ValueError("Previous-day GDELT collection/classification is incomplete")
+                        news_feature_version=feature_version(news),
+                        news_age_hours=(now-datetime.fromisoformat(news["end"].replace("Z", "+00:00"))).total_seconds()/3600)
         archives = read_archives(news_dir)
+        # Daily historical windows remain point-in-time; rolling live windows must
+        # never overwrite them or become future-informed historical training rows.
+        archives = {d: a for d, a in archives.items() if
+                    (a["classification_version"], a["classifier_id"]) ==
+                    (news["classification_version"], news["classifier_id"])}
         if store:
             for archived in archives.values():
                 remote = remote_archives.get(archived["news_date"])
@@ -263,7 +267,7 @@ def run(work_dir, *, apply=False, retrain=False, fetch=True, now=None, client=No
             ingestion_module().run(list(SOURCES), input_dir=work / "market", apply=True)
         local_model = work / "daily_bundle.joblib"
         # Weekly retraining is explicit; inference never silently retrains.
-        if retrain or now.weekday() == 0:
+        if retrain or origin.weekday() == 0:
             candidate = training_bundle(wide, archives, origin, metadata["code_revision"], now)
             (work / "evaluation.json").write_bytes(encode(candidate["reports"]))
             if store:
@@ -296,7 +300,7 @@ def run(work_dir, *, apply=False, retrain=False, fetch=True, now=None, client=No
             try:
                 if h not in model["horizons"]:
                     raise ValueError(model["reports"].get(str(h), {}).get("reason", "Insufficient validated historical news evidence"))
-                forecast = predict_day(model["horizons"][h], wide, news, origin)
+                forecast = predict_day(model["horizons"][h], wide, news, origin, now=now)
                 forecast.update(metadata)
                 forecast.update(model_version=model["id"], run_id=run_id,
                     history=[{"date": str(d.date()), "price": float(p)} for d, p in wide.mgo.dropna().items() if d.date() < origin][-20:])

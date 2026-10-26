@@ -36,9 +36,9 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-      NEWS_LLM_PROVIDER: anthropic
-      NEWS_LLM_MODEL: ${{ vars.NEWS_LLM_MODEL }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      NEWS_LLM_PROVIDER: openai
+      NEWS_LLM_MODEL: ${{ vars.NEWS_LLM_MODEL || 'gpt-4.1-mini' }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       PUBLISH: ${{ github.event_name == 'schedule' || inputs.publish }}
       RETRAIN: ${{ inputs.retrain }}
       BACKFILL_START: ${{ inputs.backfill_start }}
@@ -58,7 +58,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for name in NEWS_LLM_MODEL ANTHROPIC_API_KEY; do
+          for name in NEWS_LLM_MODEL OPENAI_API_KEY; do
             if [[ -z "${!name}" ]]; then echo "Missing required setting: $name"; exit 1; fi
           done
           if [[ "$PUBLISH" == "true" ]]; then

@@ -8,6 +8,7 @@ import hashlib
 import json
 import numpy as np
 import pandas as pd
+from news.daily_features import latest_available
 from . import config
 from .feature_engineering import FEATURES, Prepared, prepare, market_features
 from .model import make_model
@@ -220,15 +221,15 @@ def train_horizon(wide, archives, news_features, horizon, cutoff, min_evaluation
             "classifier_id": used[0]["classifier_id"]}, evaluated
 
 
-def predict_day(bundle, wide, news, origin):
+def predict_day(bundle, wide, news, origin, now=None):
     origin = pd.Timestamp(origin)
     if bundle.get("version") != VERSION:
         raise ValueError("Unsupported daily model bundle")
     if origin <= pd.Timestamp(bundle["trained_through_target_date"]):
         raise ValueError("Training labels are not strictly earlier than forecast origin")
-    expected_day = (origin - pd.Timedelta(days=1)).date().isoformat()
-    if news.get("status") != "complete" or news["news_date"] != expected_day:
-        raise ValueError("Exact previous-day complete news is required")
+    decision_time = now or origin.tz_localize("UTC").to_pydatetime()
+    if latest_available([news], now=decision_time) is None:
+        raise ValueError("A complete, nonfuture GDELT window within 7 days is required")
     if (news["classification_version"], news["classifier_id"]) != (bundle["classification_version"], bundle["classifier_id"]):
         raise ValueError("News classification version differs from training")
     x = decision_features(wide, [origin])
@@ -262,4 +263,4 @@ def predict_day(bundle, wide, news, origin):
                 "baseline_coverage": report["baseline"]["coverage"],
                 "baseline_mean_width": report["baseline"]["mean_width"],
                 "evaluation_scope": "Chronological retrospective, paired news-eligible origins; exact observed targets.",
-                "limitations": "Experimental news-conditioned range. Dependent outcomes; nominal coverage is not guaranteed. Central estimate may lie outside bounds."}}
+                "limitations": "Experimental news-conditioned range. Dependent outcomes; nominal coverage is not guaranteed. Central estimate may lie outside bounds. Coverage was evaluated on daily historical windows; an older available news window may be used."}}

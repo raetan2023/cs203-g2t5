@@ -131,3 +131,26 @@ def test_classifier_identity_checks_only_joined_complete_archives(monkeypatch):
     with pytest.raises(ValueError, match="classifier versions differ"):
         daily.train_horizon(make_wide(), archives, ["news_constant"],
                             7, "2026-01-01", min_evaluation=0)
+
+
+def test_predict_accepts_latest_older_news_and_rejects_future_or_stale_windows():
+    from news.daily_features import build_daily_payload
+    wide = make_wide()
+    origin = wide.index[-1] + pd.Timedelta(days=1)
+    table = daily.daily_table(wide, 7, origin)
+    model = daily.make_model().fit(table[FEATURES], table.y)
+    bundle = {"version": 1, "horizon_days": 7, "central_model": model, "gamma": 0.,
+              "models": daily.fit_error_models(make_oos(), ["news_constant"]),
+              "news_features": ["news_constant"], "trained_through_target_date": str(table.target_date.max().date()),
+              "classification_version": "v2", "classifier_id": "test-model",
+              "evaluation": {"all": {"n": 40, "calibrated": {"coverage": .8, "mean_width": 100},
+                                      "baseline": {"coverage": .8, "mean_width": 120}}}}
+    now = origin.tz_localize("UTC").to_pydatetime()
+    news = build_daily_payload((origin-pd.Timedelta(days=3)).date(), [], complete=True,
+        retrieved_at=now, classifier_id="test-model")
+    news["features"]["news_constant"] = 0.
+    result = daily.predict_day(bundle, wide, news, origin, now=now)
+    assert result["status"] == "ready" and result["low"] <= result["high"]
+    news["end"] = (origin+pd.Timedelta(days=1)).isoformat() + 'Z'
+    with pytest.raises(ValueError, match="nonfuture"):
+        daily.predict_day(bundle, wide, news, origin, now=now)
