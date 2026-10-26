@@ -17,20 +17,21 @@ import { formatShortDate, formatDate, addDays } from './utils';
 // anchor (zero width) to the horizon (low..high).
 export function buildSeries(data) {
   const { history = [], as_of_date, anchor_price, forecast, low, high, horizon_days = 7 } = data;
+  const anchorDate = data.anchor_quote_date || as_of_date;
 
-  const pts = history.map((h) => ({
-    date: h.date,
-    observed: h.price,
-    forecast: null,
-    band: null,
-  }));
+  // History is optional. Keep only observations before the actual quote anchor.
+  const hist = Array.isArray(history) ? history : [];
+  const pts = hist
+    .filter((h) => h && h.date && h.date < anchorDate)
+    .map((h) => ({ date: h.date, observed: h.price, forecast: null, band: null }));
 
-  // The last observed point is the anchor: start the forecast line + cone here.
-  if (pts.length > 0) {
-    const last = pts[pts.length - 1];
-    last.forecast = anchor_price;
-    last.band = [anchor_price, anchor_price];
-  }
+  // Start the forecast at the observed quote date, even when the quote is old.
+  pts.push({
+    date: anchorDate,
+    observed: anchor_price,
+    forecast: anchor_price,
+    band: [anchor_price, anchor_price],
+  });
 
   // Forecast endpoint at the horizon.
   pts.push({
