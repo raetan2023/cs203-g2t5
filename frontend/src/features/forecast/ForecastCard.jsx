@@ -44,7 +44,7 @@ export default function ForecastCard({ data }) {
         <div className="forecast-summary-arrow">{'→'}</div>
 
         <div className="forecast-summary-col">
-          <div className="forecast-summary-label">Target {formatDate(target)} ({horizon_days} days from quote)</div>
+          <div className="forecast-summary-label">Target {formatDate(target)} · {horizon_days}-day horizon</div>
           <div className={`forecast-summary-price forecast-fc is-${dir}`}>
             ${forecast != null ? Math.round(forecast).toLocaleString() : '--'}
             {delta != null && (

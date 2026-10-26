@@ -70,7 +70,7 @@ export function PurchasePlanForm({ plan, scenarioDate, onSave, onCancel, onBusyC
         {errors.purchase_deadline && <p className="pp-field-error" id={`${id}-deadline-error`}>{errors.purchase_deadline}</p>}
       </div>
       <div className="pp-field">
-        <span className="pp-label" id={`${id}-scenario-label`}>Historical scenario date</span>
+        <span className="pp-label" id={`${id}-scenario-label`}>Application date</span>
         <div className="pp-readonly" aria-labelledby={`${id}-scenario-label`}><time dateTime={scenarioDate}>{formatDate(scenarioDate)}</time></div>
       </div>
     </div>

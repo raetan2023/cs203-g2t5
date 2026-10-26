@@ -5,7 +5,6 @@ import java.util.Map;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,14 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "apiKey")
 public class ConfigController {
 
-    private final LocalDate scenarioDate;
+    private final java.time.Clock clock;
 
-    public ConfigController(@Value("${mgo.scenario-date}") LocalDate scenarioDate) {
-        this.scenarioDate = scenarioDate;
+    public ConfigController(java.time.Clock clock) {
+        this.clock = clock;
     }
 
     @GetMapping("/api/v1/config")
     public Map<String, Object> config() {
-        return Map.of("scenario_as_of_date", scenarioDate.toString());
+        return Map.of("scenario_as_of_date", LocalDate.now(clock).toString());
     }
 }

@@ -1,0 +1,104 @@
+name: Daily GDELT price ranges
+
+on:
+  schedule:
+    - cron: '17 0 * * *' # 08:17 Asia/Singapore; best-effort start time
+  workflow_dispatch:
+    inputs:
+      retrain:
+        description: Retrain with archived historical news (automatic on Mondays)
+        type: boolean
+        default: false
+      publish:
+        description: Synchronize market data and atomically publish to Supabase
+        type: boolean
+        default: false
+      backfill_start:
+        description: Optional inclusive UTC news backfill start (DOC recent retention only)
+        type: string
+      backfill_end:
+        description: Optional inclusive UTC news backfill end
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: brent-supabase-import # shared with the existing snapshot importers
+  cancel-in-progress: false
+
+jobs:
+  forecast:
+    # Manual verification first. Do not enable this variable before migration/setup.
+    if: github.event_name == 'workflow_dispatch' || vars.DAILY_FORECASTS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      NEWS_LLM_PROVIDER: anthropic
+      NEWS_LLM_MODEL: ${{ vars.NEWS_LLM_MODEL }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      PUBLISH: ${{ github.event_name == 'schedule' || inputs.publish }}
+      RETRAIN: ${{ inputs.retrain }}
+      BACKFILL_START: ${{ inputs.backfill_start }}
+      BACKFILL_END: ${{ inputs.backfill_end }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: ridge-regression-model/requirements-lock.txt
+      - name: Install validated batch environment
+        run: pip install -r ridge-regression-model/requirements-lock.txt
+      - name: Check configuration without printing credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in NEWS_LLM_MODEL ANTHROPIC_API_KEY; do
+            if [[ -z "${!name}" ]]; then echo "Missing required setting: $name"; exit 1; fi
+          done
+          if [[ "$PUBLISH" == "true" ]]; then
+            for name in SUPABASE_URL SUPABASE_SECRET_KEY; do
+              if [[ -z "${!name}" ]]; then echo "Missing required setting: $name"; exit 1; fi
+            done
+          fi
+      - name: Test data, chronology and publication adapters
+        working-directory: ridge-regression-model
+        run: python -m pytest -q tests/test_daily_news.py tests/test_daily_model.py tests/test_daily_pipeline.py
+      - name: Optional archived-news backfill
+        if: inputs.backfill_start != ''
+        working-directory: ridge-regression-model
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$BACKFILL_END" || { echo 'backfill_end is required'; exit 1; }
+          python -m news.daily_features --archive-dir work/news --start "$BACKFILL_START" --end "$BACKFILL_END"
+      - name: Refresh news, retrain weekly, forecast and publish
+        working-directory: ridge-regression-model
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--work-dir work)
+          [[ "$RETRAIN" != "true" ]] || args+=(--retrain)
+          [[ "$PUBLISH" != "true" ]] || args+=(--apply)
+          if [[ "$PUBLISH" != "true" && -n "$SUPABASE_URL" && -n "$SUPABASE_SECRET_KEY" ]]; then
+            args+=(--read-published)
+          fi
+          python -m src.daily_pipeline "${args[@]}"
+      - name: Retain run evidence (never environment files)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-forecast-evidence-${{ github.run_id }}
+          path: |
+            ridge-regression-model/work/run.json
+            ridge-regression-model/work/forecasts.json
+            ridge-regression-model/work/evaluation.json
+            ridge-regression-model/work/news/*.json
+            ridge-regression-model/work/market/*.json
+          if-no-files-found: ignore
+          retention-days: 30

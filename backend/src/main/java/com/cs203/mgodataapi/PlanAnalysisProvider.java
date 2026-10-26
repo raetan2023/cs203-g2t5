@@ -13,7 +13,13 @@ public interface PlanAnalysisProvider {
     record Range(BigDecimal lower, BigDecimal upper) {}
     record Reference(BigDecimal price, LocalDate observation_date, Basis basis) {}
     record Forecast(Range prices, LocalDate target_date, Basis basis,
-            String range_description, String horizon_description, BigDecimal central_estimate) {}
+            String range_description, String horizon_description, BigDecimal central_estimate,
+            java.util.UUID run_id, String model_version) {
+        public Forecast(Range prices, LocalDate target_date, Basis basis, String range_description,
+                String horizon_description, BigDecimal central_estimate) {
+            this(prices, target_date, basis, range_description, horizon_description, central_estimate, null, null);
+        }
+    }
     record Guidance(String recommendation_id, String action, String explanation) {}
     record Result<T>(String status, T value, String reason, String message) {
         public static <T> Result<T> ready(T value) { return new Result<>("ready", value, null, null); }
@@ -27,5 +33,6 @@ public interface PlanAnalysisProvider {
     /** 'unavailable', 'fixture', or 'model'. This is provenance, not a confidence claim. */
     String provenance();
     Prices prices(LocalDate scenarioDate);
+    default Prices prices(LocalDate scenarioDate, int horizonDays) { return prices(scenarioDate); }
     Recommendation recommendation(PlanAnalysisService.Context context);
 }
