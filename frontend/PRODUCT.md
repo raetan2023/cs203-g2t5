@@ -24,7 +24,7 @@ Singapore MGO data is expensive and often paywalled. The product's intended mech
 
 ## Operating Context
 
-- Time is anchored to a configured historical scenario date, not today's date. Days remaining and urgency derive from the gap between that date and the purchase deadline.
+- Operational plan dates use the current Asia/Singapore calendar date from the backend at runtime. Days remaining derive from today to the deadline; past plans stay visible as overdue. Market observation dates remain actual source dates, not today by relabelling.
 - Purchase plans hold quantity (metric tonnes) and deadline; urgency is derived, never user-selected.
 - Forecasting, cost-impact and recommendation interfaces call a backend analysis API. Its default provider currently reports forecasts and guidance as unavailable. Python models (linear regression, ridge, CatBoost, Random Forest) live separately and are not yet connected. Real forecasts and recommendations are coming soon.
 
@@ -50,7 +50,7 @@ Name "Bunker Buddy" is the current name. Nothing is confirmed as binding: the ap
 ## Product Principles
 
 1. **Label what is real.** Dated historical data, synthetic previews and unavailable forecasts are distinguished clearly; unavailable states are shown rather than invented numbers. Model outputs are coming, but must not be presented as validated MGO predictions until they are.
-2. **Anchored to the scenario date.** All time-remaining and urgency language reads from the historical scenario date.
+2. **Consistent current date.** Plan validation and remaining days use the backend Singapore date. The existing scenario_as_of_date API key is retained for compatibility. Fixed-date preview fixtures remain deterministic demonstrations.
 3. **Plan first.** The buyer's purchase plan (quantity, deadline) is the spine; analysis views serve that plan.
 4. **Advisory, not authoritative.** Recommendations inform a buyer's decision and can be accepted, rejected or ignored.
 5. **Demo-legible.** An assessor should grasp the buyer workflow and system states without explanation.

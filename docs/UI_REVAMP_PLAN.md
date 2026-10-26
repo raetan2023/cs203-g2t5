@@ -3,7 +3,55 @@
 Status: **active prototype plan; checkpoint commits stay on feature/ui-revamp-wireframe.** Owner: UI revamp lead (sole owner).
 
 
+
+### Phase 3A completion checkpoint — 2026-10-26
+
+- Implemented the approved Singapore-current-date behavior. `OperationalDate` reads a runtime clock;
+  config and purchase-plan endpoints use it per request. Historical `MGO_SCENARIO_DATE` no longer freezes
+  operational dates. The API key `scenario_as_of_date` remains for compatibility.
+- Past plans remain readable as overdue; create/edit require a deadline of today or later. Slow analysis
+  crossing midnight is rejected as stale. Market source dates and deterministic mock previews are intact.
+- Frontend refreshes the backend date at Singapore midnight and when returning to a tab after rollover;
+  failures show a notice and retry. Unsaved idle plan drafts survive list refresh and retry; saving is
+  blocked until fresh plan context is available. Existing in-flight-write reconciliation is retained.
+- Labels now say Current date / current planning date. PRODUCT, PRD override and backend README updated.
+- Verification: **121 frontend tests passed; 57 backend tests passed; TypeScript/Vite build passed**
+  (existing bundle-size warning). New tests cover Singapore midnight/year boundary, overdue reads,
+  deadline validation, stale analysis, tab resume/retry, and draft preservation. No database writes in tests.
+- Review: attempted independent reviewer was unavailable due to its usage limit. Author reviewed the diff,
+  found/fixed draft loss with a failing-then-passing regression test, and re-ran the full frontend suite.
+- Live Clerk/database end-to-end check remains unverified: port 8000 was unavailable when checked.
+  Phase 2 image baselines remain unchanged; Phase 3A text-label differences are expected.
+- **Home redesign is explicitly deferred for possible Impeccable + Claude work by the owner.** Do not
+  implement a guided-start/workspace/market-first design without a chosen direction. Auth styling is still
+  pending; Phase 4 card grid and Phase 6 trend colours are also not started.
+- Commit on this prototype branch only; do not push or merge into main. Unrelated changes in
+  historical-market-dashboard/backend/target and local graphify/Impeccable files are excluded.
 ### Prototype checkpoint update (2026-10-26; supersedes earlier integration notes)
+
+**Phase 3 decisions confirmed:** use today's Singapore calendar date for operational plan dates;
+retain overdue plans and require today-or-later deadlines when creating/editing. Keep real market
+observation dates. Home direction is deferred: owner may use Impeccable with Claude; do not build
+a Home redesign or choose a direction on their behalf. Auth styling remains a separate later task.
+
+**Phase 3A implementation plan (approved date behavior):**
+1. Add an injectable backend `OperationalDate` backed by a runtime `Clock` in Asia/Singapore.
+   Config and plan controllers use it per request (not a date captured at startup). Keep the existing
+   `scenario_as_of_date` wire key for compatibility. Validate/write against one captured request date;
+   re-check the current date after slow analysis to reject results that cross midnight.
+2. Test Singapore midnight, due-today and overdue reads, create/update validation, unchanged stored
+   observation dates, and analysis conflicts. Pin old fixture suites to an injected fixed date rather
+   than keeping production on historical configuration.
+3. Refresh frontend backend-config date at Singapore midnight and after tab focus/visibility resumes.
+   Keep the mounted app/drafts during a successful refresh; retry failures and show a useful notice.
+   Update visible operational labels to “Current date” (neutral enough for fixed preview fixtures).
+4. Keep deterministic historical preview fixtures and screenshots for regression tooling. They are
+   explicitly mock data, not production's clock. Update PRODUCT/PRD/backend documentation, run tests
+   and build, review the diff, and commit on the prototype branch without pushing/merging.
+
+Market-data finding: the active `/api/v1/market/stored` endpoint queries latest imported observations;
+`fetchedAt` is check time, not observation time. Monthly series are not daily. Local endpoint port 8000
+was unavailable during inspection, so actual database freshness is unverified; do not claim it is today.
 
 - Owner accepts the current beige colour scheme and authorizes continuation from Phase 2.
 - This branch is for prototyping: commit checkpoints here, **do not merge into main**. No PR or push requested.
@@ -16,8 +64,7 @@ Status: **active prototype plan; checkpoint commits stay on feature/ui-revamp-wi
 - Phase 3 discovery: `ConfigController` and `PurchasePlanController` capture a fixed date from
   `mgo.scenario-date`; changing the header alone cannot implement today. Existing plan summaries already
   support negative days as overdue. Market data retains its own observation dates.
-- Pending owner choices sent: Singapore date/overdue-plan policy and guided-start vs workspace-overview
-  vs market-first Home. Do not implement dependent behavior until those answers arrive.
+- Owner answered: Singapore date/overdue policy approved; Home design deferred for possible Impeccable/Claude work.
 ## Current continuation and scope update — 2026-10-26
 
 The owner did not hand off to another agent and is continuing this session. Read this section
@@ -375,7 +422,7 @@ Impeccable passes were not run; direct source review, browser screenshots and ax
 
 #### Phase 3A — Today's date (functional prerequisite)
 
-- [ ] **Owner request:** replace the historical scenario date with the actual current date.
+- [x] **Owner request:** replace the historical scenario date with the actual current date.
       Compute it at runtime; do not hard-code the date of this discussion (2026-10-26).
 - [x] Traced the authoritative scenario source through backend configuration, `ClerkApp`, hooks,
       plan validation, remaining-day calculations and recommendation requests before editing.
@@ -383,15 +430,15 @@ Impeccable passes were not run; direct source review, browser screenshots and ax
       Findings: ConfigController and PurchasePlanController use startup-injected LocalDate; plan reads
       recompute remaining days against that date. ClerkApp fetches config on sign-in/retry, not at midnight.
       Analysis compares the requested scenario with the active date; retain that consistency check.
-      A runtime backend clock plus frontend rollover refresh is the proposed implementation, pending date-policy choice.
-- [ ] Resolve the product date/timezone policy with the owner. Proposed default: calendar date in
+      A runtime backend clock plus frontend rollover refresh is the proposed implementation, implemented with approved date policy.
+- [x] Resolve the product date/timezone policy with the owner. Approved: calendar date in
       `Asia/Singapore`, with consistent frontend/backend behavior and a defined midnight refresh policy.
-- [ ] Keep the operational date distinct from market observation/forecast dates. Historical observations
+- [x] Keep the operational date distinct from market observation/forecast dates. Historical observations
       must retain their actual as-of dates; show stale/unavailable information when current data or
       forecasts are absent. This request does not imply live market ingestion or permission to redate data.
-- [ ] Decide how existing plans whose deadlines have passed behave (view/edit/overdue presentation),
+- [x] Decide how existing plans whose deadlines have passed behave (view/edit/overdue presentation),
       and how unsupported analysis dates are handled; preserve stored records and make limitations clear.
-- [ ] Update the affected contracts and tests together: timezone/date rollover, due today, past deadline,
+- [x] Update the affected contracts and tests together: timezone/date rollover, due today, past deadline,
       remaining days, existing plans and unavailable current analysis. Reconcile `frontend/PRODUCT.md`,
       the relevant PRD date statements and this plan with the implemented behavior, explicitly noting
       that the new owner request supersedes the previous historical-date requirement for operational dates.
@@ -400,6 +447,8 @@ Impeccable passes were not run; direct source review, browser screenshots and ax
 truthful. Functional tests cover the new behavior. Do not mark this complete after a header-only change.
 
 #### Phase 3B — Auth styling and post-signup Home
+
+**Home design deferred by owner (2026-10-26): may run Impeccable with Claude. No direction selected; no Home redesign implemented. Auth styling below remains pending separately.**
 
 - [ ] **Owner request — brainstorm before building:** the landing page after signup is too plain and
       uninviting. Scope this to authenticated `/home`, not a new public marketing page.

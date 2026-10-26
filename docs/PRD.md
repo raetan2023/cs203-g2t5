@@ -1,5 +1,14 @@
 # Product Requirements Document
 
+> **Prototype requirement update — 2026-10-26:** The owner now requires operational purchase-plan
+> dates to use today's Singapore calendar date. This supersedes the historical-scenario rules below
+> for deadline validation, remaining days and plan-analysis request context. Past-deadline plans remain
+> readable as overdue; new/edited deadlines must be today or later. The backend remains authoritative,
+> and frontend config refreshes across midnight/resume. Actual observation/forecast dates and historical
+> preview fixtures remain unchanged. This does not promise live ingestion or current market coverage.
+> See `docs/UI_REVAMP_PLAN.md` Phase 3A for implementation/verification. Other historical product notes
+> below remain a record of earlier scope, not permission to revert this date behavior.
+
 Status: Working draft - clarification in progress
 Last updated: 2026-09-23
 Source: CS203-G2-team5-project-vision.pdf (9 pages), supplemented by team clarification in this conversation.

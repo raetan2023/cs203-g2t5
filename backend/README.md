@@ -208,7 +208,7 @@ Supabase credentials or writes are needed.
 | `MGO_API_KEY` | `mgo_public_demo_2026` |
 | `FRONTEND_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173` — browser origins allowed to call the API |
 | `CLERK_ISSUER_URI` | the team's development tenant — the identity provider whose tokens are accepted |
-| `MGO_SCENARIO_DATE` | `2025-10-24` — the historical date every feature treats as "today" |
+| `MGO_SCENARIO_DATE` | Retired for operational plans/config. Runtime `OperationalDate` uses Asia/Singapore; setting this variable no longer freezes plan dates. |
 | `SUPABASE_DB_URL` | none — required |
 | `SUPABASE_DB_USER` | none — required |
 | `SUPABASE_DB_PASSWORD` | none — required |
@@ -222,3 +222,15 @@ Authenticated GET `/api/v1/purchase-plans/recommendation` and `/api/v1/purchase-
 `PlanAnalysisProvider` is Wunna's normalized ML boundary. Default output is explicitly unavailable; no policy or model adapter is implemented. Register a real provider bean when ready. To test synthetic cost calculations locally, both profile `analysis-fixture` and property `mgo.analysis.fixture-enabled=true` are required. All fixture responses are labelled and authentication remains enabled. Do not enable this profile for real-model output. Forecasts exist independently of plans; calculations are on demand, with no persisted totals or recommendation FK/table changes.
 
 Run `./mvnw clean test` (`.\mvnw.cmd clean test` on Windows). `PlanAnalysisHttpTests` starts a real local HTTP server on a random port, while stubbing identity decoding and database repositories. It verifies fixture costs, authentication requirements, two-owner isolation, conflicts and active-scenario reads. Unit tests cover signed/fractional calculations, missing inputs, incompatible basis, invalid ranges, provider failure/context checks and fixture opt-in isolation. No shared database credentials or writes are needed by these tests; real Clerk/DB/ML deployment checks remain pending.
+
+## Operational date update (prototype, 2026-10-26)
+
+`GET /api/v1/config` retains `scenario_as_of_date` for compatibility but returns the runtime
+Singapore calendar date. Purchase-plan reads, validation and analysis context use the same
+`OperationalDate` service, read per request. Old plans remain readable with negative days remaining;
+create/edit reject past deadlines. Analysis crossing midnight is rejected as a stale context.
+Tests inject a fixed date/clock; production no longer reads `MGO_SCENARIO_DATE`.
+
+The active `/api/v1/market/stored` endpoint still returns actual observation dates from the latest
+imported data. `fetchedAt` is retrieval time, not the observation date. Monthly data does not become
+current daily data when plans move to today. Legacy scenario dashboard endpoints remain historical.

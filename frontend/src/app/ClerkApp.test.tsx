@@ -11,10 +11,26 @@ const clerk = vi.hoisted(() => {
 });
 vi.mock('@clerk/react', () => ({ useAuth: () => clerk.auth, useUser: () => clerk.user }));
 vi.mock('../features/auth/ClerkAuthPage', () => ({ ClerkAuthPage: () => <p>Clerk sign-in</p> }));
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 
 describe('Clerk API wiring', () => {
+  it('refreshes the backend date on resume without remounting Home', async () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-26T15:59:00Z'));
+    window.history.replaceState(null, '', '/home');
+    let date = '2026-10-26';
+    const fetcher = vi.fn(async () => reply({ scenario_as_of_date: date }));
+    vi.stubGlobal('fetch', fetcher);
+    render(<ClerkApp />);
+    const heading = await screen.findByRole('heading', { name: /Welcome back/ });
+    expect(await screen.findByText('26 Oct 2026')).toBeInTheDocument();
+    date = '2026-10-27';
+    now.mockReturnValue(Date.parse('2026-10-26T16:01:00Z'));
+    window.dispatchEvent(new Event('focus'));
+    expect(await screen.findByText('27 Oct 2026')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Welcome back/ })).toBe(heading);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
   it('mounts both real adapters and refreshes backend configuration after a scenario conflict', async () => {
     window.history.replaceState(null, '', `/purchase-plans/recommendation?plan_id=${ANALYSIS_DEMO_PLAN.plan_id}`);
     let scenario = '2025-10-24';

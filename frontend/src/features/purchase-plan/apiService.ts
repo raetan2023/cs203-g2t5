@@ -107,7 +107,7 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
   };
 }
 
-/** The scenario date the backend treats as "today"; needed before any plan exists. */
+/** The authoritative Singapore calendar date; the historical wire key is retained for compatibility. */
 export async function fetchScenarioDate(options: ApiOptions = {}): Promise<string> {
   const baseUrl = (options.baseUrl ?? env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
   const apiKey = options.apiKey ?? env.VITE_API_KEY ?? '';
@@ -115,10 +115,10 @@ export async function fetchScenarioDate(options: ApiOptions = {}): Promise<strin
     cache: 'no-store',
     headers: { ...(apiKey && { 'X-API-Key': apiKey }) },
   });
-  if (!response.ok) throw new PlanError('Could not load the scenario date.', {}, response.status);
+  if (!response.ok) throw new PlanError('Could not load the current date.', {}, response.status);
   const payload = (await response.json()) as { scenario_as_of_date?: unknown } | null;
   if (typeof payload?.scenario_as_of_date !== 'string' || !isValidDate(payload.scenario_as_of_date)) {
-    throw new PlanError('The scenario date response was invalid. Please retry.', {}, 502);
+    throw new PlanError('The current date response was invalid. Please retry.', {}, 502);
   }
   return payload.scenario_as_of_date;
 }
