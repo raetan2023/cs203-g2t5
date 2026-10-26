@@ -1,5 +1,6 @@
 import { useAuth, useUser } from '@clerk/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useDateRollover } from './useDateRollover';
 import { StatusPage } from '../components/StatusPage';
 import { ClerkAuthPage } from '../features/auth/ClerkAuthPage';
 import type { AuthService, SessionUser } from '../features/auth/types';
@@ -19,10 +20,14 @@ export function ClerkApp() {
   const userState = useUser();
   const [scenario, setScenario] = useState<Scenario>({ state: 'idle' });
   const [scenarioAttempt, setScenarioAttempt] = useState(0);
+  const [dateRefreshError, setDateRefreshError] = useState('');
+  const configEpoch = useRef(0);
 
   const signedIn = authState.isLoaded && authState.isSignedIn && userState.isLoaded && userState.isSignedIn;
 
   useEffect(() => {
+    configEpoch.current++;
+    setDateRefreshError('');
     if (!signedIn) {
       setScenario({ state: 'idle' });
       return;
@@ -40,6 +45,20 @@ export function ClerkApp() {
       });
     return () => { current = false; };
   }, [signedIn, authState.userId, scenarioAttempt]);
+
+  useDateRollover(signedIn && scenario.state === 'ready', async () => {
+    const epoch = configEpoch.current;
+    try {
+      const date = await fetchScenarioDate();
+      if (epoch !== configEpoch.current) return;
+      setScenario(previous => previous.state === 'ready' && previous.date === date ? previous : { state: 'ready', date });
+      setDateRefreshError('');
+    } catch (error) {
+      if (epoch !== configEpoch.current) return;
+      setDateRefreshError('Could not refresh the current date. Displayed days may be outdated; retrying automatically.');
+      throw error;
+    }
+  });
 
   const sessionUser = useMemo<SessionUser | null>(() => {
     if (!signedIn) return null;
@@ -74,7 +93,9 @@ export function ClerkApp() {
     return <StatusPage message="Loading application data..." />;
   }
 
-  return <App
+  return <>
+    {dateRefreshError && <p className="bb-notice" role="alert">{dateRefreshError}</p>}
+    <App
     key={authState.userId ?? 'signed-out'}
     auth={auth}
     createPlanService={createPlanService}
@@ -83,5 +104,5 @@ export function ClerkApp() {
     scenarioDate={scenario.state === 'ready' ? scenario.date : ''}
     renderAuthPage={mode => <ClerkAuthPage mode={mode} />}
     MarketDashboard={MarketDashboard}
-  />;
+  /></>;
 }

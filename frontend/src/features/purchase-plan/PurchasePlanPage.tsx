@@ -27,6 +27,8 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [announcement, setAnnouncement] = useState('');
+  const [refreshingDate, setRefreshingDate] = useState(false);
+  const [dateRefreshError, setDateRefreshError] = useState('');
   const [writingServices, setWritingServices] = useState<Set<PurchasePlanService>>(() => new Set());
   const writing = writingServices.has(service);
   const createRef = useRef<HTMLButtonElement>(null);
@@ -48,13 +50,18 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
 
   function scenarioError(plan: PurchasePlan | null): string | null {
     return plan && plan.scenario_as_of_date !== scenarioDate
-      ? 'Your plan has not been refreshed for the active historical scenario. Please retry.'
+      ? 'Your plan has not been refreshed for the current planning date. Please retry.'
       : null;
   }
 
   useEffect(() => {
     let current = true;
-    setState({ mode: 'loading' });
+    // A date rollover must not discard an idle draft. Account/service changes and
+    // in-flight writes still follow the existing reconciliation path.
+    const keepDraft = state.mode === 'form' && !writing && readRequest.current?.context.service === service;
+    setRefreshingDate(keepDraft);
+    setDateRefreshError('');
+    if (!keepDraft) setState({ mode: 'loading' });
     setShowDelete(false);
     setSaving(false);
     setAnnouncement('');
@@ -65,10 +72,16 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
     readRequest.current.promise.then(({ plans }) => {
       if (!current) return;
       const message = plans.map(scenarioError).find(Boolean);
+      setRefreshingDate(false);
+      if (keepDraft && message) { setDateRefreshError(message); return; }
       setPlans(plans);
+      if (keepDraft) return;
       setState(message ? { mode: 'error', message } : { mode: 'view', plan: null });
     }).catch(error => {
-      if (current) setState({ mode: 'error', message: requestError(error).detail });
+      if (!current) return;
+      setRefreshingDate(false);
+      if (keepDraft) setDateRefreshError(requestError(error).detail);
+      else setState({ mode: 'error', message: requestError(error).detail });
     });
     return () => { current = false; };
   }, [context, attempt]);
@@ -166,9 +179,16 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
         deleteRef={state.plan?.plan_id === plan.plan_id ? deleteRef : undefined} onEdit={() => {
           setAnnouncement(''); setState({ mode: 'form', plan });
         }} onDelete={() => { setAnnouncement(''); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}
-      {state.mode === 'form' && <PurchasePlanForm plan={state.plan} scenarioDate={scenarioDate} onSave={save} onBusyChange={busy => {
+      {state.mode === 'form' && refreshingDate && <p role="status">Refreshing the current date. Your inputs are kept.</p>}
+      {state.mode === 'form' && dateRefreshError && <div><ErrorBanner>{dateRefreshError}</ErrorBanner><PlanButton onClick={() => setAttempt(value => value + 1)}>Retry date refresh</PlanButton></div>}
+      {state.mode === 'form' && <PurchasePlanForm plan={state.plan} scenarioDate={scenarioDate} blocked={refreshingDate || !!dateRefreshError} onSave={save} onBusyChange={busy => {
         if (activeContext.current === context) setSaving(busy);
       }} onCancel={() => {
+        if (refreshingDate || dateRefreshError) {
+          setState({ mode: 'loading' });
+          setAttempt(value => value + 1);
+          return;
+        }
         focusAfterRender.current = state.plan ? 'edit' : 'create';
         setState({ mode: 'view', plan: state.plan });
       }} />}
