@@ -5,6 +5,7 @@ import com.cs203.mgodataapi.MarketDashboardService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.time.LocalDate;
 
@@ -36,5 +37,18 @@ public class MarketDashboardController {
             return ResponseEntity.noContent().build();  // HTTP 204 No Content
         }
         return ResponseEntity.ok(response);             // HTTP 200 OK
+    }
+
+    @GetMapping("/forecast")
+    public ResponseEntity<String> getForecast(
+        @RequestParam(defaultValue = "7") int horizon
+    ) {
+        String forecast = service.getForecast(horizon);
+        if (forecast == null) {
+            return ResponseEntity.status(503).build();
+        }
+        return ResponseEntity.ok()
+            .header("Content-Type", "application/json")
+            .body(forecast);
     }
 }

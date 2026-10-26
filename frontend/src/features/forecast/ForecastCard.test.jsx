@@ -46,6 +46,24 @@ describe('forecast interval presentation', () => {
     expect(screen.getByText('Target Oct 12, 2026 · 7-day horizon')).toBeVisible();
   });
 
+  it('draws an explicit dated anchor when history is absent', () => {
+    const data = { ...buildMockForecast(7), history: undefined };
+    const series = buildSeries(data);
+    expect(series).toHaveLength(2);
+    expect(series[0]).toMatchObject({ date: data.anchor_quote_date, observed: data.anchor_price,
+      forecast: data.anchor_price, band: [data.anchor_price, data.anchor_price] });
+    expect(series[0].date).not.toBe(data.as_of_date);
+    expect(series[1].date).toBe(data.target_date);
+  });
+
+  it('does not duplicate the anchor or treat newer history as pre-anchor data', () => {
+    const data = buildMockForecast(7);
+    data.history.push({ date: data.as_of_date, price: 9999 });
+    const series = buildSeries(data);
+    expect(series.filter(row => row.date === data.anchor_quote_date)).toHaveLength(1);
+    expect(series.some(row => row.observed === 9999)).toBe(false);
+  });
+
   it('does not infer persistence fallback from no_edge evidence', () => {
     render(<ForecastCard data={{ ...buildMockForecast(30), synthetic: false, forecast: 1400 }} />);
     expect(screen.getByText('No measurable edge over carrying the last price forward at this horizon.')).toBeVisible();
