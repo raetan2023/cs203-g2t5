@@ -192,3 +192,23 @@ it('identifies a published Ridge result separately from the last-quote fallback'
   fireEvent.click(await screen.findByText('Data sources and calculation'));
   expect(screen.getByText('Ridge regression (published)')).toBeVisible();
 });
+
+it('shows executed Ridge provenance, actual anchor age and recommendation with experimental bounds', async () => {
+  const data = { ...buildMockForecast(30), anchor_quote_date: '2025-10-04',
+    forecast_origin_date: '2025-10-04', target_date: '2025-11-03',
+    model_version: `ridge-30d-sha256-${'a'.repeat(64)}`,
+    interval: { ...buildMockForecast(30).interval, method: 'experimental_gdelt_scaled_quantiles',
+      nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0,
+      limitations: 'Original Ridge pipeline executed; news adjusts only bounds.' } } as ReadyForecast;
+  render(<ForecastProvider service={{ read: async h => h === 30 ? data : { status: 'unavailable', reason: 'expired', message: 'Expired model target.' } }} scenarioDate={plan.scenario_as_of_date}>
+    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
+  </ForecastProvider>);
+  fireEvent.click(await screen.findByRole('button', { name: '30 days' }));
+  expect(await screen.findByText('Executed Ridge · experimental bounds')).toBeVisible();
+  expect(screen.getByText(/model anchor quote is 20 days old/)).toBeVisible();
+  expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
+  fireEvent.click(screen.getByText('Data sources and calculation'));
+  expect(screen.getByText('Ridge regression (executed repository artifact)')).toBeVisible();
+  expect(screen.getByText('aaaaaaaaaaaa…')).toBeVisible();
+  expect(screen.queryByText('Last-quote fallback · Ridge unavailable')).not.toBeInTheDocument();
+});

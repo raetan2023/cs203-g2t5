@@ -73,3 +73,17 @@ it('uses the plan-only endpoint and refuses confidence claims on experimental re
   expect(fetcher.mock.calls[0][0]).toContain('/api/v1/purchase-plans/forecast?horizon_days=7');
   expect(() => parseForecast({ ...body, interval: { ...body.interval, nominal_coverage: .8 } }, 7)).toThrow();
 });
+
+it('preserves executed Ridge quote horizons while allowing newer stored news and reference history', () => {
+  const body = { ...buildMockForecast(30), as_of_date: '2026-10-26',
+    forecast_origin_date: '2026-10-06', anchor_quote_date: '2026-10-06', target_date: '2026-11-05',
+    model_version: 'ridge-30d-sha256-artifact', source_dates: { mgo: '2026-10-06', gdelt: '2026-10-25' },
+    news_window_start: '2026-10-25T00:00:00Z', news_window_end: '2026-10-26T00:00:00Z',
+    published_at: '2026-10-26T02:00:00Z', history: [{ date: '2026-10-18', price: 1254 }],
+    interval: { ...buildMockForecast(30).interval, method: 'experimental_gdelt_scaled_quantiles',
+      nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0, baseline_coverage: null } };
+  expect(parseForecast(body, 30)).toMatchObject({ target_date: '2026-11-05', forecast_origin_date: '2026-10-06' });
+  expect(() => parseForecast({ ...body, target_date: '2026-11-25' }, 30)).toThrow();
+  expect(() => parseForecast({ ...body, as_of_date: '2026-11-06' }, 30)).toThrow();
+  expect(() => parseForecast({ ...body, source_dates: { gdelt: '2026-10-27' } }, 30)).toThrow();
+});

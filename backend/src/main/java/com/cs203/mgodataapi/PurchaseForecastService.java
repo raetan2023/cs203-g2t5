@@ -19,18 +19,18 @@ import org.springframework.stereotype.Service;
 import static com.cs203.mgodataapi.ForecastService.*;
 
 /** Explicitly experimental alternative for purchase plans only.
- * Empirical MGO-return q10/q90 bounds expand with yesterday's news activity/tone ranks.
+ * Original Ridge quantile-artifact bounds expand with yesterday's news activity/tone ranks.
  * This heuristic has no measured conditional coverage. It never modifies dashboard forecasts.
  */
 @Service
 public class PurchaseForecastService {
     public static final String METHOD = "experimental_gdelt_scaled_quantiles";
-    private static final String VERSION = "purchase-news-range-v1";
+    private static final String VERSION = "purchase-ridge-news-v2";
     private final PurchaseForecastRepository repository;
     private final Clock clock;
-    private final ForecastService published;
-    public PurchaseForecastService(PurchaseForecastRepository repository, Clock clock, ForecastService published) {
-        this.repository = repository; this.clock = clock; this.published = published;
+    private final RidgeInference ridge;
+    public PurchaseForecastService(PurchaseForecastRepository repository, Clock clock, RidgeInference ridge) {
+        this.repository = repository; this.clock = clock; this.ridge = ridge;
     }
     public LocalDate today() { return LocalDate.now(clock.withZone(ZoneId.of("Asia/Singapore"))); }
 
@@ -40,9 +40,6 @@ public class PurchaseForecastService {
         if (!Set.of(7, 14, 30).contains(horizon))
             throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "horizon_days must be 7, 14 or 30.");
         LocalDate origin = today(), yesterday = newsDay();
-        Response verified = published.read(horizon);
-        if (verified instanceof Ready ready && yesterday.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().equals(ready.data().news_window_end()))
-            return verified; // Retain an available model point and its validated range.
         List<PurchaseForecastRepository.Observation> observations;
         try { observations = repository.observations(origin); }
         catch (org.springframework.dao.DataAccessException failure) {
@@ -90,46 +87,71 @@ public class PurchaseForecastService {
         double volumeRank = rank(activity, Math.log1p(counts.get(yesterday).doubleValue()));
         double toneRank = rank(toneStress, Math.abs(tones.get(yesterday).doubleValue()));
         double multiplier = 1 + (volumeRank + toneRank) / 2; // Explicit policy: 1x to 2x historical deviations.
-        int returnSpan = horizon + (int) age; // Account for the gap between a dated anchor and the forecast origin.
-        List<Double> returns = new ArrayList<>();
-        for (var entry : prices.entrySet()) {
-            BigDecimal target = prices.get(entry.getKey().plusDays(returnSpan));
-            if (target != null) returns.add(Math.log(target.divide(entry.getValue(), MathContext.DECIMAL64).doubleValue()));
-        }
-        if (returns.size() < 20) return unavailable("insufficient_price_history", "At least 20 exact-date observed MGO return pairs are needed for this horizon.");
-        returns.sort(Double::compare);
-        double q10 = Math.min(0, quantile(returns, .1)), q90 = Math.max(0, quantile(returns, .9));
-        BigDecimal anchor = prices.get(quoteDate);
-        // The persistence point is unchanged by news. It is labelled as such in every response.
-        BigDecimal low = price(anchor, q10 * multiplier), high = price(anchor, q90 * multiplier);
-        String limits = "Experimental news-adjusted range, not calibrated confidence. Historical return q10/q90 deviations "
-                + "are expanded by " + String.format(java.util.Locale.ROOT, "%.2f", multiplier)
-                + "x using yesterday's article-activity and absolute-tone ranks. These are proxies, not a measure of world uncertainty. "
-                + "No measured coverage or purchasing advantage. Central estimate uses persistence (last observed MGO quote), not a new Ridge prediction. "
-                + "Reference quote: " + quoteDate + " (" + age + " days old). "
-                + (age > 7 ? "Price data is stale; this is a scenario estimate, not a current market offer. " : "")
-                + "Historical return span: " + returnSpan + " days, including the age of the reference quote. GDELT date: " + yesterday + "; " + counts.get(yesterday).stripTrailingZeros().toPlainString()
-                + " articles; average tone " + tones.get(yesterday).stripTrailingZeros().toPlainString() + ".";
+        tools.jackson.databind.JsonNode model;
+        try { model = ridge.predict(horizon, origin); }
+        catch (IllegalStateException failure) { return unavailable("ridge_unavailable", failure.getMessage()); }
+        if (!"ready".equals(model.path("status").asText()))
+            return unavailable("ridge_unavailable", model.path("message").asText("Ridge prediction unavailable."));
+        LocalDate modelAnchor, target;
+        BigDecimal central, modelLow, modelHigh, modelAnchorPrice, rawLow, rawHigh;
+        String modelVersion = model.path("model_version").asText();
+        try {
+            modelAnchor = LocalDate.parse(model.path("anchor_quote_date").asText());
+            target = LocalDate.parse(model.path("target_date").asText());
+            central = new BigDecimal(model.path("forecast").asText());
+            modelLow = new BigDecimal(model.path("low").asText());
+            modelHigh = new BigDecimal(model.path("high").asText());
+            modelAnchorPrice = new BigDecimal(model.path("anchor_price").asText());
+            rawLow = new BigDecimal(model.path("raw_q10_price").asText());
+            rawHigh = new BigDecimal(model.path("raw_q90_price").asText());
+            if (model.path("horizon_days").asInt() != horizon || !"USD/metric tonne".equals(model.path("unit").asText())
+                    || !Double.isFinite(central.doubleValue()) || !Double.isFinite(modelHigh.doubleValue())
+                    || rawLow.signum() <= 0 || rawHigh.compareTo(rawLow) < 0
+                    || !model.path("inference_snapshot").asText().matches("[a-f0-9]{64}")
+                    || !target.equals(modelAnchor.plusDays(horizon)) || !target.isAfter(origin)
+                    || modelAnchor.isAfter(origin) || central.signum() <= 0 || modelLow.signum() <= 0
+                    || modelHigh.compareTo(modelLow) < 0 || modelAnchorPrice.signum() <= 0
+                    || !model.path("as_of_date").asText().equals(origin.toString())
+                    || !model.path("execution").asText().equals("src.predict.predict:standardscaler+ridgecv")
+                    || !model.path("artifact_sha256").asText().matches("[a-f0-9]{64}")
+                    || !model.path("input_snapshot").asText().matches("[a-f0-9]{64}")
+                    || !modelVersion.startsWith("ridge-")) throw new IllegalArgumentException();
+        } catch (RuntimeException invalid) { return unavailable("invalid_ridge_response", "Ridge returned invalid dates, prices or provenance."); }
+        BigDecimal anchor = modelAnchorPrice;
+        // Widen each baseline endpoint away from the executed Ridge centre in log-price space.
+        // Include the centre if independent quantile regressions place it outside their interval.
+        double q10 = Math.min(0, Math.log(modelLow.divide(central, MathContext.DECIMAL64).doubleValue()));
+        double q90 = Math.max(0, Math.log(modelHigh.divide(central, MathContext.DECIMAL64).doubleValue()));
+        BigDecimal low = price(central, q10 * multiplier), high = price(central, q90 * multiplier);
+        String limits = "Experimental news-adjusted q10/q90-based bounds; no measured conditional coverage or purchasing advantage. "
+                + "Original repository Ridge pipeline executed using its audited CSV snapshot " + model.path("input_snapshot").asText()
+                + ". Central prediction is unchanged by news. Baseline calibrated quantile endpoints expand away from the Ridge centre by "
+                + String.format(java.util.Locale.ROOT, "%.2f", multiplier) + "x. No additional quote-age scaling is applied. "
+                + "Model horizon is " + horizon + " calendar days from its observed anchor " + modelAnchor
+                + ", not from today. Target: " + target + ". Stored GDELT UTC day: " + yesterday
+                + "; articles " + counts.get(yesterday) + "; tone " + tones.get(yesterday) + ".";
         Interval interval = new Interval(METHOD, null, null, 0,
-                returns.size() + " historical exact-date return pairs; no out-of-sample coverage evaluation.", null, null, null, limits);
+                "Experimental adjustment of original quantile artifacts; conditional news coverage not evaluated.", null, null, null, limits);
         List<History> history = prices.entrySet().stream().skip(Math.max(0, prices.size() - 20))
                 .map(e -> new History(e.getKey(), e.getValue())).toList();
-        Value value = new Value(horizon, origin.plusDays(horizon), origin, origin, quoteDate, anchor, (int) age,
-                anchor, low, high, price(anchor, q10), price(anchor, q90), "USD/metric tonne", "unevaluated", null, 0,
-                List.of(), interval, yesterday.atStartOfDay(ZoneOffset.UTC).toInstant(),
-                yesterday.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant(), Map.of("mgo", quoteDate, "gdelt", yesterday), history);
+        Map<String, LocalDate> sourceDates = new TreeMap<>();
+        sourceDates.put("gdelt", yesterday);
+        model.path("source_dates").properties().forEach(entry -> sourceDates.put(entry.getKey(), LocalDate.parse(entry.getValue().asText())));
+        sourceDates.put("mgo", modelAnchor);
+        List<Driver> drivers = new ArrayList<>();
+        for (var driver : model.path("top_drivers"))
+            drivers.add(new Driver(driver.path("feature").asText(), new BigDecimal(driver.path("contribution").asText())));
+        Value value = new Value(horizon, target, origin, modelAnchor, modelAnchor, anchor, (int) ChronoUnit.DAYS.between(modelAnchor, origin),
+                central, low, high, rawLow, rawHigh, "USD/metric tonne", "unevaluated", null, 0,
+                drivers, interval, yesterday.atStartOfDay(ZoneOffset.UTC).toInstant(),
+                yesterday.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant(), sourceDates, history);
         // Stable across horizons/requests, changes when the underlying database evidence changes.
-        String identity = VERSION + ":" + origin + ":" + observations;
+        String identity = VERSION + ":" + origin + ":" + observations + ":" + model.path("input_snapshot").asText() + ":" + model.path("inference_snapshot").asText();
         UUID run = UUID.nameUUIDFromBytes(identity.getBytes(StandardCharsets.UTF_8));
-        return new Ready("ready", value, run, clock.instant(), VERSION);
+        return new Ready("ready", value, run, clock.instant(), modelVersion);
     }
     private static double rank(List<Double> history, double value) {
         return history.stream().filter(x -> x < value).count() / (double) history.size();
-    }
-    private static double quantile(List<Double> sorted, double probability) {
-        double index = (sorted.size() - 1) * probability;
-        int lower = (int) Math.floor(index), upper = (int) Math.ceil(index);
-        return sorted.get(lower) + (sorted.get(upper) - sorted.get(lower)) * (index - lower);
     }
     private static BigDecimal price(BigDecimal anchor, double change) {
         double result = anchor.doubleValue() * Math.exp(change);

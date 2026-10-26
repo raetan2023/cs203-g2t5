@@ -59,14 +59,18 @@ export function parseForecast(payload: unknown, horizon: Horizon): Forecast {
       || Date.parse(end) - Date.parse(start) !== 86_400_000) throw invalid();
   const sourceDates = object(v.source_dates);
   const source_dates = Object.fromEntries(Object.entries(sourceDates).map(([key, value]) => [key, value == null ? null : date(value)]));
-  if (Object.values(source_dates).some(value => value != null && value > origin)) throw invalid();
+  const executedRidge = experimental && text(v.model_version).includes('-sha256-');
+  const availableDate = executedRidge ? date(v.as_of_date) : origin;
+  if (executedRidge && (origin !== anchor || target <= availableDate
+      || Math.round((Date.parse(target) - Date.parse(anchor)) / 86_400_000) !== horizon)) throw invalid();
+  if (Object.values(source_dates).some(value => value != null && value > availableDate)) throw invalid();
   if (!Array.isArray(v.top_drivers) || !Array.isArray(v.history)) throw invalid();
   return { status: 'ready', run_id: text(v.run_id), forecast_origin_date: origin, target_date: target,
     anchor_quote_date: anchor, anchor_price: number(v.anchor_price, Number.MIN_VALUE), forecast: number(v.forecast, Number.MIN_VALUE),
     low, high, unit: 'USD/metric tonne', horizon_days: horizon, interval, news_window_start: start, news_window_end: end,
     source_dates, model_version: text(v.model_version), published_at: timestamp(v.published_at),
     top_drivers: v.top_drivers.map(d => { const x = object(d); return { feature: text(x.feature), contribution: number(x.contribution) }; }),
-    history: v.history.map(d => { const x = object(d); const observed = date(x.date); if (observed > origin) throw invalid(); return { date: observed, price: number(x.price, Number.MIN_VALUE) }; }),
+    history: v.history.map(d => { const x = object(d); const observed = date(x.date); if (observed > availableDate) throw invalid(); return { date: observed, price: number(x.price, Number.MIN_VALUE) }; }),
   };
 }
 

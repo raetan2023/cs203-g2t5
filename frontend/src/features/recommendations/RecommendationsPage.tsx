@@ -34,7 +34,8 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
   const active = result?.scope === scope ? result : undefined;
   const plan = active?.plan;
   const experimental = forecast?.interval.method === 'experimental_gdelt_scaled_quantiles';
-  const quoteAge = forecast ? Math.round((Date.parse(forecast.forecast_origin_date) - Date.parse(forecast.anchor_quote_date)) / 86_400_000) : 0;
+  const quoteAge = forecast ? Math.round((Date.parse(scenarioDate) - Date.parse(forecast.anchor_quote_date)) / 86_400_000) : 0;
+  const executedRidge = experimental && forecast?.model_version.includes('-sha256-');
   const afterDeadline = !!(plan && forecast && forecast.target_date > plan.purchase_deadline);
   return <main className="recommendations">
     <header className="rec-header"><div><p className="rec-eyebrow">Purchase planning</p><h1 tabIndex={-1} ref={heading}>Purchase estimate</h1><p>Compare possible costs for your saved plan.</p></div><AppLink className="rec-back" href="/purchase-plans">Back to purchase plans</AppLink></header>
@@ -45,9 +46,9 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
     </dl></section>}
     {experimental && plan && <aside className="rec-notice" aria-label="Estimate limitations">
       <span className="rec-notice-icon" aria-hidden="true">!</span><div>
-      <h2>{plan && plan.days_remaining < 0 ? 'Your purchase deadline has passed' : afterDeadline ? 'This estimate is after your purchase deadline' : 'Timing guidance unavailable'}</h2>
-      <p>{afterDeadline ? 'Choose a shorter horizon if one fits your deadline. ' : ''}{quoteAge > 7 ? `The latest price quote is ${quoteAge} days old (${formatDate(forecast!.anchor_quote_date)}). ` : 'No current Ridge forecast is available. '}Compare this scenario with a current supplier quote before deciding when to buy.</p>
-      <span className="rec-source-label">Last-quote fallback · Ridge unavailable</span>
+      <h2>{plan && plan.days_remaining < 0 ? 'Your purchase deadline has passed' : afterDeadline ? 'This estimate is after your purchase deadline' : executedRidge ? 'Dated Ridge estimate' : 'Timing guidance unavailable'}</h2>
+      <p>{afterDeadline ? 'Choose a shorter horizon if one fits your deadline. ' : ''}{quoteAge > 7 ? `The ${executedRidge ? "model anchor" : "latest price"} quote is ${quoteAge} days old (${formatDate(forecast!.anchor_quote_date)}). ` : executedRidge ? `The model targets ${formatDate(forecast!.target_date)} from its ${formatDate(forecast!.forecast_origin_date)} quote anchor. ` : 'No current Ridge forecast is available. '}{executedRidge && quoteAge > 7 ? `The ${forecastState.horizon}-day model targets ${formatDate(forecast!.target_date)} from that anchor. ` : ''}Compare this scenario with a current supplier quote before deciding when to buy.</p>
+      <span className="rec-source-label">{executedRidge ? 'Executed Ridge · experimental bounds' : 'Last-quote fallback · Ridge unavailable'}</span>
       </div></aside>}
     {forecastState.connected && plan && <section className="rec-horizon-bar" aria-label="Estimate horizon">
       <div><span className="rec-eyebrow">Estimate date</span><p>{forecast ? formatDate(forecast.target_date) : 'Choose a horizon'}</p></div>
@@ -65,7 +66,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Choose a saved purchase plan from your plans, or create a new one.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>
       : forecastState.connected && !forecast ? null : <section className="rec-card rec-analysis" aria-label="Purchase analysis">
         {service?.readImpact && (!forecastState.connected || forecast) ? <PurchaseImpact plan={plan} service={service!} reload={reload} horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={forecast?.run_id} published={forecast} /> : forecastState.connected && <p>Cost impact is unavailable until a current forecast is ready for the selected horizon.</p>}
-        {(!forecastState.connected || forecast) && <Recommendation plan={plan} service={service} reload={reload} experimental={experimental}
+        {(!forecastState.connected || forecast) && <Recommendation plan={plan} service={service} reload={reload} experimental={experimental && !executedRidge}
           horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={forecast?.run_id} />}
       </section>}
   </main>;
