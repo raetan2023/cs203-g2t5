@@ -1,9 +1,6 @@
 # Product
 
-> **Current implementation status (2026-10-26):** Backend current-date changes were reverted at the
-> owner's request so backend work can proceed separately on main. The desired Singapore-today behavior
-> below is pending backend integration; the current backend again returns its configured historical date.
-> Frontend refresh/draft-preservation work remains and consumes that returned date without overriding it.
+> **Current implementation status (2026-10-26):** The backend Singapore-current-date change was implemented on main and merged back into this prototype via 9de0ea6. Frontend rollover/draft-preservation work is integrated with it. Actual market observation dates remain unchanged; live data freshness is unverified.
 
 <!-- impeccable:product-schema 1 -->
 

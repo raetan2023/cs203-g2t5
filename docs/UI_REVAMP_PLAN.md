@@ -5,7 +5,21 @@ Status: **active prototype plan; checkpoint commits stay on feature/ui-revamp-wi
 
 
 
-### Latest status — backend date rollback requested (2026-10-26)
+### Latest integration status — 2026-10-26
+
+- Fetched remote main (`d77a61c`, including forecast endpoint/widget and proxy analysis changes),
+  merged it into local main, and pushed main through `b083a4f`.
+- Backend current-date implementation is `8668945`; running-guide edit is `b083a4f`.
+- Merged main into this prototype branch as `9de0ea6`, with no conflicts. Backend files here now
+  exactly match main; Singapore-current-date behavior is restored alongside frontend rollover/draft handling.
+- Prior rollback notes below are historical and superseded. Phase 3A implementation is integrated again;
+  live Clerk/database validation remains pending. Home remains deferred for possible Impeccable/Claude work.
+- Phase 6 inventory must now include `features/forecast/*` and the new widget rendered by MarketDashboard.
+  Imported widget styling has not yet been adapted to this branch's beige design system.
+- Verification: 57 backend tests passed on integrated main; prototype backend is identical. After merging, 132 prototype frontend tests and the production build passed (existing bundle-size warning).
+- Main was pushed; prototype merge is local. No prototype UI was merged into main.
+
+### Historical backend rollback — 2026-10-26 (superseded by main integration)
 
 - Owner requested reverting the backend date-handling portion of `7d7a752` before doing backend work
   separately on main. Restored `backend/` exactly to `7d7a752^`: controllers, configuration, README,
@@ -438,9 +452,9 @@ Impeccable passes were not run; direct source review, browser screenshots and ax
 
 #### Phase 3A — Today's date (functional prerequisite)
 
-**Current status: partial. Backend portion reverted at owner request; backend work moves to main. Checked items below describe the original implementation, not current end-to-end completion.**
+**Current status: implementation integrated from main via 9de0ea6. Backend current-date behavior and frontend refresh/draft preservation are present. Live Clerk/database validation is still pending.**
 
-- [ ] **Backend pending on main after rollback:** replace the historical scenario date with the actual current date.
+- [x] **Backend integrated from main:** replace the historical scenario date with the actual current date.
       Compute it at runtime; do not hard-code the date of this discussion (2026-10-26).
 - [x] Traced the authoritative scenario source through backend configuration, `ClerkApp`, hooks,
       plan validation, remaining-day calculations and recommendation requests before editing.
