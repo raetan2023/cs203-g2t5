@@ -301,3 +301,15 @@
 }
 
 .forecast-interval p { margin: 4px 0; }
+
+.forecast-provenance {
+  margin-top: 12px;
+  color: #9cb1c9;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.forecast-provenance p { margin: 4px 0; }
+
+.market-forecast { max-width: 1560px; margin: 0 auto; padding: 0 40px 38px; }
+@media (max-width: 640px) { .market-forecast { padding: 0 16px 24px; } }

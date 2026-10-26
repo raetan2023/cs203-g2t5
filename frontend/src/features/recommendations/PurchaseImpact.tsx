@@ -8,8 +8,8 @@ const amount = (value: number) => number.format(value);
 const signed = (value: number) => value > 0 ? `+${amount(value)}` : amount(value);
 
 /** Display source-supplied totals only; no price/quantity calculations here. */
-export function PurchaseImpact({ plan, service, reload }: { plan: PurchasePlan; service: RecommendationService; reload?: () => void }) {
-  const { analysis, loading, error, message, changed, retry } = useAnalysis(service, plan, 'readImpact');
+export function PurchaseImpact({ plan, service, reload, horizonDays, runId }: { horizonDays?: number; runId?: string; plan: PurchasePlan; service: RecommendationService; reload?: () => void }) {
+  const { analysis, loading, error, message, changed, retry } = useAnalysis(service, plan, 'readImpact', horizonDays, runId);
   const impact = analysis?.cost_impact.status === 'ready' ? analysis.cost_impact.value : undefined;
   const forecast = analysis?.forecast.status === 'ready' ? analysis.forecast.value : undefined;
   const reference = analysis?.reference.status === 'ready' ? analysis.reference.value : undefined;

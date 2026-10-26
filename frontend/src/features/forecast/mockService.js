@@ -47,10 +47,17 @@ export function buildMockForecast(horizonDays = 7) {
   }));
 
   return {
+    status: 'ready',
+    run_id: 'synthetic-preview',
+    forecast_origin_date: AS_OF,
+    published_at: AS_OF + 'T01:00:00Z',
+    news_window_start: '2026-10-04T00:00:00Z',
+    news_window_end: '2026-10-05T00:00:00Z',
+    source_dates: { mgo: ANCHOR_DATE, gasoil: AS_OF },
     horizon_days: h,
     as_of_date: AS_OF,
     anchor_quote_date: ANCHOR_DATE,
-    target_date: isoDaysFrom(ANCHOR_DATE, h),
+    target_date: isoDaysFrom(AS_OF, h),
     synthetic: true,
     anchor_price: ANCHOR_PRICE,
     quote_age_days: 1,

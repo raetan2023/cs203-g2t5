@@ -6,6 +6,7 @@ import type { AuthService, SessionUser } from '../features/auth/types';
 import { createApiPlanService, fetchScenarioDate } from '../features/purchase-plan/apiService';
 import { App } from './App';
 import MarketDashboard from '../features/market-dashboard/MarketDashboard';
+import { createApiForecastService } from '../features/forecast/apiService';
 import { createApiRecommendationService } from '../features/recommendations/apiService';
 
 
@@ -13,6 +14,13 @@ type Scenario =
   | { state: 'idle' | 'loading' }
   | { state: 'ready'; date: string }
   | { state: 'error'; message: string };
+
+export function singaporeDate(now = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Singapore', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+}
+export function msUntilSingaporeMidnight(now = new Date()) {
+  return Date.parse(`${singaporeDate(now)}T00:00:00+08:00`) + 86_400_000 - now.getTime() + 100;
+}
 
 export function ClerkApp() {
   const authState = useAuth();
@@ -29,9 +37,9 @@ export function ClerkApp() {
     }
 
     let current = true;
-    setScenario({ state: 'loading' });
+    setScenario(previous => previous.state === 'ready' ? previous : { state: 'loading' });
     fetchScenarioDate()
-      .then(date => { if (current) setScenario({ state: 'ready', date }); })
+      .then(date => { if (current) { setScenario({ state: 'ready', date }); } })
       .catch(error => {
         if (current) setScenario({
           state: 'error',
@@ -40,6 +48,17 @@ export function ClerkApp() {
       });
     return () => { current = false; };
   }, [signedIn, authState.userId, scenarioAttempt]);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    let timer: ReturnType<typeof setTimeout>;
+    function refresh() { setScenarioAttempt(value => value + 1); }
+    function schedule() { timer = setTimeout(() => { refresh(); schedule(); }, msUntilSingaporeMidnight()); }
+    function visible() { if (document.visibilityState === 'visible') refresh(); }
+    schedule();
+    document.addEventListener('visibilitychange', visible);
+    return () => { clearTimeout(timer); document.removeEventListener('visibilitychange', visible); };
+  }, [signedIn]);
 
   const sessionUser = useMemo<SessionUser | null>(() => {
     if (!signedIn) return null;
@@ -63,6 +82,10 @@ export function ClerkApp() {
     () => createApiPlanService({ getToken: () => authState.getToken() }),
     [authState.getToken],
   );
+  const createForecastService = useCallback(
+    () => createApiForecastService({ getToken: () => authState.getToken() }),
+    [authState.getToken],
+  );
   const createRecommendationService = useCallback(
     () => createApiRecommendationService({ getToken: () => authState.getToken() }),
     [authState.getToken],
@@ -79,6 +102,8 @@ export function ClerkApp() {
     auth={auth}
     createPlanService={createPlanService}
     createRecommendationService={createRecommendationService}
+    createForecastService={createForecastService}
+    dataRevision={scenarioAttempt}
     refreshScenario={() => setScenarioAttempt(value => value + 1)}
     scenarioDate={scenario.state === 'ready' ? scenario.date : ''}
     renderAuthPage={mode => <ClerkAuthPage mode={mode} />}

@@ -21,7 +21,7 @@ describe('buildMockForecast', () => {
     const last = f.history[f.history.length - 1];
     expect(last.date).toBe(f.anchor_quote_date);
     expect(last.date).not.toBe(f.as_of_date);
-    expect(f.target_date).toBe(addDays(f.anchor_quote_date, 7));
+    expect(f.target_date).toBe(addDays(f.forecast_origin_date, 7));
     expect(last.price).toBe(f.anchor_price);
   });
 

@@ -1,16 +1,20 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import ForecastCard from './ForecastCard';
 import ForecastWidget from './ForecastWidget';
+import { ForecastProvider } from './ForecastContext';
 import { buildSeries } from './ForecastChart';
 import { buildMockForecast } from './mockService';
 
+vi.mock('./ForecastChart', async importOriginal => ({ ...await importOriginal(), default: () => null }));
+
 describe('forecast interval presentation', () => {
-  it('prominently identifies the widget as synthetic', () => {
-    render(<ForecastWidget />);
-    expect(screen.getByText('Synthetic preview')).toBeVisible();
+  it('prominently identifies explicitly supplied preview data as synthetic', async () => {
+    render(<ForecastProvider service={{ read: async () => buildMockForecast(7) }} scenarioDate="2026-10-05"><ForecastWidget /></ForecastProvider>);
+    expect(await screen.findByText('Synthetic preview')).toBeVisible();
     expect(screen.getByText(/Illustrative data, not a live forecast/)).toBeVisible();
+    expect(screen.getByText('Forecast details').closest('details')).not.toHaveAttribute('open');
   });
 
   it('distinguishes target coverage from unavailable observed coverage', () => {
@@ -35,11 +39,11 @@ describe('forecast interval presentation', () => {
   it('uses anchor horizon for stale quotes and preserves an outside point estimate', () => {
     const data = { ...buildMockForecast(7), forecast: 1400, low: 1200, high: 1300 };
     const endpoint = buildSeries(data).at(-1);
-    expect(endpoint.date).toBe('2026-10-11');
+    expect(endpoint.date).toBe('2026-10-12');
     expect(endpoint.forecast).toBe(1400);
     expect(endpoint.band).toEqual([1200, 1300]);
     render(<ForecastCard data={data} />);
-    expect(screen.getByText('Target Oct 11, 2026 (7 days from quote)')).toBeVisible();
+    expect(screen.getByText('Target Oct 12, 2026 · 7-day horizon')).toBeVisible();
   });
 
   it('does not infer persistence fallback from no_edge evidence', () => {

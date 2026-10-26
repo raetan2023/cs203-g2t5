@@ -51,3 +51,49 @@ in this session; no shared database has been changed.
 
 See the MVP-only review in
 [database-schema.md](../database-schema.md#clerk-mapping-and-ui-review-26-september-2026).
+
+## Daily published forecasts (26 October 2026)
+
+`20261026_published_forecasts.sql` adds server-owned daily news features, immutable
+forecast runs and per-horizon payloads, plus a singleton active-run pointer.
+`publish_forecast_run(run_json, forecasts_json)` validates exactly 7/14/30-day
+values and atomically publishes all three. Failed daily runs publish three
+explicitly unavailable values, so an old ready run cannot masquerade as today's
+forecast. Failed validation rolls back the entire publication and preserves the
+previous pointer. Publication serializes with an advisory transaction lock and rejects older same-day run start timestamps.
+
+The run JSON is `{id, origin_date, model_version, payload}`. `payload` carries
+shared metadata, including `run_started_at` (UTC instant), `news_feature_version`, `forecast_origin_date`,
+`as_of_date`, `news_window_start`, `news_window_end` and `source_dates`.
+The forecasts argument is an array of three payload objects, each containing
+`horizon_days` and `status`. Ready objects carry the forecast service contract;
+unavailable objects require `reason` and `message`. Per-horizon fields override
+common run fields when read. For ready values, sources must be no older than
+seven days, origin must be today's Singapore date, and the news window must be
+the fully completed previous UTC day with a matching stored feature version.
+
+RLS is enabled without browser policies. Anonymous/authenticated roles receive
+no table or function access. The trusted publisher uses a server-only role;
+`service_role`, if present, receives needed privileges. The JDBC backend's
+server-only role also requires SELECT on all four tables and RLS bypass. Do not
+put either role's credentials in the frontend. Confirm grants against the actual
+Supabase roles before application. This script creates new objects once and
+intentionally fails on conflicts; it does not silently reconcile unknown tables.
+
+The migration creates private Supabase Storage bucket `forecast-models` when
+`storage.buckets` exists. It adds no browser policies; an existing public bucket
+with that name aborts the migration. Versioned news archives, model bundles and
+reports are uploaded by the trusted publisher, never by browser clients.
+
+This migration was applied to the shared Supabase database on 26 October 2026
+using the existing authorized backend connection. Four tables and the private
+bucket were verified. Existing plans/market tables were not modified. One real
+unavailable publication was committed atomically; no synthetic or ready price
+forecast was published. Daily scheduling remains disabled pending classifier
+configuration and sufficient archived news evidence.
+
+The migration and `20261026_published_forecasts_test.sql` also passed disposable
+PostgreSQL/PGlite checks for atomicity, rollback, source/news validation, run
+ordering and role privileges, including a Python-generated test-only contract.
+Never run fixture scripts on the shared database. See
+[the operations guide](../daily-forecast-operations.md) for activation and backfill.

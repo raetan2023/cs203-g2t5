@@ -1,4 +1,14 @@
-# Ridge points and calibrated q10/q90 MGO price ranges
+# Daily GDELT-informed publication
+
+The normal app uses the **batch pipeline**, not an always-on Python API. Run `python -m src.daily_pipeline --work-dir work` for daily inference and add `--retrain` for explicit weekly training; `--apply` atomically publishes to Supabase. GitHub Actions orchestrates this at 08:17 Singapore, with schedules disabled until setup/manual verification. See [operations and historical backfill](../docs/daily-forecast-operations.md) and the approved [root plan](../plan.md).
+
+`src/daily_model.py` trains chronological out-of-sample Ridge centres at actual decision dates and q10/q90 models on log-price errors conditioned on market features and previous-day GDELT features. Genuine complete older news archives are required; recent DOC retention alone cannot satisfy the evaluation gates. Insufficient/stale inputs yield explicit unavailable results, never example or market-only substitutes. Dashboard and recommendation screens read the same published run through Java; buy/wait advice remains a separate unavailable policy.
+
+## Legacy quote-origin experiments
+
+The commands, artifacts and FastAPI endpoint below are retained for reproducible research. They are **not** the new GDELT daily publication path, and their existing reports must not be presented as news-informed evaluation.
+
+### Ridge points and calibrated q10/q90 MGO price ranges
 
 Forecast Singapore MGO prices (USD/metric tonne) at 7, 14 and 30 calendar days from the latest observed quote. Ridge supplies the central estimate and feature drivers. Independent standardized, L1-regularized `QuantileRegressor` models (q=.1/.9, alpha=.01, HiGHS solver) supply the price range. No new modelling dependency is needed.
 
@@ -42,6 +52,6 @@ The latest artifact is intended for inference after its data cutoff, not histori
 
 Nominal 80% is a target, **not a guaranteed probability**. Market series and overlapping horizons are dependent, ordinary exchangeability assumptions do not hold, calibration uses only 20 quotes, and total MGO history has just 253 irregular observations. Coverage alone does not establish quality; compare width, interval score and baseline too. Quantile ranges are experimental and may underperform persistence. GDELT is not a forecast input.
 
-The React widget is explicitly a synthetic preview. It can display the interval metadata, but still uses mocks: there is no Spring forecast proxy/live model connection. Serving reads local CSV; the Supabase loader remains a stub. `/nowcast` retains its existing observed/carried-forward/estimated behavior and legacy intervals; q10/q90 changes apply to forward horizons only.
+The legacy FastAPI endpoint reads local CSV and its Supabase loader remains a stub. The normal application now uses the separate published batch path described above; mocks are limited to explicit preview/tests. `/nowcast` retains its existing observed/carried-forward/estimated behavior and legacy intervals; q10/q90 changes apply to forward horizons only.
 
 Research and review decisions are recorded in [the implementation plan](../docs/calibrated-price-ranges-plan.md), based on [sklearn QuantileRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.QuantileRegressor.html) and [Romano et al., Conformalized Quantile Regression](https://arxiv.org/abs/1905.03222).

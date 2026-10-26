@@ -33,7 +33,10 @@ public class PlanAnalysisConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(PlanAnalysisProvider.class)
-    PlanAnalysisProvider unavailableAnalysisProvider() {
+    PlanAnalysisProvider unavailableAnalysisProvider(org.springframework.beans.factory.ObjectProvider<ForecastService> services, org.springframework.core.env.Environment environment) {
+        ForecastService forecasts = services.getIfAvailable();
+        if (forecasts != null && !java.util.Arrays.asList(environment.getActiveProfiles()).contains("test"))
+            return new PublishedForecastAnalysisProvider(forecasts);
         return new PlanAnalysisProvider() {
             public String provenance() { return "unavailable"; }
             public Prices prices(LocalDate date) { return unavailablePrices(date); }

@@ -51,8 +51,7 @@ export function parseAnalysis(payload: unknown, expected: PlanResultContext): Pl
     forecast: result(v.forecast, f => {
       const prices = range(f.prices, true);
       const central = f.central_estimate == null ? undefined : number(f.central_estimate, true);
-      if (central !== undefined && (central < prices.lower || central > prices.upper)) throw invalid();
-      return { prices, target_date: date(f.target_date), basis: basis(f.basis), range_description: text(f.range_description),
+      return { ...(f.run_id != null && { run_id: text(f.run_id) }), ...(f.model_version != null && { model_version: text(f.model_version) }), prices, target_date: date(f.target_date), basis: basis(f.basis), range_description: text(f.range_description),
         ...(central !== undefined && { central_estimate: central }),
         ...(f.horizon_description != null && { horizon_description: text(f.horizon_description) }) };
     }),
@@ -61,7 +60,6 @@ export function parseAnalysis(payload: unknown, expected: PlanResultContext): Pl
       if (i.currency !== 'USD') throw invalid();
       const forecast = range(i.forecast_total, true);
       const central = i.central_total == null ? undefined : number(i.central_total, true);
-      if (central !== undefined && (central < forecast.lower || central > forecast.upper)) throw invalid();
       return { currency: 'USD' as const, target_date: date(i.target_date), reference_total: number(i.reference_total, true),
         forecast_total: forecast, difference_total: range(i.difference_total),
         ...(central !== undefined && { central_total: central }),
@@ -81,11 +79,13 @@ export function parseAnalysis(payload: unknown, expected: PlanResultContext): Pl
 
 export function createApiRecommendationService(options: ApiOptions = {}): RecommendationService {
   const base = (options.baseUrl ?? import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
-  async function read(endpoint: string, context: PlanResultContext) {
+  async function read(endpoint: string, context: PlanResultContext, horizonDays?: number, runId?: string) {
     const token = await options.getToken?.();
     if (!token) throw new PlanError('Please sign in again.', {}, 401);
     const query = new URLSearchParams({ plan_id: context.plan_id, quantity_mt: String(context.quantity_mt),
       purchase_deadline: context.purchase_deadline, scenario_as_of_date: context.scenario_as_of_date });
+    if (horizonDays != null) query.set('horizon_days', String(horizonDays));
+    if (runId) query.set('run_id', runId);
     let response: Response;
     try {
       response = await fetch(`${base}/api/v1/purchase-plans/${endpoint}?${query}`, {
@@ -98,7 +98,9 @@ export function createApiRecommendationService(options: ApiOptions = {}): Recomm
       const detail = payload && typeof payload === 'object' && 'detail' in payload && typeof payload.detail === 'string' ? payload.detail : 'Could not load analysis. Please retry.';
       throw new PlanError(detail, {}, response.status);
     }
-    return parseAnalysis(payload, context);
+    const parsed = parseAnalysis(payload, context);
+    if (runId && parsed.forecast.status === 'ready' && parsed.forecast.value.run_id !== runId) throw new PlanError('The active forecast changed. Reload the purchase plan.', {}, 409);
+    return parsed;
   }
-  return { read: context => read('recommendation', context), readImpact: context => read('cost-impact', context) };
+  return { read: context => read('recommendation', context), readImpact: (context, horizonDays, runId) => read('cost-impact', context, horizonDays, runId) };
 }

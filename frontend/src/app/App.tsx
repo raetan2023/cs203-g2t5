@@ -9,14 +9,18 @@ import { PurchasePlanPage, type PurchasePlanService } from '../features/purchase
 import { RecommendationsPage } from '../features/recommendations/RecommendationsPage';
 import type { RecommendationService } from '../features/recommendations/service';
 import './app.css';
+import { ForecastProvider } from '../features/forecast/ForecastContext';
+import type { ForecastService } from '../features/forecast/apiService';
 
 type Session = { state: 'loading' } | { state: 'error'; message: string } | { state: 'ready'; user: SessionUser | null };
 const privateRoutes = ['/home', '/purchase-plans', '/purchase-plans/recommendation', '/market-dashboard'];
 export interface AppProps {
   auth: AuthService;
   createPlanService(user: SessionUser): PurchasePlanService;
+  createForecastService?(user: SessionUser): ForecastService;
   createRecommendationService?(user: SessionUser): RecommendationService;
   scenarioDate: string;
+  dataRevision?: number;
   refreshScenario?: () => void;
   mock?: boolean;
   renderAuthPage?: (mode: 'login' | 'signup') => ReactNode;
@@ -24,7 +28,7 @@ export interface AppProps {
   MarketDashboard?: ComponentType<{ scenarioDate: string }>;
 }
 
-export function App({ auth, createPlanService, scenarioDate, refreshScenario, mock = false, renderAuthPage, MarketDashboard, createRecommendationService }: AppProps) {
+export function App({ auth, createPlanService, scenarioDate, refreshScenario, dataRevision, mock = false, renderAuthPage, MarketDashboard, createRecommendationService, createForecastService }: AppProps) {
   const path = usePath();
   const search = useSearch();
   const selectedPlanId = new URLSearchParams(search).get('plan_id');
@@ -34,7 +38,7 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, mo
   const returnPath = useRef('/home');
   const read = useRef<{ auth: AuthService; attempt: number; promise: ReturnType<AuthService['readSession']> } | null>(null);
   const generation = useRef(0);
-  const planStore = useRef<{ userId: string; service: PurchasePlanService; recommendations?: RecommendationService } | null>(null);
+  const planStore = useRef<{ userId: string; service: PurchasePlanService; recommendations?: RecommendationService; forecasts?: ForecastService } | null>(null);
 
   function acceptUser(user: SessionUser | null) {
     generation.current++;
@@ -84,10 +88,10 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, mo
     }} /></>;
   }
   if (!user) return <div className="bb-app"><main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/login">Go to sign in</AppLink></main></div>;
-  if (!planStore.current || planStore.current.userId !== user.id) planStore.current = { userId: user.id, service: createPlanService(user), recommendations: createRecommendationService?.(user) };
-  return <AppShell path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
+  if (!planStore.current || planStore.current.userId !== user.id) planStore.current = { userId: user.id, service: createPlanService(user), recommendations: createRecommendationService?.(user), forecasts: createForecastService?.(user) };
+  return <ForecastProvider service={planStore.current.forecasts} scenarioDate={scenarioDate} revision={dataRevision}><AppShell path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
     await auth.signOut(); acceptUser(null); returnPath.current = '/home'; setNotice(''); navigate('/login', true);
   }}>
     {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? <RecommendationsPage planId={selectedPlanId} refreshScenario={refreshScenario} key={user.id} planService={planStore.current.service} service={planStore.current.recommendations} scenarioDate={scenarioDate} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
-  </AppShell>;
+  </AppShell></ForecastProvider>;
 }

@@ -42,6 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "mgo.db.check-on-startup=false",
         // A hosted dev origin, to prove they can be added without a second CORS class.
         "mgo.frontend-origins=http://127.0.0.1:5173,http://localhost:5173,https://example.app.github.dev"})
+@org.springframework.test.context.ActiveProfiles("test")
 @AutoConfigureMockMvc
 class MgoDataApiApplicationTests {
 
@@ -61,6 +62,22 @@ class MgoDataApiApplicationTests {
 
     @MockitoBean
     private MarketDataStore marketData;
+
+    @MockitoBean
+    private ForecastRepository forecasts;
+
+
+    @Test void publishedForecastRequiresClerkAndFailsClosedWithoutPublication() throws Exception {
+        mvc.perform(get("/api/v1/forecast")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/forecast").header("X-API-Key", KEY)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/forecast").with(jwt().jwt(token -> token.subject("buyer"))))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.status").value("unavailable"))
+                .andExpect(jsonPath("$.reason").value("missing_run"))
+                .andExpect(jsonPath("$.forecast").doesNotExist());
+        mvc.perform(get("/api/v1/forecast?horizon_days=5").with(jwt()))
+                .andExpect(status().isUnprocessableEntity());
+    }
 
     @BeforeEach
     void storedMarketData() {
