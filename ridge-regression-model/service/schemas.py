@@ -1,12 +1,17 @@
 """The contract between FastAPI and the Spring client. Agree changes here first."""
 from datetime import date
 from typing import Literal, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PredictRequest(BaseModel):
     horizon_days: Literal[7, 14, 30]
     as_of_date: Optional[date] = None      # default: latest available quote
+
+
+class FeatureContribution(BaseModel):
+    feature: str
+    contribution: float = Field(description="Signed contribution to predicted log return, after gamma shrinkage.")
 
 
 class PredictResponse(BaseModel):
@@ -23,6 +28,9 @@ class PredictResponse(BaseModel):
     mae_skill_vs_persistence: float
     backtest_rows: int
     model_version: str
+    top_drivers: list[FeatureContribution] = Field(
+        description="Up to five features with the largest absolute contributions to predicted log return."
+    )
 
 
 class NowcastRequest(BaseModel):
