@@ -26,7 +26,6 @@ import tools.jackson.databind.json.JsonMapper;
     "spring.datasource.password=placeholder", "mgo.db.check-on-startup=false", "mgo.analysis.fixture-enabled=true" })
 @ActiveProfiles("analysis-fixture")
 class PlanAnalysisHttpTests {
-    @MockitoBean OperationalDate operationalDate;
     @Value("${local.server.port}") int port;
     @MockitoBean JwtDecoder decoder;
     @MockitoBean UserAccounts users;
@@ -35,7 +34,6 @@ class PlanAnalysisHttpTests {
     final PurchasePlan plan = new PurchasePlan(planId, owner, new BigDecimal("100"), LocalDate.parse("2025-11-15"), LocalDate.parse("2025-09-01"));
     final HttpClient client = HttpClient.newHttpClient();
     @BeforeEach void setup() {
-        when(operationalDate.today()).thenReturn(LocalDate.parse("2025-10-24"));
         when(decoder.decode("owner-token")).thenReturn(Jwt.withTokenValue("owner-token").header("alg", "RS256").subject("owner").build());
         when(decoder.decode("other-token")).thenReturn(Jwt.withTokenValue("other-token").header("alg", "RS256").subject("other").build());
         when(users.resolve("owner", null)).thenReturn(owner);

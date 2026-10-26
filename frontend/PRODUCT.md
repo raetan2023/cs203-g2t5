@@ -1,5 +1,10 @@
 # Product
 
+> **Current implementation status (2026-10-26):** Backend current-date changes were reverted at the
+> owner's request so backend work can proceed separately on main. The desired Singapore-today behavior
+> below is pending backend integration; the current backend again returns its configured historical date.
+> Frontend refresh/draft-preservation work remains and consumes that returned date without overriding it.
+
 <!-- impeccable:product-schema 1 -->
 
 ## Platform

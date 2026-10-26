@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,27 +38,25 @@ public class PurchasePlanController {
 
     private final PurchasePlanRepository plans;
     private final UserAccounts users;
-    private final OperationalDate dates;
+    private final LocalDate scenarioDate;
     private final PlanAnalysisService analysis;
 
     public PurchasePlanController(PurchasePlanRepository plans, UserAccounts users,
-            OperationalDate dates, PlanAnalysisService analysis) {
+            @Value("${mgo.scenario-date}") LocalDate scenarioDate, PlanAnalysisService analysis) {
         this.plans = plans;
         this.users = users;
-        this.dates = dates;
+        this.scenarioDate = scenarioDate;
         this.analysis = analysis;
     }
 
     @GetMapping
     public Map<String, List<Map<String, Object>>> get(@AuthenticationPrincipal Jwt token) {
-        LocalDate scenarioDate = dates.today();
         UUID userId = ownerOf(token);
         return Map.of("plans", plans.findByUser(userId).stream().map(plan -> plan.toResponse(scenarioDate)).toList());
     }
 
     @GetMapping("/{planId}")
     public Map<String, Object> getOne(@AuthenticationPrincipal Jwt token, @PathVariable UUID planId) {
-        LocalDate scenarioDate = dates.today();
         PurchasePlan plan = plans.findByIdAndUser(planId, ownerOf(token))
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         return Map.of("plan", plan.toResponse(scenarioDate));
@@ -70,7 +69,6 @@ public class PurchasePlanController {
             @RequestParam("purchase_deadline") LocalDate deadline,
             @RequestParam("scenario_as_of_date") LocalDate scenario,
             jakarta.servlet.http.HttpServletRequest request) {
-        LocalDate scenarioDate = dates.today();
         UUID owner = ownerOf(token);
         PurchasePlan plan = plans.findByIdAndUser(planId, owner).orElseThrow(() ->
                 new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
@@ -80,7 +78,7 @@ public class PurchasePlanController {
         }
         Map<String, Object> result = analysis.read(context, request.getRequestURI().endsWith("/cost-impact"));
         // A slow provider must not publish results for inputs edited/deleted during its request.
-        if (!scenarioDate.equals(dates.today()) || !plans.findByIdAndUser(planId, owner).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate))).orElse(false)) {
+        if (!plans.findByIdAndUser(planId, owner).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate))).orElse(false)) {
             throw new ApiException(HttpStatus.CONFLICT, "Your saved plan changed while analysis was loading. Reload the purchase plan.");
         }
         return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(result);
@@ -90,9 +88,8 @@ public class PurchasePlanController {
     public ResponseEntity<Map<String, Object>> create(
             @AuthenticationPrincipal Jwt token,
             @RequestBody PurchasePlanRequest request) {
-        LocalDate scenarioDate = dates.today();
         UUID userId = ownerOf(token);
-        validate(request, scenarioDate);
+        validate(request);
         PurchasePlan saved = plans.insert(userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("plan", saved.toResponse()));
     }
@@ -102,9 +99,8 @@ public class PurchasePlanController {
             @PathVariable UUID planId,
             @AuthenticationPrincipal Jwt token,
             @RequestBody PurchasePlanRequest request) {
-        LocalDate scenarioDate = dates.today();
         UUID userId = ownerOf(token);
-        validate(request, scenarioDate);
+        validate(request);
         PurchasePlan updated = plans.update(planId, userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         return Map.of("plan", updated.toResponse());
@@ -128,7 +124,7 @@ public class PurchasePlanController {
         return users.resolve(token.getSubject(), token.getClaimAsString("email"));
     }
 
-    private void validate(PurchasePlanRequest request, LocalDate scenarioDate) {
+    private void validate(PurchasePlanRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
         if (request == null || request.quantityMt() == null) {
             errors.put("quantity_mt", "Quantity is required.");

@@ -4,7 +4,23 @@ Status: **active prototype plan; checkpoint commits stay on feature/ui-revamp-wi
 
 
 
-### Phase 3A completion checkpoint — 2026-10-26
+
+### Latest status — backend date rollback requested (2026-10-26)
+
+- Owner requested reverting the backend date-handling portion of `7d7a752` before doing backend work
+  separately on main. Restored `backend/` exactly to `7d7a752^`: controllers, configuration, README,
+  analysis copy and existing tests; removed OperationalDate and its two new test files.
+- Frontend Phase 3A changes remain: refresh scheduling, draft preservation, labels and tests.
+  They consume the date supplied by `/api/v1/config`; they do not force the backend to use today.
+- **Phase 3A is now partial, not complete end-to-end.** Until main's backend work is merged here,
+  the configured historical scenario date is active again (default 2025-10-24). The UI's “Current date”
+  label currently refers to that configured planning date, not necessarily the real calendar date.
+- The earlier completion section below is a historical record, superseded by this rollback.
+  Keep the same API key `scenario_as_of_date` when implementing backend work on main, or adapt the frontend
+  explicitly when integrating. Re-test deadlines, remaining days and analysis context after merging main.
+- Rollback verification: backend tree exactly matches `7d7a752^`; `mvnw clean test` passed 52 tests.
+- Home remains deferred for possible Claude/Impeccable work. Prototype branch only; no merge into main.
+### Phase 3A original completion checkpoint — 2026-10-26 (backend subsequently reverted)
 
 - Implemented the approved Singapore-current-date behavior. `OperationalDate` reads a runtime clock;
   config and purchase-plan endpoints use it per request. Historical `MGO_SCENARIO_DATE` no longer freezes
@@ -422,7 +438,9 @@ Impeccable passes were not run; direct source review, browser screenshots and ax
 
 #### Phase 3A — Today's date (functional prerequisite)
 
-- [x] **Owner request:** replace the historical scenario date with the actual current date.
+**Current status: partial. Backend portion reverted at owner request; backend work moves to main. Checked items below describe the original implementation, not current end-to-end completion.**
+
+- [ ] **Backend pending on main after rollback:** replace the historical scenario date with the actual current date.
       Compute it at runtime; do not hard-code the date of this discussion (2026-10-26).
 - [x] Traced the authoritative scenario source through backend configuration, `ClerkApp`, hooks,
       plan validation, remaining-day calculations and recommendation requests before editing.
