@@ -51,9 +51,9 @@ public class PublishedForecastAnalysisProvider implements PlanAnalysisProvider {
             action = "Review your overdue purchase plan";
             reason = "The saved purchase deadline has passed.";
         } else if (f.target_date().isAfter(context.purchase_deadline())) {
-            action = "Choose a forecast within your purchase deadline";
+            action = "Obtain a supplier quote within your purchase window";
             reason = "This forecast targets " + f.target_date() + ", after your deadline of "
-                    + context.purchase_deadline() + ". It cannot support waiting until that date.";
+                    + context.purchase_deadline() + ". The model supports 7, 14 and 30 days from its quote anchor; a shorter estimate may not be available. Do not wait beyond your deadline based on this forecast.";
         } else if (r.observation_date().isBefore(context.scenario_as_of_date().minusDays(7))) {
             action = "Review this estimate against a current supplier quote";
             reason = "The reference price is dated " + r.observation_date()
@@ -68,7 +68,7 @@ public class PublishedForecastAnalysisProvider implements PlanAnalysisProvider {
             action = "No clear price advantage from waiting";
             reason = "The forecast range includes the reference price, so prices could rise or fall.";
         }
-        String explanation = reason + " For " + context.quantity_mt().stripTrailingZeros().toPlainString()
+        String explanation = f.target_date().isAfter(context.purchase_deadline()) ? reason : reason + " For " + context.quantity_mt().stripTrailingZeros().toPlainString()
                 + " MT, the estimated cost at " + f.target_date() + " is USD "
                 + String.format(java.util.Locale.ROOT, "%,.0f", f.prices().lower().multiply(context.quantity_mt())) + " to "
                 + String.format(java.util.Locale.ROOT, "%,.0f", f.prices().upper().multiply(context.quantity_mt()))

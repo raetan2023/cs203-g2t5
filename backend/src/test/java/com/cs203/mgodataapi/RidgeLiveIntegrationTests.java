@@ -52,19 +52,27 @@ class RidgeLiveIntegrationTests {
         String query = "?plan_id=" + saved.get("plan_id") + "&quantity_mt=" + saved.get("quantity_mt")
                 + "&purchase_deadline=" + saved.get("purchase_deadline") + "&scenario_as_of_date=" + today
                 + "&horizon_days=30&run_id=" + forecast.path("run_id").asText();
+        LocalDate deadline = saved.get("purchase_deadline") instanceof LocalDate d ? d : ((java.sql.Date) saved.get("purchase_deadline")).toLocalDate();
+        boolean fits = !LocalDate.parse(forecast.path("target_date").asText()).isAfter(deadline);
         var impact = mapper.readTree(mvc.perform(get("/api/v1/purchase-plans/cost-impact" + query).with(jwt()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.cost_impact.status").value("ready"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cost_impact.status").value(fits ? "ready" : "unavailable"))
                 .andReturn().getResponse().getContentAsString());
-        BigDecimal quantity = (BigDecimal) saved.get("quantity_mt");
-        assertEquals(0, new BigDecimal(forecast.path("low").asText()).multiply(quantity)
-                .compareTo(new BigDecimal(impact.at("/cost_impact/value/forecast_total/lower").asText())));
+        if (fits) {
+            BigDecimal quantity = (BigDecimal) saved.get("quantity_mt");
+            assertEquals(0, new BigDecimal(forecast.path("low").asText()).multiply(quantity)
+                    .compareTo(new BigDecimal(impact.at("/cost_impact/value/forecast_total/lower").asText())));
+        } else assertEquals("unsupported_horizon", impact.at("/cost_impact/reason").asText());
         assertEquals(forecast.path("run_id").asText(), impact.at("/forecast/value/run_id").asText());
         mvc.perform(get("/api/v1/purchase-plans/recommendation" + query).with(jwt()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.recommendation.status").value("ready"));
-        mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=7").with(jwt()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.reason").value("ridge_unavailable"));
-        mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=14").with(jwt()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.reason").value("ridge_unavailable"));
+        for (int h : new int[]{7,14}) {
+            var current = mapper.readTree(mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=" + h).with(jwt()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ready"))
+                .andReturn().getResponse().getContentAsString());
+            assertEquals(today.toString(), current.path("anchor_quote_date").asText());
+            assertEquals(today.plusDays(h).toString(), current.path("target_date").asText());
+        }
         // Change only news in memory; never write synthetic market/news data to the database.
         var repository = mock(PurchaseForecastRepository.class);
         var rows = new java.util.ArrayList<>(observations.observations(today));

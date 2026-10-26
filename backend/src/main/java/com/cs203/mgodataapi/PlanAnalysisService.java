@@ -115,6 +115,10 @@ public class PlanAnalysisService {
                 || !nonnegative(f.prices().upper()) || f.prices().lower().compareTo(f.prices().upper()) > 0
                 || blank(f.range_description()) || (f.central_estimate() != null && !nonnegative(f.central_estimate())))
             return Result.unavailable("invalid_bounds", "The source price bounds or uncertainty metadata are invalid.");
+        if (f.target_date().isAfter(context.purchase_deadline()))
+            return Result.unavailable("unsupported_horizon", "The forecast targets " + f.target_date()
+                    + ", after your purchase deadline of " + context.purchase_deadline()
+                    + ". No cost estimate is available within this purchase window.");
         BigDecimal q = context.quantity_mt;
         BigDecimal base = r.price().multiply(q), low = f.prices().lower().multiply(q), high = f.prices().upper().multiply(q);
         return Result.ready(new Impact("USD", f.target_date(), base, new Range(low, high),

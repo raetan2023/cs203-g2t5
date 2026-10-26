@@ -25,7 +25,7 @@ import static com.cs203.mgodataapi.ForecastService.*;
 @Service
 public class PurchaseForecastService {
     public static final String METHOD = "experimental_gdelt_scaled_quantiles";
-    private static final String VERSION = "purchase-ridge-news-v2";
+    private static final String VERSION = "purchase-ridge-news-db-v3";
     private final PurchaseForecastRepository repository;
     private final Clock clock;
     private final RidgeInference ridge;
@@ -47,7 +47,7 @@ public class PurchaseForecastService {
         }
         TreeMap<LocalDate, BigDecimal> prices = new TreeMap<>(), counts = new TreeMap<>(), tones = new TreeMap<>();
         for (var row : observations) {
-            if (row.date() == null || row.date().isBefore(origin.minusDays(400)) || !row.date().isBefore(origin)
+            if (row.date() == null || row.date().isBefore(origin.minusDays(400)) || (row.date().isAfter(origin) || (row.date().equals(origin) && !row.series().equals("SGP_MGO_OBSERVED")))
                     || row.value() == null) return unavailable("invalid_inputs", "Stored observations contain invalid dates or values.");
             TreeMap<LocalDate, BigDecimal> series;
             switch (row.series()) {
@@ -104,7 +104,9 @@ public class PurchaseForecastService {
             modelAnchorPrice = new BigDecimal(model.path("anchor_price").asText());
             rawLow = new BigDecimal(model.path("raw_q10_price").asText());
             rawHigh = new BigDecimal(model.path("raw_q90_price").asText());
-            if (model.path("horizon_days").asInt() != horizon || !"USD/metric tonne".equals(model.path("unit").asText())
+            if (!"supabase".equals(model.path("input_source").asText())
+                    || !modelAnchor.equals(quoteDate) || modelAnchorPrice.compareTo(prices.get(quoteDate)) != 0
+                    || model.path("horizon_days").asInt() != horizon || !"USD/metric tonne".equals(model.path("unit").asText())
                     || !Double.isFinite(central.doubleValue()) || !Double.isFinite(modelHigh.doubleValue())
                     || rawLow.signum() <= 0 || rawHigh.compareTo(rawLow) < 0
                     || !model.path("inference_snapshot").asText().matches("[a-f0-9]{64}")
@@ -124,7 +126,7 @@ public class PurchaseForecastService {
         double q90 = Math.max(0, Math.log(modelHigh.divide(central, MathContext.DECIMAL64).doubleValue()));
         BigDecimal low = price(central, q10 * multiplier), high = price(central, q90 * multiplier);
         String limits = "Experimental news-adjusted q10/q90-based bounds; no measured conditional coverage or purchasing advantage. "
-                + "Original repository Ridge pipeline executed using its audited CSV snapshot " + model.path("input_snapshot").asText()
+                + "Original repository Ridge pipeline executed using the current database observation snapshot " + model.path("input_snapshot").asText()
                 + ". Central prediction is unchanged by news. Baseline calibrated quantile endpoints expand away from the Ridge centre by "
                 + String.format(java.util.Locale.ROOT, "%.2f", multiplier) + "x. No additional quote-age scaling is applied. "
                 + "Model horizon is " + horizon + " calendar days from its observed anchor " + modelAnchor
