@@ -1,5 +1,10 @@
 # Product Requirements Document
 
+> **Current implementation status (2026-10-26):** Backend current-date changes were reverted at the
+> owner's request so backend work can proceed separately on main. The desired Singapore-today behavior
+> below is pending backend integration; the current backend again returns its configured historical date.
+> Frontend refresh/draft-preservation work remains and consumes that returned date without overriding it.
+
 > **Prototype requirement update — 2026-10-26:** The owner now requires operational purchase-plan
 > dates to use today's Singapore calendar date. This supersedes the historical-scenario rules below
 > for deadline validation, remaining days and plan-analysis request context. Past-deadline plans remain

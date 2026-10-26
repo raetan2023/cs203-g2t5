@@ -75,7 +75,7 @@ public class PlanAnalysisService {
         if (!validBasis(r.basis())) return Result.unavailable("incompatible_basis", "The reference price basis is not specified.");
         if (!nonnegative(r.price())) return Result.unavailable("invalid_bounds", "The reference price is invalid.");
         if (r.observation_date() == null || r.observation_date().isAfter(scenario))
-            return Result.unavailable("unsupported_horizon", "The reference observation is not available at this planning date.");
+            return Result.unavailable("unsupported_horizon", "The reference observation is not available at this historical scenario.");
         return result;
     }
     private static Result<Forecast> validateForecast(Result<Forecast> result, LocalDate scenario) {
@@ -84,7 +84,7 @@ public class PlanAnalysisService {
         Forecast f = result.value();
         if (!validBasis(f.basis())) return Result.unavailable("incompatible_basis", "The forecast price basis is not specified.");
         if (f.target_date() == null || f.target_date().isBefore(scenario))
-            return Result.unavailable("unsupported_horizon", "The forecast target is not supported for this planning date.");
+            return Result.unavailable("unsupported_horizon", "The forecast target is not supported for this historical scenario.");
         if (f.prices() == null || !nonnegative(f.prices().lower()) || !nonnegative(f.prices().upper())
                 || f.prices().lower().compareTo(f.prices().upper()) > 0 || blank(f.range_description())
                 || (f.central_estimate() != null && (f.central_estimate().compareTo(f.prices().lower()) < 0
@@ -102,7 +102,7 @@ public class PlanAnalysisService {
             return Result.unavailable("incompatible_basis", "Reference and forecast must describe the same commodity in USD/MT.");
         if (r.observation_date() == null || r.observation_date().isAfter(context.scenario_as_of_date)
                 || f.target_date() == null || f.target_date().isBefore(context.scenario_as_of_date))
-            return Result.unavailable("unsupported_horizon", "The supplied price dates are incompatible with the current planning date.");
+            return Result.unavailable("unsupported_horizon", "The supplied price dates are incompatible with the active historical scenario.");
         if (!nonnegative(r.price()) || f.prices() == null || !nonnegative(f.prices().lower())
                 || !nonnegative(f.prices().upper()) || f.prices().lower().compareTo(f.prices().upper()) > 0
                 || blank(f.range_description()) || (f.central_estimate() != null &&
