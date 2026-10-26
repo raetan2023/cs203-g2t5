@@ -2,7 +2,7 @@ import type { PlanAnalysis, PlanResultContext } from '../purchase-plan/types';
 
 /** Independent analysis reads; apiService maps the authenticated backend contract. */
 export interface RecommendationService {
-  read(context: PlanResultContext): Promise<PlanAnalysis>;
+  read(context: PlanResultContext, horizonDays?: number, runId?: string): Promise<PlanAnalysis>;
   readImpact?(context: PlanResultContext, horizonDays?: number, runId?: string): Promise<PlanAnalysis>;
 }
 

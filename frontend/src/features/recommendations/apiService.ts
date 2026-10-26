@@ -102,5 +102,5 @@ export function createApiRecommendationService(options: ApiOptions = {}): Recomm
     if (runId && parsed.forecast.status === 'ready' && parsed.forecast.value.run_id !== runId) throw new PlanError('The active forecast changed. Reload the purchase plan.', {}, 409);
     return parsed;
   }
-  return { read: context => read('recommendation', context), readImpact: (context, horizonDays, runId) => read('cost-impact', context, horizonDays, runId) };
+  return { read: (context, horizonDays, runId) => read('recommendation', context, horizonDays, runId), readImpact: (context, horizonDays, runId) => read('cost-impact', context, horizonDays, runId) };
 }

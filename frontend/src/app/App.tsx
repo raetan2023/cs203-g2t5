@@ -18,6 +18,7 @@ export interface AppProps {
   auth: AuthService;
   createPlanService(user: SessionUser): PurchasePlanService;
   createForecastService?(user: SessionUser): ForecastService;
+  createPurchaseForecastService?(user: SessionUser): ForecastService;
   createRecommendationService?(user: SessionUser): RecommendationService;
   scenarioDate: string;
   dataRevision?: number;
@@ -28,7 +29,7 @@ export interface AppProps {
   MarketDashboard?: ComponentType<{ scenarioDate: string }>;
 }
 
-export function App({ auth, createPlanService, scenarioDate, refreshScenario, dataRevision, mock = false, renderAuthPage, MarketDashboard, createRecommendationService, createForecastService }: AppProps) {
+export function App({ auth, createPlanService, scenarioDate, refreshScenario, dataRevision, mock = false, renderAuthPage, MarketDashboard, createRecommendationService, createForecastService, createPurchaseForecastService }: AppProps) {
   const path = usePath();
   const search = useSearch();
   const selectedPlanId = new URLSearchParams(search).get('plan_id');
@@ -38,7 +39,7 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, da
   const returnPath = useRef('/home');
   const read = useRef<{ auth: AuthService; attempt: number; promise: ReturnType<AuthService['readSession']> } | null>(null);
   const generation = useRef(0);
-  const planStore = useRef<{ userId: string; service: PurchasePlanService; recommendations?: RecommendationService; forecasts?: ForecastService } | null>(null);
+  const planStore = useRef<{ userId: string; service: PurchasePlanService; recommendations?: RecommendationService; forecasts?: ForecastService; purchaseForecasts?: ForecastService } | null>(null);
 
   function acceptUser(user: SessionUser | null) {
     generation.current++;
@@ -88,10 +89,14 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, da
     }} /></>;
   }
   if (!user) return <div className="bb-app"><main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/login">Go to sign in</AppLink></main></div>;
-  if (!planStore.current || planStore.current.userId !== user.id) planStore.current = { userId: user.id, service: createPlanService(user), recommendations: createRecommendationService?.(user), forecasts: createForecastService?.(user) };
+  if (!planStore.current || planStore.current.userId !== user.id) planStore.current = { userId: user.id, service: createPlanService(user), recommendations: createRecommendationService?.(user), forecasts: createForecastService?.(user), purchaseForecasts: createPurchaseForecastService?.(user) };
+  const recommendationPage = <RecommendationsPage planId={selectedPlanId} refreshScenario={refreshScenario} key={user.id} planService={planStore.current.service} service={planStore.current.recommendations} scenarioDate={scenarioDate} />;
+  const purchaseRecommendation = planStore.current.purchaseForecasts
+    ? <ForecastProvider service={planStore.current.purchaseForecasts} scenarioDate={scenarioDate} revision={dataRevision}>{recommendationPage}</ForecastProvider>
+    : recommendationPage;
   return <ForecastProvider service={planStore.current.forecasts} scenarioDate={scenarioDate} revision={dataRevision}><AppShell path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
     await auth.signOut(); acceptUser(null); returnPath.current = '/home'; setNotice(''); navigate('/login', true);
   }}>
-    {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? <RecommendationsPage planId={selectedPlanId} refreshScenario={refreshScenario} key={user.id} planService={planStore.current.service} service={planStore.current.recommendations} scenarioDate={scenarioDate} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
+    {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? purchaseRecommendation : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
   </AppShell></ForecastProvider>;
 }

@@ -32,7 +32,9 @@ public interface PlanAnalysisProvider {
 
     /** 'unavailable', 'fixture', or 'model'. This is provenance, not a confidence claim. */
     String provenance();
+    default boolean recommendationUsesPrices() { return false; }
     Prices prices(LocalDate scenarioDate);
     default Prices prices(LocalDate scenarioDate, int horizonDays) { return prices(scenarioDate); }
     Recommendation recommendation(PlanAnalysisService.Context context);
+    default Recommendation recommendation(PlanAnalysisService.Context context, Prices prices) { return recommendation(context); }
 }

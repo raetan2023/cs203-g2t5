@@ -3,7 +3,7 @@ import { isValidDate } from '../purchase-plan/dates';
 
 export type Horizon = 7 | 14 | 30;
 export interface Interval {
-  nominal_coverage: number; empirical_coverage: number | null; evaluation_rows: number;
+  nominal_coverage: number | null; empirical_coverage: number | null; evaluation_rows: number;
   baseline_coverage: number | null; baseline_mean_width: number | null; mean_width: number | null;
   method: string; evaluation_scope: string; limitations: string;
 }
@@ -46,7 +46,9 @@ export function parseForecast(payload: unknown, horizon: Horizon): Forecast {
   if (low > high || anchor > origin || target <= origin) throw invalid();
   const i = object(v.interval), rows = number(i.evaluation_rows, 0);
   if (!Number.isInteger(rows)) throw invalid();
-  const interval: Interval = { nominal_coverage: fraction(i.nominal_coverage), empirical_coverage: nullable(i.empirical_coverage, fraction),
+  const experimental = i.method === 'experimental_gdelt_scaled_quantiles';
+  if (experimental && (i.nominal_coverage != null || i.empirical_coverage != null || rows !== 0)) throw invalid();
+  const interval: Interval = { nominal_coverage: experimental ? null : fraction(i.nominal_coverage), empirical_coverage: nullable(i.empirical_coverage, fraction),
     evaluation_rows: rows, baseline_coverage: nullable(i.baseline_coverage, fraction),
     baseline_mean_width: nullable(i.baseline_mean_width, x => number(x, 0)), mean_width: nullable(i.mean_width, x => number(x, 0)),
     method: text(i.method), evaluation_scope: text(i.evaluation_scope), limitations: text(i.limitations) };
@@ -69,13 +71,13 @@ export function parseForecast(payload: unknown, horizon: Horizon): Forecast {
 }
 
 /** Normal routes only call the authenticated backend; no synthetic fallback. */
-export function createApiForecastService(options: ApiOptions = {}): ForecastService {
+export function createApiForecastService(options: ApiOptions & { path?: '/api/v1/forecast' | '/api/v1/purchase-plans/forecast' } = {}): ForecastService {
   const base = (options.baseUrl ?? import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
   return { async read(horizon) {
     const token = await options.getToken?.();
     if (!token) throw new Error('Please sign in again to load the forecast.');
     let response: Response;
-    try { response = await fetch(`${base}/api/v1/forecast?horizon_days=${horizon}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); }
+    try { response = await fetch(`${base}${options.path ?? '/api/v1/forecast'}?horizon_days=${horizon}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }); }
     catch { throw new Error('Could not reach the forecast service. Please retry.'); }
     let payload: unknown;
     try { payload = await response.json(); } catch { throw new Error('The forecast service returned an unreadable response.'); }

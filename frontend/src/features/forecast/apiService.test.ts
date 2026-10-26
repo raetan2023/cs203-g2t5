@@ -60,3 +60,16 @@ describe('live forecast adapter', () => {
     await expect(createApiForecastService({ getToken: () => 'session' }).read(7)).rejects.toThrow('reach');
   });
 });
+
+it('uses the plan-only endpoint and refuses confidence claims on experimental responses', async () => {
+  const body = { ...payload(), interval: { ...payload().interval,
+    method: 'experimental_gdelt_scaled_quantiles', nominal_coverage: null, empirical_coverage: null,
+    evaluation_rows: 0, baseline_coverage: null, baseline_mean_width: null, mean_width: null,
+    evaluation_scope: 'Historical return pairs; no coverage evaluation.' } };
+  const fetcher = vi.fn(async (_url: string) => new Response(JSON.stringify(body)));
+  vi.stubGlobal('fetch', fetcher);
+  const service = createApiForecastService({ baseUrl: 'https://api.example', getToken: () => 'session', path: '/api/v1/purchase-plans/forecast' });
+  expect(await service.read(7)).toMatchObject({ status: 'ready', interval: { nominal_coverage: null, empirical_coverage: null } });
+  expect(fetcher.mock.calls[0][0]).toContain('/api/v1/purchase-plans/forecast?horizon_days=7');
+  expect(() => parseForecast({ ...body, interval: { ...body.interval, nominal_coverage: .8 } }, 7)).toThrow();
+});

@@ -32,7 +32,7 @@ public class PlanAnalysisService {
             Result<Forecast> forecast = Result.unavailable("missing_forecast", "Forecast prices are loaded separately.");
             Result<Impact> cost = Result.unavailable("missing_forecast", "Cost impact is loaded separately.");
             Result<Guidance> guidance = Result.unavailable("recommendation_unavailable", "Recommendations are loaded separately.");
-            if (impact) {
+            if (impact || expectedRunId != null || provider.recommendationUsesPrices()) {
                 Prices prices = provider.prices(context.scenario_as_of_date, horizon);
                 if (!context.scenario_as_of_date.equals(prices.scenario_as_of_date())) throw new IllegalArgumentException("Provider scenario mismatch");
                 reference = validateReference(prices.reference(), context.scenario_as_of_date);
@@ -41,8 +41,11 @@ public class PlanAnalysisService {
                         || !expectedRunId.equals(forecast.value().run_id())))
                     throw new ApiException(HttpStatus.CONFLICT, "The forecast run changed. Reload the forecast and cost impact.");
                 cost = calculate(context, reference, forecast);
-            } else {
-                Recommendation result = provider.recommendation(context);
+            }
+            if (!impact) {
+                Recommendation result = provider.recommendationUsesPrices()
+                        ? provider.recommendation(context, new Prices(context.scenario_as_of_date, reference, forecast))
+                        : provider.recommendation(context);
                 if (!context.matches(result.context())) throw new IllegalArgumentException("Provider context mismatch");
                 guidance = result.recommendation();
                 validateResult(guidance);
