@@ -2,7 +2,8 @@ import type { ForecastService, Horizon, ReadyForecast } from '../features/foreca
 import { buildMockForecast } from '../features/forecast/mockService';
 import type { RecommendationService } from '../features/recommendations/service';
 import { RECOMMENDATION_DEMO_PLAN } from '../features/recommendations/mockService';
-import type { CurrentRecommendation, PlanAnalysis, PlanResultContext, PurchasePlan } from '../features/purchase-plan/types';
+import type { CurrentRecommendation, PlanAnalysis, PlanResultContext, PurchasePlan, PurchasePlanService, SubmittedRecommendation } from '../features/purchase-plan/types';
+import type { OrganisationPermissions } from '../features/organisation/apiService';
 
 /**
  * Fixed preview data for the Monitor, Buy now and Wait mockups (docs/ui-revamp/assets/inspo/recommendations-page).
@@ -94,8 +95,11 @@ export function createScenarioRecommendationService(scenario: RecommendationScen
     const [low, central, high] = prices[horizon];
     const target = addDays(QUOTE_DATE, horizon);
     const q = context.quantity_mt, reference = PRICE * q;
+    // Shaped like model output so the buyer approval flow can be clicked through; the page still labels
+    // these results synthetic because every preview forecast carries `synthetic: true`.
     return {
-      source: 'mock', provenance: 'fixture', context: { ...context, urgency: context.urgency ?? 'NORMAL' },
+      source: 'api', provenance: 'model', approval_fingerprint: (scenario === 'monitor' ? 'a' : scenario === 'buy' ? 'b' : 'c').repeat(56) + String(horizon).padStart(8, '0'),
+      context: { ...context, urgency: context.urgency ?? 'NORMAL' },
       reference: { status: 'ready', value: { price: PRICE, observation_date: QUOTE_DATE, basis } },
       forecast: { status: 'ready', value: { prices: { lower: low, upper: high }, central_estimate: central, target_date: target, basis,
         run_id: `preview-${scenario}`, model_version: `ridge-${horizon}d-sha256-preview00000000`,
@@ -108,4 +112,28 @@ export function createScenarioRecommendationService(scenario: RecommendationScen
     };
   }
   return { read, readImpact: read };
+}
+
+/** Preview buyer: can write plans, so the decision rail offers "Submit for approval". */
+export const PREVIEW_BUYER: OrganisationPermissions = { organisation_id: 'preview-organisation', role: 'org:buyer', can_read_plans: true, can_write_plans: true, plan_scope: 'own' };
+
+/** Adds a local submit and saved-snapshot read to the preview plan service; nothing leaves the browser. */
+export function withPreviewApproval(plans: PurchasePlanService, scenario: RecommendationScenario): PurchasePlanService {
+  const recommendations = createScenarioRecommendationService(scenario, 0);
+  let submitted: { plan: PurchasePlan; submission: SubmittedRecommendation } | undefined;
+  return {
+    ...plans,
+    async read(planId) { return submitted && submitted.plan.plan_id === planId ? { plan: submitted.plan } : plans.read(planId); },
+    async submit(planId, selection) {
+      const { plan } = await plans.read(planId);
+      if (!plan) throw new Error('No saved purchase plan.');
+      const analysis = await recommendations.read({ ...plan, urgency: selection.urgency }, selection.horizon_days);
+      const saved: PurchasePlan = { ...plan, status: 'submitted', submitted_at: new Date().toISOString() };
+      submitted = { plan: saved, submission: { horizon_days: selection.horizon_days, analysis } };
+      return { plan: saved };
+    },
+    async readSubmission(planId) {
+      return { submission: submitted && submitted.plan.plan_id === planId ? submitted.submission : null, decision: null };
+    },
+  };
 }

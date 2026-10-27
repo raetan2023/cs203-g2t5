@@ -37,19 +37,17 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
     } catch (failure) { if (active.current) setError(requestError(failure).detail); }
     finally { pending.current = false; if (active.current) setBusy(false); }
   }
-  return <section className="rec-approval" aria-label="Request recommendation approval">
-    <h3>Request approval for this recommendation</h3>
-    <p>Plan recommendation: <strong>{guidance?.action.replaceAll('_', ' ')}</strong>. This recommendation considers the available forecasts within your purchase deadline.</p>
-    {referenceOnly ? <p>This request uses the observed reference price for buying now. No supported forecast cost is available within the deadline.</p>
-      : <p>Cost detail included: <strong>{horizon}-day forecast</strong>{forecast ? ` · target ${formatDate(forecast.target_date)}` : ''}.</p>}
-    <p>Every manager in your organisation will receive the plan recommendation, its reasons and this selected cost detail.</p>
-    {!valid && <p>A saved draft and a current priced recommendation are required.</p>}
+  return <section className="rec-approval" aria-label="Submit for approval">
+    {confirm ? <div className="rec-approval-confirm" role="group" aria-label="Confirm submission">
+      <p><strong>Submit {guidance ? `“${guidance.action.replaceAll('_', ' ').toLowerCase()}”` : 'this recommendation'} for approval?</strong> The plan and this recommendation are locked while managers review it.</p>
+      <div className="rec-approval-actions"><button className="bb-button bb-button--secondary" disabled={busy} onClick={() => setConfirm(false)}>Cancel</button>
+      <button className="bb-button" disabled={busy || !valid} onClick={submit}>{busy ? 'Submitting…' : 'Confirm submission'}</button></div>
+    </div> : <button className="bb-button rec-submit" disabled={!valid} onClick={() => setConfirm(true)}>Submit for approval</button>}
     {error && <p role="alert">{error} Your selection has not been confirmed. Refresh the page if the plan or forecast changed.</p>}
-    {confirm ? <div>
-      <p><strong>Confirm this choice?</strong> The plan and this recommendation will be locked for review.</p>
-      <div className="rec-approval-actions"><button className="bb-button bb-button--secondary" disabled={busy} onClick={() => setConfirm(false)}>Cancel request</button>
-      <button className="bb-button" disabled={busy || !valid} onClick={submit}>{busy ? 'Submitting request…' : 'Confirm approval request'}</button></div>
-    </div> : <button className="bb-button" disabled={!valid} onClick={() => setConfirm(true)}>Request approval for this recommendation</button>}
+    {!valid && <p className="rec-approval-note">A saved draft and a current priced recommendation are required.</p>}
+    {referenceOnly ? <p className="rec-approval-note">Uses the observed reference price for buying now. No supported forecast cost is available within the deadline.</p>
+      : <p className="rec-approval-note">Cost detail included: <strong>{horizon}-day forecast</strong>{forecast ? ` · target ${formatDate(forecast.target_date)}` : ''}. Select an eligible date to change it.</p>}
+    <p className="rec-approval-note">Every manager in your organisation receives the recommendation, its reasons and this cost detail.</p>
   </section>;
 }
 
