@@ -263,6 +263,7 @@ it('refreshes urgency, renders policy evidence, and ignores a late previous urge
   expect(screen.getByText('$70,000.00')).toBeVisible();
   expect(screen.getByText('-$1,500.00')).toBeVisible();
   expect(screen.getByText('High urgency takes precedence over falling prices.')).toBeVisible();
+  expect(screen.getByText('Current date: 24 Oct 2025')).toBeVisible();
   await act(async () => resolveOld(body));
   expect(screen.getByText('BUY_NOW')).toBeVisible();
   expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();

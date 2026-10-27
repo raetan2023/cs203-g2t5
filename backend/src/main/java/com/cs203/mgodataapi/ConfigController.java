@@ -1,6 +1,5 @@
 package com.cs203.mgodataapi;
 
-import java.time.LocalDate;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -13,21 +12,22 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>The scenario date is needed even when a user has no saved plan, so screens can show
  * days remaining while the deadline is being chosen. Every feature reads it from here, so
- * the dashboard and the purchase-plan screens cannot drift apart.
+ * plan validation and displayed remaining days agree. Market observations retain their own dates.
  */
 @RestController
 @Tag(name = "Operations")
 @SecurityRequirement(name = "apiKey")
 public class ConfigController {
 
-    private final java.time.Clock clock;
+    private final OperationalDate dates;
 
-    public ConfigController(java.time.Clock clock) {
-        this.clock = clock;
+    public ConfigController(OperationalDate dates) {
+        this.dates = dates;
     }
 
     @GetMapping("/api/v1/config")
     public Map<String, Object> config() {
-        return Map.of("scenario_as_of_date", LocalDate.now(clock).toString());
+        // Keep the existing wire key; its value is now the runtime Singapore date.
+        return Map.of("scenario_as_of_date", dates.today().toString());
     }
 }
