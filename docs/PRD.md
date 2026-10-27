@@ -8,7 +8,7 @@
 > readable as overdue; new/edited deadlines must be today or later. The backend remains authoritative,
 > and frontend config refreshes across midnight/resume. Actual observation/forecast dates and historical
 > preview fixtures remain unchanged. This does not promise live ingestion or current market coverage.
-> See `docs/UI_REVAMP_PLAN.md` Phase 3A for implementation/verification. Other historical product notes
+> See `docs/ui-revamp/UI_REVAMP_PLAN.md` Phase 3A for implementation/verification. Other historical product notes
 > below remain a record of earlier scope, not permission to revert this date behavior.
 
 Status: Working draft - clarification in progress
