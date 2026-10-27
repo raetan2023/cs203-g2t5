@@ -121,6 +121,19 @@ logs a message when the frontend falls back.
 
 ### Purchase plans
 
+Draft submission and the shared manager inbox require the manual
+[`20261027_plan_submission.sql`](migrations/20261027_plan_submission.sql) migration
+plus [`20261027_recommendation_approval_snapshot.sql`](migrations/20261027_recommendation_approval_snapshot.sql)
+before running this branch. Both are applied to the shared project; do not rerun them there. See the [rollout and API guide](../docs/plan-submission.md).
+Buyers choose a recommendation and submit the validated selection body with `POST /api/v1/purchase-plans/{planId}/submit`;
+only managers can read `GET /api/v1/purchase-plans/approval-notifications`.
+Submitted plans cannot be edited/deleted. No new environment variables are needed.
+Manager decisions also require [`20261027_manager_approval_decisions.sql`](migrations/20261027_manager_approval_decisions.sql),
+applied to the shared project. Managers POST the final choice, comment and saved
+fingerprint to `/api/v1/purchase-plans/{planId}/decision`. Rejection needs a reason;
+only submitted requests can be decided, and the first decision is final. Submission
+GET includes the buyer-visible audit record. See the rollout guide for full details.
+
 Organisation access now requires the active Clerk organisation and membership role
 in the verified session token. Buyers can manage multiple own plans within that
 organisation. Managers and analysts can read organisation plans and their analysis
@@ -280,7 +293,12 @@ a supported model target. Missing inputs remain unavailable rather than producin
 
 ### Daily forecast publication API
 
-Authenticated `GET /api/v1/forecast?horizon_days=7` accepts 7, 14 or 30 and needs
+The verified Clerk token must include an active organisation with Buyer, Manager
+or Analyst membership. Admin-only, missing or invalid membership claims are denied
+with 403; missing/invalid authentication receives 401. Forecasts remain shared market
+publications, not private per-organisation records. No database change is needed.
+
+Organisation-authorised `GET /api/v1/forecast?horizon_days=7` accepts 7, 14 or 30 and needs
 only `Authorization: Bearer <Clerk token>`, not `X-API-Key`. Ready responses contain
 the published prices, independent point estimate, nominal/measured interval
 coverage and paired baseline results, exact target/origin/news dates, source dates,

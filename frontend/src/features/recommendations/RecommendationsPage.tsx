@@ -1,3 +1,5 @@
+import { EvidenceView } from './RecommendationEvidence';
+import { RecommendationApproval, SubmittedRecommendationView } from './RecommendationApproval';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppLink } from '../../app/router';
 import { formatDate } from '../purchase-plan/dates';
@@ -11,8 +13,8 @@ import '../forecast/forecast.css';
 import type { Horizon } from '../forecast/apiService';
 import { useForecastContext } from '../forecast/ForecastContext';
 
-export function RecommendationsPage({ planService, service, scenarioDate, refreshScenario, planId }: {
-  planId?: string | null; planService: PurchasePlanService; service?: RecommendationService; scenarioDate: string; refreshScenario?: () => void;
+export function RecommendationsPage({ planService, service, scenarioDate, refreshScenario, planId, canSubmit = false, canDecide = false }: {
+  canSubmit?: boolean; canDecide?: boolean; planId?: string | null; planService: PurchasePlanService; service?: RecommendationService; scenarioDate: string; refreshScenario?: () => void;
 }) {
   const forecastState = useForecastContext();
   const forecast = forecastState.data?.status === 'ready' ? forecastState.data : undefined;
@@ -50,6 +52,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
     if (plan && forecast && !fitsSelected && fittingHorizons.length > 0) forecastState.setHorizon(fittingHorizons[0]);
   }, [plan, forecast, fitsSelected, fittingHorizons[0], forecastState.setHorizon]);
   const afterDeadline = !!(plan && forecast && forecast.target_date > plan.purchase_deadline);
+  if (plan?.status && plan.status !== 'draft') return <SubmittedRecommendationView canDecide={canDecide} plan={plan} planService={planService} />;
   return <main className="recommendations">
     <header className="rec-header"><div><p className="rec-eyebrow">Purchase planning</p><h1 tabIndex={-1} ref={heading}>Purchase recommendation</h1><p>Compare possible costs for your saved plan.</p></div><AppLink className="rec-back" href="/purchase-plans">Back to purchase plans</AppLink></header>
     {plan && <section className="rec-plan" aria-label="Selected purchase plan"><dl>
@@ -89,12 +92,13 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       : <section className="rec-card rec-analysis" aria-label="Purchase analysis">
         {service?.readImpact && (!forecastState.connected || (forecast && fitsSelected)) ? <PurchaseImpact plan={plan} service={service!} reload={reload} horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={forecast?.run_id} published={forecast} /> : forecastState.connected && <p>Cost impact is unavailable until a current forecast is ready for the selected horizon.</p>}
         {(!forecastState.connected || forecast || (forecastState.status !== 'error' && forecastState.status !== 'loading')) && <Recommendation plan={plan} service={service} reload={reload} requireEvidence={forecastState.connected && !forecast}
-           />}
+          horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={fitsSelected ? forecast?.run_id : undefined}
+          approval={canSubmit && plan.status === 'draft' && !!forecast ? { planService, horizon: forecastState.horizon, onSubmitted: (saved: PurchasePlan) => setResult({ scope, plan: saved }) } : undefined} />}
       </section>}
   </main>;
 }
 
-function Recommendation({ plan, service, reload, horizonDays, runId, requireEvidence }: { requireEvidence?: boolean; horizonDays?: number; runId?: string; plan: PurchasePlan & { urgency?: Urgency }; service?: RecommendationService; reload(): void }) {
+function Recommendation({ plan, service, reload, horizonDays, runId, requireEvidence, approval }: { approval?: { planService: PurchasePlanService; horizon: Horizon; onSubmitted(plan: PurchasePlan): void }; requireEvidence?: boolean; horizonDays?: number; runId?: string; plan: PurchasePlan & { urgency?: Urgency }; service?: RecommendationService; reload(): void }) {
   const { analysis, loading, error, message, changed, connected, retry } = useAnalysis(service, plan, 'read', horizonDays, runId);
 
   return <section className="rec-guidance" aria-label="Recommendation" aria-busy={loading}>
@@ -103,27 +107,8 @@ function Recommendation({ plan, service, reload, horizonDays, runId, requireEvid
       : error ? <div className="rec-empty rec-error" role="alert"><h3>Couldn’t load analysis</h3><p>{message ?? 'We couldn’t load the recommendation for this plan and current date. Your plan remains saved.'}</p><button className="bb-button" onClick={changed ? reload : retry}>{changed ? 'Reload saved plan' : 'Retry recommendation'}</button></div>
       : !connected ? <div className="rec-unavailable"><h3>No recommendation available</h3><p>The recommendations service is not connected yet. Your purchase plan remains saved.</p></div>
       : analysis && <>
-        {analysis.recommendation.status === 'ready' && (!requireEvidence || analysis.recommendation.value.evidence) ? <><h3>{({ BUY_NOW: 'Buy now', WAIT: 'Wait', MONITOR: 'Monitor', SPLIT: 'Split purchase' } as Record<string, string>)[analysis.recommendation.value.action] ?? analysis.recommendation.value.action}</h3><p>{analysis.recommendation.value.explanation}</p><EvidenceView analysis={analysis} /><p className="rec-context">Current date: {formatDate(analysis.context.scenario_as_of_date)}</p></> : <div className="rec-unavailable"><h3>No recommendation available</h3><p>{analysis.recommendation.status === 'unavailable' ? analysis.recommendation.message : 'Current forecast evidence is unavailable. Refresh evidence before making a timing decision.'}</p><p>Your purchase plan remains saved.</p></div>}
+        {analysis.recommendation.status === 'ready' && (!requireEvidence || analysis.recommendation.value.evidence) ? <><h3>{({ BUY_NOW: 'Buy now', WAIT: 'Wait', MONITOR: 'Monitor', SPLIT: 'Split purchase' } as Record<string, string>)[analysis.recommendation.value.action] ?? analysis.recommendation.value.action}</h3><p>{analysis.recommendation.value.explanation}</p><EvidenceView analysis={analysis} />{approval && <RecommendationApproval key={`${analysis.approval_fingerprint}:${approval.horizon}`} analysis={analysis} plan={plan} horizon={approval.horizon} planService={approval.planService} onSubmitted={approval.onSubmitted} />}<p className="rec-context">Current date: {formatDate(analysis.context.scenario_as_of_date)}</p></> : <div className="rec-unavailable"><h3>No recommendation available</h3><p>{analysis.recommendation.status === 'unavailable' ? analysis.recommendation.message : 'Current forecast evidence is unavailable. Refresh evidence before making a timing decision.'}</p><p>Your purchase plan remains saved.</p></div>}
         {(analysis.source === 'mock' || analysis.provenance === 'fixture') && <p className="rec-demo">Synthetic demo data · Illustrative guidance only.</p>}
       </>}
   </section>;
-}
-
-function EvidenceView({ analysis }: { analysis: PlanAnalysis }) {
-  const e = analysis.recommendation.status === 'ready' ? analysis.recommendation.value.evidence : undefined;
-  if (!e) return null;
-  const usd = (v: number | null) => v == null ? 'Unavailable' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(v);
-  return <div className="rec-evidence">
-    <ul className="rec-reasons">{e.reasons.map((reason, i) => <li key={i}>{reason}</li>)}</ul>
-    <dl className="rec-evidence-grid"><div><dt>Estimated buy-now reference cost</dt><dd>{usd(e.buy_now_cost_usd)}</dd></div>
-      <div><dt>Estimated cost from recommendation signal</dt><dd>{usd(e.alternative_cost_usd)}</dd></div>
-      <div><dt>Potential savings from signal for full quantity</dt><dd>{usd(e.alternative_minus_now_usd == null ? null : e.alternative_minus_now_usd === 0 ? 0 : -e.alternative_minus_now_usd)}</dd></div>
-      <div><dt>Suggested date</dt><dd>{e.supported_target_date ? formatDate(e.supported_target_date) : 'Unavailable'}</dd></div>
-      <div><dt>Reference freshness</dt><dd>{e.reference_age_days == null ? 'Unavailable' : `${e.reference_age_days} calendar ${e.reference_age_days === 1 ? 'day' : 'days'} old`}</dd></div></dl>
-    {!!e.allocations.length && <div><h4>Illustrative split allocation</h4><ul>{e.allocations.map(a => <li key={a.date}>{a.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT on {formatDate(a.date)}</li>)}</ul></div>}
-    <details className="rec-forecast rec-assumptions"><summary>Assumptions and limitations</summary><div className="rec-details-body">
-      {analysis.reference.status === 'ready' && <p>Reference: USD {analysis.reference.value.price.toLocaleString('en-GB')}/MT, observed {formatDate(analysis.reference.value.observation_date)}.</p>}
-      {analysis.forecast.status === 'ready' && <p>Forecast: USD {analysis.forecast.value.central_estimate?.toLocaleString('en-GB') ?? 'unavailable'}/MT on {formatDate(analysis.forecast.value.target_date)}. Experimental range: USD {analysis.forecast.value.prices.lower.toLocaleString('en-GB')}–{analysis.forecast.value.prices.upper.toLocaleString('en-GB')}/MT. {analysis.forecast.value.range_description}</p>}
-      <ul>{e.limitations.map((limit, i) => <li key={i}>{limit}</li>)}</ul><p>Policy: {e.policy_version}. {e.horizon_description}</p></div></details>
-  </div>;
 }

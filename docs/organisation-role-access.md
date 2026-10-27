@@ -1,8 +1,9 @@
 # Clerk organisation membership, roles and purchase-plan access
 
 This branch includes frontend organisation selection and backend enforcement for
-organisation-scoped purchase plans. Approval workflows and dedicated manager,
-analyst and admin business consoles remain later work. The frontend foundation was introduced in commit `78e6bab`; this guide also
+organisation-scoped purchase plans. Draft submission and the shared manager inbox
+are documented in [plan submission](plan-submission.md). Manager decisions and audit records are included.
+Dedicated analyst and admin business consoles remain later work. The frontend foundation was introduced in commit `78e6bab`; this guide also
 covers the organisation-scoped backend and matching frontend permissions.
 
 ## Clerk development setup
@@ -38,14 +39,15 @@ organisation and membership role exposed by Clerk's `useAuth` and `useOrganizati
 
 | Membership role | Read plans and their analysis | Create/edit/delete plans |
 | --- | --- | --- |
-| `org:buyer` | Own plans in the active organisation | Own plans in the active organisation |
+| `org:buyer` | Own plans in the active organisation | Own drafts in the active organisation |
 | `org:manager` | All assigned plans in the active organisation | Denied |
 | `org:analyst` | All assigned plans in the active organisation | Denied |
 | `org:admin` | Denied by default; membership administration does not imply business-data access | Denied |
 
 The admin policy deliberately grants no automatic purchase-plan privileges. Admins
-can still manage organisation members through Clerk's organisation UI. No purchase
-approval route is implemented here. Roles do not inherit privileges from each other.
+can still manage organisation members through Clerk's organisation UI. Buyers can
+submit drafts, and managers can read their organisation approval inbox. Managers can approve/reject a submitted saved recommendation, with a required
+rejection reason and a final audit record. Roles do not inherit privileges from each other.
 
 Spring Security checks the role on each route. Controller checks provide defense
 in depth. Buyers resolve their internal user ID from the verified Clerk subject;
@@ -68,6 +70,20 @@ The frontend verifies this response against Clerk's selected organisation/role
 before loading private pages, then hides write actions for read-only roles and
 blocks admin plan URLs. UI gating complements, not replaces, backend enforcement.
 Organisation/role changes reset page state and invalidate old adapters.
+
+## Shared forecast access
+
+`GET /api/v1/forecast?horizon_days=7` requires a verified Clerk session with an
+active organisation and one of `org:buyer`, `org:manager` or `org:analyst`. Admin
+membership is denied, consistent with the plan business-data policy. Missing or
+invalid sessions return 401; missing, unsupported, malformed or conflicting
+organisation/role claims return 403. A shared API key alone does not grant access.
+
+Forecast publications remain shared market information: this rule verifies active
+membership and role, not ownership of a separate organisation-specific forecast.
+No database migration is required. Role permissions still need team agreement if
+the intended admin policy differs. Forecast data, horizon validation and response
+format are unchanged.
 
 ## Database rollout and legacy plans
 

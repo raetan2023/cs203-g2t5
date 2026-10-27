@@ -42,6 +42,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(HttpMethod.GET, "/api/v1/organisation").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST, ADMIN))))
+                        .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/approval-notifications").access((auth, context) ->
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(MANAGER))))
+                        .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/decision").access((auth, context) ->
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(MANAGER))))
+                        .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/submit").access((auth, context) ->
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans", "/api/v1/purchase-plans/**").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans").access((auth, context) ->
@@ -50,7 +56,8 @@ public class SecurityConfig {
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/purchase-plans", "/api/v1/purchase-plans/*").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
-                        .requestMatchers(HttpMethod.GET, "/api/v1/forecast").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/forecast").access((auth, context) ->
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST))))
                         .anyRequest().denyAll())
                 // Set on both: the resource server answers a rejected token, while the
                 // outer handler answers a request that carries no token at all.
