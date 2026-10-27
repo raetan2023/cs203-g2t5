@@ -1,0 +1,13 @@
+/* Shared by the production login and the wireframe prototype. Stroke colour comes from the parent (currentColor). */
+.wireframe-scene { position: relative; width: 100%; overflow: hidden; pointer-events: none; }
+.wireframe-vessel { display: block; width: 100%; height: auto; }
+/* Trace the stationary vessel once, then leave the complete mesh visible. */
+.wireframe-build { stroke-dasharray: 1; stroke-dashoffset: 0; animation: vessel-build var(--build-duration) ease-out var(--build-delay) both; }
+.wireframe-sweep { animation: vessel-light 1.25s ease-in-out 3.75s both; }
+@keyframes vessel-build { from { stroke-dashoffset: 1; opacity: 0; } 10% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
+@keyframes vessel-light { from { transform: translateX(0); } to { transform: translateX(1120px); } }
+@media (prefers-reduced-motion: reduce) {
+  .wireframe-build { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; opacity: 1; }
+  .wireframe-sweep { animation: none; transform: none; }
+  .wireframe-highlight { display: none; }
+}
