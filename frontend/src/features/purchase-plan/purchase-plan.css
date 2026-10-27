@@ -63,13 +63,14 @@
 .pp-form-footer .pp-error-banner { margin-bottom: 27px; }
 .pp-field input.pp-invalid, .pp-input-unit.pp-invalid input { border-color: #ff737c; }
 .purchase-plan .pp-field-error { margin-top: 6px; color: #ff9095; font-size: 13px; }
-.pp-summary { width: 580px; max-width: 100%; }
+.pp-plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: var(--pp-space); align-items: stretch; }
+.pp-summary { min-width: 0; display: flex; flex-direction: column; }
 .pp-details { margin-top: 26px !important; }
 .pp-details > div { padding: 20px 0; border-bottom: 1px solid var(--pp-border); }
 .pp-details > div:first-child { padding-top: 0; }
 .pp-details dd { font: 15px/22px 'SFMono-Regular', Consolas, monospace; }
 .pp-time-note { display: block; margin-top: 4px; color: var(--pp-muted); font: 14px/20px Inter, 'Segoe UI', Arial, sans-serif; }
-.pp-summary .pp-actions { padding-top: 28px; }
+.pp-summary .pp-actions { margin-top: auto; padding-top: 28px; flex-wrap: wrap; }
 .pp-loading { min-height: calc(100dvh - 130px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; color: var(--pp-muted); font-size: 18px; font-weight: 500; text-align: center; }
 .pp-spinner { width: 56px; height: 56px; border: 5px solid var(--pp-teal); border-right-color: transparent; border-radius: 50%; animation: pp-spin .85s linear infinite; }
 @keyframes pp-spin { to { transform: rotate(360deg); } }
@@ -97,5 +98,3 @@
   .pp-spinner { animation: none; }
   .pp-button { transition: none; }
 }
-
-.pp-summary + .pp-summary { margin-top: 24px; }

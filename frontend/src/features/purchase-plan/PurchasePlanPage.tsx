@@ -162,11 +162,11 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
       {state.mode === 'view' && plans.length === 0 && <section className="pp-empty" aria-label="No purchase plan">
         <p>{canEdit ? "You haven't created a purchase plan yet." : 'No purchase plans have been assigned to this organisation yet.'}</p>
       </section>}
-      {state.mode === 'view' && plans.map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} busy={writing}
+      {state.mode === 'view' && plans.length > 0 && <div className="pp-plan-grid">{plans.map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} busy={writing}
         editRef={state.plan?.plan_id === plan.plan_id ? editRef : undefined}
         deleteRef={state.plan?.plan_id === plan.plan_id ? deleteRef : undefined} onEdit={() => {
           setAnnouncement(''); setState({ mode: 'form', plan });
-        }} onDelete={() => { setAnnouncement(''); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}
+        }} onDelete={() => { setAnnouncement(''); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}</div>}
       {canEdit && state.mode === 'form' && <PurchasePlanForm plan={state.plan} scenarioDate={scenarioDate} onSave={save} onBusyChange={busy => {
         if (activeContext.current === context) setSaving(busy);
       }} onCancel={() => {
