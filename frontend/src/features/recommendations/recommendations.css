@@ -48,10 +48,16 @@
 .rec-rail-facts > div:last-child dd { font-weight: 600; }
 .rec-refresh { display: inline-flex; align-items: center; justify-content: center; gap: var(--bb-space-2); width: 100%; }
 .recommendations .rec-rail-note { padding: 0 4px; font-size: 12px; line-height: 18px; color: var(--bb-text-secondary); }
-.rec-rail .rec-approval { margin: 0; padding-top: 18px; border-top: 1px solid var(--bb-border-subtle); }
-.rec-rail .rec-approval h3 { font-size: 14px; line-height: 20px; font-weight: 600; }
-.rec-rail .rec-approval p { font-size: 13px; line-height: 19px; margin: var(--bb-space-2) 0; }
-.rec-rail .rec-approval > .bb-button, .rec-rail .rec-approval-actions .bb-button { width: 100%; min-height: 48px; }
+/* Submit for approval is the rail's primary action; Refresh prices sits below it as a secondary button. */
+.rec-rail .rec-approval { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: var(--bb-space-2); }
+.recommendations .rec-rail .rec-approval p { margin: 0; font-size: 12px; line-height: 18px; color: var(--bb-text-secondary); }
+.recommendations .rec-rail .rec-approval-confirm p { font-size: 13px; color: var(--bb-text-supporting); }
+.rec-rail .rec-approval-confirm strong, .rec-rail .rec-approval-note strong { color: var(--bb-text); font-weight: 600; }
+.rec-rail .rec-submit { width: 100%; min-height: 48px; font-size: 15px; font-weight: 600; }
+.rec-rail .rec-approval-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--bb-space-2); margin: var(--bb-space-3) 0 var(--bb-space-1); }
+.rec-rail .rec-approval-actions { grid-template-columns: 2fr 3fr; }
+.rec-rail .rec-approval-actions .bb-button { width: 100%; min-height: 44px; padding: 10px; font-size: 14px; }
+.recommendations .rec-rail .rec-approval [role=alert] { color: var(--bb-error-text); }
 
 .rec-section-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--bb-space-3); }
 .recommendations .rec-section-head h2 { font-size: 20px; line-height: 26px; font-weight: 600; letter-spacing: -.015em; }

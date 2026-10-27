@@ -9,7 +9,8 @@ import './preview.css';
 import { buildMockForecast } from '../features/forecast/mockService';
 import ForecastWidget from '../features/forecast/ForecastWidget';
 import type { ReadyForecast } from '../features/forecast/apiService';
-import { createScenarioForecastService, createScenarioRecommendationService, scenarioPlan, SCENARIO_DATE, type RecommendationScenario } from './recommendationScenarios';
+import { createScenarioForecastService, createScenarioRecommendationService, PREVIEW_BUYER, scenarioPlan, SCENARIO_DATE, withPreviewApproval, type RecommendationScenario } from './recommendationScenarios';
+import type { PurchasePlanService } from '../features/purchase-plan/types';
 function PreviewMarketDashboard() { return <main><ForecastWidget /></main>; }
 
 const examples = {
@@ -33,6 +34,7 @@ export function PreviewApp() {
   const [slow, setSlow] = useState(false);
   const [scenarioDate, setScenarioDate] = useState(SCENARIO_DATE);
   const scenario = recommendationScenarios[example];
+  const withScenarioApproval = (plans: PurchasePlanService) => scenario ? withPreviewApproval(plans, scenario) : plans;
   const activeDate = useRef(scenarioDate);
   activeDate.current = scenarioDate;
   const auth = useMemo(() => createMockAuthService({
@@ -48,13 +50,13 @@ export function PreviewApp() {
   }
 
   return <>
-    <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock MarketDashboard={PreviewMarketDashboard} createForecastService={() => scenario ? createScenarioForecastService(scenario) : ({ read: async horizon => buildMockForecast(horizon) as ReadyForecast })} createRecommendationService={() => scenario ? createScenarioRecommendationService(scenario, slow ? 3500 : 600) : createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} createPlanService={() => createMockPlanService({
+    <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock MarketDashboard={PreviewMarketDashboard} createForecastService={() => scenario ? createScenarioForecastService(scenario) : ({ read: async horizon => buildMockForecast(horizon) as ReadyForecast })} createRecommendationService={() => scenario ? createScenarioRecommendationService(scenario, slow ? 3500 : 600) : createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} planAccess={scenario ? PREVIEW_BUYER : undefined} createPlanService={() => withScenarioApproval(createMockPlanService({
       initialPlans: example === 'multiple' ? [DEMO_PLAN, { ...DEMO_PLAN, plan_id: 'second-demo-plan', quantity_mt: 250 }] : undefined,
       initialPlan: scenario ? scenarioPlan(scenario) : example === 'rec-empty' ? null : example.startsWith('rec-') ? RECOMMENDATION_DEMO_PLAN : ['saved', 'edit-error', 'delete-error'].includes(example) ? DEMO_PLAN : null,
       getScenarioDate: () => activeDate.current,
       delayMs: example === 'loading' ? 8000 : slow ? 3500 : 700,
       failOnce: { read: example === 'load-error', create: example === 'save-error', update: example === 'edit-error', delete: example === 'delete-error' },
-    })} />
+    }))} />
     <details className="preview-tools">
       <summary>Demo controls</summary>
       <div className="preview-tools-body">

@@ -10,6 +10,10 @@
 #app-content { width: 100%; max-width: var(--bb-page-max); margin-inline: auto; }
 .bb-button { border: 1px solid transparent; border-radius: var(--bb-radius-control); min-height: 50px; display: inline-flex; justify-content: center; align-items: center; gap: var(--bb-space-2); padding: 13px var(--bb-space-5); background: var(--bb-action); color: var(--bb-text-on-action); font-weight: 600; text-decoration: none; cursor: pointer; }
 .bb-button:hover:not(:disabled) { background: var(--bb-action-hover); }
+/* Secondary actions (cancel, refresh, retry) sit beside a primary button, so they are outlined rather than filled. */
+.bb-button--secondary { background: transparent; color: var(--bb-text); border-color: var(--bb-border-control); font-weight: 500; }
+.bb-button--secondary:hover:not(:disabled) { background: var(--bb-surface-hover); border-color: var(--bb-action); }
+.bb-button:disabled { cursor: not-allowed; opacity: .55; }
 .bb-skip { position: fixed; left: var(--bb-space-4); top: -80px; z-index: 10; padding: var(--bb-space-3); background: var(--bb-action); color: var(--bb-text-on-action); border-radius: var(--bb-radius-control); }
 .bb-skip:focus { top: var(--bb-space-2); }
 .bb-home { min-height: calc(100dvh - 64px); padding: 60px var(--bb-page-pad); display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding-bottom: 15vh; }

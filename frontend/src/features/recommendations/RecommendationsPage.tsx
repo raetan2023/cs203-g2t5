@@ -131,7 +131,7 @@ function PlanDecision({ plan, service, reload, horizonDays, runId, requireEviden
   const waitTarget = guidance?.action === 'WAIT' && evidence?.supported_target_date && evidence.alternative_cost_usd != null ? evidence.supported_target_date : undefined;
   const reference = (g.analysis ?? i.analysis)?.reference;
   const quote = published?.anchor_quote_date ?? (reference?.status === 'ready' ? reference.value.observation_date : undefined);
-  const demo = [g.analysis, i.analysis].some(a => a && (a.source === 'mock' || a.provenance === 'fixture'));
+  const demo = !!published?.synthetic || [g.analysis, i.analysis].some(a => a && (a.source === 'mock' || a.provenance === 'fixture'));
 
   const impactTile = showImpact ? <div className="rec-tile" aria-busy={i.loading}>
     {i.loading ? <div role="status"><span className="rec-tile-label">Estimated cost</span><div className="rec-skeleton" /><p>Loading cost impact for {amount(plan.quantity_mt)} MT…</p></div>
