@@ -62,7 +62,18 @@ class PlanAnalysisHttpTests {
         assertEquals("unavailable", body.path("recommendation").path("status").asText());
         var recommendation = get(path("recommendation"), "owner-token");
         assertEquals(200, recommendation.statusCode());
-        assertTrue(recommendation.body().contains("No approved recommendation provider"));
+        var guidance = new JsonMapper().readTree(recommendation.body()).path("recommendation").path("value");
+        assertEquals("BUY_NOW", guidance.path("action").asText());
+        assertEquals(70000, guidance.path("evidence").path("buy_now_cost_usd").asInt());
+        assertEquals(1000, guidance.path("evidence").path("alternative_minus_now_usd").asInt());
+    }
+    @Test void urgencyIsValidatedAndReturnedWithoutChangingSavedPlan() throws Exception {
+        assertEquals(422, get(path("recommendation") + "&urgency=INVALID", "owner-token").statusCode());
+        var response = get(path("recommendation") + "&urgency=HIGH", "owner-token");
+        assertEquals(200, response.statusCode());
+        var body = new JsonMapper().readTree(response.body());
+        assertEquals("HIGH", body.path("context").path("urgency").asText());
+        assertEquals("BUY_NOW", body.path("recommendation").path("value").path("action").asText());
     }
     @Test void rejectsMissingAuthenticationAndOtherOwners() throws Exception {
         for (String endpoint : new String[]{"recommendation", "cost-impact"}) {

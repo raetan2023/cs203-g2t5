@@ -123,7 +123,7 @@ class MgoDataApiApplicationTests {
                     .with(jwt().jwt(token -> token.subject("analysis_owner"))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.provenance").value("unavailable"))
-                    .andExpect(jsonPath("$.recommendation.status").value("unavailable"))
+                    .andExpect(jsonPath("$.recommendation.status").value(section.equals("recommendation") ? "ready" : "unavailable"))
                     .andExpect(jsonPath("$.cost_impact.status").value("unavailable"));
         }
     }
