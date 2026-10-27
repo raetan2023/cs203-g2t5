@@ -50,7 +50,8 @@ public class SecurityConfig {
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/purchase-plans", "/api/v1/purchase-plans/*").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
-                        .requestMatchers(HttpMethod.GET, "/api/v1/forecast").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/forecast").access((auth, context) ->
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST))))
                         .anyRequest().denyAll())
                 // Set on both: the resource server answers a rejected token, while the
                 // outer handler answers a request that carries no token at all.

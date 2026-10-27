@@ -280,7 +280,12 @@ a supported model target. Missing inputs remain unavailable rather than producin
 
 ### Daily forecast publication API
 
-Authenticated `GET /api/v1/forecast?horizon_days=7` accepts 7, 14 or 30 and needs
+The verified Clerk token must include an active organisation with Buyer, Manager
+or Analyst membership. Admin-only, missing or invalid membership claims are denied
+with 403; missing/invalid authentication receives 401. Forecasts remain shared market
+publications, not private per-organisation records. No database change is needed.
+
+Organisation-authorised `GET /api/v1/forecast?horizon_days=7` accepts 7, 14 or 30 and needs
 only `Authorization: Bearer <Clerk token>`, not `X-API-Key`. Ready responses contain
 the published prices, independent point estimate, nominal/measured interval
 coverage and paired baseline results, exact target/origin/news dates, source dates,
