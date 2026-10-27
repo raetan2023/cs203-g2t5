@@ -1,8 +1,8 @@
 .stored-market {
-  --sm-bg: #0c1a29;
-  --sm-border: #213346;
-  --sm-text: #eff5fa;
-  --sm-muted: #91a5ba;
+  --sm-bg: var(--bb-surface);
+  --sm-border: var(--bb-border-subtle);
+  --sm-text: var(--bb-text);
+  --sm-muted: var(--bb-text-secondary);
   --sm-accent: #39d4bd;
   max-width: 1560px;
   margin: 0 auto;

@@ -1,0 +1,65 @@
+/*
+ * Bunker Buddy design tokens: the single source of values for the wireframe theme.
+ * Spec: DESIGN_SYSTEM.md (repo root). Plan: docs/UI_REVAMP_PLAN.md Â§4.
+ * Custom properties only; no selectors other than :root. Dark theme only.
+ * Colour values are mirrored in theme.ts for Clerk and Recharts; theme.test.ts keeps them in sync.
+ *
+ * Pending (values not decided, add here only when the owning phase decides them):
+ *   price-up / price-down / price-flat (+ -surface)  Phase 5
+ *   success-*  Phase 4    warning-*  Phase 5    chart-*  Phase 6
+ */
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --bb-canvas: #0c0d0e;
+  --bb-surface: #1a1b1c;
+  --bb-surface-input: #121314;
+  --bb-surface-hover: #e8dcc412; /* about 7% beige */
+
+  /* text */
+  --bb-text: #f0e6d2;
+  --bb-text-secondary: #b5ac9b;
+  --bb-text-supporting: #c5bba7;
+  --bb-text-label: #e4d8c0;
+  --bb-text-placeholder: #b6ac99;
+
+  /* 40% beige preserves control contrast after the beige request on 2026-10-26. */
+  --bb-border-subtle: #e8dcc426;
+  --bb-border-control: #e8dcc466;
+  --bb-backdrop: #000000b8;
+
+  /* actions and focus */
+  --bb-action: #e8dcc4;
+  --bb-action-hover: #f4e8d1;
+  --bb-text-on-action: #171818;
+  --bb-focus: #f4e8d1;
+
+  /* errors */
+  --bb-error-text: #efb9af;
+  --bb-error-surface: #382b29;
+  --bb-error-border: #e3b3a9;
+  --bb-error-alert-text: #f2d9d2;
+
+  /* type */
+  --bb-font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+
+  /* spacing scale */
+  --bb-space-1: 4px;
+  --bb-space-2: 8px;
+  --bb-space-3: 12px;
+  --bb-space-4: 16px;
+  --bb-space-5: 20px;
+  --bb-space-6: 24px;
+  --bb-space-7: 28px;
+  --bb-space-8: 32px;
+  --bb-space-10: 40px;
+  --bb-page-max: 1440px;
+  --bb-page-pad: clamp(16px, 3vw, 40px);
+
+  /* shape and motion */
+  --bb-radius-card: 10px;
+  --bb-radius-control: 5px;
+  --bb-shadow-card: 0 16px 60px #00000026;
+  --bb-motion-fast: 150ms;
+}
