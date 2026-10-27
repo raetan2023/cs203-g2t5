@@ -7,7 +7,7 @@
     "interval_reliable": true,
     "coverage_80": 0.7816091954022989,
     "coverage_80_flat": 0.896551724137931,
-    "mean_log_width_scaled": 0.22522634335074218,
+    "mean_log_width_scaled": 0.22522634335074215,
     "mean_log_width_flat": 0.2481669431389487,
     "holdout_coverage_80": 0.765625,
     "holdout_coverage_80_flat": 0.953125,
@@ -40,11 +40,11 @@
           },
           "drift": {
             "MAE": 81.96822411380734,
-            "RMSE": 99.37894081391352,
+            "RMSE": 99.3789408139135,
             "MAE_skill": 0.0577756566603318,
             "paired_gain_CI95": [
               -1.561955166886909,
-              10.242211356171321
+              10.242211356171318
             ]
           },
           "sma5": {
@@ -66,11 +66,11 @@
             ]
           },
           "ema10": {
-            "MAE": 88.33569296252637,
-            "RMSE": 108.17994428660558,
-            "MAE_skill": 0.12569366300081763,
+            "MAE": 88.33569296252638,
+            "RMSE": 108.1799442866056,
+            "MAE_skill": 0.12569366300081786,
             "paired_gain_CI95": [
-              -1.68530353655432,
+              -1.6853035365542948,
               28.799650950534392
             ]
           }
@@ -130,12 +130,12 @@
             ]
           },
           "ema10": {
-            "MAE": 102.87339479808941,
-            "RMSE": 127.84787570702218,
-            "MAE_skill": 0.19697410431395368,
+            "MAE": 102.87339479808948,
+            "RMSE": 127.84787570702221,
+            "MAE_skill": 0.19697410431395423,
             "paired_gain_CI95": [
-              6.390114230541903,
-              52.90492242843281
+              6.3901142305419585,
+              52.90492242843283
             ]
           }
         },
@@ -167,12 +167,12 @@
             ]
           },
           "drift": {
-            "MAE": 76.20039257217155,
-            "RMSE": 89.29924983901643,
-            "MAE_skill": 0.0415895832711094,
+            "MAE": 76.20039257217152,
+            "RMSE": 89.29924983901641,
+            "MAE_skill": 0.041589583271108954,
             "paired_gain_CI95": [
               -7.913844715644611,
-              11.351291415046322
+              11.351291415046308
             ]
           },
           "sma5": {
@@ -206,7 +206,95 @@
         "oracle_gasoil_MAE": 47.65844471057038
       }
     },
-    "evidence": "no_edge"
+    "evidence": "no_edge",
+    "quantile_intervals": {
+      "nominal_coverage": 0.8,
+      "method": "split_conformal_quantile",
+      "dev_end": "2026-07-31",
+      "pinball_scope": "sorted crossing-repaired raw return endpoints",
+      "limitations": [
+        "Dependent overlapping market outcomes do not guarantee nominal coverage.",
+        "Sparse observed MGO quotes; counts are not independent sample counts."
+      ],
+      "all": {
+        "n": 107,
+        "raw": {
+          "coverage": 0.514018691588785,
+          "lower_tail_rate": 0.2336448598130841,
+          "upper_tail_rate": 0.2523364485981308,
+          "mean_width": 176.50024394002216,
+          "interval_score": 556.8763753387783,
+          "pinball_q10": 0.022562895272041295,
+          "pinball_q90": 0.025593734973725992
+        },
+        "calibrated": {
+          "coverage": 0.8317757009345794,
+          "lower_tail_rate": 0.028037383177570093,
+          "upper_tail_rate": 0.14018691588785046,
+          "mean_width": 452.04906450101856,
+          "interval_score": 522.950115457093
+        },
+        "baseline": {
+          "coverage": 0.794392523364486,
+          "lower_tail_rate": 0.028037383177570093,
+          "upper_tail_rate": 0.17757009345794392,
+          "mean_width": 255.63863773575275,
+          "interval_score": 353.8892338390214
+        }
+      },
+      "dev": {
+        "n": 36,
+        "raw": {
+          "coverage": 0.4166666666666667,
+          "lower_tail_rate": 0.4444444444444444,
+          "upper_tail_rate": 0.1388888888888889,
+          "mean_width": 128.72807032935316,
+          "interval_score": 618.5758278845769,
+          "pinball_q10": 0.03330430410520996,
+          "pinball_q90": 0.025777837742279704
+        },
+        "calibrated": {
+          "coverage": 0.8611111111111112,
+          "lower_tail_rate": 0.05555555555555555,
+          "upper_tail_rate": 0.08333333333333333,
+          "mean_width": 491.66828071162735,
+          "interval_score": 578.6166236066438
+        },
+        "baseline": {
+          "coverage": 0.6944444444444444,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.3055555555555556,
+          "mean_width": 237.43523199614194,
+          "interval_score": 429.3324808010359
+        }
+      },
+      "holdout": {
+        "n": 64,
+        "raw": {
+          "coverage": 0.546875,
+          "lower_tail_rate": 0.140625,
+          "upper_tail_rate": 0.3125,
+          "mean_width": 198.4422997566151,
+          "interval_score": 548.037298685578,
+          "pinball_q10": 0.016957463402998287,
+          "pinball_q90": 0.0271951916242748
+        },
+        "calibrated": {
+          "coverage": 0.796875,
+          "lower_tail_rate": 0.015625,
+          "upper_tail_rate": 0.1875,
+          "mean_width": 387.45596980420066,
+          "interval_score": 457.08522149294095
+        },
+        "baseline": {
+          "coverage": 0.828125,
+          "lower_tail_rate": 0.046875,
+          "upper_tail_rate": 0.125,
+          "mean_width": 250.6941364842947,
+          "interval_score": 307.014649391694
+        }
+      }
+    }
   },
   "14d": {
     "gamma": 0.0,
@@ -216,7 +304,7 @@
     "interval_reliable": true,
     "coverage_80": 0.8333333333333334,
     "coverage_80_flat": 1.0,
-    "mean_log_width_scaled": 0.37892426541626456,
+    "mean_log_width_scaled": 0.37892426541626495,
     "mean_log_width_flat": 0.4665390629395919,
     "holdout_coverage_80": 0.8245614035087719,
     "holdout_coverage_80_flat": 1.0,
@@ -275,11 +363,11 @@
             ]
           },
           "ema10": {
-            "MAE": 114.07370076208812,
-            "RMSE": 151.15451471896384,
-            "MAE_skill": -0.05195149450153935,
+            "MAE": 114.07370076208817,
+            "RMSE": 151.15451471896387,
+            "MAE_skill": -0.05195149450153913,
             "paired_gain_CI95": [
-              -25.292177455638168,
+              -25.29217745563815,
               13.858411966480633
             ]
           }
@@ -340,11 +428,11 @@
           },
           "ema10": {
             "MAE": 163.58334612890877,
-            "RMSE": 199.61440070358134,
+            "RMSE": 199.61440070358137,
             "MAE_skill": 0.04701856526981518,
             "paired_gain_CI95": [
-              -26.809699696609417,
-              53.50638968141001
+              -26.809699696609396,
+              53.50638968141003
             ]
           }
         },
@@ -415,7 +503,95 @@
         "oracle_gasoil_MAE": 53.29200739417936
       }
     },
-    "evidence": "no_edge"
+    "evidence": "no_edge",
+    "quantile_intervals": {
+      "nominal_coverage": 0.8,
+      "method": "split_conformal_quantile",
+      "dev_end": "2026-07-31",
+      "pinball_scope": "sorted crossing-repaired raw return endpoints",
+      "limitations": [
+        "Dependent overlapping market outcomes do not guarantee nominal coverage.",
+        "Sparse observed MGO quotes; counts are not independent sample counts."
+      ],
+      "all": {
+        "n": 79,
+        "raw": {
+          "coverage": 0.31645569620253167,
+          "lower_tail_rate": 0.27848101265822783,
+          "upper_tail_rate": 0.4050632911392405,
+          "mean_width": 134.50721607261718,
+          "interval_score": 831.7146218108875,
+          "pinball_q10": 0.02596541298194769,
+          "pinball_q90": 0.04096106586676762
+        },
+        "calibrated": {
+          "coverage": 0.7848101265822784,
+          "lower_tail_rate": 0.10126582278481013,
+          "upper_tail_rate": 0.11392405063291139,
+          "mean_width": 615.8354230708773,
+          "interval_score": 777.8508039479321
+        },
+        "baseline": {
+          "coverage": 0.810126582278481,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.189873417721519,
+          "mean_width": 431.8521819070661,
+          "interval_score": 630.8726834223564
+        }
+      },
+      "dev": {
+        "n": 8,
+        "raw": {
+          "coverage": 0.125,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.875,
+          "mean_width": 45.06145785801586,
+          "interval_score": 1967.538149998255,
+          "pinball_q10": 0.02103583654999691,
+          "pinball_q90": 0.15413075161486453
+        },
+        "calibrated": {
+          "coverage": 0.375,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.625,
+          "mean_width": 374.0426775426455,
+          "interval_score": 1109.2740160439946
+        },
+        "baseline": {
+          "coverage": 0.375,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.625,
+          "mean_width": 357.92032094952873,
+          "interval_score": 1125.8629555104349
+        }
+      },
+      "holdout": {
+        "n": 57,
+        "raw": {
+          "coverage": 0.3508771929824561,
+          "lower_tail_rate": 0.2807017543859649,
+          "upper_tail_rate": 0.3684210526315789,
+          "mean_width": 134.1813353962669,
+          "interval_score": 744.1131638237637,
+          "pinball_q10": 0.02875111420645286,
+          "pinball_q90": 0.02837549113876065
+        },
+        "calibrated": {
+          "coverage": 0.7894736842105263,
+          "lower_tail_rate": 0.14035087719298245,
+          "upper_tail_rate": 0.07017543859649122,
+          "mean_width": 648.6634355527538,
+          "interval_score": 770.0207053997106
+        },
+        "baseline": {
+          "coverage": 0.8245614035087719,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.17543859649122806,
+          "mean_width": 398.96181246004255,
+          "interval_score": 567.0158219902304
+        }
+      }
+    }
   },
   "30d": {
     "gamma": 0.0,
@@ -425,7 +601,7 @@
     "interval_reliable": false,
     "coverage_80": 1.0,
     "coverage_80_flat": 1.0,
-    "mean_log_width_scaled": 0.7236205035658801,
+    "mean_log_width_scaled": 0.7236205035658797,
     "mean_log_width_flat": 0.6258666420990577,
     "holdout_coverage_80": 1.0,
     "holdout_coverage_80_flat": 1.0,
@@ -484,12 +660,12 @@
             ]
           },
           "ema10": {
-            "MAE": 165.21188567862276,
-            "RMSE": 191.4115310422695,
-            "MAE_skill": 0.06375372625086273,
+            "MAE": 165.2118856786228,
+            "RMSE": 191.41153104226953,
+            "MAE_skill": 0.06375372625086295,
             "paired_gain_CI95": [
-              -8.399240304523413,
-              33.40759202213257
+              -8.399240304523373,
+              33.40759202213258
             ]
           }
         },
@@ -548,11 +724,11 @@
             ]
           },
           "ema10": {
-            "MAE": 217.95695201263865,
-            "RMSE": 238.99457707638697,
-            "MAE_skill": 0.09276809858979018,
+            "MAE": 217.9569520126387,
+            "RMSE": 238.99457707638703,
+            "MAE_skill": 0.09276809858979052,
             "paired_gain_CI95": [
-              -4.892340934499081,
+              -4.892340934499049,
               60.56728247038842
             ]
           }
@@ -624,468 +800,94 @@
         "oracle_gasoil_MAE": 49.898153842542435
       }
     },
-    "evidence": "no_edge"
-  },
-  "nowcast": {
-    "rows_total": 249,
-    "range_mode": "flat",
-    "n_with_interval": 179,
-    "interval_reliable": true,
-    "coverage_80": 0.7150837988826816,
-    "coverage_80_flat": 0.8603351955307262,
-    "mean_log_width_scaled": 0.06770116449844352,
-    "mean_log_width_flat": 0.08571253306287567,
-    "holdout_coverage_80": 0.6911764705882353,
-    "holdout_coverage_80_flat": 0.8970588235294118,
-    "holdout_n_with_interval": 68,
-    "by_gap": {
-      "1d": {
-        "n": 123,
-        "persist_MAE": 15.910569105691057,
-        "transfer_MAE": 17.179997531528407,
-        "ridge_MAE": 24.22053922445915,
-        "transfer_skill": -0.07978523064792742,
-        "ridge_skill": -0.5222924499787815
-      },
-      "2-6d": {
-        "n": 18,
-        "persist_MAE": 58.361111111111114,
-        "transfer_MAE": 30.881824288788533,
-        "ridge_MAE": 21.60774763617156,
-        "transfer_skill": 0.47084927444246216,
-        "ridge_skill": 0.6297577749156706
-      },
-      "7d+": {
-        "n": 58,
-        "persist_MAE": 61.73275862068966,
-        "transfer_MAE": 36.13768280239777,
-        "ridge_MAE": 30.198858568213712,
-        "transfer_skill": 0.4146109195533947,
-        "ridge_skill": 0.5108130716502177
-      }
-    },
-    "splits": {
-      "ungated": {
-        "all": {
-          "n": 199,
-          "model_MAE": 25.726631050331456,
-          "model_RMSE": 40.2858743758402,
-          "persist_MAE": 33.10552763819096,
-          "persist_RMSE": 65.6392799730229,
-          "MAE_skill_vs_persist": 0.22289016711961762,
-          "RMSE_skill_vs_persist": 0.38625356048394643,
-          "paired_MAE_gain_mean": 7.3788965878595025,
-          "paired_MAE_gain_CI95": [
-            -2.374161881724482,
-            15.937405167093354
-          ],
-          "direction_acc": 0.7708333333333334,
-          "n_direction": 144,
-          "baselines": {
-            "persist": {
-              "MAE": 33.10552763819096,
-              "RMSE": 65.6392799730229,
-              "MAE_skill": 0.22289016711961762,
-              "paired_gain_CI95": [
-                -2.374161881724482,
-                15.937405167093354
-              ]
-            },
-            "drift": {
-              "MAE": 37.315364738948524,
-              "RMSE": 67.28266102187123,
-              "MAE_skill": 0.3105619835070549,
-              "paired_gain_CI95": [
-                1.8074930906606774,
-                20.35261887636275
-              ]
-            },
-            "gasoil_transfer": {
-              "MAE": 23.944714251835467,
-              "RMSE": 46.77873847646584,
-              "MAE_skill": -0.07441796046321159,
-              "paired_gain_CI95": [
-                -6.78190912488874,
-                3.097032354831836
-              ]
-            }
-          },
-          "oracle_gasoil_MAE": 25.50740555278142
+    "evidence": "no_edge",
+    "quantile_intervals": {
+      "nominal_coverage": 0.8,
+      "method": "split_conformal_quantile",
+      "dev_end": "2026-07-31",
+      "pinball_scope": "sorted crossing-repaired raw return endpoints",
+      "limitations": [
+        "Dependent overlapping market outcomes do not guarantee nominal coverage.",
+        "Sparse observed MGO quotes; counts are not independent sample counts."
+      ],
+      "all": {
+        "n": 51,
+        "raw": {
+          "coverage": 0.11764705882352941,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.8823529411764706,
+          "mean_width": 78.78388905096504,
+          "interval_score": 2013.751239314681,
+          "pinball_q10": 0.02315368170481244,
+          "pinball_q90": 0.14698155390609782
         },
-        "dev": {
-          "n": 131,
-          "model_MAE": 26.678920021432248,
-          "model_RMSE": 44.67479920336086,
-          "persist_MAE": 42.76335877862596,
-          "persist_RMSE": 78.47861574831065,
-          "MAE_skill_vs_persist": 0.3761266471246655,
-          "RMSE_skill_vs_persist": 0.43073920484737216,
-          "paired_MAE_gain_mean": 16.084438757193706,
-          "paired_MAE_gain_CI95": [
-            3.5610783289954204,
-            27.13220075002583
-          ],
-          "direction_acc": 0.8165137614678899,
-          "n_direction": 109,
-          "baselines": {
-            "persist": {
-              "MAE": 42.76335877862596,
-              "RMSE": 78.47861574831065,
-              "MAE_skill": 0.3761266471246655,
-              "paired_gain_CI95": [
-                3.5610783289954204,
-                27.13220075002583
-              ]
-            },
-            "drift": {
-              "MAE": 46.695858900836676,
-              "RMSE": 80.28597432335663,
-              "MAE_skill": 0.4286662532948028,
-              "paired_gain_CI95": [
-                7.22067953868814,
-                31.676577460193176
-              ]
-            },
-            "gasoil_transfer": {
-              "MAE": 27.72188331039169,
-              "RMSE": 54.55648827818665,
-              "MAE_skill": 0.03762238219105707,
-              "paired_gain_CI95": [
-                -3.977317294210821,
-                8.356190554922392
-              ]
-            }
-          },
-          "oracle_gasoil_MAE": 29.483994303468684
+        "calibrated": {
+          "coverage": 0.803921568627451,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.19607843137254902,
+          "mean_width": 707.2603580474736,
+          "interval_score": 798.5726453307904
         },
-        "holdout": {
-          "n": 68,
-          "model_MAE": 23.892074356004926,
-          "model_RMSE": 30.076531447300113,
-          "persist_MAE": 14.5,
-          "persist_RMSE": 27.27299353702465,
-          "MAE_skill_vs_persist": -0.6477292659313743,
-          "RMSE_skill_vs_persist": -0.1027953864495843,
-          "paired_MAE_gain_mean": -9.392074356004926,
-          "paired_MAE_gain_CI95": [
-            -12.744537434838419,
-            -4.2727923023264465
-          ],
-          "direction_acc": 0.6285714285714286,
-          "n_direction": 35,
-          "baselines": {
-            "persist": {
-              "MAE": 14.5,
-              "RMSE": 27.27299353702465,
-              "MAE_skill": -0.6477292659313743,
-              "paired_gain_CI95": [
-                -12.744537434838419,
-                -4.2727923023264465
-              ]
-            },
-            "drift": {
-              "MAE": 19.244118632958106,
-              "RMSE": 28.814723358896778,
-              "MAE_skill": -0.2415260377311632,
-              "paired_gain_CI95": [
-                -7.663518153664959,
-                -0.5468532790770737
-              ]
-            },
-            "gasoil_transfer": {
-              "MAE": 16.66810915373451,
-              "RMSE": 25.882102657159468,
-              "MAE_skill": -0.43340040166774885,
-              "paired_gain_CI95": [
-                -10.570867431820778,
-                -3.7570348969790555
-              ]
-            }
-          },
-          "oracle_gasoil_MAE": 17.84662428307506
+        "baseline": {
+          "coverage": 1.0,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.0,
+          "mean_width": 592.374216698541,
+          "interval_score": 592.374216698541
         }
       },
-      "ridge_gated": {
-        "all": {
-          "n": 199,
-          "model_MAE": 20.590317861344136,
-          "model_RMSE": 38.76644907927233,
-          "persist_MAE": 33.10552763819096,
-          "persist_RMSE": 65.6392799730229,
-          "MAE_skill_vs_persist": 0.37803988245180886,
-          "RMSE_skill_vs_persist": 0.40940167084092083,
-          "paired_MAE_gain_mean": 12.515209776846818,
-          "paired_MAE_gain_CI95": [
-            4.385540084071638,
-            19.74032416123754
-          ],
-          "direction_acc": 0.8533333333333334,
-          "n_direction": 75,
-          "baselines": {
-            "persist": {
-              "MAE": 33.10552763819096,
-              "RMSE": 65.6392799730229,
-              "MAE_skill": 0.37803988245180886,
-              "paired_gain_CI95": [
-                4.385540084071638,
-                19.74032416123754
-              ]
-            },
-            "drift": {
-              "MAE": 37.315364738948524,
-              "RMSE": 67.28266102187123,
-              "MAE_skill": 0.44820805034627853,
-              "paired_gain_CI95": [
-                8.36768069676133,
-                24.374581579695604
-              ]
-            },
-            "gasoil_transfer": {
-              "MAE": 23.944714251835467,
-              "RMSE": 46.77873847646584,
-              "MAE_skill": 0.14008922199746865,
-              "paired_gain_CI95": [
-                -0.43243114069509125,
-                7.289023278311571
-              ]
-            }
-          },
-          "oracle_gasoil_MAE": 25.50740555278142
+      "dev": {
+        "n": 0,
+        "raw": {
+          "coverage": null,
+          "lower_tail_rate": null,
+          "upper_tail_rate": null,
+          "mean_width": null,
+          "interval_score": null,
+          "pinball_q10": null,
+          "pinball_q90": null
         },
-        "dev": {
-          "n": 131,
-          "model_MAE": 23.751704232118193,
-          "model_RMSE": 43.55265105899721,
-          "persist_MAE": 42.76335877862596,
-          "persist_RMSE": 78.47861574831065,
-          "MAE_skill_vs_persist": 0.44457814094832504,
-          "RMSE_skill_vs_persist": 0.44503798080899837,
-          "paired_MAE_gain_mean": 19.011654546507764,
-          "paired_MAE_gain_CI95": [
-            7.1220978013045375,
-            28.84641277783315
-          ],
-          "direction_acc": 0.8533333333333334,
-          "n_direction": 75,
-          "baselines": {
-            "persist": {
-              "MAE": 42.76335877862596,
-              "RMSE": 78.47861574831065,
-              "MAE_skill": 0.44457814094832504,
-              "paired_gain_CI95": [
-                7.1220978013045375,
-                28.84641277783315
-              ]
-            },
-            "drift": {
-              "MAE": 46.695858900836676,
-              "RMSE": 80.28597432335663,
-              "MAE_skill": 0.491353092304024,
-              "paired_gain_CI95": [
-                10.597183370265405,
-                33.51049274781426
-              ]
-            },
-            "gasoil_transfer": {
-              "MAE": 27.72188331039169,
-              "RMSE": 54.55648827818665,
-              "MAE_skill": 0.14321462340133484,
-              "paired_gain_CI95": [
-                -0.6816462616791896,
-                9.925922106284332
-              ]
-            }
-          },
-          "oracle_gasoil_MAE": 29.483994303468684
+        "calibrated": {
+          "coverage": null,
+          "lower_tail_rate": null,
+          "upper_tail_rate": null,
+          "mean_width": null,
+          "interval_score": null
         },
-        "holdout": {
-          "n": 68,
-          "model_MAE": 14.5,
-          "model_RMSE": 27.27299353702465,
-          "persist_MAE": 14.5,
-          "persist_RMSE": 27.27299353702465,
-          "MAE_skill_vs_persist": 0.0,
-          "RMSE_skill_vs_persist": 0.0,
-          "paired_MAE_gain_mean": 0.0,
-          "paired_MAE_gain_CI95": [
-            0.0,
-            0.0
-          ],
-          "direction_acc": NaN,
-          "n_direction": 0,
-          "baselines": {
-            "persist": {
-              "MAE": 14.5,
-              "RMSE": 27.27299353702465,
-              "MAE_skill": 0.0,
-              "paired_gain_CI95": [
-                0.0,
-                0.0
-              ]
-            },
-            "drift": {
-              "MAE": 19.244118632958106,
-              "RMSE": 28.814723358896778,
-              "MAE_skill": 0.24652304028271643,
-              "paired_gain_CI95": [
-                2.2084946358822806,
-                6.48991754698915
-              ]
-            },
-            "gasoil_transfer": {
-              "MAE": 16.66810915373451,
-              "RMSE": 25.882102657159468,
-              "MAE_skill": 0.130075291308537,
-              "paired_gain_CI95": [
-                -2.573549837048195,
-                4.982884739032002
-              ]
-            }
-          },
-          "oracle_gasoil_MAE": 17.84662428307506
+        "baseline": {
+          "coverage": null,
+          "lower_tail_rate": null,
+          "upper_tail_rate": null,
+          "mean_width": null,
+          "interval_score": null
         }
       },
-      "transfer_gated": {
-        "all": {
-          "n": 199,
-          "model_MAE": 23.160092661996302,
-          "model_RMSE": 47.21179596540066,
-          "persist_MAE": 33.10552763819096,
-          "persist_RMSE": 65.6392799730229,
-          "MAE_skill_vs_persist": 0.30041614454504195,
-          "RMSE_skill_vs_persist": 0.28073866768794153,
-          "paired_MAE_gain_mean": 9.945434976194653,
-          "paired_MAE_gain_CI95": [
-            2.803273846160647,
-            16.335085090655117
-          ],
-          "direction_acc": 0.7866666666666666,
-          "n_direction": 75,
-          "baselines": {
-            "persist": {
-              "MAE": 33.10552763819096,
-              "RMSE": 65.6392799730229,
-              "MAE_skill": 0.30041614454504195,
-              "paired_gain_CI95": [
-                2.803273846160647,
-                16.335085090655117
-              ]
-            },
-            "drift": {
-              "MAE": 37.315364738948524,
-              "RMSE": 67.28266102187123,
-              "MAE_skill": 0.379341651246877,
-              "paired_gain_CI95": [
-                6.78314437529036,
-                20.89012980510392
-              ]
-            },
-            "gasoil_transfer": {
-              "MAE": 23.944714251835467,
-              "RMSE": 46.77873847646584,
-              "MAE_skill": 0.03276804983291959,
-              "paired_gain_CI95": [
-                -1.1542651976990086,
-                2.3013223099696294
-              ]
-            }
-          },
-          "oracle_gasoil_MAE": 25.50740555278142
+      "holdout": {
+        "n": 41,
+        "raw": {
+          "coverage": 0.07317073170731707,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.926829268292683,
+          "mean_width": 63.32507804722117,
+          "interval_score": 2294.0416669715673,
+          "pinball_q10": 0.024124025002423763,
+          "pinball_q90": 0.16915110031065808
         },
-        "dev": {
-          "n": 131,
-          "model_MAE": 27.65540793692568,
-          "model_RMSE": 54.77102105967565,
-          "persist_MAE": 42.76335877862596,
-          "persist_RMSE": 78.47861574831065,
-          "MAE_skill_vs_persist": 0.353291960061181,
-          "RMSE_skill_vs_persist": 0.30208986820903927,
-          "paired_MAE_gain_mean": 15.107950841700273,
-          "paired_MAE_gain_CI95": [
-            4.503723918592691,
-            24.143976821909153
-          ],
-          "direction_acc": 0.7866666666666666,
-          "n_direction": 75,
-          "baselines": {
-            "persist": {
-              "MAE": 42.76335877862596,
-              "RMSE": 78.47861574831065,
-              "MAE_skill": 0.353291960061181,
-              "paired_gain_CI95": [
-                4.503723918592691,
-                24.143976821909153
-              ]
-            },
-            "drift": {
-              "MAE": 46.695858900836676,
-              "RMSE": 80.28597432335663,
-              "MAE_skill": 0.40775459349286836,
-              "paired_gain_CI95": [
-                7.8261616323540935,
-                28.770868710658867
-              ]
-            },
-            "gasoil_transfer": {
-              "MAE": 27.72188331039169,
-              "RMSE": 54.55648827818665,
-              "MAE_skill": 0.0023979385787649132,
-              "paired_gain_CI95": [
-                -1.584705991312522,
-                2.1047812326703523
-              ]
-            }
-          },
-          "oracle_gasoil_MAE": 29.483994303468684
+        "calibrated": {
+          "coverage": 0.8536585365853658,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.14634146341463414,
+          "mean_width": 724.357222437135,
+          "interval_score": 784.2307454230606
         },
-        "holdout": {
-          "n": 68,
-          "model_MAE": 14.5,
-          "model_RMSE": 27.27299353702465,
-          "persist_MAE": 14.5,
-          "persist_RMSE": 27.27299353702465,
-          "MAE_skill_vs_persist": 0.0,
-          "RMSE_skill_vs_persist": 0.0,
-          "paired_MAE_gain_mean": 0.0,
-          "paired_MAE_gain_CI95": [
-            0.0,
-            0.0
-          ],
-          "direction_acc": NaN,
-          "n_direction": 0,
-          "baselines": {
-            "persist": {
-              "MAE": 14.5,
-              "RMSE": 27.27299353702465,
-              "MAE_skill": 0.0,
-              "paired_gain_CI95": [
-                0.0,
-                0.0
-              ]
-            },
-            "drift": {
-              "MAE": 19.244118632958106,
-              "RMSE": 28.814723358896778,
-              "MAE_skill": 0.24652304028271643,
-              "paired_gain_CI95": [
-                2.2084946358822806,
-                6.48991754698915
-              ]
-            },
-            "gasoil_transfer": {
-              "MAE": 16.66810915373451,
-              "RMSE": 25.882102657159468,
-              "MAE_skill": 0.130075291308537,
-              "paired_gain_CI95": [
-                -2.573549837048195,
-                4.982884739032002
-              ]
-            }
-          },
-          "oracle_gasoil_MAE": 17.84662428307506
+        "baseline": {
+          "coverage": 1.0,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.0,
+          "mean_width": 571.4362906382381,
+          "interval_score": 571.4362906382381
         }
       }
-    },
-    "evidence": "weak"
+    }
   }
 }

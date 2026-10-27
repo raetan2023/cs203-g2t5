@@ -3,3 +3,6 @@ data/tester/
 __pycache__/
 .pytest_cache/
 *.pyc
+
+work/
+artifacts/llm_cache_*.jsonl
