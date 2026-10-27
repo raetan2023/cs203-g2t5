@@ -1,0 +1,102 @@
+.bb-organisation-setup {
+  --org-bg: #071422;
+  --org-line: #20384c;
+  --org-text: #edf4fc;
+  --org-muted: #98aec3;
+  --org-accent: #35d0c3;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: 0 clamp(24px, 5vw, 88px);
+  display: flex;
+  flex-direction: column;
+  color: var(--org-text);
+  background: radial-gradient(ellipse at 14% 48%, #0e343e70 0, transparent 48%), var(--org-bg);
+  font: 14px/1.5 Inter, 'Segoe UI', Arial, sans-serif;
+}
+.bb-organisation-setup *, .bb-organisation-control * { box-sizing: border-box; }
+.bb-organisation-setup button { font: inherit; }
+.bb-organisation-setup :focus-visible, .bb-organisation-control :focus-visible { outline: 2px solid #35d0c3; outline-offset: 4px; }
+.bb-org-topbar { width: 100%; max-width: 1320px; margin: 0 auto; min-height: 92px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid #20384c80; }
+.bb-org-signout { background: transparent; color: #a6bbcf; border: 1px solid #2a4054; border-radius: 8px; display: inline-flex; align-items: center; gap: 9px; padding: 9px 14px; cursor: pointer; }
+.bb-org-signout svg { width: 16px; height: 16px; }
+.bb-org-signout:hover:not(:disabled) { color: #edf4fc; background: #14283a; }
+.bb-org-signout:disabled { opacity: .6; cursor: wait; }
+.bb-org-layout { width: 100%; max-width: 1200px; margin: auto; padding: 70px 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; gap: clamp(40px, 7vw, 112px); }
+.bb-org-eyebrow, .bb-org-section-label { font-size: 10px; font-weight: 650; letter-spacing: .18em; color: var(--org-muted); }
+.bb-org-eyebrow { display: inline-flex; align-items: center; gap: 10px; color: #71d6cb; }
+.bb-org-eyebrow > span { width: 7px; height: 7px; border-radius: 50%; background: #35d0c3; box-shadow: 0 0 0 5px #35d0c310; }
+.bb-org-intro h1 { max-width: 560px; font-size: clamp(36px, 4.1vw, 56px); font-weight: 600; line-height: 1.12; letter-spacing: -.04em; margin: 24px 0 22px; text-wrap: balance; }
+.bb-org-lead { margin: 0; max-width: 450px; font-size: 16px; line-height: 1.8; color: #9fb5c9; }
+.bb-org-route { margin: 30px 0 35px; max-width: 500px; }
+.bb-org-route svg { width: 100%; display: block; overflow: visible; }
+.bb-org-route-grid { stroke: #294659; stroke-width: .6; opacity: .45; }
+.bb-org-route-line { stroke: #35d0c3; stroke-width: 1.8; stroke-dasharray: 5 6; }
+.bb-org-route circle { fill: #0d2935; stroke: #59dfd3; stroke-width: 2; }
+.bb-org-ship { stroke: #9ae6de; stroke-width: 1.5; stroke-linejoin: round; }
+.bb-org-route > div { display: flex; justify-content: space-between; gap: 10px; padding: 0 2%; margin-top: 0; color: #708da5; font-size: 10px; letter-spacing: .03em; }
+.bb-org-team { border-top: 1px solid var(--org-line); padding-top: 24px; }
+.bb-org-section-label { margin: 0 0 19px; }
+.bb-org-role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 14px; }
+.bb-org-role { display: flex; align-items: flex-start; gap: 12px; }
+.bb-org-role > span { color: #57758b; font-size: 11px; padding-top: 3px; font-variant-numeric: tabular-nums; }
+.bb-org-role strong { color: #dce9f4; font-size: 12px; font-weight: 550; }
+.bb-org-role p { margin: 3px 0 0; color: #7793aa; font-size: 11px; }
+.bb-org-panel { width: 100%; min-width: 0; border: 1px solid #294155; border-radius: 18px; padding: clamp(20px, 2.5vw, 32px); background: linear-gradient(145deg, #102438e0, #0b1b2ef5); box-shadow: 0 26px 70px #00000030; }
+.bb-org-panel-heading { display: flex; align-items: flex-start; gap: 14px; padding-bottom: 26px; }
+.bb-org-panel-icon { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: 11px; border: 1px solid #2b555b; color: #67ddd1; background: #10343e; }
+.bb-org-panel-icon svg { width: 23px; height: 23px; }
+.bb-org-panel-heading h2 { margin: 0 0 6px; font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
+.bb-org-panel-heading p { margin: 0; color: #8fa8c1; font-size: 12px; line-height: 1.6; }
+.bb-org-picker { min-width: 0; }
+.bb-org-clerk-list, .bb-org-clerk-list .bb-org-clerk-cardbox { width: 100%; max-width: 100%; }
+.bb-org-clerk-list .bb-org-clerk-card { padding: 0; box-shadow: none; background: transparent; border: 0; }
+.bb-org-clerk-cardbox { box-shadow: none; border: 1px solid #2b4258; }
+.bb-org-clerk-list .bb-org-clerk-cardbox { border: 0; border-radius: 0; background: transparent; }
+.bb-org-clerk-popover { border: 1px solid #2b4258; box-shadow: 0 14px 44px #0008; }
+.bb-org-invitation-note { display: flex; align-items: flex-start; gap: 12px; margin-top: 24px; padding-top: 22px; border-top: 1px solid #253d53; }
+.bb-org-invitation-note > svg { flex-shrink: 0; width: 18px; height: 18px; color: #6d8ba3; margin-top: 2px; }
+.bb-org-invitation-note strong { font-size: 12px; font-weight: 550; color: #b4c9dc; }
+.bb-org-invitation-note p { margin: 5px 0 0; font-size: 12px; line-height: 1.7; color: #819cb5; }
+.bb-org-loading { color: #9fb5c9; padding: 24px 0; }
+.bb-org-error, .bb-org-role-warning { font-size: 13px; line-height: 1.6; padding: 12px; border-radius: 8px; }
+.bb-org-error { background: #ff929912; border: 1px solid #ff929933; color: #ffafb5; }
+.bb-org-role-warning { margin: 0 0 16px; background: #f4c46a10; border: 1px solid #f4c46a33; color: #f4d18d; }
+.bb-org-footer { width: 100%; max-width: 1320px; margin: 0 auto; padding: 24px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #20384c80; color: #627f97; font-size: 11px; }
+.bb-org-footer > span:first-child { font-size: 9px; letter-spacing: .18em; }
+.bb-organisation-control { display: flex; align-items: center; gap: 16px; margin-left: auto; min-width: 0; padding-left: 18px; border-left: 1px solid #263b50; }
+.bb-org-workspace { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.bb-org-workspace-label { color: #6d8ba3; font-size: 8px; letter-spacing: .15em; margin-left: 8px; }
+.bb-org-clerk-trigger { padding: 3px 7px; min-height: 30px; max-width: 240px; border-radius: 7px; color: #edf4fc; }
+.bb-org-clerk-trigger:hover { background: #162b3f; }
+.bb-org-clerk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bb-org-role-badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #2d575b; color: #8fe0d4; background: #10313a; font-size: 10px; font-weight: 550; padding: 5px 9px; border-radius: 6px; white-space: nowrap; }
+.bb-org-role-badge > span { width: 5px; height: 5px; background: #54c6b3; border-radius: 50%; }
+.bb-org-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.bb-personal-plan-notice { margin: 1rem auto; padding: .75rem 1rem; max-width: 70rem; background: #fff7e6; color: #664a10; border-radius: .5rem; }
+@media (max-width: 1000px) {
+  .bb-org-layout { gap: 40px; }
+  .bb-header:has(.bb-organisation-control) > .bb-date { display: none; }
+}
+@media (max-width: 760px) {
+  .bb-org-topbar { min-height: 78px; }
+  .bb-org-layout { grid-template-columns: minmax(0, 1fr); max-width: 500px; padding: 42px 0; gap: 32px; }
+  .bb-org-intro h1 { font-size: 38px; max-width: 400px; margin: 20px 0 16px; }
+  .bb-org-lead { font-size: 14px; }
+  .bb-org-route, .bb-org-team { display: none; }
+  .bb-org-panel { padding: 24px; }
+}
+@media (max-width: 640px) {
+  .bb-header:has(.bb-organisation-control) { flex-wrap: wrap; height: auto; gap: 12px; padding-top: 12px; padding-bottom: 12px; }
+  .bb-organisation-control { flex-basis: 100%; border-left: 0; border-top: 1px solid #20354c; padding: 10px 0 0; justify-content: space-between; gap: 10px; }
+  .bb-org-clerk-trigger { max-width: 200px; }
+  .bb-org-role-badge { font-size: 9px; }
+  .bb-personal-plan-notice { margin: .75rem; }
+}
+@media (max-width: 380px) {
+  .bb-organisation-setup { padding: 0 18px; }
+  .bb-org-panel { padding: 18px; }
+  .bb-org-topbar .bb-brand { font-size: 16px; gap: 8px; }
+  .bb-org-signout { padding: 8px 10px; }
+  .bb-org-footer { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .bb-org-clerk-trigger { max-width: 165px; }
+}

@@ -5,8 +5,8 @@ import { formatDate } from '../features/purchase-plan/dates';
 import { Brand } from './Brand';
 import { AppIcon } from './AppIcon';
 
-export function AppShell({ children, path, scenarioDate, onSignOut, marketAvailable = false }: {
-  children: ReactNode; path: string; scenarioDate: string; onSignOut(): Promise<void>; marketAvailable?: boolean;
+export function AppShell({ children, path, scenarioDate, onSignOut, marketAvailable = false, organisationControl }: {
+  children: ReactNode; path: string; scenarioDate: string; onSignOut(): Promise<void>; marketAvailable?: boolean; organisationControl?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -17,6 +17,7 @@ export function AppShell({ children, path, scenarioDate, onSignOut, marketAvaila
       <Brand />{path === '/market-dashboard'
         ? <span className="bb-date">MARKET OVERVIEW</span>
         : <time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>}
+      {organisationControl}
     </header>
     <div id="app-content" tabIndex={-1}>{children}</div>
     {open && <Navigation path={path} marketAvailable={marketAvailable} onSignOut={onSignOut} onClose={() => { setOpen(false); trigger.current?.focus(); }} />}
