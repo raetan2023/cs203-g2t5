@@ -16,7 +16,7 @@ describe('recommendations app integration', () => {
     render(<App auth={createMockAuthService({ user: DEMO_USER, delayMs: 0 })} scenarioDate={plan.scenario_as_of_date} createPlanService={() => planService} createRecommendationService={() => service} />);
     fireEvent.click(await screen.findByRole('link', { name: 'View recommendation →' }));
     expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
-    expect(document.title).toContain('Purchase recommendation');
+    expect(document.title).toContain('Purchase estimate');
     fireEvent.click(screen.getByRole('link', { name: 'Back to purchase plans' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
     fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '200' } });

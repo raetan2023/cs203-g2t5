@@ -34,6 +34,7 @@ public class ApiKeyFilter extends OncePerRequestFilter {
         // must reach the CORS handler rather than being rejected for a missing key.
         return "OPTIONS".equals(request.getMethod())
                 || !request.getRequestURI().startsWith("/api/")
+                || request.getRequestURI().equals("/api/v1/forecast")
                 || request.getRequestURI().equals("/api/v1/purchase-plan")
                 || request.getRequestURI().startsWith("/api/v1/purchase-plan/")
                 || request.getRequestURI().equals("/api/v1/purchase-plans")

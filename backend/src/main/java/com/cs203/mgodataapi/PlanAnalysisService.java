@@ -25,20 +25,27 @@ public class PlanAnalysisService {
     private final PlanAnalysisProvider provider;
     public PlanAnalysisService(PlanAnalysisProvider provider) { this.provider = provider; }
 
-    public Map<String, Object> read(Context context, boolean impact) {
+    public Map<String, Object> read(Context context, boolean impact) { return read(context, impact, 7, null); }
+    public Map<String, Object> read(Context context, boolean impact, int horizon, UUID expectedRunId) {
         try {
             Result<Reference> reference = Result.unavailable("missing_reference", "Reference prices are loaded separately.");
             Result<Forecast> forecast = Result.unavailable("missing_forecast", "Forecast prices are loaded separately.");
             Result<Impact> cost = Result.unavailable("missing_forecast", "Cost impact is loaded separately.");
             Result<Guidance> guidance = Result.unavailable("recommendation_unavailable", "Recommendations are loaded separately.");
-            if (impact) {
-                Prices prices = provider.prices(context.scenario_as_of_date);
+            if (impact || expectedRunId != null || provider.recommendationUsesPrices()) {
+                Prices prices = provider.prices(context.scenario_as_of_date, horizon);
                 if (!context.scenario_as_of_date.equals(prices.scenario_as_of_date())) throw new IllegalArgumentException("Provider scenario mismatch");
                 reference = validateReference(prices.reference(), context.scenario_as_of_date);
                 forecast = validateForecast(prices.forecast(), context.scenario_as_of_date);
+                if (expectedRunId != null && (!"ready".equals(forecast.status())
+                        || !expectedRunId.equals(forecast.value().run_id())))
+                    throw new ApiException(HttpStatus.CONFLICT, "The forecast run changed. Reload the forecast and cost impact.");
                 cost = calculate(context, reference, forecast);
-            } else {
-                Recommendation result = provider.recommendation(context);
+            }
+            if (!impact) {
+                Recommendation result = provider.recommendationUsesPrices()
+                        ? provider.recommendation(context, new Prices(context.scenario_as_of_date, reference, forecast))
+                        : provider.recommendation(context);
                 if (!context.matches(result.context())) throw new IllegalArgumentException("Provider context mismatch");
                 guidance = result.recommendation();
                 validateResult(guidance);
@@ -53,6 +60,8 @@ public class PlanAnalysisService {
                 throw new IllegalArgumentException("Invalid provenance");
             return Map.of("provenance", provenance, "context", context, "reference", reference,
                     "forecast", forecast, "cost_impact", cost, "recommendation", guidance);
+        } catch (ApiException failure) {
+            throw failure;
         } catch (RuntimeException failure) {
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "The analysis provider could not complete this request. Please retry.");
         }
@@ -87,8 +96,7 @@ public class PlanAnalysisService {
             return Result.unavailable("unsupported_horizon", "The forecast target is not supported for this planning date.");
         if (f.prices() == null || !nonnegative(f.prices().lower()) || !nonnegative(f.prices().upper())
                 || f.prices().lower().compareTo(f.prices().upper()) > 0 || blank(f.range_description())
-                || (f.central_estimate() != null && (f.central_estimate().compareTo(f.prices().lower()) < 0
-                || f.central_estimate().compareTo(f.prices().upper()) > 0)))
+                || (f.central_estimate() != null && !nonnegative(f.central_estimate())))
             return Result.unavailable("invalid_bounds", "The forecast bounds or uncertainty description are invalid.");
         return result;
     }
@@ -105,9 +113,12 @@ public class PlanAnalysisService {
             return Result.unavailable("unsupported_horizon", "The supplied price dates are incompatible with the current planning date.");
         if (!nonnegative(r.price()) || f.prices() == null || !nonnegative(f.prices().lower())
                 || !nonnegative(f.prices().upper()) || f.prices().lower().compareTo(f.prices().upper()) > 0
-                || blank(f.range_description()) || (f.central_estimate() != null &&
-                (f.central_estimate().compareTo(f.prices().lower()) < 0 || f.central_estimate().compareTo(f.prices().upper()) > 0)))
+                || blank(f.range_description()) || (f.central_estimate() != null && !nonnegative(f.central_estimate())))
             return Result.unavailable("invalid_bounds", "The source price bounds or uncertainty metadata are invalid.");
+        if (f.target_date().isAfter(context.purchase_deadline()))
+            return Result.unavailable("unsupported_horizon", "The forecast targets " + f.target_date()
+                    + ", after your purchase deadline of " + context.purchase_deadline()
+                    + ". No cost estimate is available within this purchase window.");
         BigDecimal q = context.quantity_mt;
         BigDecimal base = r.price().multiply(q), low = f.prices().lower().multiply(q), high = f.prices().upper().multiply(q);
         return Result.ready(new Impact("USD", f.target_date(), base, new Range(low, high),

@@ -29,6 +29,14 @@ if [ ! -f frontend/.env.local ]; then
   exit 1
 fi
 
+# The plan-only model is a private subprocess; it needs no third service/port.
+export MGO_RIDGE_ROOT="${MGO_RIDGE_ROOT:-$PWD/ridge-regression-model}"
+export MGO_RIDGE_PYTHON="${MGO_RIDGE_PYTHON:-$PWD/.venv/bin/python}"
+if [ ! -x "$MGO_RIDGE_PYTHON" ] || ! (cd "$MGO_RIDGE_ROOT" && "$MGO_RIDGE_PYTHON" -c 'import pandas, numpy, sklearn, joblib') ; then
+  echo "Install the Ridge runtime: python3 -m venv .venv && .venv/bin/pip install -r ridge-regression-model/requirements.txt"
+  exit 1
+fi
+
 if [ ! -d frontend/node_modules ]; then
   echo "Installing frontend dependencies..."
   (cd frontend && npm ci)
@@ -54,10 +62,10 @@ trap 'exit 143' TERM
 
 (cd backend && exec ./mvnw spring-boot:run) &
 backend_pid=$!
-(cd frontend && exec npm run dev -- --port 5173 --strictPort) &
+(cd frontend && exec npm run dev -- --port "${FRONTEND_PORT:-5173}" --strictPort) &
 frontend_pid=$!
 
-echo "Frontend: http://127.0.0.1:5173"
+echo "Frontend: http://127.0.0.1:${FRONTEND_PORT:-5173}"
 echo "Backend:  http://127.0.0.1:${PORT:-8000}"
 echo "Starting services. Press Ctrl+C to stop both."
 while kill -0 "$backend_pid" 2>/dev/null && kill -0 "$frontend_pid" 2>/dev/null; do
