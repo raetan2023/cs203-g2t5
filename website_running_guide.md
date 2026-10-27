@@ -124,13 +124,7 @@ Open Terminal in the project folder, then run:
 
 ```bash
 cd backend
-
-export SUPABASE_DB_URL='jdbc:postgresql://SUPABASE_HOST:5432/postgres?sslmode=require'
-export SUPABASE_DB_USER='postgres.PROJECT_REF'
-export SUPABASE_DB_PASSWORD='YOUR_DATABASE_PASSWORD'
-export CLERK_ISSUER_URI='https://YOUR-CLERK-DOMAIN.clerk.accounts.dev'
-export FRONTEND_ORIGINS='http://127.0.0.1:5173,http://localhost:5173'
-
+source .env.local
 ./mvnw spring-boot:run
 ```
 
