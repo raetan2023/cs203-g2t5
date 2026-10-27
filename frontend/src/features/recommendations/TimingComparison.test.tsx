@@ -1,38 +1,54 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
-import type { Horizon, ReadyForecast } from '../forecast/apiService';
+import type { ForecastService, Horizon, ReadyForecast } from '../forecast/apiService';
 import { buildMockForecast } from '../forecast/mockService';
-import { TimingComparison } from './TimingComparison';
+import { CompareBuyingDates, ExploredDetail, buildColumns, useHorizonComparison, type ColumnId } from './TimingComparison';
 
-const entry = (h: Horizon, price: number) => ({ horizon: h, forecast: { ...buildMockForecast(h),
-  run_id: 'same-snapshot', anchor_quote_date: '2026-10-26', forecast_origin_date: '2026-10-26',
+const entry = (h: Horizon, price: number) => ({ ...buildMockForecast(h),
+  run_id: 'same-snapshot', anchor_quote_date: '2026-10-26', forecast_origin_date: '2026-10-26', anchor_price: 1000,
   target_date: new Date(Date.parse('2026-10-26') + h * 86400000).toISOString().slice(0, 10),
-  forecast: price, low: price - 100, high: price + 100 } as ReadyForecast });
+  forecast: price, low: price - 100, high: price + 100 } as ReadyForecast);
+const prices: ForecastService = { read: async h => entry(h, h === 14 ? 980 : 1000) };
 
-it('renders all three real ranges and lets a card select the detailed estimate', async () => {
-  const select = vi.fn();
-  render(<TimingComparison service={{ read: async h => entry(h, h === 14 ? 980 : 1000).forecast }} today="2026-10-26" deadline="2026-12-01" select={select} />);
-  expect(await screen.findByRole('heading', { name: 'MGO price forecasts' })).toBeVisible();
-  const chartToggle = screen.getByText('View price ranges chart');
-  expect(chartToggle.closest('details')).not.toHaveAttribute('open');
-  fireEvent.click(chartToggle);
-  expect(screen.getByRole('img', { name: /Central MGO price/ })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: /14 days/ }));
-  expect(select).toHaveBeenCalledWith(14);
+function Harness({ service = prices, deadline = '2026-12-01', explored, recommended = [], onExplore = () => {} }: {
+  service?: ForecastService; deadline?: string; explored?: ColumnId; recommended?: ColumnId[]; onExplore?(id: ColumnId): void;
+}) {
+  const { entries } = useHorizonComparison(service, '2026-10-26');
+  return <CompareBuyingDates entries={entries} quantity={10} today="2026-10-26" deadline={deadline} explored={explored} recommended={recommended} onExplore={onExplore} />;
+}
+
+it('shows today and all three ranges in totals or per MT and lets a column be explored', async () => {
+  const onExplore = vi.fn();
+  render(<Harness onExplore={onExplore} recommended={['today']} />);
+  expect(await screen.findByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/Eligible.*USD 9,800.*Range 8,800–10,800/);
+  expect(screen.getByRole('button', { name: 'Today' })).toHaveAccessibleDescription(/Recommended.*USD 10,000/);
+  fireEvent.click(screen.getByRole('button', { name: 'Per MT' }));
+  expect(screen.getByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/USD 980\/MT.*Range 880–1,080\/MT/);
+  fireEvent.click(screen.getByRole('button', { name: '14 days' }));
+  expect(onExplore).toHaveBeenCalledWith(14);
+});
+
+it('dates today’s detail by the observed quote, not by the planning date', () => {
+  const columns = buildColumns([7, 14, 30].map(h => ({ horizon: h as Horizon, forecast: entry(h as Horizon, 1000) })), '2026-10-28', '2026-12-01');
+  render(<ExploredDetail column={columns[0]} quantity={10} today="2026-10-28" source="" experimental={false} />);
+  expect(screen.getByText('MGO quote observed 26 Oct 2026 · 2 days old')).toBeVisible();
 });
 
 it('rejects a comparison assembled from different source snapshots', async () => {
-  render(<TimingComparison service={{ read: async h => ({ ...entry(h, 1000).forecast, run_id: String(h) }) }} today="2026-10-26" deadline="2026-12-01" select={() => {}} />);
-  expect(await screen.findByRole('heading', { name: 'MGO price forecasts' })).toBeVisible();
-  expect(screen.getAllByText(/Source data changed. Refresh the comparison./)).toHaveLength(3);
+  render(<Harness service={{ read: async h => ({ ...entry(h, 1000), run_id: String(h) }) }} />);
+  expect(await screen.findAllByText(/Source data changed. Refresh the comparison./)).toHaveLength(3);
+  for (const h of [7, 14, 30]) expect(screen.getByRole('button', { name: `${h} days` })).toBeDisabled();
 });
 
-it('distinguishes the selected horizon from the suggested one and disables late targets', async () => {
-  const { rerender } = render(<TimingComparison service={{ read: async h => entry(h, h === 14 ? 980 : 1000).forecast }} today="2026-10-26" deadline="2026-11-15" selectedHorizon={7} select={() => {}} />);
-  const selected = await screen.findByRole('button', { name: /7 days.*Selected/ });
-  expect(selected).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByRole('button', { name: /14 days/ })).toHaveAttribute('aria-pressed', 'false');
-  expect(screen.getByRole('button', { name: /30 days/ })).toBeDisabled();
-  rerender(<TimingComparison service={{ read: async h => entry(h, h === 14 ? 980 : 1000).forecast }} today="2026-10-26" deadline="2026-11-15" selectedHorizon={14} select={() => {}} />);
-  expect(await screen.findByRole('button', { name: /14 days.*Selected/ })).toHaveAttribute('aria-pressed', 'true');
+it('marks late targets after the deadline but still lets them be explored for comparison', async () => {
+  const onExplore = vi.fn();
+  render(<Harness deadline="2026-11-15" explored={7} onExplore={onExplore} />);
+  expect(await screen.findByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('button', { name: '14 days' })).toHaveAttribute('aria-pressed', 'false');
+  const late = screen.getByRole('button', { name: '30 days' });
+  expect(late).toHaveAccessibleDescription(/After deadline/);
+  expect(late).toBeEnabled();
+  fireEvent.click(late);
+  expect(onExplore).toHaveBeenCalledWith(30);
+  expect(screen.getByLabelText('Purchase deadline 15 Nov 2026')).toBeVisible();
 });

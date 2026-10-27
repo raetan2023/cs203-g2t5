@@ -60,7 +60,7 @@ describe('Clerk API wiring', () => {
     const buttons = await screen.findAllByRole('button', { name: 'Reload saved plan' });
     scenario = '2025-10-25';
     await userEvent.click(buttons[0]);
-    expect(await screen.findByText('21 days')).toBeInTheDocument();
+    expect((await screen.findAllByText(/21 days left/))[0]).toBeInTheDocument();
     await waitFor(() => expect(screen.getAllByText('No ML provider connected.')).toHaveLength(2));
     const analysisCalls = fetcher.mock.calls.filter(([url]) => /\/(cost-impact|recommendation)\?/.test(url));
     expect(analysisCalls.length).toBeGreaterThanOrEqual(4);

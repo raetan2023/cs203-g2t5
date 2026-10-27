@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { navigate } from './router';
@@ -15,7 +15,8 @@ describe('recommendations app integration', () => {
     const read = vi.spyOn(service, 'read');
     render(<App auth={createMockAuthService({ user: DEMO_USER, delayMs: 0 })} scenarioDate={plan.scenario_as_of_date} createPlanService={() => planService} createRecommendationService={() => service} />);
     fireEvent.click(await screen.findByRole('link', { name: 'View recommendation →' }));
-    expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
+    // The decision rail repeats the action; read it from the recommendation itself.
+    expect(await within(await screen.findByRole('region', { name: 'Recommendation' })).findByText('Consider purchasing on 29 October')).toBeVisible();
     expect(document.title).toContain('Purchase estimate');
     fireEvent.click(screen.getByRole('link', { name: 'Back to purchase plans' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
