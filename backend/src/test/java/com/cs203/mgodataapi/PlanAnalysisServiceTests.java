@@ -54,13 +54,17 @@ class PlanAnalysisServiceTests {
             assertEquals("incompatible_basis", calculate(forecast("680", "740", incompatible, date, null)).reason());
         assertEquals("invalid_bounds", calculate(forecast("740", "680", basis, date, null)).reason());
         assertEquals("invalid_bounds", calculate(forecast("-1", "680", basis, date, null)).reason());
-        assertEquals("invalid_bounds", calculate(forecast("680", "740", basis, date, "750")).reason());
+        assertEquals("invalid_bounds", calculate(forecast("680", "740", basis, date, "-1")).reason());
+    }
+
+    @Test void independentPointMayLieOutsideQuantileBounds() {
+        assertEquals("ready", calculate(forecast("680", "740", basis, date, "750")).status());
     }
 
     @Test void rejectsFutureReferencesAndUnsupportedTargets() {
         assertEquals("unsupported_horizon", calculate(forecast("680", "740", basis, date.minusDays(1), null)).reason());
-        // A cost estimate's explicit target is not a recommended purchase date or assumed deadline.
-        assertEquals("ready", calculate(forecast("680", "740", basis, date.plusDays(23), null)).status());
+        // Estimates beyond the saved deadline must not be used for this purchase window.
+        assertEquals("unsupported_horizon", calculate(forecast("680", "740", basis, date.plusDays(23), null)).reason());
         assertEquals("unsupported_horizon", PlanAnalysisService.calculate(context,
                 Result.ready(new Reference(reference.price(), date.plusDays(1), basis)),
                 Result.ready(forecast("680", "740", basis, date, null))).reason());
@@ -83,14 +87,14 @@ class PlanAnalysisServiceTests {
     @Test void providerFailuresAndStaleOutputsDoNotBecomeUnavailableOrSyntheticSuccess() {
         PlanAnalysisProvider provider = org.mockito.Mockito.mock(PlanAnalysisProvider.class);
         org.mockito.Mockito.when(provider.provenance()).thenReturn("model");
-        org.mockito.Mockito.when(provider.prices(date)).thenThrow(new IllegalStateException("Provider offline"));
+        org.mockito.Mockito.when(provider.prices(date, 7)).thenThrow(new IllegalStateException("Provider offline"));
         org.mockito.Mockito.when(provider.recommendation(context)).thenReturn(new Recommendation(context,
                 Result.unavailable("recommendation_unavailable", "No policy")));
         PlanAnalysisService service = new PlanAnalysisService(provider);
         assertEquals("model", service.read(context, false).get("provenance"));
         assertEquals(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, assertThrows(ApiException.class, () -> service.read(context, true)).status());
         org.mockito.Mockito.reset(provider);
-        org.mockito.Mockito.when(provider.prices(date)).thenReturn(new Prices(date.minusDays(1), Result.ready(reference),
+        org.mockito.Mockito.when(provider.prices(date, 7)).thenReturn(new Prices(date.minusDays(1), Result.ready(reference),
                 Result.ready(forecast("680", "740", basis, date, null))));
         assertThrows(ApiException.class, () -> service.read(context, true));
     }
@@ -98,7 +102,7 @@ class PlanAnalysisServiceTests {
     @Test void invalidProviderBoundsBecomeExplicitUnavailableSections() {
         PlanAnalysisProvider provider = org.mockito.Mockito.mock(PlanAnalysisProvider.class);
         org.mockito.Mockito.when(provider.provenance()).thenReturn("model");
-        org.mockito.Mockito.when(provider.prices(date)).thenReturn(new Prices(date, Result.ready(reference),
+        org.mockito.Mockito.when(provider.prices(date, 7)).thenReturn(new Prices(date, Result.ready(reference),
                 Result.ready(forecast("740", "680", basis, date, null))));
         var body = new PlanAnalysisService(provider).read(context, true);
         assertEquals("invalid_bounds", ((Result<?>) body.get("forecast")).reason());

@@ -30,7 +30,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher("/api/v1/purchase-plan/**", "/api/v1/purchase-plans/**")
+                .securityMatcher("/api/v1/purchase-plan/**", "/api/v1/purchase-plans/**", "/api/v1/forecast")
                 .cors(Customizer.withDefaults())
                 // No browser sessions or forms, so there is no cookie for a forged request to ride on.
                 .csrf(csrf -> csrf.disable())

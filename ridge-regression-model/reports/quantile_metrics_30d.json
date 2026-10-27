@@ -1,0 +1,88 @@
+{
+  "nominal_coverage": 0.8,
+  "method": "split_conformal_quantile",
+  "dev_end": "2026-07-31",
+  "pinball_scope": "sorted crossing-repaired raw return endpoints",
+  "limitations": [
+    "Dependent overlapping market outcomes do not guarantee nominal coverage.",
+    "Sparse observed MGO quotes; counts are not independent sample counts."
+  ],
+  "all": {
+    "n": 51,
+    "raw": {
+      "coverage": 0.11764705882352941,
+      "lower_tail_rate": 0.0,
+      "upper_tail_rate": 0.8823529411764706,
+      "mean_width": 78.78388905096504,
+      "interval_score": 2013.751239314681,
+      "pinball_q10": 0.02315368170481244,
+      "pinball_q90": 0.14698155390609782
+    },
+    "calibrated": {
+      "coverage": 0.803921568627451,
+      "lower_tail_rate": 0.0,
+      "upper_tail_rate": 0.19607843137254902,
+      "mean_width": 707.2603580474736,
+      "interval_score": 798.5726453307904
+    },
+    "baseline": {
+      "coverage": 1.0,
+      "lower_tail_rate": 0.0,
+      "upper_tail_rate": 0.0,
+      "mean_width": 592.374216698541,
+      "interval_score": 592.374216698541
+    }
+  },
+  "dev": {
+    "n": 0,
+    "raw": {
+      "coverage": null,
+      "lower_tail_rate": null,
+      "upper_tail_rate": null,
+      "mean_width": null,
+      "interval_score": null,
+      "pinball_q10": null,
+      "pinball_q90": null
+    },
+    "calibrated": {
+      "coverage": null,
+      "lower_tail_rate": null,
+      "upper_tail_rate": null,
+      "mean_width": null,
+      "interval_score": null
+    },
+    "baseline": {
+      "coverage": null,
+      "lower_tail_rate": null,
+      "upper_tail_rate": null,
+      "mean_width": null,
+      "interval_score": null
+    }
+  },
+  "holdout": {
+    "n": 41,
+    "raw": {
+      "coverage": 0.07317073170731707,
+      "lower_tail_rate": 0.0,
+      "upper_tail_rate": 0.926829268292683,
+      "mean_width": 63.32507804722117,
+      "interval_score": 2294.0416669715673,
+      "pinball_q10": 0.024124025002423763,
+      "pinball_q90": 0.16915110031065808
+    },
+    "calibrated": {
+      "coverage": 0.8536585365853658,
+      "lower_tail_rate": 0.0,
+      "upper_tail_rate": 0.14634146341463414,
+      "mean_width": 724.357222437135,
+      "interval_score": 784.2307454230606
+    },
+    "baseline": {
+      "coverage": 1.0,
+      "lower_tail_rate": 0.0,
+      "upper_tail_rate": 0.0,
+      "mean_width": 571.4362906382381,
+      "interval_score": 571.4362906382381
+    }
+  }
+}
