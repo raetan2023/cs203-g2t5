@@ -72,7 +72,6 @@
 .bb-org-role-badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #2d575b; color: #8fe0d4; background: #10313a; font-size: 10px; font-weight: 550; padding: 5px 9px; border-radius: 6px; white-space: nowrap; }
 .bb-org-role-badge > span { width: 5px; height: 5px; background: #54c6b3; border-radius: 50%; }
 .bb-org-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-.bb-personal-plan-notice { margin: 1rem auto; padding: .75rem 1rem; max-width: 70rem; background: #fff7e6; color: #664a10; border-radius: .5rem; }
 @media (max-width: 1000px) {
   .bb-org-layout { gap: 40px; }
   .bb-header:has(.bb-organisation-control) > .bb-date { display: none; }
@@ -90,7 +89,6 @@
   .bb-organisation-control { flex-basis: 100%; border-left: 0; border-top: 1px solid #20354c; padding: 10px 0 0; justify-content: space-between; gap: 10px; }
   .bb-org-clerk-trigger { max-width: 200px; }
   .bb-org-role-badge { font-size: 9px; }
-  .bb-personal-plan-notice { margin: .75rem; }
 }
 @media (max-width: 380px) {
   .bb-organisation-setup { padding: 0 18px; }

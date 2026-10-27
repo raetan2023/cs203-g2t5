@@ -8,11 +8,12 @@ import { App } from './App';
 import MarketDashboard from '../features/market-dashboard/MarketDashboard';
 import { createApiRecommendationService } from '../features/recommendations/apiService';
 import { OrganisationSelection, OrganisationControl } from '../features/organisation/OrganisationAccess';
+import { fetchOrganisationAccess, type OrganisationPermissions } from '../features/organisation/apiService';
 import { organisationRoleLabel } from '../features/organisation/roles';
 
 type Scenario =
   | { state: 'idle' | 'loading' }
-  | { state: 'ready'; date: string; context: string }
+  | { state: 'ready'; date: string; context: string; permissions: OrganisationPermissions }
   | { state: 'error'; message: string; context: string };
 
 export function ClerkApp() {
@@ -43,8 +44,14 @@ export function ClerkApp() {
 
     let current = true;
     setScenario({ state: 'loading' });
-    fetchScenarioDate()
-      .then(date => { if (current) setScenario({ state: 'ready', date, context: contextKey }); })
+    Promise.all([fetchScenarioDate(), fetchOrganisationAccess(() => getContextToken(true))])
+      .then(([date, permissions]) => {
+        if (!current) return;
+        if (permissions.organisation_id !== orgId || permissions.role !== orgRole) {
+          throw new Error('Your organisation membership changed. Refresh your session and retry.');
+        }
+        setScenario({ state: 'ready', date, context: contextKey, permissions });
+      })
       .catch(error => {
         if (current) setScenario({
           state: 'error', context: contextKey,
@@ -73,11 +80,11 @@ export function ClerkApp() {
   }), [authState.signOut, sessionUser]);
 
   // Prevent an adapter from sending a request after its account/organisation context changed.
-  const getContextToken = useCallback(async () => {
+  const getContextToken = useCallback(async (skipCache = false) => {
     if (!organisationReady || generation.current.value !== currentGeneration) {
       throw new Error('Your organisation changed. Please try again.');
     }
-    const token = await authState.getToken();
+    const token = await authState.getToken({ skipCache });
     if (generation.current.value !== currentGeneration) {
       throw new Error('Your organisation changed. Please try again.');
     }
@@ -106,7 +113,7 @@ export function ClerkApp() {
   return <App
     key={contextKey}
     organisationControl={organisationReady ? <OrganisationControl name={organisationState.organization!.name} role={roleLabel!} /> : undefined}
-    personalPlansNotice={organisationReady}
+    planAccess={scenario.state === 'ready' ? scenario.permissions : undefined}
     auth={auth}
     createPlanService={createPlanService}
     createRecommendationService={createRecommendationService}

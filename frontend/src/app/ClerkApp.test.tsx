@@ -28,6 +28,13 @@ beforeEach(() => {
 vi.mock('../features/auth/ClerkAuthPage', () => ({ ClerkAuthPage: () => <p>Clerk sign-in</p> }));
 afterEach(() => vi.unstubAllGlobals());
 const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+function accessReply() {
+  const role = clerk.auth.orgRole;
+  return reply({ organisation_id: clerk.auth.orgId, role,
+    can_read_plans: role !== 'org:admin', can_write_plans: role === 'org:buyer',
+    plan_scope: role === 'org:admin' ? 'none' : role === 'org:buyer' ? 'own' : 'organisation' });
+}
+
 
 describe('Clerk API wiring', () => {
   it('mounts both real adapters and refreshes backend configuration after a scenario conflict', async () => {
@@ -35,6 +42,7 @@ describe('Clerk API wiring', () => {
     let scenario = '2025-10-24';
     const unavailable = { status: 'unavailable', reason: 'missing_forecast', message: 'No ML provider connected.' };
     const fetcher = vi.fn(async (url: string, _init?: RequestInit) => {
+      if (url.endsWith('/organisation')) return accessReply();
       if (url.endsWith('/config')) return reply({ scenario_as_of_date: scenario });
       if (url.endsWith(`/purchase-plans/${ANALYSIS_DEMO_PLAN.plan_id}`)) return reply({ plan: { ...ANALYSIS_DEMO_PLAN, scenario_as_of_date: scenario, days_remaining: scenario === '2025-10-24' ? 22 : 21 } });
       if (scenario === '2025-10-24') return reply({ detail: 'The backend scenario changed.' }, 409);
@@ -58,7 +66,7 @@ describe('Clerk API wiring', () => {
 
 describe('Organisation selection and role recognition', () => {
   function configuration() {
-    const fetcher = vi.fn(async (_url: string) => reply({ scenario_as_of_date: '2025-10-24' }));
+    const fetcher = vi.fn(async (url: string) => url.endsWith('/organisation') ? accessReply() : reply({ scenario_as_of_date: '2025-10-24' }));
     vi.stubGlobal('fetch', fetcher);
     window.history.replaceState(null, '', '/home');
     return fetcher;
@@ -127,6 +135,7 @@ describe('Organisation selection and role recognition', () => {
     const oldRows = new Promise<Response>(resolve => { resolveOld = resolve; });
     let first = true;
     const fetcher = vi.fn(async (url: string) => {
+      if (url.endsWith('/organisation')) return accessReply();
       if (url.endsWith('/config')) return reply({ scenario_as_of_date: '2025-10-24' });
       if (first) { first = false; return oldRows; }
       return reply({ plans: [] });
@@ -142,7 +151,7 @@ describe('Organisation selection and role recognition', () => {
     await act(async () => { resolveOld(reply({ plans: [ANALYSIS_DEMO_PLAN] })); });
     expect(screen.queryByText('Your purchase plan')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Active organisation')).toHaveTextContent('Other Company');
-    expect(screen.getByText('Purchase plans are personal and are not shared with this organisation yet.')).toBeInTheDocument();
+    expect(screen.queryByText('Purchase plans are personal and are not shared with this organisation yet.')).not.toBeInTheDocument();
     expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(2);
   });
 
@@ -158,5 +167,47 @@ describe('Organisation selection and role recognition', () => {
     await act(async () => { resolveToken('old-token'); });
     expect(screen.getByRole('heading', { name: 'Choose your organisation' })).toBeInTheDocument();
     expect(fetcher.mock.calls.every(([url]) => url.endsWith('/config'))).toBe(true);
+  });
+});
+
+
+describe('Verified organisation permissions', () => {
+  function backend(role: string) {
+    clerk.auth.orgRole = role;
+    const fetcher = vi.fn(async (url: string) => {
+      if (url.endsWith('/organisation')) return accessReply();
+      if (url.endsWith('/config')) return reply({ scenario_as_of_date: '2025-10-24' });
+      if (url.endsWith('/purchase-plans')) return reply({ plans: [ANALYSIS_DEMO_PLAN] });
+      throw new Error('Unexpected request');
+    });
+    vi.stubGlobal('fetch', fetcher);
+    return fetcher;
+  }
+  it.each(['org:manager', 'org:analyst'])('shows organisation plans read-only for %s', async role => {
+    backend(role);
+    window.history.replaceState(null, '', '/purchase-plans');
+    render(<ClerkApp />);
+    expect(await screen.findByRole('heading', { name: 'Organisation purchase plans' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /View recommendation/ })).toBeInTheDocument();
+    for (const name of ['Create plan', 'Edit', 'Delete']) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+  });
+  it('does not request purchase plans for an admin opening a private plan URL', async () => {
+    const fetcher = backend('org:admin');
+    window.history.replaceState(null, '', '/purchase-plans');
+    render(<ClerkApp />);
+    expect(await screen.findByRole('heading', { name: 'Purchase-plan access is restricted' })).toBeInTheDocument();
+    expect(fetcher.mock.calls.some(([url]) => url.endsWith('/purchase-plans'))).toBe(false);
+  });
+  it('does not accept backend permissions from a different organisation', async () => {
+    backend('org:buyer');
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('/organisation')
+      ? reply({ organisation_id: 'org_other', role: 'org:buyer', can_read_plans: true,
+          can_write_plans: true, plan_scope: 'own' }) : reply({ scenario_as_of_date: '2025-10-24' })));
+    window.history.replaceState(null, '', '/home');
+    render(<ClerkApp />);
+    expect(await screen.findByText('Your organisation membership changed. Refresh your session and retry.')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Go to purchase plans/ })).not.toBeInTheDocument();
   });
 });
