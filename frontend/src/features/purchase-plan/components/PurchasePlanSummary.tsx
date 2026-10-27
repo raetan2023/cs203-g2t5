@@ -1,8 +1,11 @@
 import { AppLink } from '../../../app/router';
 import { formatDate } from '../dates';
 import type { PurchasePlan } from '../types';
-import { PlanButton } from './Primitives';
-import { useId, type RefObject } from 'react';
+import { Icon, PlanButton } from './Primitives';
+import { useEffect, useId, useRef, useState, type RefObject } from 'react';
+
+/** A plan is "due soon" within this many days of its deadline (presentation rule, not stored). */
+export const DUE_SOON_DAYS = 7;
 
 export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef, busy = false, canEdit = true }: {
   plan: PurchasePlan;
@@ -11,27 +14,76 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
   onEdit(): void;
   onDelete(): void;
   editRef?: RefObject<HTMLButtonElement | null>;
+  /** Focus target for the plan's delete flow: the "more actions" button, since Delete lives in its menu. */
   deleteRef?: RefObject<HTMLButtonElement | null>;
 }) {
   const headingId = useId();
-  const timeRemaining =
-    plan.days_remaining < 0
-      ? `Overdue by ${Math.abs(plan.days_remaining)} ${Math.abs(plan.days_remaining) === 1 ? 'day' : 'days'}`
-      : `${plan.days_remaining} ${plan.days_remaining === 1 ? 'day' : 'days'}`;
-      
-  return <section className="pp-card pp-summary" aria-labelledby={headingId}>
-    <h2 id={headingId}>{canEdit ? "Your purchase plan" : "Purchase plan"}</h2>
-    <p className="pp-card-description">{canEdit ? "Your saved purchase quantity and deadline." : "An organisation buyer’s purchase quantity and deadline."}</p>
-    <dl className="pp-details">
-      <div><dt>Quantity</dt><dd>{new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt)} MT</dd></div>
-      <div><dt>Purchase deadline</dt><dd><time dateTime={plan.purchase_deadline}>{formatDate(plan.purchase_deadline)}</time></dd></div>
-      <div><dt>Application date</dt><dd><time dateTime={plan.scenario_as_of_date}>{formatDate(plan.scenario_as_of_date)}</time></dd></div>
-      <div><dt>Time remaining</dt><dd>{timeRemaining}<span className="pp-time-note">Calculated from scenario date</span></dd></div>
-    </dl>
+  const quantity = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt);
+  const overdue = plan.days_remaining < 0;
+  const days = Math.abs(plan.days_remaining);
+  const unit = days === 1 ? 'day' : 'days';
+  const status = overdue ? 'overdue' : days <= DUE_SOON_DAYS ? 'soon' : 'on-track';
+
+  // Guide: docs/ui-revamp/assets/inspo/purchase-plans-page/image.png. Quantity leads; deadline and time left follow.
+  return <section className={`pp-card pp-summary pp-summary--${status}`} aria-labelledby={headingId}>
+    <div className="pp-summary-top">
+      <span className={`pp-badge pp-badge--${status}`}>
+        <Icon name={overdue ? 'alert' : 'clock'} />{overdue ? 'Overdue' : status === 'soon' ? 'Due soon' : 'On track'}
+      </span>
+      {canEdit && <PlanMenu quantity={quantity} busy={busy} triggerRef={deleteRef} onDelete={onDelete} />}
+    </div>
+    <h3 id={headingId} className="pp-summary-title">
+      {/* Read as one phrase; drawn with a smaller unit. */}
+      <span className="pp-summary-qty">
+        <span className="pp-sr-only">{quantity} MT</span>
+        <span aria-hidden="true">{quantity}<span className="pp-summary-unit">MT</span></span>
+      </span>{' '}
+      <span className="pp-summary-due">Due <time dateTime={plan.purchase_deadline}>{formatDate(plan.purchase_deadline)}</time></span>
+    </h3>
+    <p className="pp-countdown">
+      {overdue
+        ? <span className="pp-countdown-value">Overdue by {days} {unit}</span>
+        : <><span className="pp-countdown-value">{days} {unit}</span> {days === 0 ? 'left · due today' : 'left'}</>}
+    </p>
     <div className="pp-actions">
-      {canEdit && <PlanButton ref={deleteRef} variant="danger-outline" disabled={busy} onClick={onDelete}>Delete</PlanButton>}
+      {!busy && <AppLink className="pp-button pp-button--primary pp-summary-link" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>View recommendation &rarr;</AppLink>}
       {canEdit && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}
-      {!busy && <AppLink className="pp-button pp-button--primary" style={{ textDecoration: 'none' }} href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>View recommendation &rarr;</AppLink>}
     </div>
   </section>;
+}
+
+/** Disclosure menu for less frequent actions. Delete still opens the same confirmation dialog. */
+function PlanMenu({ quantity, busy, triggerRef, onDelete }: {
+  quantity: string; busy: boolean; triggerRef?: RefObject<HTMLButtonElement | null>; onDelete(): void;
+}) {
+  const [open, setOpen] = useState(false);
+  const localTrigger = useRef<HTMLButtonElement>(null);
+  const trigger = triggerRef ?? localTrigger;
+  const menu = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent) => { if (!menu.current?.parentElement?.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [open]);
+  useEffect(() => { if (busy) setOpen(false); }, [busy]);
+
+  return <div className="pp-menu" onKeyDown={event => {
+    if (event.key === 'Escape' && open) { event.stopPropagation(); setOpen(false); trigger.current?.focus(); }
+  }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false); }}>
+    <button ref={trigger} type="button" className="pp-menu-trigger" aria-label={`More actions for ${quantity} MT plan`}
+      aria-expanded={open} aria-controls={menuId} disabled={busy} onClick={() => setOpen(value => !value)}>
+      <Icon name="more" />
+    </button>
+    <div ref={menu} id={menuId} className="pp-menu-list" hidden={!open}>
+      <button type="button" className="pp-menu-item pp-menu-item--danger" onClick={() => {
+        // Focus the trigger first so the dialog returns focus there when it closes.
+        trigger.current?.focus();
+        setOpen(false);
+        onDelete();
+      }}><Icon name="trash" />Delete</button>
+    </div>
+  </div>;
 }
