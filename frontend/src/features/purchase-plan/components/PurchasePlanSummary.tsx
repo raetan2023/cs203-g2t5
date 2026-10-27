@@ -14,6 +14,7 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
   deleteRef?: RefObject<HTMLButtonElement | null>;
 }) {
   const headingId = useId();
+  const draft = !plan.status || plan.status === 'draft';
   const timeRemaining =
     plan.days_remaining < 0
       ? `Overdue by ${Math.abs(plan.days_remaining)} ${Math.abs(plan.days_remaining) === 1 ? 'day' : 'days'}`
@@ -22,6 +23,8 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
   return <section className="pp-card pp-summary" aria-labelledby={headingId}>
     <h2 id={headingId}>{canEdit ? "Your purchase plan" : "Purchase plan"}</h2>
     <p className="pp-card-description">{canEdit ? "Your saved purchase quantity and deadline." : "An organisation buyer’s purchase quantity and deadline."}</p>
+    {plan.status && <p className={`pp-plan-status pp-plan-status--${plan.status}`}>{plan.status === 'submitted' ? 'Submitted for approval' : plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</p>}
+    {plan.status === 'submitted' && <p className="pp-card-description">All managers in your organisation have been notified. This plan is locked while awaiting review.</p>}
     <dl className="pp-details">
       <div><dt>Quantity</dt><dd>{new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt)} MT</dd></div>
       <div><dt>Purchase deadline</dt><dd><time dateTime={plan.purchase_deadline}>{formatDate(plan.purchase_deadline)}</time></dd></div>
@@ -29,9 +32,9 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
       <div><dt>Time remaining</dt><dd>{timeRemaining}<span className="pp-time-note">Calculated from scenario date</span></dd></div>
     </dl>
     <div className="pp-actions">
-      {canEdit && <PlanButton ref={deleteRef} variant="danger-outline" disabled={busy} onClick={onDelete}>Delete</PlanButton>}
-      {canEdit && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}
-      {!busy && <AppLink className="pp-button pp-button--primary" style={{ textDecoration: 'none' }} href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>View recommendation &rarr;</AppLink>}
+      {canEdit && draft && <PlanButton ref={deleteRef} variant="danger-outline" disabled={busy} onClick={onDelete}>Delete</PlanButton>}
+      {canEdit && draft && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}
+      {!busy && <AppLink className="pp-button pp-button--primary" style={{ textDecoration: 'none' }} href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>{plan.status && plan.status !== 'draft' ? 'View submitted recommendation' : 'View recommendation'} &rarr;</AppLink>}
     </div>
   </section>;
 }

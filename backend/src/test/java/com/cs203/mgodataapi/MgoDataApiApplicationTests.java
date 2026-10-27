@@ -360,7 +360,7 @@ class MgoDataApiApplicationTests {
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(url)
                         .with(jwt().jwt(t -> t.subject("other").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isNotFound());
-        verify(plans).findByIdAndUser(selected.planId(), other, "org_a");
+        verify(plans, org.mockito.Mockito.times(3)).findByIdAndUser(selected.planId(), other, "org_a");
         verify(plans).update(selected.planId(), other, new BigDecimal("500"),
                 LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"), "org_a");
         verify(plans).delete(selected.planId(), other, "org_a");

@@ -121,6 +121,19 @@ logs a message when the frontend falls back.
 
 ### Purchase plans
 
+Draft submission and the shared manager inbox require the manual
+[`20261027_plan_submission.sql`](migrations/20261027_plan_submission.sql) migration
+plus [`20261027_recommendation_approval_snapshot.sql`](migrations/20261027_recommendation_approval_snapshot.sql)
+before running this branch. Both are applied to the shared project; do not rerun them there. See the [rollout and API guide](../docs/plan-submission.md).
+Buyers choose a recommendation and submit the validated selection body with `POST /api/v1/purchase-plans/{planId}/submit`;
+only managers can read `GET /api/v1/purchase-plans/approval-notifications`.
+Submitted plans cannot be edited/deleted. No new environment variables are needed.
+Manager decisions also require [`20261027_manager_approval_decisions.sql`](migrations/20261027_manager_approval_decisions.sql),
+applied to the shared project. Managers POST the final choice, comment and saved
+fingerprint to `/api/v1/purchase-plans/{planId}/decision`. Rejection needs a reason;
+only submitted requests can be decided, and the first decision is final. Submission
+GET includes the buyer-visible audit record. See the rollout guide for full details.
+
 Organisation access now requires the active Clerk organisation and membership role
 in the verified session token. Buyers can manage multiple own plans within that
 organisation. Managers and analysts can read organisation plans and their analysis

@@ -98,3 +98,11 @@
   .pp-spinner { animation: none; }
   .pp-button { transition: none; }
 }
+
+.pp-plan-status { align-self: flex-start; display: inline-block; margin: 0 0 1rem; padding: .35rem .7rem; border: 1px solid var(--pp-border, #40556b); border-radius: 999px; font-size: .85rem; font-weight: 600; }
+.pp-plan-status--submitted { background: #173b47; color: #b7f3e3; border-color: #427e79; }
+.pp-approval-inbox { margin-bottom: 1.5rem; }
+.pp-approval-list { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.pp-approval-list li { padding: 1rem 0; border-top: 1px solid #40556b; }
+.pp-approval-list p { font-size: .9rem; }
+.pp-approval-list a { color: inherit; text-decoration: underline; }

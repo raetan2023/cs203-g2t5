@@ -19,7 +19,9 @@ public class PurchasePlanRepository {
             rs.getObject("user_id", UUID.class),
             rs.getBigDecimal("quantity_mt"),
             rs.getObject("purchase_deadline", LocalDate.class),
-            rs.getObject("scenario_as_of_date", LocalDate.class));
+            rs.getObject("scenario_as_of_date", LocalDate.class),
+            rs.getString("status"),
+            rs.getTimestamp("submitted_at") == null ? null : rs.getTimestamp("submitted_at").toInstant());
 
     private final JdbcTemplate jdbc;
 
@@ -29,14 +31,14 @@ public class PurchasePlanRepository {
 
     public List<PurchasePlan> findByUser(UUID userId, String organisationId) {
         return jdbc.query("""
-                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date
+                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at
                 from purchase_plans where user_id = ? and clerk_org_id = ?
                 order by purchase_deadline, plan_id""", MAPPER, userId, requireOrganisation(organisationId));
     }
 
     public Optional<PurchasePlan> findByIdAndUser(UUID planId, UUID userId, String organisationId) {
         return jdbc.query("""
-                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date
+                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at
                 from purchase_plans where plan_id = ? and user_id = ? and clerk_org_id = ?""", MAPPER, planId, userId, requireOrganisation(organisationId))
                 .stream().findFirst();
     }
@@ -45,7 +47,7 @@ public class PurchasePlanRepository {
         return jdbc.queryForObject("""
                 insert into purchase_plans (user_id, quantity_mt, purchase_deadline, scenario_as_of_date, clerk_org_id)
                 values (?, ?, ?, ?, ?)
-                returning plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date""",
+                returning plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at""",
                 MAPPER, userId, quantityMt, deadline, scenarioDate, requireOrganisation(organisationId));
     }
 
@@ -53,28 +55,57 @@ public class PurchasePlanRepository {
         List<PurchasePlan> updated = jdbc.query("""
                 update purchase_plans
                 set quantity_mt = ?, purchase_deadline = ?, scenario_as_of_date = ?
-                where plan_id = ? and user_id = ? and clerk_org_id = ?
-                returning plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date""",
+                where plan_id = ? and user_id = ? and clerk_org_id = ? and status = 'draft'
+                returning plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at""",
                 MAPPER, quantityMt, deadline, scenarioDate, planId, userId, requireOrganisation(organisationId));
         return updated.stream().findFirst();
     }
 
     public boolean delete(UUID planId, UUID userId, String organisationId) {
-        return jdbc.update("delete from purchase_plans where plan_id = ? and user_id = ? and clerk_org_id = ?", planId, userId, requireOrganisation(organisationId)) > 0;
+        return jdbc.update("delete from purchase_plans where plan_id = ? and user_id = ? and clerk_org_id = ? and status = 'draft'", planId, userId, requireOrganisation(organisationId)) > 0;
     }
 
     public List<PurchasePlan> findByOrganisation(String organisationId) {
         return jdbc.query("""
-                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date
+                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at
                 from purchase_plans where clerk_org_id = ?
                 order by purchase_deadline, plan_id""", MAPPER, requireOrganisation(organisationId));
     }
 
     public Optional<PurchasePlan> findByIdAndOrganisation(UUID planId, String organisationId) {
         return jdbc.query("""
-                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date
+                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at
                 from purchase_plans where plan_id = ? and clerk_org_id = ?""",
                 MAPPER, planId, requireOrganisation(organisationId)).stream().findFirst();
+    }
+
+    public Optional<PurchasePlan> lockOwned(UUID planId, UUID userId, String organisationId) {
+        return jdbc.query("""
+                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at
+                from purchase_plans where plan_id = ? and user_id = ? and clerk_org_id = ? for update""",
+                MAPPER, planId, userId, requireOrganisation(organisationId)).stream().findFirst();
+    }
+
+    public Optional<PurchasePlan> lockOrganisation(UUID planId, String organisationId) {
+        return jdbc.query("""
+                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at
+                from purchase_plans where plan_id = ? and clerk_org_id = ? for update""",
+                MAPPER, planId, requireOrganisation(organisationId)).stream().findFirst();
+    }
+
+    public int markDecided(UUID planId, String organisationId, String decision) {
+        if (!java.util.Set.of("approved", "rejected").contains(decision)) throw new IllegalArgumentException("Invalid decision");
+        return jdbc.update("""
+                update purchase_plans set status = ?
+                where plan_id = ? and clerk_org_id = ? and status = 'submitted'""",
+                decision, planId, requireOrganisation(organisationId));
+    }
+
+    public int markSubmitted(UUID planId, UUID userId, String organisationId, java.time.Instant submittedAt) {
+        return jdbc.update("""
+                update purchase_plans set status = 'submitted', submitted_at = ?
+                where plan_id = ? and user_id = ? and clerk_org_id = ? and status = 'draft'""",
+                java.sql.Timestamp.from(submittedAt), planId, userId, requireOrganisation(organisationId));
     }
 
     private static String requireOrganisation(String id) {
