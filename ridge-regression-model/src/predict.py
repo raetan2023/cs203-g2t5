@@ -157,3 +157,222 @@ def nowcast(as_of=None, wide: pd.DataFrame = None) -> dict:
     margin = _margin(meta, X["gasoil_vol20"].iloc[0], np.sqrt(gap))
     return {**base, "status": "estimated", "gap_days": gap, "estimate": anchor * float(np.exp(ret)),
             "low": anchor * float(np.exp(ret - margin)), "high": anchor * float(np.exp(ret + margin))}
+
+
+FEATURE_DESCRIPTIONS = {
+    "gasoil_ret5": "5-day Singapore gasoil log return",
+    "gasoil_ret20": "20-day Singapore gasoil log return",
+    "brent_ret5": "5-day Brent crude log return",
+    "brent_ret20": "20-day Brent crude log return",
+    "dubai_ret5": "5-day Dubai crude log return",
+    "dubai_ret20": "20-day Dubai crude log return",
+    "usd_ret5": "5-day US Dollar index return",
+    "usd_ret20": "20-day US Dollar index return",
+    "gasoil_vol20": "20-day rolling gasoil volatility",
+    "brent_vol20": "20-day rolling Brent volatility",
+    "dubai_vol20": "20-day rolling Dubai volatility",
+    "usd_vol20": "20-day rolling USD volatility",
+    "gasoil_brent": "Gasoil-Brent crack spread",
+    "brent_dubai": "Brent-Dubai crude quality spread",
+    "basis_dev": "MGO vs Gasoil basis deviation from 90-day mean",
+    "mgo_prev_ret": "Prior MGO quote return",
+    "quote_age": "Log calendar age of previous quote",
+    "gasoil_since_quote": "Gasoil return since prior MGO quote",
+    "brent_since_quote": "Brent return since prior MGO quote",
+    "gasoil_since": "Gasoil return since last quote",
+    "brent_since": "Brent return since last quote",
+    "dubai_since": "Dubai return since last quote",
+    "usd_since": "USD return since last quote",
+    "gap": "Log days since last observed quote",
+    "basis_dev_prev": "Basis deviation at last quote date",
+}
+
+
+def _build_feature_shap_details(
+    feature_names: list[str],
+    raw_values: np.ndarray,
+    scaled_values: np.ndarray,
+    coefs: np.ndarray,
+    shap_values: np.ndarray,
+    anchor_price: float,
+) -> list[dict]:
+    details = []
+    for name, raw_v, z_v, coef, phi in zip(feature_names, raw_values, scaled_values, coefs, shap_values):
+        phi_f = float(phi)
+        raw_f = float(raw_v)
+        z_f = float(z_v)
+        coef_f = float(coef)
+        price_impact = anchor_price * (float(np.exp(phi_f)) - 1.0)
+        direction = "upward" if phi_f > 1e-6 else ("downward" if phi_f < -1e-6 else "neutral")
+        desc = FEATURE_DESCRIPTIONS.get(name, name.replace("_", " "))
+        details.append({
+            "feature": name,
+            "description": desc,
+            "feature_value": round(raw_f, 6),
+            "standardized_value": round(z_f, 6),
+            "coefficient": round(coef_f, 6),
+            "shap_value": float(phi_f),
+            "contribution": float(phi_f),
+            "abs_shap_value": abs(phi_f),
+            "direction": direction,
+            "price_impact_usd": round(price_impact, 2),
+        })
+    return details
+
+
+def _generate_explanation(
+    target_label: str,
+    predicted_return: float,
+    anchor_price: float,
+    forecast_price: float,
+    top_pos: list[dict],
+    top_neg: list[dict],
+) -> str:
+    direction_word = "increase" if predicted_return > 1e-5 else ("decrease" if predicted_return < -1e-5 else "remain steady")
+    diff_usd = forecast_price - anchor_price
+    pct_move = (float(np.exp(predicted_return)) - 1.0) * 100.0
+
+    pos_drivers_str = (
+        ", ".join(f"{d['feature']} (+{d['shap_value']:.4f})" for d in top_pos[:2])
+        if top_pos else "none"
+    )
+    neg_drivers_str = (
+        ", ".join(f"{d['feature']} ({d['shap_value']:.4f})" for d in top_neg[:2])
+        if top_neg else "none"
+    )
+
+    return (
+        f"The {target_label} Ridge model projects price to {direction_word} by {diff_usd:+.2f} USD/MT "
+        f"({pct_move:+.2f}%), moving from {anchor_price:.2f} to {forecast_price:.2f} USD/MT. "
+        f"Main upward associations: {pos_drivers_str}. "
+        f"Main downward associations: {neg_drivers_str}. "
+        f"Attributions reflect statistical Ridge associations with historical returns, "
+        f"not confirmed causal drivers (FR-09)."
+    )
+
+
+def explain(
+    h: int = 7,
+    as_of=None,
+    wide: pd.DataFrame = None,
+    top_k: int = 5,
+    model_type: str = "forecast",
+) -> dict:
+    """Per-prediction SHAP decomposition and top drivers for the Ridge regression model.
+    
+    Computes exact closed-form Shapley values for the standardized linear pipeline:
+      phi_j = gamma * beta_j * (x_j - mu_j) / sigma_j
+      base_value = gamma * intercept
+    Satisfies efficiency: base_value + sum(phi_j) == predicted_return.
+    """
+    wide = wide if wide is not None else load_wide()
+    if model_type == "forecast":
+        meta, model = _load(f"{h}d")
+        p = prepare(wide)
+        as_of_ts = pd.Timestamp(as_of) if as_of is not None else p.mgo.index.max()
+        avail = p.mgo.index[p.mgo.index <= as_of_ts]
+        if len(avail) < 2:
+            raise ValueError("No MGO quote on or before as_of_date.")
+        origin = avail[-1]
+        X = origin_features(p, [origin])[meta["features"]]
+        if X.isna().any(axis=None):
+            raise ValueError("Features unavailable for this date (insufficient history).")
+
+        gamma = float(meta.get("gamma", 1.0))
+        scaler = model.named_steps["standardscaler"]
+        ridge = model.named_steps["ridgecv"]
+
+        scaled_values = scaler.transform(X)[0]
+        raw_values = X.iloc[0].values
+        coefs = ridge.coef_
+        intercept = float(ridge.intercept_)
+        base_value = float(intercept * gamma)
+        shap_values = coefs * scaled_values * gamma
+
+        predicted_return = float(model.predict(X)[0]) * gamma
+        anchor = float(p.mgo[origin])
+        forecast_price = anchor * float(np.exp(predicted_return))
+        quote_age_days = int((as_of_ts - origin).days)
+        model_version = f"ridge-{h}d-alpha{meta['alpha']:.3g}-gamma{gamma:.2f}-to-{meta['trained_to_origin']}"
+        anchor_date = str(origin.date())
+        horizon_val = h
+        target_label = f"{h}-day"
+        feature_names = list(X.columns)
+    elif model_type == "nowcast":
+        meta, model = _load("nowcast")
+        as_of_ts = pd.Timestamp(as_of) if as_of is not None else wide.index.max()
+        p = prepare(wide, end=as_of_ts)
+        avail = p.mgo.index[p.mgo.index <= as_of_ts]
+        if len(avail) < 2:
+            raise ValueError("No MGO quote on or before as_of_date.")
+        last = avail[-1]
+        anchor = float(p.mgo[last])
+        gap = int((as_of_ts - last).days)
+        anchor_date = str(last.date())
+        quote_age_days = gap
+        horizon_val = None
+        target_label = "nowcast"
+        model_version = f"ridge-nowcast-alpha{meta['alpha']:.3g}-to-{meta['trained_to_origin']}"
+
+        if gap < meta.get("min_gap_days", config.MIN_GAP_DAYS):
+            predicted_return = 0.0
+            forecast_price = anchor
+            base_value = 0.0
+            scaler = model.named_steps["standardscaler"]
+            ridge = model.named_steps["ridgecv"]
+            scaled_values = np.zeros(len(meta["features"]))
+            raw_values = np.zeros(len(meta["features"]))
+            coefs = ridge.coef_
+            shap_values = np.zeros(len(meta["features"]))
+            feature_names = meta["features"]
+        else:
+            X = nowcast_features(p, [as_of_ts], [last])[meta["features"]]
+            if X.isna().any(axis=None):
+                raise ValueError("Features unavailable for this date (market data too old or insufficient history).")
+            scaler = model.named_steps["standardscaler"]
+            ridge = model.named_steps["ridgecv"]
+            scaled_values = scaler.transform(X)[0]
+            raw_values = X.iloc[0].values
+            coefs = ridge.coef_
+            intercept = float(ridge.intercept_)
+            base_value = intercept
+            shap_values = coefs * scaled_values
+            predicted_return = float(model.predict(X)[0])
+            forecast_price = anchor * float(np.exp(predicted_return))
+            feature_names = list(X.columns)
+    else:
+        raise ValueError(f"Unknown model_type '{model_type}'; must be 'forecast' or 'nowcast'.")
+
+    all_details = _build_feature_shap_details(
+        feature_names, raw_values, scaled_values, coefs, shap_values, anchor
+    )
+    ranked_all = sorted(all_details, key=lambda d: d["abs_shap_value"], reverse=True)
+    top_drivers = ranked_all[:top_k]
+    top_pos = [d for d in ranked_all if d["shap_value"] > 0][:top_k]
+    top_neg = [d for d in ranked_all if d["shap_value"] < 0][:top_k]
+
+    sum_shap = sum(d["shap_value"] for d in all_details)
+    efficiency_check = bool(abs(base_value + sum_shap - predicted_return) < 1e-7)
+    explanation = _generate_explanation(
+        target_label, predicted_return, anchor, forecast_price, top_pos, top_neg
+    )
+
+    return {
+        "model_type": model_type,
+        "horizon_days": horizon_val,
+        "as_of_date": str(as_of_ts.date()),
+        "anchor_quote_date": anchor_date,
+        "anchor_price": anchor,
+        "quote_age_days": quote_age_days,
+        "forecast_price": round(forecast_price, 2),
+        "predicted_return": round(predicted_return, 6),
+        "base_value": round(base_value, 6),
+        "unit": "USD/metric tonne",
+        "model_version": model_version,
+        "top_drivers": top_drivers,
+        "top_positive_drivers": top_pos,
+        "top_negative_drivers": top_neg,
+        "all_shap_values": all_details,
+        "efficiency_check": efficiency_check,
+        "explanation": explanation,
+    }
