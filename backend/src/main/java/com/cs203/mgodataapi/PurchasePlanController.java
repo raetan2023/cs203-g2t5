@@ -24,10 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * The saved purchase plans belonging to the signed-in user.
- *
- * <p>The owner comes from the verified session token, so a signed-in user can only ever
- * reach their own plans.
+ * Organisation-scoped plans. Buyers manage their own plans; managers and analysts
+ * have read-only organisation access. Role admission is enforced in SecurityConfig.
  */
 @RestController
 @RequestMapping("/api/v1/purchase-plans")
@@ -37,28 +35,31 @@ public class PurchasePlanController {
 
     private final PurchasePlanRepository plans;
     private final UserAccounts users;
-    private final java.time.Clock clock;
+    private final OperationalDate dates;
     private final PlanAnalysisService analysis;
 
     public PurchasePlanController(PurchasePlanRepository plans, UserAccounts users,
-            java.time.Clock clock, PlanAnalysisService analysis) {
+            OperationalDate dates, PlanAnalysisService analysis) {
         this.plans = plans;
         this.users = users;
-        this.clock = clock;
+        this.dates = dates;
         this.analysis = analysis;
     }
 
     @GetMapping
     public Map<String, List<Map<String, Object>>> get(@AuthenticationPrincipal Jwt token) {
-        LocalDate scenarioDate = LocalDate.now(clock);
-        UUID userId = ownerOf(token);
-        return Map.of("plans", plans.findByUser(userId).stream().map(plan -> plan.toResponse(scenarioDate)).toList());
+        LocalDate scenarioDate = dates.today();
+        var access = OrganisationAccess.requirePlanReader(token);
+        List<PurchasePlan> rows = access.ownPlansOnly()
+                ? plans.findByUser(ownerOf(token), access.organisationId())
+                : plans.findByOrganisation(access.organisationId());
+        return Map.of("plans", rows.stream().map(plan -> plan.toResponse(scenarioDate)).toList());
     }
 
     @GetMapping("/{planId}")
     public Map<String, Object> getOne(@AuthenticationPrincipal Jwt token, @PathVariable UUID planId) {
-        LocalDate scenarioDate = LocalDate.now(clock);
-        PurchasePlan plan = plans.findByIdAndUser(planId, ownerOf(token))
+        LocalDate scenarioDate = dates.today();
+        PurchasePlan plan = readPlan(token, planId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         return Map.of("plan", plan.toResponse(scenarioDate));
     }
@@ -73,9 +74,8 @@ public class PurchasePlanController {
             @RequestParam(defaultValue = "NORMAL") String urgency,
             @RequestParam(required = false) UUID run_id,
             jakarta.servlet.http.HttpServletRequest request) {
-        LocalDate scenarioDate = LocalDate.now(clock);
-        UUID owner = ownerOf(token);
-        PurchasePlan plan = plans.findByIdAndUser(planId, owner).orElseThrow(() ->
+        LocalDate scenarioDate = dates.today();
+        PurchasePlan plan = readPlan(token, planId).orElseThrow(() ->
                 new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         PlanAnalysisService.Context context = PlanAnalysisService.Context.of(plan, scenarioDate).withUrgency(urgency);
         if (!context.matches(new PlanAnalysisService.Context(planId, quantity, deadline, scenario, urgency))) {
@@ -85,7 +85,7 @@ public class PurchasePlanController {
             throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "horizon_days must be 7, 14 or 30.");
         Map<String, Object> result = analysis.read(context, request.getRequestURI().endsWith("/cost-impact"), horizon_days, run_id);
         // A slow provider must not publish results for inputs edited/deleted during its request.
-        if (!plans.findByIdAndUser(planId, owner).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate).withUrgency(urgency))).orElse(false)) {
+        if (!scenarioDate.equals(dates.today()) || !readPlan(token, planId).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate).withUrgency(urgency))).orElse(false)) {
             throw new ApiException(HttpStatus.CONFLICT, "Your saved plan changed while analysis was loading. Reload the purchase plan.");
         }
         return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(result);
@@ -95,10 +95,11 @@ public class PurchasePlanController {
     public ResponseEntity<Map<String, Object>> create(
             @AuthenticationPrincipal Jwt token,
             @RequestBody PurchasePlanRequest request) {
-        LocalDate scenarioDate = LocalDate.now(clock);
+        var access = OrganisationAccess.requireBuyer(token);
+        LocalDate scenarioDate = dates.today();
         UUID userId = ownerOf(token);
         validate(request, scenarioDate);
-        PurchasePlan saved = plans.insert(userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate);
+        PurchasePlan saved = plans.insert(userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate, access.organisationId());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("plan", saved.toResponse()));
     }
 
@@ -107,22 +108,30 @@ public class PurchasePlanController {
             @PathVariable UUID planId,
             @AuthenticationPrincipal Jwt token,
             @RequestBody PurchasePlanRequest request) {
-        LocalDate scenarioDate = LocalDate.now(clock);
+        var access = OrganisationAccess.requireBuyer(token);
+        LocalDate scenarioDate = dates.today();
         UUID userId = ownerOf(token);
         validate(request, scenarioDate);
-        PurchasePlan updated = plans.update(planId, userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate)
+        PurchasePlan updated = plans.update(planId, userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate, access.organisationId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         return Map.of("plan", updated.toResponse());
     }
 
     @DeleteMapping("/{planId}")
     public ResponseEntity<Void> delete(@AuthenticationPrincipal Jwt token, @PathVariable UUID planId) {
-        LocalDate scenarioDate = LocalDate.now(clock);
+        var access = OrganisationAccess.requireBuyer(token);
         UUID userId = ownerOf(token);
-        if (!plans.delete(planId, userId)) {
+        if (!plans.delete(planId, userId, access.organisationId())) {
             throw new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found.");
         }
         return ResponseEntity.noContent().build();
+    }
+
+    private java.util.Optional<PurchasePlan> readPlan(Jwt token, UUID planId) {
+        var access = OrganisationAccess.requirePlanReader(token);
+        return access.ownPlansOnly()
+                ? plans.findByIdAndUser(planId, ownerOf(token), access.organisationId())
+                : plans.findByIdAndOrganisation(planId, access.organisationId());
     }
 
     /** The application's user id for whoever signed in, created on their first request. */

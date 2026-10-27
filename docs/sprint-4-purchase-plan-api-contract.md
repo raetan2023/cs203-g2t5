@@ -1,3 +1,9 @@
+> Organisation-scope update (27 October 2026): the membership and access rules in
+> [organisation-role-access.md](organisation-role-access.md) supersede the
+> user-only ownership assumptions below. URLs and plan response fields remain
+> compatible, but all plan operations require active organisation membership and
+> the appropriate role; legacy NULL organisation plans are not exposed.
+
 > Multiple-plan update (21 October 2026): CRUD now uses `GET/POST /api/v1/purchase-plans`
 
 Current implementation note (26 October 2026): the buyer heuristic is now connected to the saved-plan recommendation endpoint, including explicit urgency, four outcomes and structured evidence. See [buyer recommendation policy](buyer-recommendation-policy.md) for the current contract and checks. Earlier unavailable-policy notes below describe the previous branch state.
