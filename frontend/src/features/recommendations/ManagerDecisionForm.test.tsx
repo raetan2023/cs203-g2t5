@@ -78,7 +78,7 @@ it('shows the manager controls only to a manager and refreshes the final audit a
     return { plan: { ...plan, status: 'rejected' } };
   });
   const view = render(<SubmittedRecommendationView plan={plan} planService={api} />);
-  await screen.findByRole('heading', { name: /14-day estimate/ });
+  await screen.findByRole('heading', { name: /Plan recommendation/ });
   expect(screen.queryByRole('button', { name: 'Reject recommendation' })).not.toBeInTheDocument();
   view.rerender(<SubmittedRecommendationView canDecide plan={plan} planService={api} />);
   await user.click(screen.getByRole('button', { name: 'Reject recommendation' }));

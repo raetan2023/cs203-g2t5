@@ -1,0 +1,18 @@
+/* Global base for the app shell. Values come from tokens.css. Scoped to .bb-app / .auth-page so
+   Clerk-owned UI and prototype entries are not restyled globally. */
+html, body, #root { margin: 0; min-width: 320px; min-height: 100%; background: var(--bb-canvas); }
+.bb-app, .auth-page { font: 14px/1.5 var(--bb-font); color: var(--bb-text); }
+.bb-app *, .auth-page * { box-sizing: border-box; }
+.bb-app button, .auth-page button, .auth-page input { font: inherit; }
+.bb-app :focus-visible, .auth-page :focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 4px; }
+.bb-app button:disabled, .auth-page button:disabled { cursor: not-allowed; opacity: .5; }
+
+/* Reduced motion: no looping or sliding animation and no transitions; state changes stay instant. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

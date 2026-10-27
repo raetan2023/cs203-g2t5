@@ -1,0 +1,40 @@
+[
+  {
+    "state": "home",
+    "headerAccessibility": "pass",
+    "desktopOverflow": "pass"
+  },
+  {
+    "navigation": "focus loop, Escape, focus return, active item, control bounds and axe pass"
+  },
+  {
+    "state": "home-loading",
+    "headerAccessibility": "pass",
+    "desktopOverflow": "pass"
+  },
+  {
+    "state": "session-error",
+    "headerAccessibility": "pass",
+    "desktopOverflow": "pass"
+  },
+  {
+    "state": "loading",
+    "headerAccessibility": "pass",
+    "desktopOverflow": "pass"
+  },
+  {
+    "state": "load-error",
+    "headerAccessibility": "pass",
+    "desktopOverflow": "pass"
+  },
+  {
+    "state": "saved",
+    "headerAccessibility": "pass",
+    "desktopOverflow": "pass"
+  },
+  {
+    "state": "rec-ready",
+    "headerAccessibility": "pass",
+    "desktopOverflow": "pass"
+  }
+]

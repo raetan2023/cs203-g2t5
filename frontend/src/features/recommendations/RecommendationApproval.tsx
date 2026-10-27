@@ -17,8 +17,10 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
   useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
   const guidance = analysis.recommendation.status === 'ready' ? analysis.recommendation.value : undefined;
   const forecast = analysis.forecast.status === 'ready' ? analysis.forecast.value : undefined;
+  const referenceOnly = guidance?.action === 'BUY_NOW' && analysis.reference.status === 'ready'
+    && analysis.cost_impact.status === 'unavailable' && analysis.cost_impact.reason === 'unsupported_horizon';
   const valid = plan.status === 'draft' && !!planService.submit && analysis.source === 'api' && analysis.provenance === 'model'
-    && !!guidance && !!forecast?.run_id && analysis.cost_impact.status === 'ready'
+    && !!guidance && !!forecast?.run_id && (analysis.cost_impact.status === 'ready' || referenceOnly)
     && !!analysis.approval_fingerprint?.match(/^[a-f0-9]{64}$/);
 
   async function submit() {
@@ -37,9 +39,11 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
   }
   return <section className="rec-approval" aria-label="Request recommendation approval">
     <h3>Request approval for this recommendation</h3>
-    <p>Your selection: <strong>{horizon}-day estimate · {guidance?.action.replaceAll('_', ' ')}</strong>{forecast ? ` · target ${formatDate(forecast.target_date)}` : ''}.</p>
-    <p>Every manager in your organisation will receive this recommendation with its saved prices, cost estimates and reasons.</p>
-    {!valid && <p>A saved draft and a current recommendation with supported forecast and cost data are required.</p>}
+    <p>Plan recommendation: <strong>{guidance?.action.replaceAll('_', ' ')}</strong>. This recommendation considers the available forecasts within your purchase deadline.</p>
+    {referenceOnly ? <p>This request uses the observed reference price for buying now. No supported forecast cost is available within the deadline.</p>
+      : <p>Cost detail included: <strong>{horizon}-day forecast</strong>{forecast ? ` · target ${formatDate(forecast.target_date)}` : ''}.</p>}
+    <p>Every manager in your organisation will receive the plan recommendation, its reasons and this selected cost detail.</p>
+    {!valid && <p>A saved draft and a current priced recommendation are required.</p>}
     {error && <p role="alert">{error} Your selection has not been confirmed. Refresh the page if the plan or forecast changed.</p>}
     {confirm ? <div>
       <p><strong>Confirm this choice?</strong> The plan and this recommendation will be locked for review.</p>
@@ -82,7 +86,9 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
     {!current ? <p role="status">Loading submitted recommendation…</p> : current.error ? <section className="rec-card" role="alert"><p>{current.error}</p><button className="bb-button" onClick={() => { setResult(undefined); setAttempt(value => value + 1); }}>Retry submission</button></section>
       : !analysis || !submission ? <section className="rec-card"><h2>Earlier plan-only submission</h2><p>This request was submitted before recommendation snapshots were introduced. No selected recommendation was saved.</p></section>
       : <section className="rec-card" aria-label="Saved recommendation for approval">
-        <h2>{submission.horizon_days}-day estimate · {rec?.action.replaceAll('_', ' ')}</h2>
+        <h2>Plan recommendation · {rec?.action.replaceAll('_', ' ')}</h2>
+        {cost ? <p>Saved cost detail: {submission.horizon_days}-day forecast{analysis.forecast.status === 'ready' ? ` · target ${formatDate(analysis.forecast.value.target_date)}` : ''}.</p>
+          : <p>Reference-price-only request. No supported forecast cost was available within the deadline.</p>}
         <p>{analysis.context.quantity_mt.toLocaleString('en-GB')} MT · Deadline {formatDate(analysis.context.purchase_deadline)}</p>
         <p>Planning date: {formatDate(analysis.context.scenario_as_of_date)} · Urgency: {analysis.context.urgency ?? 'NORMAL'}</p>
         {plan.submitted_at && <p>Submitted: {new Date(plan.submitted_at).toLocaleString('en-GB')}</p>}

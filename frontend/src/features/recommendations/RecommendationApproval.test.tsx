@@ -20,7 +20,7 @@ function analysis(h: Horizon = 14, context: PlanResultContext = draft): PlanAnal
     forecast: { status: 'ready', value: { prices: { lower: 680, upper: 740 }, target_date: forecast(h).target_date,
       basis: { commodity: 'MGO', currency: 'USD', unit: 'MT' }, range_description: 'Experimental bounds',
       central_estimate: 710, run_id: forecast(h).run_id, model_version: 'ridge-test' } },
-    recommendation: { status: 'ready', value: { recommendation_id: `rec-${h}`, action: 'WAIT', explanation: `Review the ${h}-day recommendation.` } } };
+    recommendation: { status: 'ready', value: { recommendation_id: 'plan-rec', action: 'WAIT', explanation: 'One recommendation for this plan.' } } };
 }
 function service() { return { ...createMockPlanService({ initialPlan: draft, delayMs: 0 }),
   submit: vi.fn().mockResolvedValue({ plan: submitted }), readSubmission: vi.fn().mockResolvedValue({ submission: { horizon_days: 14, analysis: analysis() } }) }; }
@@ -34,7 +34,7 @@ it('confirms the selected recommendation, horizon, run and urgency, without trus
   await user.click(screen.getByRole('button', { name: 'Request approval for this recommendation' }));
   await user.click(screen.getByRole('button', { name: 'Confirm approval request' }));
   expect(api.submit).toHaveBeenCalledWith(draft.plan_id, { horizon_days: 14, run_id: forecast(14).run_id,
-    recommendation_id: 'rec-14', approval_fingerprint: 'b'.repeat(64), urgency: 'NORMAL',
+    recommendation_id: 'plan-rec', approval_fingerprint: 'b'.repeat(64), urgency: 'NORMAL',
     quantity_mt: draft.quantity_mt, purchase_deadline: draft.purchase_deadline, scenario_as_of_date: DEMO_SCENARIO_DATE });
   expect(callback).toHaveBeenCalledWith(submitted);
 });
@@ -62,18 +62,21 @@ it('does not submit twice or publish a response after the selection component is
   expect(api.submit).toHaveBeenCalledTimes(1); expect(callback).not.toHaveBeenCalled();
 });
 
-it('switches the actual recommendation page to the chosen horizon before requesting approval', async () => {
+it('keeps one plan recommendation while selecting the forecast cost detail for approval', async () => {
   const api = service(), user = userEvent.setup();
   const recommendations = { read: vi.fn(async (context: PlanResultContext, h: Horizon = 7) => analysis(h, context)) };
   render(<ForecastProvider service={{ read: async h => forecast(h) }} scenarioDate={DEMO_SCENARIO_DATE}>
     <RecommendationsPage canSubmit planId={draft.plan_id} planService={api} service={recommendations} scenarioDate={DEMO_SCENARIO_DATE} />
   </ForecastProvider>);
   await screen.findByRole('button', { name: 'Request approval for this recommendation' });
+  expect(screen.getByText('One recommendation for this plan.')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: /^14 days$/ }));
-  await screen.findByText('Review the 14-day recommendation.');
+  await screen.findByText(/Cost detail included:/);
+  await waitFor(() => expect(screen.getByText('14-day forecast')).toBeVisible());
+  expect(screen.getByText('One recommendation for this plan.')).toBeVisible();
   await user.click(screen.getByRole('button', { name: 'Request approval for this recommendation' }));
   await user.click(screen.getByRole('button', { name: 'Confirm approval request' }));
-  await waitFor(() => expect(api.submit).toHaveBeenCalledWith(draft.plan_id, expect.objectContaining({ horizon_days: 14, recommendation_id: 'rec-14' })));
+  await waitFor(() => expect(api.submit).toHaveBeenCalledWith(draft.plan_id, expect.objectContaining({ horizon_days: 14, recommendation_id: 'plan-rec' })));
   expect(await screen.findByRole('heading', { name: 'Submitted recommendation' })).toBeVisible();
   expect(api.readSubmission).toHaveBeenCalledWith(draft.plan_id);
 });
@@ -84,7 +87,19 @@ it('never offers approval requests to read-only viewers and shows the persisted 
   await screen.findByText('No recommendation available');
   expect(screen.queryByRole('button', { name: 'Request approval for this recommendation' })).not.toBeInTheDocument();
   view.rerender(<SubmittedRecommendationView plan={submitted} planService={api} />);
-  expect(await screen.findByRole('heading', { name: '14-day estimate · WAIT' })).toBeVisible();
-  expect(screen.getByText('Review the 14-day recommendation.')).toBeVisible();
+  expect(await screen.findByRole('heading', { name: 'Plan recommendation · WAIT' })).toBeVisible();
+  expect(screen.getByText('One recommendation for this plan.')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Request approval for this recommendation' })).not.toBeInTheDocument();
+});
+
+
+it('allows the deadline policy buy-now request using the reference price when no forecast fits', async () => {
+  const api = service(), user = userEvent.setup();
+  const data: PlanAnalysis = { ...analysis(7), cost_impact: { status: 'unavailable', reason: 'unsupported_horizon', message: 'No forecast fits.' },
+    recommendation: { status: 'ready', value: { recommendation_id: 'buy-now-plan', action: 'BUY_NOW', explanation: 'Buying now is the only priced option.' } } };
+  render(<RecommendationApproval analysis={data} plan={draft} horizon={7} planService={api} onSubmitted={vi.fn()} />);
+  expect(screen.getByText(/This request uses the observed reference price/)).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Request approval for this recommendation' }));
+  await user.click(screen.getByRole('button', { name: 'Confirm approval request' }));
+  expect(api.submit).toHaveBeenCalledWith(draft.plan_id, expect.objectContaining({ recommendation_id: 'buy-now-plan' }));
 });

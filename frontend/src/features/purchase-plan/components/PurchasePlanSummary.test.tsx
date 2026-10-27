@@ -1,6 +1,7 @@
 import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import { PurchasePlanSummary } from './PurchasePlanSummary';
 import { DEMO_PLAN } from '../fixtures';
 import type { PurchasePlan } from '../types';
@@ -33,5 +34,48 @@ describe('PurchasePlanSummary time remaining', () => {
   it('shows singular "day" when exactly one day remains', () => {
     renderSummary({ days_remaining: 1 });
     expect(screen.getByText('1 day')).toBeTruthy();
+  });
+});
+describe('PurchasePlanSummary status and actions', () => {
+  it.each([
+    [5, 'Due soon'], [7, 'Due soon'], [8, 'On track'], [-2, 'Overdue'],
+  ])('labels a plan with %i days remaining as "%s"', (days, label) => {
+    renderSummary({ days_remaining: days });
+    expect(screen.getByText(label)).toBeVisible();
+  });
+
+  it('keeps Delete in a menu that Escape closes, returning focus to its trigger', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    render(<PurchasePlanSummary plan={DEMO_PLAN} onEdit={() => {}} onDelete={onDelete} />);
+    const trigger = screen.getByRole('button', { name: 'More actions for 500 MT plan' });
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+    await user.click(trigger);
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(trigger).toHaveFocus();
+  });
+
+  it('shows no menu or Edit for read-only organisation plans', () => {
+    render(<PurchasePlanSummary plan={DEMO_PLAN} canEdit={false} onEdit={() => {}} onDelete={() => {}} />);
+    expect(screen.queryByRole('button', { name: /More actions|Edit/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /View recommendation/ })).toBeInTheDocument();
+  });
+});
+
+
+describe('approval workflow in the redesigned cards', () => {
+  it.each(['submitted', 'approved', 'rejected'] as const)('keeps a %s plan locked and links to its saved recommendation', status => {
+    const onEdit = vi.fn(), onDelete = vi.fn();
+    render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status }} onEdit={onEdit} onDelete={onDelete} />);
+    expect(screen.getByText(status === 'submitted' ? 'Submitted for approval' : status.charAt(0).toUpperCase() + status.slice(1))).toBeVisible();
+    expect(screen.queryByRole('button', { name: /More actions|Edit|Delete/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /View submitted recommendation/ })).toHaveAttribute('href', `/purchase-plans/recommendation?plan_id=${DEMO_PLAN.plan_id}`);
+    expect(onEdit).not.toHaveBeenCalled(); expect(onDelete).not.toHaveBeenCalled();
   });
 });

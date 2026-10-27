@@ -12,5 +12,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
     restoreMocks: true,
+    css: { include: [/styles[\\/]tokens\.css/] }, // lets theme.test.ts read the token values
   },
 });

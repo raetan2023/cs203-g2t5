@@ -1,0 +1,43 @@
+/* Theme-only overrides; controls and form behavior belong to the shared preview.
+   The vessel's drawing and animation live in features/auth/wireframe-vessel.css. */
+body { background: #0c0d0e; }
+.wireframe-theme { --oris-text: #eeede7; --oris-muted: #aaa9a5; --oris-border: #ffffff26; --oris-accent: #e5e2d9; background: #0c0d0e; box-sizing: border-box; }
+.wireframe-scene { margin-top: 24px; }
+.wireframe-vessel { color: #eeede3; }
+.wireframe-theme .oris-intro { min-width: 0; align-self: start; padding-top: clamp(32px, 6vh, 70px); padding-bottom: 0; }
+.wireframe-theme .oris-intro p { color: #b9b8b3; }
+.wireframe-theme .oris-card { background: #1a1b1c; box-shadow: 0 16px 60px #00000026; }
+.wireframe-theme .oris-field input { background: #121314; }
+.wireframe-theme .oris-field label { color: #e1dfd8; }
+.wireframe-theme .oris-field input::placeholder, .wireframe-theme .oris-password button, .wireframe-theme .oris-preview-note { color: #a6a5a0; }
+.wireframe-theme .oris-submit { color: #171818; }
+.wireframe-theme .oris-submit:hover:not(:disabled) { background: #fffdf5; }
+.wireframe-theme :focus-visible { outline-color: #eeeadd; }
+.wireframe-theme .oris-field input:focus { border-color: #eeeadd; }
+.wireframe-theme .oris-field input[aria-invalid=true] { border-color: #e3b3a9; }
+.wireframe-theme .oris-field-error { color: #efb9af; }
+.wireframe-theme .oris-error { background: #382b29; color: #f2d9d2; }
+/* Include page padding in viewport height; scale the illustration before controls. */
+@media (min-width: 761px) {
+  .wireframe-theme { display: flex; flex-direction: column; min-height: 100svh; padding-block: 24px; }
+  .wireframe-theme .oris-header { flex: 0 0 48px; }
+  .wireframe-theme .oris-layout { flex: 1; min-height: 0; padding-top: 16px; }
+  .wireframe-theme .oris-intro { align-self: center; padding: 0; }
+  .wireframe-theme .oris-intro h1 { font-size: clamp(38px, min(5.2vw, 7svh), 76px); }
+  .wireframe-theme .oris-intro p { margin-top: 18px; }
+  .wireframe-scene { margin-top: 12px; }
+  .wireframe-vessel { height: clamp(140px, calc(100svh - 440px), 360px); }
+}
+@media (min-width: 761px) and (max-height: 800px) {
+  .wireframe-theme { padding-block: 16px; }
+  .wireframe-theme .oris-card { padding: 24px 28px; }
+  .wireframe-theme .oris-subtitle { margin-bottom: 18px; }
+  .wireframe-theme .oris-divider { margin-block: 16px; }
+  .wireframe-theme .oris-field { margin-bottom: 14px; }
+  .wireframe-theme .oris-switch { margin-top: 18px; }
+  .wireframe-theme .oris-preview-note { margin-top: 14px; }
+}
+@media (max-width: 760px) {
+  .wireframe-theme .oris-intro { padding-top: 0; }
+  .wireframe-scene { margin-top: 20px; }
+}

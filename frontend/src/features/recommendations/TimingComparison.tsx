@@ -6,25 +6,6 @@ const horizons = [7, 14, 30] as const;
 const money = (n: number) => n.toLocaleString('en-US', { maximumFractionDigits: 0 });
 type Entry = { horizon: Horizon; forecast?: ReadyForecast; message?: string };
 
-export function timingChoice(entries: Entry[], today: string, deadline: string) {
-  const fitting = entries.filter((e): e is Entry & { forecast: ReadyForecast } => !!e.forecast
-    && e.forecast.target_date > today && e.forecast.target_date <= deadline);
-  if (deadline < today) return { title: 'Review your overdue purchase plan', reason: 'Your purchase deadline has passed. Update the plan and obtain a current supplier quote.' };
-  if (!fitting.length && entries.every(e => e.forecast && e.forecast.target_date > deadline)) {
-    const days = Math.round((Date.parse(deadline) - Date.parse(today)) / 86_400_000);
-    return { title: days === 0 ? 'Buy by today' : `Buy within ${days} ${days === 1 ? 'day' : 'days'}`,
-      reason: 'The 7, 14 and 30 day options all miss your deadline. Get a current supplier quote for your purchase window.' };
-  }
-  if (fitting.length === 0 || entries.filter(e => e.forecast).length < 2) return { title: 'Not enough forecasts to choose a buying date',
-    reason: fitting.length ? 'Only one available estimate fits your deadline. Compare it with a current supplier quote.' : 'No available estimate fits your purchase window.' };
-  if (fitting.some(e => Date.parse(today) - Date.parse(e.forecast.anchor_quote_date) > 7 * 86_400_000))
-    return { title: 'Check a current quote before choosing when to buy', reason: 'The model uses older price data, so this comparison cannot support a current timing recommendation.' };
-  const best = [...fitting].sort((a, b) => a.forecast.forecast - b.forecast.forecast || a.horizon - b.horizon)[0];
-  const overlaps = fitting.some(e => e !== best && e.forecast.low <= best.forecast.high && best.forecast.low <= e.forecast.high);
-  return { title: `Buy in ${best.horizon} days`, horizon: best.horizon,
-    reason: fitting.length === 1 ? 'The only supported timing within your deadline. Check the uncertainty range and a current supplier quote.' : overlaps ? 'Lowest central estimate within your deadline. Uncertainty ranges overlap, so the saving is uncertain.' : 'Lowest central estimate within your deadline. This is a model comparison, not a guaranteed saving.' };
-}
-
 /** Read every horizon as a group; never combine forecasts from different snapshots. */
 export function TimingComparison({ service, today, deadline, revision, selectedRun, selectedHorizon, refresh, select }: {
   service: ForecastService; today: string; deadline: string; revision?: string; selectedRun?: string; selectedHorizon?: Horizon; refresh?(): void;
@@ -50,19 +31,19 @@ export function TimingComparison({ service, today, deadline, revision, selectedR
   const currentEntries = result?.service === service && result.today === today && result.revision === revision && result.attempt === attempt ? result.entries : undefined;
   const entries: Entry[] | undefined = currentEntries && selectedRun && currentEntries.some(e => e.forecast && e.forecast.run_id !== selectedRun)
     ? currentEntries.map(e => ({ horizon: e.horizon, message: 'Source data changed. Refresh the comparison.' })) : currentEntries;
-  const choice = entries ? timingChoice(entries, today, deadline) : undefined;
   const points = entries?.filter((e): e is Entry & { forecast: ReadyForecast } => !!e.forecast) ?? [];
   const min = points.length ? Math.min(...points.flatMap(e => [e.forecast.low, e.forecast.forecast])) * .96 : 0;
   const max = points.length ? Math.max(...points.flatMap(e => [e.forecast.high, e.forecast.forecast])) * 1.04 : 1;
   const y = (price: number) => 235 - (price - min) / Math.max(max - min, 1) * 190;
   const x = (h: Horizon) => 135 + horizons.indexOf(h) * 220;
   return <section className="timing-comparison" aria-label="Compare purchase timing" aria-busy={!entries}>
-    <div className="timing-heading"><div><p className="rec-eyebrow">Compare model horizons</p><h2>{choice?.horizon ? `Lowest central estimate · ${choice.horizon} days` : choice?.title ?? 'Comparing 7, 14 and 30 days…'}</h2><p>{choice?.reason ?? 'Loading model prices and uncertainty for all three horizons.'}</p></div>
+    <div className="timing-heading"><div><p className="rec-eyebrow">Compare model horizons</p><h2>MGO price forecasts</h2><p>All forecasts remain visible. Only targets on or before your deadline are eligible for the final recommendation.</p></div>
       <button className="bb-button" onClick={() => { refresh?.(); retry(n => n + 1); }}>Refresh comparison</button></div>
     {entries && <>
-      <div className="timing-options">{entries.map(e => <button key={e.horizon} className={`timing-option ${choice?.horizon === e.horizon ? 'timing-best' : ''} ${selectedHorizon === e.horizon ? 'timing-selected' : ''}`} aria-pressed={selectedHorizon === e.horizon} disabled={!e.forecast || e.forecast.target_date <= today || e.forecast.target_date > deadline} onClick={() => select(e.horizon)}>
-        <span className="timing-option-heading"><span className="rec-eyebrow">{e.horizon} days {choice?.horizon === e.horizon ? '· Suggested' : ''}</span>{selectedHorizon === e.horizon && <> <span className="timing-selection">Selected</span></>}</span>
-        {e.forecast ? <><strong>USD {money(e.forecast.forecast)}<small>/MT</small></strong><span>{money(e.forecast.low)}–{money(e.forecast.high)} uncertainty</span><span>Target {formatDate(e.forecast.target_date)}</span>{e.forecast.target_date > deadline && <span>After your deadline</span>}</> : <><strong>Unavailable</strong><span>Model status: {e.message}</span></>}
+      {points[0] && <p className="timing-reference"><strong>Buy today: USD {money(points[0].forecast.anchor_price)}/MT</strong> · {deadline < today ? 'Deadline passed' : 'Eligible'}<br />Reference observed {formatDate(points[0].forecast.anchor_quote_date)}; confirm a current supplier quote.</p>}
+      <div className="timing-options">{entries.map(e => <button key={e.horizon} className={`timing-option ${selectedHorizon === e.horizon ? 'timing-selected' : ''}`} aria-pressed={selectedHorizon === e.horizon} disabled={!e.forecast || e.forecast.target_date <= today || e.forecast.target_date > deadline} onClick={() => select(e.horizon)}>
+        <span className="timing-option-heading"><span className="rec-eyebrow">{e.horizon} days </span>{selectedHorizon === e.horizon && <> <span className="timing-selection">Selected</span></>}</span>
+        {e.forecast ? <><strong>USD {money(e.forecast.forecast)}<small>/MT</small></strong><span>{money(e.forecast.low)}–{money(e.forecast.high)} uncertainty</span><span>Target {formatDate(e.forecast.target_date)}</span>{e.forecast.target_date > deadline ? <span>Too late · After your deadline</span> : e.forecast.target_date <= today ? <span>Past target</span> : <span>Eligible</span>}</> : <><strong>Unavailable</strong><span>Model status: {e.message}</span></>}
       </button>)}</div>
       <details className="rec-forecast timing-chart-disclosure"><summary>View price ranges chart</summary>
       <div className="timing-legend"><span><i /> Central price</span><span><i className="timing-band-key" /> Experimental uncertainty range</span><span>USD / MT</span></div>

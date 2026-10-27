@@ -243,34 +243,18 @@ it('returns to a fitting horizon when a shared longer horizon exceeds the plan d
   expect(impact).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, buildMockForecast(7).run_id);
 });
 
-it('refreshes urgency, renders policy evidence, and ignores a late previous urgency response', async () => {
+it('renders one final recommendation with positive savings and no urgency override', async () => {
   const body = await ready().read(plan);
-  let resolveOld!: (value: PlanAnalysis) => void;
-  const service = { read: vi.fn((context: PlanAnalysis['context']) => {
-    if (context.urgency === 'NORMAL') return new Promise<PlanAnalysis>(resolve => { resolveOld = resolve; });
-    return Promise.resolve({ ...body, context, recommendation: { status: 'ready' as const, value: {
-      recommendation_id: 'high-urgency', action: 'BUY_NOW', explanation: 'Secure supply because urgency is high.',
-      evidence: { policy_version: 'buyer-heuristic-v1', urgency: 'HIGH' as const, direction: 'DOWN', interval_width_fraction: 0.2,
-        buy_now_cost_usd: 70000, alternative_cost_usd: 68500, alternative_minus_now_usd: -1500,
-        reference_age_days: 0, supported_target_date: '2025-10-29', horizon_description: '7 calendar days',
-        reasons: ['High urgency takes precedence over falling prices.'], limitations: ['Experimental; no guaranteed savings.'], allocations: [] },
-    } } });
-  }) };
-  render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />);
-  await waitFor(() => expect(service.read).toHaveBeenCalledOnce());
-  fireEvent.change(screen.getByLabelText('Urgency for this analysis'), { target: { value: 'HIGH' } });
-  expect(await screen.findByText('BUY_NOW')).toBeVisible();
-  expect(screen.getByText('$70,000.00')).toBeVisible();
-  expect(screen.getByText('-$1,500.00')).toBeVisible();
-  expect(screen.getByText('High urgency takes precedence over falling prices.')).toBeVisible();
-  expect(screen.getByText('Current date: 24 Oct 2025')).toBeVisible();
-  const assumptions = screen.getByText('Assumptions and limitations');
-  expect(assumptions.closest('details')).not.toHaveAttribute('open');
-  expect(screen.getByText(/^Reference: USD/)).not.toBeVisible();
-  fireEvent.click(assumptions);
-  expect(screen.getByText(/^Reference: USD/)).toBeVisible();
-  expect(screen.getByText('Experimental; no guaranteed savings.')).toBeVisible();
-  await act(async () => resolveOld(body));
-  expect(screen.getByText('BUY_NOW')).toBeVisible();
-  expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();
+  body.recommendation = { status: 'ready', value: {
+    recommendation_id: 'deadline', action: 'WAIT', explanation: 'Buy in 14 days.',
+    evidence: { policy_version: 'deadline-minimum-v1', urgency: 'NORMAL', direction: 'DOWN', interval_width_fraction: 0.2,
+      buy_now_cost_usd: 72000, alternative_cost_usd: 69500, alternative_minus_now_usd: -2500,
+      reference_age_days: 0, supported_target_date: '2025-11-07', horizon_description: 'Deadline comparison',
+      reasons: ['Cheapest eligible price.'], limitations: ['Experimental; no guaranteed savings.'], allocations: [] },
+  } };
+  render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={{read: async () => body}} scenarioDate={plan.scenario_as_of_date} />);
+  expect(await screen.findByText('Buy in 14 days.')).toBeVisible();
+  expect(screen.getAllByRole('region', {name: 'Recommendation'})).toHaveLength(1);
+  expect(screen.getByText('$2,500.00')).toBeVisible();
+  expect(screen.queryByLabelText('Urgency for this analysis')).not.toBeInTheDocument();
 });

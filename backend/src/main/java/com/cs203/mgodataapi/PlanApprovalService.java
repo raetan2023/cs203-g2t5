@@ -46,10 +46,15 @@ public class PlanApprovalService {
         var guidance = (PlanAnalysisProvider.Result<?>) verified.get("recommendation");
         var forecast = (PlanAnalysisProvider.Result<?>) verified.get("forecast");
         var cost = (PlanAnalysisProvider.Result<?>) verified.get("cost_impact");
-        if (!"model".equals(verified.get("provenance")) || guidance == null || !"ready".equals(guidance.status())
-                || forecast == null || !"ready".equals(forecast.status()) || cost == null || !"ready".equals(cost.status()))
-            throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "A current recommendation with a supported forecast and cost estimate is required.");
-        var recommendation = (PlanAnalysisProvider.Guidance) guidance.value();
+        var reference = (PlanAnalysisProvider.Result<?>) verified.get("reference");
+        var recommendation = guidance != null && "ready".equals(guidance.status())
+                ? (PlanAnalysisProvider.Guidance) guidance.value() : null;
+        boolean referenceOnly = recommendation != null && "BUY_NOW".equals(recommendation.action())
+                && reference != null && "ready".equals(reference.status()) && cost != null
+                && "unavailable".equals(cost.status()) && "unsupported_horizon".equals(cost.reason());
+        if (!"model".equals(verified.get("provenance")) || recommendation == null
+                || forecast == null || !"ready".equals(forecast.status()) || cost == null || (!"ready".equals(cost.status()) && !referenceOnly))
+            throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "A current priced recommendation is required. Forecast costs must be available unless buying now uses the observed reference price.");
         if (!selection.recommendation_id().equals(recommendation.recommendation_id())
                 || !selection.approval_fingerprint().equals(verified.get("approval_fingerprint")) || !today.equals(dates.today()))
             throw new ApiException(HttpStatus.CONFLICT, "The recommendation or forecast changed. Reload it and confirm your selection again.");

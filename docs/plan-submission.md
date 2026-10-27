@@ -14,16 +14,19 @@ history; former managers lose access when their updated token no longer admits
 them. This follows the same token expiry/refresh model as existing role checks.
 No notification is visible to managers in another organisation.
 
-A buyer opens a saved draft's recommendation page, chooses a 7/14/30-day
-estimate and urgency, then selects **Request approval for this recommendation**.
+A buyer opens a saved draft's recommendation page, reviews the single deadline-weighted plan recommendation, chooses a 7/14/30-day
+forecast cost detail for comparison, then selects **Request approval for this recommendation**.
 There is no direct plan-only submission button on plan cards.
-The confirmation identifies the selected horizon, action and target date.
+The confirmation distinguishes the plan recommendation from the selected forecast cost detail. Selecting another cost horizon does not change the final recommendation.
 A buyer confirms submission of their own valid draft and selected recommendation. The backend checks the
 owner and organisation from trusted identity, positive quantity, and a deadline
 on or after the Singapore operational date. It locks the row and changes status
 from `draft` to `submitted`, preserving the submitted quantity and deadline.
-The backend recomputes the recommendation using the selected horizon, urgency
-and expected forecast run. It validates the recommendation ID and a SHA-256
+The backend recomputes the plan recommendation across all available 7/14/30-day
+forecasts from a consistent publication. The selected horizon chooses the saved
+forecast/cost detail, not a different policy recommendation. Urgency is retained
+in the transport for compatibility, but the UI no longer exposes it and the new
+policy does not use it to override the recommendation. It validates the recommendation ID and a SHA-256
 fingerprint of the displayed context, forecast, reference, costs and guidance.
 Stale choices require a refresh; client-provided prices/actions are never trusted.
 The same transaction inserts one approval notification with its timestamp and an
@@ -115,7 +118,7 @@ first coordinating write restrictions; older code can edit/delete those plans.
 ## Verify with real accounts after migration
 
 1. Buyer in organisation A: create a draft with a future deadline, open its
-   recommendation, select a fitting horizon and urgency, choose **Request approval
+   recommendation, select a fitting horizon for cost details, choose **Request approval
    for this recommendation**, cancel once, then confirm. Check the submitted label
    and that Edit/Delete/Submit disappear.
 2. Two managers in organisation A: open Purchase plans and check that both see
@@ -224,3 +227,27 @@ responses, conflict refresh and the buyer's final decision display.
 Real account test: a manager decides a submitted test request, then the buyer
 reloads the plan and checks its final status and comment. Use separate requests
 for testing approval and rejection, since each decision is final.
+
+
+## Integration with main PR #33 (deadline-weighted policy)
+
+Pending merge includes `origin/main` commit `161f9e8`. The deadline-weighted policy
+owns the one plan recommendation. Horizon selection controls forecast/cost detail
+only. Approval preserves that recommendation, its ID/policy/evidence, the selected
+cost detail and all three validated provider inputs (`recommendation_inputs`,
+including run/model metadata) in the existing JSONB snapshot. The approval
+fingerprint covers all those inputs. The saved view labels the plan recommendation
+and cost detail separately. No SQL migration or reinterpretation of older saved
+requests is needed; existing approvals/decisions continue to use their original
+saved fingerprint and evidence.
+
+For short deadlines, the new policy may validly recommend BUY_NOW using the
+observed reference when no forecast fits. Such a request is accepted only with a
+verified BUY_NOW recommendation, ready reference and run-bound forecast metadata,
+and forecast costs explicitly unavailable for `unsupported_horizon`. No forecast
+cost is manufactured. Other missing/invalid data remains ineligible. The request
+and saved view clearly identify a reference-price-only request.
+
+Integration regressions verify horizon-independent recommendation IDs with
+different selected cost fingerprints, archival of all provider inputs, existing
+manager decisions and request ownership, and reference-only short-deadline cases.
