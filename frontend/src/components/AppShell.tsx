@@ -5,8 +5,8 @@ import { formatDate } from '../features/purchase-plan/dates';
 import { Brand } from './Brand';
 import { AppIcon } from './AppIcon';
 
-export function AppShell({ children, path, scenarioDate, onSignOut, marketAvailable = false }: {
-  children: ReactNode; path: string; scenarioDate: string; onSignOut(): Promise<void>; marketAvailable?: boolean;
+export function AppShell({ children, path, scenarioDate, onSignOut, marketAvailable = false, organisationControl, canReadPlans = true }: {
+  children: ReactNode; path: string; scenarioDate: string; onSignOut(): Promise<void>; marketAvailable?: boolean; organisationControl?: ReactNode; canReadPlans?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -17,14 +17,15 @@ export function AppShell({ children, path, scenarioDate, onSignOut, marketAvaila
       <Brand />{path === '/market-dashboard'
         ? <span className="bb-date">MARKET OVERVIEW</span>
         : <time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>}
+      {organisationControl}
     </header>
     <div id="app-content" tabIndex={-1}>{children}</div>
-    {open && <Navigation path={path} marketAvailable={marketAvailable} onSignOut={onSignOut} onClose={() => { setOpen(false); trigger.current?.focus(); }} />}
+    {open && <Navigation canReadPlans={canReadPlans} path={path} marketAvailable={marketAvailable} onSignOut={onSignOut} onClose={() => { setOpen(false); trigger.current?.focus(); }} />}
   </div>;
 }
 
-function Navigation({ path, onClose, onSignOut, marketAvailable }: {
-  path: string; onClose(): void; onSignOut(): Promise<void>; marketAvailable: boolean;
+function Navigation({ path, onClose, onSignOut, marketAvailable, canReadPlans }: {
+  path: string; onClose(): void; onSignOut(): Promise<void>; marketAvailable: boolean; canReadPlans: boolean;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const close = useRef<HTMLButtonElement>(null);
@@ -63,7 +64,7 @@ function Navigation({ path, onClose, onSignOut, marketAvailable }: {
     <div className="bb-sidebar-top"><Brand /><button ref={close} className="bb-icon-button" aria-label="Close navigation" disabled={busy} onClick={onClose}><AppIcon name="close" /></button></div>
     <nav>
       <AppLink href="/home" aria-current={path === '/home' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="home" />Home</AppLink>
-      <AppLink href="/purchase-plans" aria-current={path.startsWith('/purchase-plans') ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="plan" />Purchase plans</AppLink>
+      {canReadPlans && <AppLink href="/purchase-plans" aria-current={path.startsWith('/purchase-plans') ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="plan" />Purchase plans</AppLink>}
       {marketAvailable ? <AppLink href="/market-dashboard" aria-current={path === '/market-dashboard' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="chart" />Market dashboard</AppLink> : <button disabled title="Awaiting market dashboard integration"><AppIcon name="chart" />Market dashboard</button>}
     </nav>
     <div className="bb-sidebar-bottom">{error && <p role="alert">{error}</p>}<button className="bb-signout" disabled={busy} onClick={signOut}><AppIcon name="logout" />{busy ? 'Signing out...' : 'Sign out'}</button></div>

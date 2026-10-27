@@ -8,6 +8,7 @@ import { HomePage } from '../features/home/HomePage';
 import { PurchasePlanPage, type PurchasePlanService } from '../features/purchase-plan';
 import { RecommendationsPage } from '../features/recommendations/RecommendationsPage';
 import type { RecommendationService } from '../features/recommendations/service';
+import type { OrganisationPermissions } from '../features/organisation/apiService';
 import './app.css';
 import { ForecastProvider } from '../features/forecast/ForecastContext';
 import type { ForecastService } from '../features/forecast/apiService';
@@ -24,12 +25,14 @@ export interface AppProps {
   dataRevision?: number;
   refreshScenario?: () => void;
   mock?: boolean;
+  organisationControl?: ReactNode;
+  planAccess?: OrganisationPermissions;
   renderAuthPage?: (mode: 'login' | 'signup') => ReactNode;
   /** Anjali owns this component. No dashboard implementation is supplied here. */
   MarketDashboard?: ComponentType<{ scenarioDate: string }>;
 }
 
-export function App({ auth, createPlanService, scenarioDate, refreshScenario, dataRevision, mock = false, renderAuthPage, MarketDashboard, createRecommendationService, createForecastService, createPurchaseForecastService }: AppProps) {
+export function App({ auth, createPlanService, scenarioDate, refreshScenario, dataRevision, mock = false, renderAuthPage, MarketDashboard, createRecommendationService, createForecastService, createPurchaseForecastService, organisationControl, planAccess }: AppProps) {
   const path = usePath();
   const search = useSearch();
   const selectedPlanId = new URLSearchParams(search).get('plan_id');
@@ -94,9 +97,9 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, da
   const purchaseRecommendation = planStore.current.purchaseForecasts
     ? <ForecastProvider service={planStore.current.purchaseForecasts} scenarioDate={scenarioDate} revision={dataRevision}>{recommendationPage}</ForecastProvider>
     : recommendationPage;
-  return <ForecastProvider service={planStore.current.forecasts} scenarioDate={scenarioDate} revision={dataRevision}><AppShell path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
+  return <ForecastProvider service={planStore.current.forecasts} scenarioDate={scenarioDate} revision={dataRevision}><AppShell canReadPlans={planAccess?.can_read_plans ?? true} organisationControl={organisationControl} path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
     await auth.signOut(); acceptUser(null); returnPath.current = '/home'; setNotice(''); navigate('/login', true);
   }}>
-    {path === '/home' ? <HomePage displayName={user.displayName} /> : path === '/purchase-plans' ? <PurchasePlanPage key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? purchaseRecommendation : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
+    {path.startsWith('/purchase-plans') && planAccess && !planAccess.can_read_plans ? <main className="bb-status"><h1>Purchase-plan access is restricted</h1><p>Your admin role manages the organisation. Buyer, manager or analyst membership is required to view purchase plans.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : path === '/home' ? <HomePage displayName={user.displayName} canReadPlans={planAccess?.can_read_plans ?? true} /> : path === '/purchase-plans' ? <PurchasePlanPage canEdit={planAccess?.can_write_plans ?? true} key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? purchaseRecommendation : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
   </AppShell></ForecastProvider>;
 }
