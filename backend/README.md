@@ -246,7 +246,7 @@ Supabase credentials or writes are needed.
 
 Authenticated GET `/api/v1/purchase-plans/recommendation` and `/api/v1/purchase-plans/cost-impact` now expose independent guidance and cost availability. Both select an owned plan using the `plan_id` query parameter and require saved-context query preconditions; see [the complete API/provider contract](../docs/sprint-4-purchase-plan-api-contract.md). Ownership uses the existing verified Clerk subject mapping. Saved-plan GET derives days from the current Singapore date, including previously saved/overdue plans, without updating stored rows.
 
-`PlanAnalysisProvider` uses `PublishedForecastAnalysisProvider` in normal mode. It reads the selected purchase forecast run/horizon and generates deadline-aware guidance from the forecast bounds, reference quote and quote age. To test synthetic cost calculations locally, both profile `analysis-fixture` and property `mgo.analysis.fixture-enabled=true` are required. All fixture responses are labelled and authentication remains enabled. Do not enable this profile for real-model output. Forecasts exist independently of plans; calculations are on demand, with no persisted totals or recommendation FK/table changes.
+`PlanAnalysisProvider` uses `PublishedForecastAnalysisProvider` in normal mode. The recommendation service reads all three purchase horizons and generates one deadline-based result from eligible price and uncertainty signals. See [the current policy](../docs/buyer-recommendation-policy.md). To test synthetic cost calculations locally, both profile `analysis-fixture` and property `mgo.analysis.fixture-enabled=true` are required. All fixture responses are labelled and authentication remains enabled. Do not enable this profile for real-model output. Forecasts exist independently of plans; calculations are on demand, with no persisted totals or recommendation FK/table changes.
 
 Run `./mvnw clean test` (`.\mvnw.cmd clean test` on Windows). `PlanAnalysisHttpTests` starts a real local HTTP server on a random port, while stubbing identity decoding and database repositories. It verifies fixture costs, authentication requirements, two-owner isolation, conflicts and active-scenario reads. Unit tests cover signed/fractional calculations, missing inputs, incompatible basis, invalid ranges, provider failure/context checks and fixture opt-in isolation. No shared database credentials or writes are needed by these tests; real Clerk/DB/ML deployment checks remain pending.
 
@@ -257,7 +257,7 @@ The purchase recommendation page is connected through these files:
 
 - `frontend/src/app/ClerkApp.tsx` supplies the authenticated purchase forecast and recommendation adapters.
 - `frontend/src/features/recommendations/RecommendationsPage.tsx` displays the selected plan's guidance and costs; `TimingComparison.tsx` compares the 7, 14 and 30 day options.
-- `PublishedForecastAnalysisProvider.java` contains the recommendation rules (deadline, quote freshness and forecast range versus reference price).
+- `PlanAnalysisService.java` gathers comparable forecasts; `RecommendationPolicy.java` applies deadline eligibility, inverse-distance weights and price/uncertainty direction rules.
 - `PurchaseForecastService.java` loads database observations and news inputs, then calls `RidgeInference.java`.
 - `ridge-regression-model/src/purchase_inference.py` executes `src/predict.py` with the saved Ridge artifacts and the database snapshot supplied by Java.
 

@@ -115,7 +115,7 @@ class OrganisationPlanHttpTests {
     }
     @Test void recommendationPreservesUrgencyAndOrganisationReadPermissions() throws Exception {
         when(provider.provenance()).thenReturn("unavailable");
-        when(provider.prices(today, 7)).thenReturn(new PlanAnalysisProvider.Prices(today,
+        when(provider.prices(eq(today), anyInt())).thenReturn(new PlanAnalysisProvider.Prices(today,
                 PlanAnalysisProvider.Result.unavailable("missing_reference", "No current reference"),
                 PlanAnalysisProvider.Result.unavailable("missing_forecast", "No current forecast")));
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(plan(id, owner)));

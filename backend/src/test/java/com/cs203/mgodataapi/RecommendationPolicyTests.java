@@ -1,99 +1,93 @@
 package com.cs203.mgodataapi;
-
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static com.cs203.mgodataapi.PlanAnalysisProvider.*;
-
 class RecommendationPolicyTests {
-    final LocalDate date = LocalDate.of(2026, 10, 26);
+    final LocalDate date = LocalDate.of(2026, 10, 27);
     final Basis basis = new Basis("Singapore MGO", "USD", "MT");
-    final UUID id = UUID.randomUUID();
-    PlanAnalysisService.Context context(int days, String urgency) {
-        return new PlanAnalysisService.Context(id, new BigDecimal("100.125"), date.plusDays(days), date, urgency);
+    PlanAnalysisService.Context context(int days) {
+        return new PlanAnalysisService.Context(UUID.fromString("00000000-0000-0000-0000-000000000001"), new BigDecimal("100.125"), date.plusDays(days), date);
     }
-    Prices prices(String point, String low, String high, int age, int target) {
-        return new Prices(date, Result.ready(new Reference(new BigDecimal("100"), date.minusDays(age), basis)),
-            Result.ready(new Forecast(new Range(new BigDecimal(low), new BigDecimal(high)), date.plusDays(target), basis,
-                "Experimental test interval", "7 calendar days", point == null ? null : new BigDecimal(point))));
+    Prices prices(int days, String point) {
+        return new Prices(date, Result.ready(new Reference(new BigDecimal("720"), date, basis)),
+                Result.ready(new Forecast(new Range(new BigDecimal(point).subtract(BigDecimal.ONE), new BigDecimal(point).add(BigDecimal.ONE)), date.plusDays(days), basis, "Experimental bounds", days + " days", new BigDecimal(point))));
     }
-    Guidance decide(String point, String low, String high) {
-        return RecommendationPolicy.evaluate(context(7, "NORMAL"), prices(point, low, high, 0, 7));
+    @Test void twentyDayExample() {
+        var result = RecommendationPolicy.evaluateAvailable(context(20), List.of(prices(7, "710"), prices(14, "695"), prices(30, "680")));
+        assertEquals("WAIT", result.action());
+        assertEquals(date.plusDays(14), result.evidence().supported_target_date());
+        assertTrue(result.explanation().contains("$20.26/mt"));
+        assertEquals(-2028.85, result.evidence().alternative_minus_now_usd().doubleValue(), 0.01);
+        assertTrue(result.evidence().reasons().stream().anyMatch(s -> s.contains("68.42%") && s.contains("31.58%")));
+        assertTrue(result.evidence().reasons().stream().anyMatch(s -> s.contains("Excluded")));
     }
-    @Test void allFourOutcomesAndSignConvention() {
-        assertEquals("BUY_NOW", decide("102", "101", "103").action());
-        var wait = decide("98", "97", "99");
-        assertEquals("WAIT", wait.action());
-        assertEquals(0, new BigDecimal("10012.500").compareTo(wait.evidence().buy_now_cost_usd()));
-        assertEquals(0, new BigDecimal("-200.250").compareTo(wait.evidence().alternative_minus_now_usd()));
-        assertEquals("SPLIT", decide("98", "90", "110").action());
-        assertEquals("MONITOR", decide("100", "99", "101").action());
+    @Test void deadlineInclusiveAndTodayCheaper() {
+        assertEquals(date.plusDays(14), RecommendationPolicy.evaluate(context(14), prices(14, "695")).evidence().supported_target_date());
+        var result = RecommendationPolicy.evaluateAvailable(context(30), List.of(prices(7, "721"), prices(14, "730"), prices(30, "740")));
+        assertEquals("BUY_NOW", result.action());
+        assertEquals(date, result.evidence().supported_target_date());
+        assertEquals(0, result.evidence().alternative_minus_now_usd().signum());
     }
-    @Test void thresholdBoundariesAreInclusiveAndQuantityIndependent() {
-        assertEquals("MONITOR", decide("100.999", "100", "102").action());
-        assertEquals("BUY_NOW", decide("101", "100", "102").action());
-        assertEquals("WAIT", decide("99", "98", "100").action());
-        assertEquals("BUY_NOW", decide("102", "97", "106.999").action());
-        assertEquals("SPLIT", decide("102", "97", "107").action());
-        assertEquals("MONITOR", decide("100", "80", "120").action()); // Flat before width.
+    @Test void tiesPreferTodayAndBlendedSignalUsesNearestEligibleDate() {
+        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(30), prices(7, "720")).action());
+        assertEquals(date.plusDays(14), RecommendationPolicy.evaluateAvailable(context(30), List.of(prices(14, "695"), prices(7, "695"))).evidence().supported_target_date());
     }
-    @Test void deadlineAndUrgencyPrecedence() {
-        var fallingWide = prices("98", "90", "110", 0, 7);
-        assertEquals("BUY_NOW", RecommendationPolicy.evaluate(context(7, "HIGH"), fallingWide).action());
-        assertEquals("SPLIT", RecommendationPolicy.evaluate(context(7, "LOW"), fallingWide).action());
-        assertEquals("BUY_NOW", RecommendationPolicy.evaluate(context(0, "LOW"), null).action());
-        assertEquals("BUY_NOW", RecommendationPolicy.evaluate(context(1, "NORMAL"), null).action());
-        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(2, "HIGH"), null).action());
-        var overdue = RecommendationPolicy.evaluate(context(-1, "HIGH"), fallingWide);
+    @Test void shortAndOverdueDeadlines() {
+        for (int days : new int[] {0, 1, 6}) assertEquals("BUY_NOW", RecommendationPolicy.evaluate(context(days), prices(7, "695")).action());
+        var overdue = RecommendationPolicy.evaluate(context(-1), prices(7, "695"));
         assertEquals("MONITOR", overdue.action());
-        assertTrue(overdue.explanation().contains("now"));
-        assertTrue(overdue.evidence().allocations().isEmpty());
+        assertNull(overdue.evidence().supported_target_date());
+        assertNull(overdue.evidence().alternative_minus_now_usd());
     }
-    @Test void horizonBoundariesAndNoExtrapolation() {
-        var p = prices("98", "97", "99", 0, 7);
-        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(6, "NORMAL"), p).action());
-        assertNull(RecommendationPolicy.evaluate(context(6, "NORMAL"), p).evidence().alternative_cost_usd());
-        assertEquals("WAIT", RecommendationPolicy.evaluate(context(7, "NORMAL"), p).action());
-        var beyond = RecommendationPolicy.evaluate(context(30, "NORMAL"), p);
-        assertEquals("WAIT", beyond.action());
-        assertEquals(date.plusDays(7), beyond.evidence().supported_target_date());
-        assertTrue(beyond.evidence().limitations().stream().anyMatch(s -> s.contains("no extrapolated")));
-        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(7, "NORMAL"), prices("98", "97", "99", 0, 0)).action());
+    @Test void missingForecastStillComparesToday() {
+        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(20), null).action());
+        var good = prices(14, "695");
+        var missing = new Prices(date, good.reference(), Result.<Forecast>unavailable("missing_forecast", "Missing"));
+        assertEquals("BUY_NOW", RecommendationPolicy.evaluate(context(20), missing).action());
     }
-    @Test void staleMissingMalformedAndMismatchedDataDoNotProducePriceAdvice() {
-        assertEquals("WAIT", RecommendationPolicy.evaluate(context(7, "NORMAL"), prices("98", "97", "99", 7, 7)).action());
-        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(7, "NORMAL"), prices("98", "97", "99", 8, 7)).action());
-        for (Prices p : new Prices[]{null, prices(null, "97", "99", 0, 7), prices("98", "99", "97", 0, 7), prices("98", "-1", "99", 0, 7), prices("98", "97", "99", -1, 7)})
-            assertEquals("MONITOR", RecommendationPolicy.evaluate(context(7, "NORMAL"), p).action());
-        var good = prices("98", "97", "99", 0, 7);
-        var incompatible = new Prices(date, Result.ready(new Reference(new BigDecimal("100"), date, new Basis("Brent", "USD", "MT"))), good.forecast());
-        var decision = RecommendationPolicy.evaluate(context(7, "NORMAL"), incompatible);
-        assertEquals("MONITOR", decision.action());
-        assertNull(decision.evidence().alternative_cost_usd());
+    @Test void urgencyDoesNotOverrideCheapestPrice() {
+        assertEquals("WAIT", RecommendationPolicy.evaluate(context(20).withUrgency("HIGH"), prices(14, "695")).action());
+        assertEquals(RecommendationPolicy.evaluate(context(20), prices(14, "695")), RecommendationPolicy.evaluate(context(20), prices(14, "695")));
     }
-    @Test void splitAllocationIsPositiveExactAndInsideDeadline() {
-        var c = context(7, "NORMAL");
-        var result = RecommendationPolicy.evaluate(c, prices("98", "90", "110", 0, 7));
-        var a = result.evidence().allocations();
-        assertEquals(2, a.size());
-        assertEquals(0, a.get(0).quantity_mt().add(a.get(1).quantity_mt()).compareTo(c.quantity_mt()));
-        assertTrue(a.stream().allMatch(x -> x.quantity_mt().signum() > 0 && !x.date().isAfter(c.purchase_deadline())));
-        assertEquals(date, a.get(0).date());
-        assertEquals(date.plusDays(7), a.get(1).date());
+    @Test void blendCanRejectWaitingEvenWhenOneIndividualForecastIsCheaper() {
+        var result = RecommendationPolicy.evaluateAvailable(context(20), List.of(prices(7, "600"), prices(14, "800"), prices(30, "500")));
+        assertEquals("BUY_NOW", result.action());
+        assertEquals(0, result.evidence().alternative_minus_now_usd().signum());
     }
-    @Test void invalidRequestsAre422NotMonitor() {
-        for (BigDecimal quantity : new BigDecimal[]{null, BigDecimal.ZERO, BigDecimal.ONE.negate(), new BigDecimal("1e400")})
-            assertThrows(ApiException.class, () -> RecommendationPolicy.evaluate(new PlanAnalysisService.Context(id, quantity, date.plusDays(7), date), null));
-        assertThrows(ApiException.class, () -> RecommendationPolicy.evaluate(context(7, "ASAP"), null));
-        assertThrows(ApiException.class, () -> RecommendationPolicy.evaluate(context(7, null), null));
+    @Test void exactDeadlineUsesOnlyMatchingForecast() {
+        var result = RecommendationPolicy.evaluateAvailable(context(14), List.of(prices(7, "600"), prices(14, "730")));
+        assertEquals("BUY_NOW", result.action());
+        assertTrue(result.evidence().reasons().stream().anyMatch(s -> s.contains("100%")));
     }
-    @Test void configurableThresholdAndDeterminism() {
-        var p = prices("102", "101", "103", 0, 7);
-        var c = context(7, "NORMAL");
-        var cfg = new RecommendationPolicy.Config(new BigDecimal("0.03"), new BigDecimal("0.1"), 7, 1, new BigDecimal("0.5"));
-        assertEquals("MONITOR", RecommendationPolicy.evaluate(c, p, cfg).action());
-        assertEquals(RecommendationPolicy.evaluate(c, p), RecommendationPolicy.evaluate(c, p));
+    @Test void uncertaintyOverlapProducesMonitorWithDirectionAndPotentialSavings() {
+        var original = prices(14, "695");
+        var wide = new Prices(date, original.reference(), Result.ready(new Forecast(new Range(new BigDecimal("600"), new BigDecimal("800")), date.plusDays(14), basis, "Wide bounds", "14 days", new BigDecimal("695"))));
+        var result = RecommendationPolicy.evaluate(context(20), wide);
+        assertEquals("MONITOR", result.action());
+        assertEquals("DOWN", result.evidence().direction());
+        assertTrue(result.explanation().contains("overlaps"));
+        assertTrue(result.explanation().contains("$25.00/mt"));
+    }
+    @Test void weightedUncertaintyUsesSameWeightsAsPrice() {
+        var a = prices(7, "710");
+        var b = prices(14, "695");
+        var wide = new Prices(date, b.reference(), Result.ready(new Forecast(new Range(new BigDecimal("600"), new BigDecimal("800")), date.plusDays(14), basis, "Wide", "14 days", new BigDecimal("695"))));
+        var result = RecommendationPolicy.evaluateAvailable(context(20), List.of(a, wide));
+        assertEquals("MONITOR", result.action());
+        assertTrue(result.evidence().reasons().stream().anyMatch(reason -> reason.contains("$634.42") && reason.contains("$771.89")));
+    }
+    @Test void staleReferenceProducesMonitorAndMalformedForecastCannotCreateSavings() {
+        var p = prices(14, "695");
+        var stale = new Prices(date, Result.ready(new Reference(new BigDecimal("720"), date.minusDays(8), basis)), p.forecast());
+        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(20), stale).action());
+        var malformed = new Prices(date, p.reference(), Result.ready(new Forecast(new Range(new BigDecimal("800"), new BigDecimal("600")), date.plusDays(14), basis, "Bad", "14 days", new BigDecimal("695"))));
+        assertEquals("BUY_NOW", RecommendationPolicy.evaluate(context(20), malformed).action());
+    }
+    @Test void invalidQuantityRejected() {
+        assertThrows(ApiException.class, () -> RecommendationPolicy.evaluate(new PlanAnalysisService.Context(UUID.randomUUID(), BigDecimal.ZERO, date, date), null));
     }
 }

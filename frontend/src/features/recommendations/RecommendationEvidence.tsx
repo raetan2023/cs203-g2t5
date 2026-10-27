@@ -8,9 +8,9 @@ export function EvidenceView({ analysis }: { analysis: PlanAnalysis }) {
   return <div className="rec-evidence">
     <ul className="rec-reasons">{e.reasons.map((reason, i) => <li key={i}>{reason}</li>)}</ul>
     <dl className="rec-evidence-grid"><div><dt>Estimated buy-now reference cost</dt><dd>{usd(e.buy_now_cost_usd)}</dd></div>
-      <div><dt>Estimated full-quantity cost at forecast target</dt><dd>{usd(e.alternative_cost_usd)}</dd></div>
-      <div><dt>Alternative minus buy-now (positive costs more)</dt><dd>{usd(e.alternative_minus_now_usd)}</dd></div>
-      <div><dt>Selected supported target</dt><dd>{e.supported_target_date ? formatDate(e.supported_target_date) : 'Unavailable'}</dd></div>
+      <div><dt>Estimated cost from recommendation signal</dt><dd>{usd(e.alternative_cost_usd)}</dd></div>
+      <div><dt>Potential savings from signal for full quantity</dt><dd>{usd(e.alternative_minus_now_usd == null ? null : e.alternative_minus_now_usd === 0 ? 0 : -e.alternative_minus_now_usd)}</dd></div>
+      <div><dt>Suggested date</dt><dd>{e.supported_target_date ? formatDate(e.supported_target_date) : 'Unavailable'}</dd></div>
       <div><dt>Reference freshness</dt><dd>{e.reference_age_days == null ? 'Unavailable' : `${e.reference_age_days} calendar ${e.reference_age_days === 1 ? 'day' : 'days'} old`}</dd></div></dl>
     {!!e.allocations.length && <div><h4>Illustrative split allocation</h4><ul>{e.allocations.map(a => <li key={a.date}>{a.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT on {formatDate(a.date)}</li>)}</ul></div>}
     <details className="rec-forecast rec-assumptions"><summary>Assumptions and limitations</summary><div className="rec-details-body">

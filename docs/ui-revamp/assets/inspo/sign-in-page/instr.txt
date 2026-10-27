@@ -1,0 +1,49 @@
+# Task: animate the hero ship on the sign-in page
+
+## Context
+Bunker Buddy is a dark-first web app. The sign-in page has a hero on the left (headline, subhead, ship illustration) and a Clerk sign-in card on the right.
+I'm replacing the old animated wireframe boat with a minimalist ship at night, lit only by its deck lights, on dark water. The artwork is done as an inline SVG, and a first pass of CSS motion is already in the reference file. Your job is to port it into the app as a component and polish the motion.
+
+Reference: `Main.dc.html` (attached). Take the `<svg class="scene">` and the keyframes from its `<style>`. Ignore the page layout in it. Use the app's real layout, and keep the Clerk card as it is.
+
+## Do not change
+- The ship's shapes, proportions and the SVG `id`s and class names (`.ship`, `.halo`, `.rf`, `.w1`–`.w3`, `#rf`, `#dash`, `#fade`). If you need new hooks, add classes rather than renaming.
+- The palette. These are the only colours in the illustration:
+  - ground `#0c0d0e`
+  - ship `#101214` to `#23262b`
+  - sea `#080a0c` to `#14120f`
+  - horizon haze `#2a241b`
+  - lights `#eadfc9` (the beige accent)
+- Add no other colour. Headline, form and button styles are not part of this task.
+
+## Motion spec
+Animate only `transform` and `opacity`. Never animate blur filters, SVG turbulence or `filter` values.
+
+1. **Ambient, always on, very slow**
+   - Whole ship (`.ship`): roll/bob over 9–12s ease-in-out, about ±1.5px translateY and ±0.15° rotate. Transform-origin is the waterline, about x=420, y=238 in viewBox units.
+   - Reflections (`.rf`): translateX ±3px over 4–5s, alternating, with different negative delays per column so they never sync. Opacity .7 to 1.
+   - Halos (`.halo`): breathe, opacity .7 to 1 over 7s.
+   - Windows (`.w1`–`.w3`): rare flicker, dropping to .25 for about 0.4s every 11–23s, with different periods.
+2. **Entrance, once per page load, about 2.2s total**
+   - Start as a dark silhouette with every light, halo and reflection at opacity 0.
+   - Bridge windows turn on first, then the masthead light.
+   - Then the deck lights, one by one from stern (left) to bow (right) with a 120ms stagger.
+   - The reflections fade in last, 400ms after their light.
+   - Ease-out. The ambient layer starts only after the entrance has finished.
+3. **Interaction (optional, behind a prop, default on)**
+   - Subtle mouse parallax: ship moves up to 4px, water and reflections up to 8px, with damped easing. Disable it on touch devices.
+   - When the Clerk form gets focus, raise the halo opacity slightly. On successful sign-in, run a short brighten-and-glide (about 600ms) before the redirect.
+
+## Constraints
+- Respect `prefers-reduced-motion: reduce`. Render the final lit state with no animation and no parallax.
+- Pause all animation when the tab is hidden or the hero is off-screen (IntersectionObserver + `animation-play-state`).
+- Target well under 2% CPU on a mid-range laptop. Check with the browser performance panel.
+- Prefer CSS keyframes and the Web Animations API. Add a library (GSAP, Motion) only if the entrance sequencing gets unwieldy, and tell me before you do.
+- The SVG must scale from 360px to 1440px wide with no layout shift. Reserve its space with the viewBox aspect ratio (800×340).
+- Keep text contrast and focus rings in the sign-in form untouched. Nothing in the scene may overlap or sit under the headline or the card.
+
+## Deliverables
+- A reusable `HeroShip` component (framework/stack of the repo), with props `animate` (default true) and `parallax` (default true).
+- Reduced-motion and hidden-tab behaviour implemented and tested.
+- A short note listing the final timings/amplitudes, so I can tune them.
+- Before finishing, open the page in the browser and check these four things: the entrance sequence, the idle loop, reduced-motion mode, and a 390px-wide viewport.

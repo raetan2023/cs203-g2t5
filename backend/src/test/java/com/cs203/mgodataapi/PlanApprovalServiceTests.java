@@ -201,4 +201,23 @@ class PlanApprovalServiceTests {
         assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM plan_approval_decisions", Integer.class));
     }
 
+    @Test void planRecommendationIsIndependentOfCostHorizonAndAllInputsAreFrozen() {
+        var seven = selection(7, "NORMAL"); var fourteen = selection(14, "NORMAL");
+        assertEquals(seven.recommendation_id(), fourteen.recommendation_id());
+        assertNotEquals(seven.approval_fingerprint(), fourteen.approval_fingerprint());
+        approvals.submit(id, owner, "org_a", fourteen);
+        var saved = approvals.submittedRecommendation(id, "org_a");
+        var payload = (java.util.Map<?, ?>)saved.get("analysis");
+        assertEquals(3, ((java.util.List<?>)payload.get("recommendation_inputs")).size());
+        assertEquals(14, saved.get("horizon_days"));
+    }
+    @Test void shortDeadlineBuyNowCanBeSubmittedWithoutInventingAForecastCost() {
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline=? WHERE plan_id=?", today.plusDays(3), id);
+        choice = selection(7, "NORMAL");
+        assertEquals("submitted", submit(id, owner, "org_a").status());
+        var payload = (java.util.Map<?, ?>)approvals.submittedRecommendation(id, "org_a").get("analysis");
+        assertEquals("unavailable", ((java.util.Map<?, ?>)payload.get("cost_impact")).get("status"));
+        assertEquals("BUY_NOW", ((java.util.Map<?, ?>)((java.util.Map<?, ?>)payload.get("recommendation")).get("value")).get("action"));
+    }
+
 }

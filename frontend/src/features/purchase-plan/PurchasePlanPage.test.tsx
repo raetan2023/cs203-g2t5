@@ -7,6 +7,13 @@ import { DEMO_PLAN, DEMO_SCENARIO_DATE } from './fixtures';
 import { createMockPlanService } from './mockService';
 import { PlanError, type PurchasePlanService, type SavedPlanResponse } from './types';
 
+/** Delete lives in each plan card's "More actions" menu. */
+async function chooseDelete(user: ReturnType<typeof userEvent.setup>, scope: Pick<typeof screen, 'findByRole' | 'getByRole'> = screen) {
+  await user.click(await scope.findByRole('button', { name: /More actions/ }));
+  await user.click(scope.getByRole('button', { name: 'Delete' }));
+}
+
+
 function setup(service = createMockPlanService({ delayMs: 0 })) {
   const user = userEvent.setup();
   render(<StrictMode><PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} /></StrictMode>);
@@ -43,7 +50,7 @@ describe('purchase plan journeys', () => {
     expect(await screen.findByText('600 MT')).toBeVisible();
     expect(screen.getByText('27 days')).toBeVisible();
 
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await chooseDelete(user);
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus();
     await user.tab({ shift: true });
@@ -52,8 +59,8 @@ describe('purchase plan journeys', () => {
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus();
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('600 MT')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Delete' })).toHaveFocus();
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(screen.getByRole('button', { name: /More actions/ })).toHaveFocus();
+    await chooseDelete(user);
     await user.click(screen.getByRole('button', { name: 'Delete plan' }));
     expect(await screen.findByText("You haven't created a purchase plan yet.")).toBeVisible();
     expect(screen.getByRole('button', { name: 'Create plan' })).toHaveFocus();
@@ -129,7 +136,7 @@ describe('purchase plan journeys', () => {
   it('retains the plan on delete failure, retries and blocks dismissal while deleting', async () => {
     const service = createMockPlanService({ delayMs: 0, initialPlan: DEMO_PLAN, failOnce: { delete: true } });
     const user = setup(service);
-    await user.click(await screen.findByRole('button', { name: 'Delete' }));
+    await chooseDelete(user);
     await user.click(screen.getByRole('button', { name: 'Delete plan' }));
     expect(await screen.findByText('Deletion failed')).toBeVisible();
     expect(screen.getByText('500 MT')).toBeVisible();
@@ -149,11 +156,11 @@ describe('purchase plan journeys', () => {
 
   it('dismisses a confirmation or failed deletion through the native Escape/cancel event', async () => {
     const user = setup(createMockPlanService({ delayMs: 0, initialPlan: DEMO_PLAN, failOnce: { delete: true } }));
-    await user.click(await screen.findByRole('button', { name: 'Delete' }));
+    await chooseDelete(user);
     fireEvent(screen.getByRole('dialog'), new Event('cancel', { bubbles: true, cancelable: true }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Delete' })).toHaveFocus();
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(screen.getByRole('button', { name: /More actions/ })).toHaveFocus();
+    await chooseDelete(user);
     await user.click(screen.getByRole('button', { name: 'Delete plan' }));
     await screen.findByText('Deletion failed');
     fireEvent(screen.getByRole('dialog'), new Event('cancel', { bubbles: true, cancelable: true }));
@@ -186,7 +193,7 @@ describe('multiple purchase plans', () => {
     await screen.findByText('300 MT');
     expect(update).toHaveBeenCalledWith(second.plan_id, { quantity_mt: 300, purchase_deadline: '2025-11-15' });
     expect(screen.getByText('500 MT')).toBeVisible();
-    await user.click(within(screen.getByText('300 MT').closest('section')!).getByRole('button', { name: 'Delete' }));
+    await chooseDelete(user, within(screen.getByText('300 MT').closest('section')!));
     await user.click(screen.getByRole('button', { name: 'Delete plan' }));
     await waitFor(() => expect(screen.queryByText('300 MT')).not.toBeInTheDocument());
     expect(remove).toHaveBeenCalledWith(second.plan_id);
@@ -194,3 +201,28 @@ describe('multiple purchase plans', () => {
     expect((await service.list()).plans).toEqual([DEMO_PLAN]);
   });
 });
+
+describe('plan overview and sorting', () => {
+  const plans = [
+    { ...DEMO_PLAN, plan_id: 'a', quantity_mt: 100, purchase_deadline: '2025-11-15', days_remaining: 22 },
+    { ...DEMO_PLAN, plan_id: 'b', quantity_mt: 900, purchase_deadline: '2025-12-31', days_remaining: 68 },
+    { ...DEMO_PLAN, plan_id: 'c', quantity_mt: 300, purchase_deadline: '2025-10-28', days_remaining: 4 },
+  ];
+  const titles = () => screen.getAllByRole('heading', { level: 3 }).map(heading => heading.textContent);
+
+  it('summarises active plans and the next deadline, and sorts by deadline or volume without changing plans', async () => {
+    const service = createMockPlanService({ delayMs: 0, initialPlans: plans });
+    const writes = [vi.spyOn(service, 'create'), vi.spyOn(service, 'update'), vi.spyOn(service, 'delete')];
+    const user = setup(service);
+    const overview = await screen.findByRole('region', { name: 'Plan summary' });
+    expect(within(overview).getByText('Active plans').nextSibling).toHaveTextContent('3');
+    expect(within(overview).getByText('Overdue plans').nextSibling).toHaveTextContent('0');
+    expect(within(overview).getByText('Next deadline').nextSibling).toHaveTextContent(/4\s*days/);
+    expect(titles()[0]).toMatch(/^300 MT/);
+    await user.click(screen.getByRole('button', { name: 'Largest volume' }));
+    expect(screen.getByRole('button', { name: 'Largest volume' })).toHaveAttribute('aria-pressed', 'true');
+    expect(titles().map(title => title?.split(' MT')[0])).toEqual(['900', '300', '100']);
+    for (const write of writes) expect(write).not.toHaveBeenCalled();
+  });
+});
+
