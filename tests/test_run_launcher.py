@@ -16,14 +16,15 @@ class LauncherTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix='launcher test ')
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        for folder in ('backend', 'frontend', 'bin'):
-            (self.root / folder).mkdir()
+        for folder in ('backend', 'frontend', 'bin', '.venv/bin', 'ridge-regression-model'):
+            (self.root / folder).mkdir(parents=True)
         shutil.copy2(LAUNCHER, self.root / 'run.command')
         (self.root / 'backend/.env').write_text(
             "SUPABASE_DB_URL='jdbc:postgresql://example/db'\n"
             "SUPABASE_DB_USER='test'\nSUPABASE_DB_PASSWORD='test password'\n"
             "CLERK_ISSUER_URI='https://example.test'\n")
         (self.root / 'frontend/.env.local').write_text('VITE_API_URL=http://127.0.0.1:8000\n')
+        self.executable('.venv/bin/python', '#!/bin/bash\nexit 0\n')
         self.executable('bin/java', '#!/bin/bash\nexit 0\n')
         service = '''#!/bin/bash
 if [[ "${PWD##*/}" == backend ]]; then

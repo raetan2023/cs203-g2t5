@@ -36,13 +36,13 @@ class PlanAnalysisHttpTests {
     final HttpClient client = HttpClient.newHttpClient();
     @BeforeEach void setup() {
         when(operationalDate.today()).thenReturn(LocalDate.parse("2025-10-24"));
-        when(decoder.decode("owner-token")).thenReturn(Jwt.withTokenValue("owner-token").header("alg", "RS256").subject("owner").build());
-        when(decoder.decode("other-token")).thenReturn(Jwt.withTokenValue("other-token").header("alg", "RS256").subject("other").build());
+        when(decoder.decode("owner-token")).thenReturn(Jwt.withTokenValue("owner-token").header("alg", "RS256").subject("owner").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")).build());
+        when(decoder.decode("other-token")).thenReturn(Jwt.withTokenValue("other-token").header("alg", "RS256").subject("other").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")).build());
         when(users.resolve("owner", null)).thenReturn(owner);
         when(users.resolve("other", null)).thenReturn(other);
-        when(plans.findByIdAndUser(planId, owner)).thenReturn(Optional.of(plan));
-        when(plans.findByIdAndUser(planId, other)).thenReturn(Optional.empty());
-        when(plans.findByUser(owner)).thenReturn(java.util.List.of(plan));
+        when(plans.findByIdAndUser(planId, owner, "org_a")).thenReturn(Optional.of(plan));
+        when(plans.findByIdAndUser(planId, other, "org_a")).thenReturn(Optional.empty());
+        when(plans.findByUser(owner, "org_a")).thenReturn(java.util.List.of(plan));
     }
     String path(String endpoint) {
         return "/api/v1/purchase-plans/" + endpoint + "?plan_id=" + planId + "&quantity_mt=100&purchase_deadline=2025-11-15&scenario_as_of_date=2025-10-24";
@@ -64,14 +64,25 @@ class PlanAnalysisHttpTests {
         assertEquals("unavailable", body.path("recommendation").path("status").asText());
         var recommendation = get(path("recommendation"), "owner-token");
         assertEquals(200, recommendation.statusCode());
-        assertTrue(recommendation.body().contains("No approved recommendation provider"));
+        var guidance = new JsonMapper().readTree(recommendation.body()).path("recommendation").path("value");
+        assertEquals("BUY_NOW", guidance.path("action").asText());
+        assertEquals(70000, guidance.path("evidence").path("buy_now_cost_usd").asInt());
+        assertEquals(1000, guidance.path("evidence").path("alternative_minus_now_usd").asInt());
+    }
+    @Test void urgencyIsValidatedAndReturnedWithoutChangingSavedPlan() throws Exception {
+        assertEquals(422, get(path("recommendation") + "&urgency=INVALID", "owner-token").statusCode());
+        var response = get(path("recommendation") + "&urgency=HIGH", "owner-token");
+        assertEquals(200, response.statusCode());
+        var body = new JsonMapper().readTree(response.body());
+        assertEquals("HIGH", body.path("context").path("urgency").asText());
+        assertEquals("BUY_NOW", body.path("recommendation").path("value").path("action").asText());
     }
     @Test void rejectsMissingAuthenticationAndOtherOwners() throws Exception {
         for (String endpoint : new String[]{"recommendation", "cost-impact"}) {
             assertEquals(401, get(path(endpoint), null).statusCode());
             assertEquals(404, get(path(endpoint), "other-token").statusCode());
         }
-        verify(plans, never()).findByUser(any());
+        verify(plans, never()).findByUser(any(), org.mockito.ArgumentMatchers.eq("org_a"));
     }
     @Test void rejectsOldInputsAndScenario() throws Exception {
         for (String stale : new String[]{path("cost-impact").replace("quantity_mt=100", "quantity_mt=101"),
@@ -81,7 +92,7 @@ class PlanAnalysisHttpTests {
     }
     @Test void anotherAccountWithItsOwnPlanCannotSelectTheFirstAccountsPlan() throws Exception {
         UUID otherPlanId = UUID.randomUUID();
-        when(plans.findByIdAndUser(otherPlanId, other)).thenReturn(Optional.of(new PurchasePlan(otherPlanId, other, new BigDecimal("250"),
+        when(plans.findByIdAndUser(otherPlanId, other, "org_a")).thenReturn(Optional.of(new PurchasePlan(otherPlanId, other, new BigDecimal("250"),
                 plan.purchaseDeadline(), plan.scenarioAsOfDate())));
         assertEquals(404, get(path("cost-impact"), "other-token").statusCode());
         var response = get(path("cost-impact").replace(planId.toString(), otherPlanId.toString()).replace("quantity_mt=100", "quantity_mt=250"), "other-token");
@@ -91,7 +102,7 @@ class PlanAnalysisHttpTests {
         assertEquals(175000, body.path("cost_impact").path("value").path("reference_total").asInt());
     }
     @Test void detectsDeletionDuringAnalysis() throws Exception {
-        when(plans.findByIdAndUser(planId, owner)).thenReturn(Optional.of(plan), Optional.empty());
+        when(plans.findByIdAndUser(planId, owner, "org_a")).thenReturn(Optional.of(plan), Optional.empty());
         assertEquals(409, get(path("cost-impact"), "owner-token").statusCode());
     }
     @Test void readsActiveScenarioInsteadOfStoredScenario() throws Exception {
@@ -103,7 +114,7 @@ class PlanAnalysisHttpTests {
         UUID secondId = UUID.randomUUID();
         PurchasePlan second = new PurchasePlan(secondId, owner, new BigDecimal("250"),
                 plan.purchaseDeadline(), plan.scenarioAsOfDate());
-        when(plans.findByIdAndUser(secondId, owner)).thenReturn(Optional.of(second));
+        when(plans.findByIdAndUser(secondId, owner, "org_a")).thenReturn(Optional.of(second));
         var response = get(path("cost-impact").replace(planId.toString(), secondId.toString())
                 .replace("quantity_mt=100", "quantity_mt=250"), "owner-token");
         assertEquals(200, response.statusCode());

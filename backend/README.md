@@ -6,8 +6,7 @@ the dashboard needs, and is the project other backend features are built in.
 Purchase plans, Clerk user mappings, and shared market-data routes use Supabase PostgreSQL.
 The historical data API and backend homepage read imported observations from
 `public.market_series` and `public.market_observations`; no bundled JSON files are required.
-Analysis uses a separate provider boundary and reports unavailable by default until
-normalized ML inputs are connected.
+Forecasts and cost impact read immutable daily publications from Supabase. Missing, stale or failed publications are explicitly unavailable; database failures return 503. No mock forecast is substituted.
 
 ## Run
 
@@ -94,11 +93,10 @@ defaults to the Vite dev server on both `127.0.0.1:5173` and `localhost:5173`
 (browsers treat those as different origins). Requests from anywhere else are
 refused. Add deployed origins to that variable rather than the code.
 
-`GET /api/v1/config` exists because screens need the scenario date before a plan
-is saved, to show days remaining while a deadline is being chosen:
+`GET /api/v1/config` returns the current Singapore date (the legacy key remains for compatibility), to show days remaining before a plan is saved:
 
 ```json
-{ "scenario_as_of_date": "2025-10-24" }
+{ "scenario_as_of_date": "2026-10-26" }
 ```
 
 ### Market dashboard
@@ -123,6 +121,22 @@ logs a message when the frontend falls back.
 
 ### Purchase plans
 
+Organisation access now requires the active Clerk organisation and membership role
+in the verified session token. Buyers can manage multiple own plans within that
+organisation. Managers and analysts can read organisation plans and their analysis
+but cannot create/edit/delete them. Admin membership manages access and does not
+automatically grant purchase-plan access. See [the complete role contract](../docs/organisation-role-access.md).
+
+Apply the additive `migrations/20261027_purchase_plan_organisation.sql` schema step
+before running this backend if it has not already been applied. It was reported
+applied in the shared project; do not assign existing plans automatically. Legacy
+NULL organisation rows are preserved but hidden until reviewed assignment. The
+later NOT NULL step is not yet applied.
+
+`GET /api/v1/organisation` returns verified active-organisation capabilities and
+requires a Clerk Bearer token. `X-API-Key` alone does not establish membership.
+
+
 Apply the database migration in `migrations/20261021_multiple_purchase_plans.sql`
 if the unique constraint on `purchase_plans.user_id` has not already been removed.
 Existing rows are preserved. The backend does not run this migration automatically.
@@ -141,7 +155,7 @@ from the verified token, never a client-supplied user ID.
 POST and PUT accept `{"quantity_mt": 500, "purchase_deadline": "2025-11-15"}`.
 Plan responses contain `plan_id`, `quantity_mt`, `purchase_deadline`,
 `scenario_as_of_date` and derived `days_remaining`. Lists are ordered by deadline,
-then plan ID. Scenario-date behavior is unchanged.
+then plan ID and filtered by the verified organisation and applicable owner scope. Scenario-date behavior is unchanged.
 
 Missing plans and other users' plans both return `404`. Missing or invalid tokens
 return `401`. Invalid quantities and deadlines return `422` with `field_errors`.
@@ -217,12 +231,90 @@ Supabase credentials or writes are needed.
 
 ### Sprint 4 analysis integration
 
-Authenticated GET `/api/v1/purchase-plans/recommendation` and `/api/v1/purchase-plans/cost-impact` now expose independent guidance and cost availability. Both select an owned plan using the `plan_id` query parameter and require saved-context query preconditions; see [the complete API/provider contract](../docs/sprint-4-purchase-plan-api-contract.md). Ownership uses the existing verified Clerk subject mapping. Saved-plan GET derives days from the active configured scenario, including previously saved/overdue plans, without updating stored rows.
+Authenticated GET `/api/v1/purchase-plans/recommendation` and `/api/v1/purchase-plans/cost-impact` now expose independent guidance and cost availability. Both select an owned plan using the `plan_id` query parameter and require saved-context query preconditions; see [the complete API/provider contract](../docs/sprint-4-purchase-plan-api-contract.md). Ownership uses the existing verified Clerk subject mapping. Saved-plan GET derives days from the current Singapore date, including previously saved/overdue plans, without updating stored rows.
 
-`PlanAnalysisProvider` is Wunna's normalized ML boundary. Default output is explicitly unavailable; no policy or model adapter is implemented. Register a real provider bean when ready. To test synthetic cost calculations locally, both profile `analysis-fixture` and property `mgo.analysis.fixture-enabled=true` are required. All fixture responses are labelled and authentication remains enabled. Do not enable this profile for real-model output. Forecasts exist independently of plans; calculations are on demand, with no persisted totals or recommendation FK/table changes.
+`PlanAnalysisProvider` uses `PublishedForecastAnalysisProvider` in normal mode. It reads the selected purchase forecast run/horizon and generates deadline-aware guidance from the forecast bounds, reference quote and quote age. To test synthetic cost calculations locally, both profile `analysis-fixture` and property `mgo.analysis.fixture-enabled=true` are required. All fixture responses are labelled and authentication remains enabled. Do not enable this profile for real-model output. Forecasts exist independently of plans; calculations are on demand, with no persisted totals or recommendation FK/table changes.
 
 Run `./mvnw clean test` (`.\mvnw.cmd clean test` on Windows). `PlanAnalysisHttpTests` starts a real local HTTP server on a random port, while stubbing identity decoding and database repositories. It verifies fixture costs, authentication requirements, two-owner isolation, conflicts and active-scenario reads. Unit tests cover signed/fractional calculations, missing inputs, incompatible basis, invalid ranges, provider failure/context checks and fixture opt-in isolation. No shared database credentials or writes are needed by these tests; real Clerk/DB/ML deployment checks remain pending.
 
+
+### Purchase recommendation engine and Windows setup
+
+The purchase recommendation page is connected through these files:
+
+- `frontend/src/app/ClerkApp.tsx` supplies the authenticated purchase forecast and recommendation adapters.
+- `frontend/src/features/recommendations/RecommendationsPage.tsx` displays the selected plan's guidance and costs; `TimingComparison.tsx` compares the 7, 14 and 30 day options.
+- `PublishedForecastAnalysisProvider.java` contains the recommendation rules (deadline, quote freshness and forecast range versus reference price).
+- `PurchaseForecastService.java` loads database observations and news inputs, then calls `RidgeInference.java`.
+- `ridge-regression-model/src/purchase_inference.py` executes `src/predict.py` with the saved Ridge artifacts and the database snapshot supplied by Java.
+
+From the repository root in PowerShell, install the model's matching dependencies once:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r ridge-regression-model/requirements-lock.txt
+```
+
+Start Spring Boot from `backend` with the usual database and Clerk configuration.
+The backend selects `../.venv/Scripts/python.exe` on Windows and
+`../.venv/bin/python` on macOS/Linux. `MGO_RIDGE_PYTHON` can override this with an
+explicit executable path; `MGO_RIDGE_ROOT` overrides the model directory.
+Restart an already-running backend after changing these settings. The purchase
+engine runs Python privately as a subprocess; it does not require a separate FastAPI server.
+
+To verify the saved-model adapter against the repository's historical test data,
+run from the repository root:
+
+```powershell
+$env:MGO_DATA_DIR = (Resolve-Path 'models/ridge-regression/data/raw').Path
+Push-Location ridge-regression-model
+try { ..\.venv\Scripts\python.exe -m pytest -q tests/test_purchase_inference.py }
+finally { Pop-Location; Remove-Item Env:MGO_DATA_DIR }
+```
+
+This CSV is only test input; purchase-plan serving still requires database observations.
+
+Ready estimates still require compatible stored MGO/benchmark observations, the
+previous completed UTC day's GDELT count and tone, sufficient news history, and
+a supported model target. Missing inputs remain unavailable rather than producing demo advice.
+
+### Daily forecast publication API
+
+Authenticated `GET /api/v1/forecast?horizon_days=7` accepts 7, 14 or 30 and needs
+only `Authorization: Bearer <Clerk token>`, not `X-API-Key`. Ready responses contain
+the published prices, independent point estimate, nominal/measured interval
+coverage and paired baseline results, exact target/origin/news dates, source dates,
+history, drivers, run ID, model version and publication time. Responses have
+`Cache-Control: no-store`. Unknown horizons return 422.
+
+A ready run must originate today in Singapore, use yesterday's completed UTC news
+window and source observations no more than seven days old, with at least 40
+chronologically evaluated news-eligible interval rows. Nominal coverage is a target,
+not a guarantee. Points may lie outside independent quantile intervals. Missing,
+stale and failed inputs return `{status:"unavailable",reason,message,last_successful_run?}`
+without prices. A previous good run is identified only as historical metadata.
+Missing tables/database failures return 503 rather than synthetic data.
+
+The cost-impact query accepts `horizon_days` (default 7) and optional `run_id`.
+Supplying the forecast widget's run ID prevents publication changes from mixing
+price/cost snapshots: a changed/unavailable run returns 409. The backend multiplies
+both bounds and the independent point by the owned plan quantity. Forecasts do
+not constitute a purchasing recommendation and are not silently aligned to the
+plan deadline.
+
+Apply the reviewed [publication migration](../docs/migrations/20261026_published_forecasts.sql)
+through the agreed database process before enabling the publisher. This service
+only reads the four publication tables; its server-only JDBC role needs SELECT
+and RLS bypass. The trusted Python publisher writes through the atomic publication
+function. Browser clients get no direct Supabase access. The private
+`forecast-models` storage bucket holds versioned archives/artifacts.
+
+`ForecastServiceTests` cover typed contract serialization, source/news freshness,
+invalid bounds/evidence, failed-run behavior, shared-run cost consistency and
+unsupported horizons. MockMvc tests verify Clerk authentication and no-store.
+`TimeConfigurationTests` verify current Singapore time and isolated historical
+fixture mode. The SQL smoke test verifies atomic rollback and publication order
+on disposable PostgreSQL/PGlite. These checks do not claim shared deployment.
 ## Operational date update (prototype, 2026-10-26)
 
 `GET /api/v1/config` retains `scenario_as_of_date` for compatibility but returns the runtime

@@ -13,8 +13,22 @@ public interface PlanAnalysisProvider {
     record Range(BigDecimal lower, BigDecimal upper) {}
     record Reference(BigDecimal price, LocalDate observation_date, Basis basis) {}
     record Forecast(Range prices, LocalDate target_date, Basis basis,
-            String range_description, String horizon_description, BigDecimal central_estimate) {}
-    record Guidance(String recommendation_id, String action, String explanation) {}
+            String range_description, String horizon_description, BigDecimal central_estimate,
+            java.util.UUID run_id, String model_version) {
+        public Forecast(Range prices, LocalDate target_date, Basis basis, String range_description,
+                String horizon_description, BigDecimal central_estimate) {
+            this(prices, target_date, basis, range_description, horizon_description, central_estimate, null, null);
+        }
+    }
+    record Allocation(LocalDate date, BigDecimal quantity_mt) {}
+    record Evidence(String policy_version, String urgency, String direction, BigDecimal interval_width_fraction,
+            BigDecimal buy_now_cost_usd, BigDecimal alternative_cost_usd, BigDecimal alternative_minus_now_usd,
+            Long reference_age_days, LocalDate supported_target_date, String horizon_description,
+            java.util.List<String> reasons, java.util.List<String> limitations,
+            java.util.List<Allocation> allocations) {}
+    record Guidance(String recommendation_id, String action, String explanation, Evidence evidence) {
+        public Guidance(String id, String action, String explanation) { this(id, action, explanation, null); }
+    }
     record Result<T>(String status, T value, String reason, String message) {
         public static <T> Result<T> ready(T value) { return new Result<>("ready", value, null, null); }
         public static <T> Result<T> unavailable(String reason, String message) {
@@ -26,6 +40,9 @@ public interface PlanAnalysisProvider {
 
     /** 'unavailable', 'fixture', or 'model'. This is provenance, not a confidence claim. */
     String provenance();
+    default boolean recommendationUsesPrices() { return false; }
     Prices prices(LocalDate scenarioDate);
+    default Prices prices(LocalDate scenarioDate, int horizonDays) { return prices(scenarioDate); }
     Recommendation recommendation(PlanAnalysisService.Context context);
+    default Recommendation recommendation(PlanAnalysisService.Context context, Prices prices) { return recommendation(context); }
 }

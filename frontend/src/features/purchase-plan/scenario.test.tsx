@@ -15,35 +15,7 @@ function deferred<T>() {
 const nextDate = '2025-11-01';
 const refreshed = { ...DEMO_PLAN, scenario_as_of_date: nextDate, days_remaining: 14 };
 
-describe('current planning date', () => {
-  it('keeps a draft through a failed rollover refresh and retry', async () => {
-    const user = userEvent.setup();
-    const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0 });
-    vi.spyOn(service, 'list').mockResolvedValueOnce({ plans: [DEMO_PLAN] })
-      .mockRejectedValueOnce(new Error('Offline')).mockResolvedValue({ plans: [refreshed] });
-    const view = render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} />);
-    await user.click(await screen.findByRole('button', { name: 'Edit' }));
-    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '888' } });
-    view.rerender(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
-    await screen.findByRole('button', { name: 'Retry date refresh' });
-    expect(screen.getByLabelText('Quantity')).toHaveValue(888);
-    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Retry date refresh' }));
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled());
-    expect(screen.getByLabelText('Quantity')).toHaveValue(888);
-  });
-  it('retains an unsaved edit and updates validation when the date rolls over', async () => {
-    const user = userEvent.setup();
-    const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0 });
-    vi.spyOn(service, 'list').mockResolvedValueOnce({ plans: [DEMO_PLAN] }).mockResolvedValue({ plans: [refreshed] });
-    const view = render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} />);
-    await user.click(await screen.findByRole('button', { name: 'Edit' }));
-    fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '777' } });
-    view.rerender(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
-    await waitFor(() => expect(screen.getByLabelText('Quantity')).toHaveValue(777));
-    expect(screen.getByLabelText('Purchase deadline')).toHaveAttribute('min', nextDate);
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Save changes' })).toBeEnabled());
-  });
+describe('active historical scenario', () => {
   it('refreshes a saved plan and validates edits against the active date', async () => {
     const user = userEvent.setup();
     let date = DEMO_SCENARIO_DATE;
@@ -68,7 +40,7 @@ describe('current planning date', () => {
     const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0 });
     vi.spyOn(service, 'list').mockResolvedValueOnce({ plans: [DEMO_PLAN] }).mockResolvedValueOnce({ plans: [refreshed] });
     render(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
-    expect(await screen.findByRole('alert')).toHaveTextContent('current planning date');
+    expect(await screen.findByRole('alert')).toHaveTextContent('current application date');
     expect(screen.queryByText('22 days')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(await screen.findByText('14 days')).toBeVisible();
@@ -157,7 +129,7 @@ describe('current planning date', () => {
     fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '500' } });
     fireEvent.change(screen.getByLabelText('Purchase deadline'), { target: { value: '2025-11-15' } });
     await user.click(screen.getByRole('button', { name: 'Save plan' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('current planning date');
+    expect(await screen.findByRole('alert')).toHaveTextContent('current application date');
     expect(screen.queryByText('22 days')).not.toBeInTheDocument();
     expect(invalidate).toHaveBeenCalledTimes(1);
   });

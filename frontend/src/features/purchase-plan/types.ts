@@ -16,7 +16,10 @@ export interface PlanResponse { plan: PurchasePlan | null }
 export interface SavedPlanResponse { plan: PurchasePlan }
 
 /** Analysis view models. The API adapter validates the Sprint 4 transport contract. */
+export type Urgency = 'LOW' | 'NORMAL' | 'HIGH';
+
 export interface PlanResultContext {
+  urgency?: Urgency;
   plan_id: string;
   quantity_mt: number;
   purchase_deadline: string;
@@ -39,6 +42,8 @@ export interface ReferencePrice {
 export interface NumericRange { lower: number; upper: number }
 
 export interface PlanForecast {
+  run_id?: string;
+  model_version?: string;
   central_estimate?: number;
   prices: NumericRange;
   target_date: string;
@@ -75,7 +80,23 @@ export interface PlanCostImpact {
   difference_total: NumericRange;
 }
 
+export interface RecommendationEvidence {
+  policy_version: string;
+  urgency: Urgency;
+  direction: string;
+  interval_width_fraction: number | null;
+  buy_now_cost_usd: number | null;
+  alternative_cost_usd: number | null;
+  alternative_minus_now_usd: number | null;
+  reference_age_days: number | null;
+  supported_target_date: string | null;
+  horizon_description: string | null;
+  reasons: string[];
+  limitations: string[];
+  allocations: { date: string; quantity_mt: number }[];
+}
 export interface CurrentRecommendation {
+  evidence?: RecommendationEvidence;
   recommendation_id: string;
   action: string;
   explanation: string;
