@@ -23,9 +23,10 @@
   "alpha": 1000.0,
   "gamma": 0.0,
   "trained_to_origin": "2026-09-25",
+  "trained_through_target_date": "2026-10-06",
   "n_rows": 144,
   "train_mean_ret": 0.03216869095629983,
-  "q_scale": 2.3156640577809884,
+  "q_scale": 2.3156640577809786,
   "q_flat": 0.17366037901279413,
   "range_mode": "scaled",
   "vol_floor": 0.003,
@@ -110,7 +111,7 @@
     "interval_reliable": true,
     "coverage_80": 0.8333333333333334,
     "coverage_80_flat": 1.0,
-    "mean_log_width_scaled": 0.37892426541626456,
+    "mean_log_width_scaled": 0.37892426541626495,
     "mean_log_width_flat": 0.4665390629395919,
     "holdout_coverage_80": 0.8245614035087719,
     "holdout_coverage_80_flat": 1.0,
@@ -169,11 +170,11 @@
             ]
           },
           "ema10": {
-            "MAE": 114.07370076208812,
-            "RMSE": 151.15451471896384,
-            "MAE_skill": -0.05195149450153935,
+            "MAE": 114.07370076208817,
+            "RMSE": 151.15451471896387,
+            "MAE_skill": -0.05195149450153913,
             "paired_gain_CI95": [
-              -25.292177455638168,
+              -25.29217745563815,
               13.858411966480633
             ]
           }
@@ -234,11 +235,11 @@
           },
           "ema10": {
             "MAE": 163.58334612890877,
-            "RMSE": 199.61440070358134,
+            "RMSE": 199.61440070358137,
             "MAE_skill": 0.04701856526981518,
             "paired_gain_CI95": [
-              -26.809699696609417,
-              53.50638968141001
+              -26.809699696609396,
+              53.50638968141003
             ]
           }
         },
@@ -309,8 +310,98 @@
         "oracle_gasoil_MAE": 53.29200739417936
       }
     },
-    "evidence": "no_edge"
+    "evidence": "no_edge",
+    "quantile_intervals": {
+      "nominal_coverage": 0.8,
+      "method": "split_conformal_quantile",
+      "dev_end": "2026-07-31",
+      "pinball_scope": "sorted crossing-repaired raw return endpoints",
+      "limitations": [
+        "Dependent overlapping market outcomes do not guarantee nominal coverage.",
+        "Sparse observed MGO quotes; counts are not independent sample counts."
+      ],
+      "all": {
+        "n": 79,
+        "raw": {
+          "coverage": 0.31645569620253167,
+          "lower_tail_rate": 0.27848101265822783,
+          "upper_tail_rate": 0.4050632911392405,
+          "mean_width": 134.50721607261718,
+          "interval_score": 831.7146218108875,
+          "pinball_q10": 0.02596541298194769,
+          "pinball_q90": 0.04096106586676762
+        },
+        "calibrated": {
+          "coverage": 0.7848101265822784,
+          "lower_tail_rate": 0.10126582278481013,
+          "upper_tail_rate": 0.11392405063291139,
+          "mean_width": 615.8354230708773,
+          "interval_score": 777.8508039479321
+        },
+        "baseline": {
+          "coverage": 0.810126582278481,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.189873417721519,
+          "mean_width": 431.8521819070661,
+          "interval_score": 630.8726834223564
+        }
+      },
+      "dev": {
+        "n": 8,
+        "raw": {
+          "coverage": 0.125,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.875,
+          "mean_width": 45.06145785801586,
+          "interval_score": 1967.538149998255,
+          "pinball_q10": 0.02103583654999691,
+          "pinball_q90": 0.15413075161486453
+        },
+        "calibrated": {
+          "coverage": 0.375,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.625,
+          "mean_width": 374.0426775426455,
+          "interval_score": 1109.2740160439946
+        },
+        "baseline": {
+          "coverage": 0.375,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.625,
+          "mean_width": 357.92032094952873,
+          "interval_score": 1125.8629555104349
+        }
+      },
+      "holdout": {
+        "n": 57,
+        "raw": {
+          "coverage": 0.3508771929824561,
+          "lower_tail_rate": 0.2807017543859649,
+          "upper_tail_rate": 0.3684210526315789,
+          "mean_width": 134.1813353962669,
+          "interval_score": 744.1131638237637,
+          "pinball_q10": 0.02875111420645286,
+          "pinball_q90": 0.02837549113876065
+        },
+        "calibrated": {
+          "coverage": 0.7894736842105263,
+          "lower_tail_rate": 0.14035087719298245,
+          "upper_tail_rate": 0.07017543859649122,
+          "mean_width": 648.6634355527538,
+          "interval_score": 770.0207053997106
+        },
+        "baseline": {
+          "coverage": 0.8245614035087719,
+          "lower_tail_rate": 0.0,
+          "upper_tail_rate": 0.17543859649122806,
+          "mean_width": 398.96181246004255,
+          "interval_score": 567.0158219902304
+        }
+      }
+    }
   },
   "horizon_days": 14,
-  "tolerance_days": 3
+  "tolerance_days": 3,
+  "interval_version": 1,
+  "training_run_id": "ce15faa0f91a47408735926cbdeb72ea"
 }

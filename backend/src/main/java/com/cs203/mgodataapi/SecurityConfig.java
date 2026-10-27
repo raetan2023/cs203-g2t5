@@ -34,7 +34,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher("/api/v1/purchase-plan/**", "/api/v1/purchase-plans/**", "/api/v1/organisation")
+                                .securityMatcher("/api/v1/purchase-plan/**", "/api/v1/purchase-plans/**", "/api/v1/organisation", "/api/v1/forecast")
                 .cors(Customizer.withDefaults())
                 // No browser sessions or forms, so there is no cookie for a forged request to ride on.
                 .csrf(csrf -> csrf.disable())
@@ -50,6 +50,7 @@ public class SecurityConfig {
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/purchase-plans", "/api/v1/purchase-plans/*").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
+                        .requestMatchers(HttpMethod.GET, "/api/v1/forecast").authenticated()
                         .anyRequest().denyAll())
                 // Set on both: the resource server answers a rejected token, while the
                 // outer handler answers a request that carries no token at all.

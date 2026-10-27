@@ -1,0 +1,88 @@
+{
+  "nominal_coverage": 0.8,
+  "method": "split_conformal_quantile",
+  "dev_end": "2026-07-31",
+  "pinball_scope": "sorted crossing-repaired raw return endpoints",
+  "limitations": [
+    "Dependent overlapping market outcomes do not guarantee nominal coverage.",
+    "Sparse observed MGO quotes; counts are not independent sample counts."
+  ],
+  "all": {
+    "n": 107,
+    "raw": {
+      "coverage": 0.514018691588785,
+      "lower_tail_rate": 0.2336448598130841,
+      "upper_tail_rate": 0.2523364485981308,
+      "mean_width": 176.50024394002216,
+      "interval_score": 556.8763753387783,
+      "pinball_q10": 0.022562895272041295,
+      "pinball_q90": 0.025593734973725992
+    },
+    "calibrated": {
+      "coverage": 0.8317757009345794,
+      "lower_tail_rate": 0.028037383177570093,
+      "upper_tail_rate": 0.14018691588785046,
+      "mean_width": 452.04906450101856,
+      "interval_score": 522.950115457093
+    },
+    "baseline": {
+      "coverage": 0.794392523364486,
+      "lower_tail_rate": 0.028037383177570093,
+      "upper_tail_rate": 0.17757009345794392,
+      "mean_width": 255.63863773575275,
+      "interval_score": 353.8892338390214
+    }
+  },
+  "dev": {
+    "n": 36,
+    "raw": {
+      "coverage": 0.4166666666666667,
+      "lower_tail_rate": 0.4444444444444444,
+      "upper_tail_rate": 0.1388888888888889,
+      "mean_width": 128.72807032935316,
+      "interval_score": 618.5758278845769,
+      "pinball_q10": 0.03330430410520996,
+      "pinball_q90": 0.025777837742279704
+    },
+    "calibrated": {
+      "coverage": 0.8611111111111112,
+      "lower_tail_rate": 0.05555555555555555,
+      "upper_tail_rate": 0.08333333333333333,
+      "mean_width": 491.66828071162735,
+      "interval_score": 578.6166236066438
+    },
+    "baseline": {
+      "coverage": 0.6944444444444444,
+      "lower_tail_rate": 0.0,
+      "upper_tail_rate": 0.3055555555555556,
+      "mean_width": 237.43523199614194,
+      "interval_score": 429.3324808010359
+    }
+  },
+  "holdout": {
+    "n": 64,
+    "raw": {
+      "coverage": 0.546875,
+      "lower_tail_rate": 0.140625,
+      "upper_tail_rate": 0.3125,
+      "mean_width": 198.4422997566151,
+      "interval_score": 548.037298685578,
+      "pinball_q10": 0.016957463402998287,
+      "pinball_q90": 0.0271951916242748
+    },
+    "calibrated": {
+      "coverage": 0.796875,
+      "lower_tail_rate": 0.015625,
+      "upper_tail_rate": 0.1875,
+      "mean_width": 387.45596980420066,
+      "interval_score": 457.08522149294095
+    },
+    "baseline": {
+      "coverage": 0.828125,
+      "lower_tail_rate": 0.046875,
+      "upper_tail_rate": 0.125,
+      "mean_width": 250.6941364842947,
+      "interval_score": 307.014649391694
+    }
+  }
+}

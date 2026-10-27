@@ -35,6 +35,7 @@ public class ApiKeyFilter extends OncePerRequestFilter {
         return "OPTIONS".equals(request.getMethod())
                 || !request.getRequestURI().startsWith("/api/")
                 || request.getRequestURI().equals("/api/v1/organisation")
+                || request.getRequestURI().equals("/api/v1/forecast")
                 || request.getRequestURI().equals("/api/v1/purchase-plan")
                 || request.getRequestURI().startsWith("/api/v1/purchase-plan/")
                 || request.getRequestURI().equals("/api/v1/purchase-plans")
