@@ -39,6 +39,8 @@ export interface ReferencePrice {
 export interface NumericRange { lower: number; upper: number }
 
 export interface PlanForecast {
+  run_id?: string;
+  model_version?: string;
   central_estimate?: number;
   prices: NumericRange;
   target_date: string;

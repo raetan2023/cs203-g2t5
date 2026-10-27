@@ -7,6 +7,7 @@ Honest-evaluation rules:
    has been confirmed on quotes that arrived after the model was frozen (see src/evaluate_new.py).
 """
 import argparse, json
+from uuid import uuid4
 import joblib
 import numpy as np
 import pandas as pd
@@ -22,6 +23,7 @@ from .intervals import add_range, mean_log_width, coverage_on, final_scales
 from .metrics import score_splits
 from .model import make_model
 from .predict import evidence_label
+from .quantile import fit_quantile, walk_forward_quantile, summarize_quantile
 
 
 def _range_stats(wf):
@@ -29,8 +31,8 @@ def _range_stats(wf):
     res, cov, n_ok = add_range(wf, scaled=True)
     res_f, cov_f, _ = add_range(wf, scaled=False)
     hold = res["origin"] >= cut
-    # serve whichever range method is closer to the 80% target on the backtest
-    mode = "scaled" if abs(cov - 0.80) <= abs(cov_f - 0.80) else "flat"
+    # Legacy nowcast/diagnostic path: fixed rule, independent of holdout outcomes.
+    mode = "scaled"  # fixed legacy rule; never select using holdout coverage
     return res, {
         "range_mode": mode, "n_with_interval": n_ok, "interval_reliable": n_ok >= MIN_INTERVAL_ROWS,
         "coverage_80": cov, "coverage_80_flat": cov_f,
@@ -47,7 +49,8 @@ def _save(name, res, table, features, gamma, served, full):
     q_scale, q_flat = final_scales(res)
     joblib.dump(final, ARTIFACTS / f"ridge_{name}.joblib")
     meta = {"features": features, "alpha": float(final[-1].alpha_), "gamma": float(gamma),
-            "trained_to_origin": str(table["origin"].max().date()), "n_rows": int(len(table)),
+            "trained_to_origin": str(table["origin"].max().date()),
+            "trained_through_target_date": str(table["target_date"].max().date()), "n_rows": int(len(table)),
             "train_mean_ret": float(table["y"].mean()), "q_scale": q_scale, "q_flat": q_flat,
             "range_mode": full["range_mode"],
             "vol_floor": VOL_FLOOR, "lags": LAG_DAYS, "dev_end": config.DEV_END,
@@ -69,9 +72,23 @@ def run(horizons=HORIZONS, data_path=None, save=True, nowcast=True):
                   "scope": f"holdout: origins >= {config.DEV_END}" if "holdout" in splits else "all rows"}
         summary[f"{h}d"] = {"gamma": gamma, "rows_total": int(len(table)), **rng, "splits": splits,
                             "evidence": evidence_label(served)}
+        quantile_results = walk_forward_quantile(table)
+        quantile_report = summarize_quantile(quantile_results)
+        summary[f"{h}d"]["quantile_intervals"] = quantile_report
         if save:
+            bundle = fit_quantile(table)
+            run_id = uuid4().hex
+            bundle["training_run_id"] = run_id
+            bundle["evaluation"] = quantile_report
+            bundle["horizon_days"] = h
+            ARTIFACTS.mkdir(exist_ok=True)
+            REPORTS.mkdir(exist_ok=True)
+            joblib.dump(bundle, ARTIFACTS / f"quantile_{h}d.joblib")
+            quantile_results.to_csv(REPORTS / f"quantile_backtest_{h}d.csv", index=False)
+            (REPORTS / f"quantile_metrics_{h}d.json").write_text(
+                json.dumps(quantile_report, indent=2, allow_nan=False))
             meta = _save(f"{h}d", res, table, FEATURES, gamma, served, summary[f"{h}d"])
-            meta.update(horizon_days=h, tolerance_days=TOLERANCE_DAYS)
+            meta.update(horizon_days=h, tolerance_days=TOLERANCE_DAYS, interval_version=1, training_run_id=run_id)
             (ARTIFACTS / f"ridge_{h}d.json").write_text(json.dumps(meta, indent=2, default=str))
     if nowcast:
         table = build_nowcast_table(p)
@@ -111,9 +128,14 @@ if __name__ == "__main__":
         for tag in ("dev", "holdout", "all"):
             if tag in sp:
                 print(_line(tag, sp[tag]))
-        print(f"  range [{v['range_mode']}]: coverage {v['coverage_80']:.2f} (flat {v['coverage_80_flat']:.2f}), holdout {v['holdout_coverage_80']:.2f} "
+        print(f"  legacy ridge diagnostic range [{v['range_mode']}]: coverage {v['coverage_80']:.2f} (flat {v['coverage_80_flat']:.2f}), holdout {v['holdout_coverage_80']:.2f} "
               f"(flat {v['holdout_coverage_80_flat']:.2f}), width {v['mean_log_width_scaled']:.3f} vs flat {v['mean_log_width_flat']:.3f}, "
               f"rows with range {v['n_with_interval']}" + ("" if v["interval_reliable"] else "  <-- too few rows to trust"))
         if "by_gap" in v:
             for g, d in v["by_gap"].items():
                 print(f"  gap {g:4s} n={d['n']:3d} persist={d['persist_MAE']:.1f} transfer={d['transfer_MAE']:.1f} ridge={d['ridge_MAE']:.1f}")
+        if "quantile_intervals" in v:
+            q = v["quantile_intervals"]["holdout"]
+            print(f"  SERVED quantile holdout: n={q['n']} coverage={q['calibrated']['coverage']} "
+                  f"baseline={q['baseline']['coverage']} mean width={q['calibrated']['mean_width']} "
+                  f"baseline width={q['baseline']['mean_width']}")

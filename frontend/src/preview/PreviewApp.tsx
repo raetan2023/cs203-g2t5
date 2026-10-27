@@ -6,8 +6,13 @@ import { DEMO_PLAN, DEMO_SCENARIO_DATE } from '../features/purchase-plan/fixture
 import { createMockPlanService } from '../features/purchase-plan/mockService';
 import { createMockAuthService, DEMO_USER } from './mockAuthService';
 import './preview.css';
+import { buildMockForecast } from '../features/forecast/mockService';
+import ForecastWidget from '../features/forecast/ForecastWidget';
+import type { ReadyForecast } from '../features/forecast/apiService';
+function PreviewMarketDashboard() { return <main><ForecastWidget /></main>; }
 
 const examples = {
+  market: 'Market dashboard - synthetic forecast',
   'rec-ready': 'Recommendation - ready', 'rec-loading': 'Recommendation - loading', 'rec-error': 'Recommendation - fails once', 'rec-unavailable': 'Recommendation - unavailable', 'rec-missing': 'Recommendation - missing forecast', 'rec-unsupported': 'Recommendation - unsupported context',
   'rec-empty': 'Recommendation - no saved plan',
   login: 'Sign in', signup: 'Create account', home: 'Home', 'home-loading': 'Home loading (8 seconds)',
@@ -33,13 +38,13 @@ export function PreviewApp() {
   }), [example, revision, slow]);
 
   function select(next: Example) {
-    navigate(next.startsWith('rec-') ? `/purchase-plans/recommendation?plan_id=${RECOMMENDATION_DEMO_PLAN.plan_id}` : next.startsWith('signup') ? '/signup' : publicExamples.includes(next) ? '/login' : ['home', 'home-loading', 'session-error', 'logout-error'].includes(next) ? '/home' : '/purchase-plans', true);
+    navigate(next === 'market' ? '/market-dashboard' : next.startsWith('rec-') ? `/purchase-plans/recommendation?plan_id=${RECOMMENDATION_DEMO_PLAN.plan_id}` : next.startsWith('signup') ? '/signup' : publicExamples.includes(next) ? '/login' : ['home', 'home-loading', 'session-error', 'logout-error'].includes(next) ? '/home' : '/purchase-plans', true);
     setExample(next); setRevision(value => value + 1);
     setScenarioDate(DEMO_SCENARIO_DATE);
   }
 
   return <>
-    <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock createRecommendationService={() => createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} createPlanService={() => createMockPlanService({
+    <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock MarketDashboard={PreviewMarketDashboard} createForecastService={() => ({ read: async horizon => buildMockForecast(horizon) as ReadyForecast })} createRecommendationService={() => createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} createPlanService={() => createMockPlanService({
       initialPlans: example === 'multiple' ? [DEMO_PLAN, { ...DEMO_PLAN, plan_id: 'second-demo-plan', quantity_mt: 250 }] : undefined,
       initialPlan: example === 'rec-empty' ? null : example.startsWith('rec-') ? RECOMMENDATION_DEMO_PLAN : ['saved', 'edit-error', 'delete-error'].includes(example) ? DEMO_PLAN : null,
       getScenarioDate: () => activeDate.current,

@@ -40,7 +40,7 @@ describe('active historical scenario', () => {
     const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0 });
     vi.spyOn(service, 'list').mockResolvedValueOnce({ plans: [DEMO_PLAN] }).mockResolvedValueOnce({ plans: [refreshed] });
     render(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
-    expect(await screen.findByRole('alert')).toHaveTextContent('active historical scenario');
+    expect(await screen.findByRole('alert')).toHaveTextContent('current application date');
     expect(screen.queryByText('22 days')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(await screen.findByText('14 days')).toBeVisible();
@@ -129,7 +129,7 @@ describe('active historical scenario', () => {
     fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '500' } });
     fireEvent.change(screen.getByLabelText('Purchase deadline'), { target: { value: '2025-11-15' } });
     await user.click(screen.getByRole('button', { name: 'Save plan' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('active historical scenario');
+    expect(await screen.findByRole('alert')).toHaveTextContent('current application date');
     expect(screen.queryByText('22 days')).not.toBeInTheDocument();
     expect(invalidate).toHaveBeenCalledTimes(1);
   });

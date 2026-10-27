@@ -4,9 +4,10 @@ import type { PurchasePlan } from '../types';
 import { PlanButton } from './Primitives';
 import { useId, type RefObject } from 'react';
 
-export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef, busy = false }: {
+export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef, busy = false, canEdit = true }: {
   plan: PurchasePlan;
   busy?: boolean;
+  canEdit?: boolean;
   onEdit(): void;
   onDelete(): void;
   editRef?: RefObject<HTMLButtonElement | null>;
@@ -19,17 +20,17 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
       : `${plan.days_remaining} ${plan.days_remaining === 1 ? 'day' : 'days'}`;
       
   return <section className="pp-card pp-summary" aria-labelledby={headingId}>
-    <h2 id={headingId}>Your purchase plan</h2>
-    <p className="pp-card-description">Your saved purchase quantity and deadline.</p>
+    <h2 id={headingId}>{canEdit ? "Your purchase plan" : "Purchase plan"}</h2>
+    <p className="pp-card-description">{canEdit ? "Your saved purchase quantity and deadline." : "An organisation buyer’s purchase quantity and deadline."}</p>
     <dl className="pp-details">
       <div><dt>Quantity</dt><dd>{new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt)} MT</dd></div>
       <div><dt>Purchase deadline</dt><dd><time dateTime={plan.purchase_deadline}>{formatDate(plan.purchase_deadline)}</time></dd></div>
-      <div><dt>Historical scenario date</dt><dd><time dateTime={plan.scenario_as_of_date}>{formatDate(plan.scenario_as_of_date)}</time></dd></div>
+      <div><dt>Application date</dt><dd><time dateTime={plan.scenario_as_of_date}>{formatDate(plan.scenario_as_of_date)}</time></dd></div>
       <div><dt>Time remaining</dt><dd>{timeRemaining}<span className="pp-time-note">Calculated from scenario date</span></dd></div>
     </dl>
     <div className="pp-actions">
-      <PlanButton ref={deleteRef} variant="danger-outline" disabled={busy} onClick={onDelete}>Delete</PlanButton>
-      <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>
+      {canEdit && <PlanButton ref={deleteRef} variant="danger-outline" disabled={busy} onClick={onDelete}>Delete</PlanButton>}
+      {canEdit && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}
       {!busy && <AppLink className="pp-button pp-button--primary" style={{ textDecoration: 'none' }} href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>View recommendation &rarr;</AppLink>}
     </div>
   </section>;
