@@ -6,10 +6,19 @@ import { useAnalysis } from './useAnalysis';
 
 const amount = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 0 });
 const price = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 2 });
-const compact = (value: number) => Math.abs(value) >= 1_000_000
-  ? `${(value / 1_000_000).toFixed(2)}m` : amount(value);
-const change = (value: number) => value === 0 ? 'no change'
-  : `USD ${Math.abs(value) >= 100_000 ? `${Math.round(Math.abs(value) / 1_000)}k` : amount(Math.abs(value))} ${value < 0 ? 'less' : 'more'}`;
+const compact = (value: number) => {
+  const magnitude = Math.abs(value);
+  if (magnitude >= 1_000_000_000) return `${price(value / 1_000_000_000)}bn`;
+  if (magnitude >= 1_000_000) return `${price(value / 1_000_000)}m`;
+  return amount(value);
+};
+const change = (value: number) => {
+  if (value === 0) return 'no change';
+  const magnitude = Math.abs(value);
+  const formatted = magnitude >= 100_000 && magnitude < 1_000_000
+    ? `${amount(Math.round(magnitude / 1_000))}k` : compact(magnitude);
+  return `USD ${formatted} ${value < 0 ? 'less' : 'more'}`;
+};
 
 /** Display backend totals; formatting never changes the plan or forecast calculation. */
 export function PurchaseImpact({ plan, service, reload, horizonDays, runId, published }: {
