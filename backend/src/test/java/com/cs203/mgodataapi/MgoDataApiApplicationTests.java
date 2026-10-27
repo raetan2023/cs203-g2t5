@@ -116,13 +116,13 @@ class MgoDataApiApplicationTests {
     void defaultAnalysisIsExplicitlyUnavailable() throws Exception {
         UUID owner = UUID.randomUUID(), planId = UUID.randomUUID();
         when(users.resolve("analysis_owner", null)).thenReturn(owner);
-        when(plans.findByIdAndUser(planId, owner)).thenReturn(Optional.of(new PurchasePlan(planId, owner,
+        when(plans.findByIdAndUser(planId, owner, "org_a")).thenReturn(Optional.of(new PurchasePlan(planId, owner,
                 new BigDecimal("100"), LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"))));
         for (String section : new String[]{"recommendation", "cost-impact"}) {
             mvc.perform(get("/api/v1/purchase-plans/" + section)
                     .param("plan_id", planId.toString()).param("quantity_mt", "100")
                     .param("purchase_deadline", "2025-11-15").param("scenario_as_of_date", "2025-10-24")
-                    .with(jwt().jwt(token -> token.subject("analysis_owner"))))
+                    .with(jwt().jwt(token -> token.subject("analysis_owner").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.provenance").value("unavailable"))
                     .andExpect(jsonPath("$.recommendation.status").value("unavailable"))
@@ -208,11 +208,11 @@ class MgoDataApiApplicationTests {
     void purchasePlanUsesTheUserBehindTheToken() throws Exception {
         UUID userId = UUID.fromString("8a9d4260-9070-4bb1-b5af-a71f458a3f47");
         when(users.resolve("user_2abc", null)).thenReturn(userId);
-        when(plans.findByUser(userId)).thenReturn(List.of(new PurchasePlan(
+        when(plans.findByUser(userId, "org_a")).thenReturn(List.of(new PurchasePlan(
                 UUID.randomUUID(), userId, new BigDecimal("500"),
                 LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"))));
 
-        mvc.perform(get("/api/v1/purchase-plans").with(jwt().jwt(token -> token.subject("user_2abc"))))
+        mvc.perform(get("/api/v1/purchase-plans").with(jwt().jwt(token -> token.subject("user_2abc").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.plans[0].days_remaining").value(22));
     }
@@ -222,9 +222,9 @@ class MgoDataApiApplicationTests {
     void firstRequestFromANewAccountCreatesItsUserRecord() throws Exception {
         UUID userId = UUID.randomUUID();
         when(users.resolve("user_new", null)).thenReturn(userId);
-        when(plans.findByUser(userId)).thenReturn(List.of());
+        when(plans.findByUser(userId, "org_a")).thenReturn(List.of());
 
-        mvc.perform(get("/api/v1/purchase-plans").with(jwt().jwt(token -> token.subject("user_new"))))
+        mvc.perform(get("/api/v1/purchase-plans").with(jwt().jwt(token -> token.subject("user_new").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.plans").isEmpty());
         verify(users).resolve("user_new", null);
@@ -235,18 +235,18 @@ class MgoDataApiApplicationTests {
     void createSavesAgainstTheTokensUser() throws Exception {
         UUID userId = UUID.randomUUID();
         when(users.resolve("user_2abc", null)).thenReturn(userId);
-        when(plans.findByUser(userId)).thenReturn(List.of());
-        when(plans.insert(any(), any(), any(), any())).thenReturn(new PurchasePlan(
+        when(plans.findByUser(userId, "org_a")).thenReturn(List.of());
+        when(plans.insert(any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("org_a"))).thenReturn(new PurchasePlan(
                 UUID.randomUUID(), userId, new BigDecimal("500"),
                 LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24")));
 
         mvc.perform(post("/api/v1/purchase-plans")
-                        .with(jwt().jwt(token -> token.subject("user_2abc")))
+                        .with(jwt().jwt(token -> token.subject("user_2abc").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer"))))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity_mt\": 500, \"purchase_deadline\": \"2025-11-15\"}"))
                 .andExpect(status().isCreated());
         verify(plans).insert(userId, new BigDecimal("500"),
-                LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"));
+                LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"), "org_a");
     }
 
     /** Field errors still reach the form when the caller is signed in. */
@@ -255,7 +255,7 @@ class MgoDataApiApplicationTests {
         when(users.resolve("user_2abc", null)).thenReturn(UUID.randomUUID());
 
         mvc.perform(post("/api/v1/purchase-plans")
-                        .with(jwt().jwt(token -> token.subject("user_2abc")))
+                        .with(jwt().jwt(token -> token.subject("user_2abc").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer"))))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity_mt\": -5, \"purchase_deadline\": \"2025-11-15\"}"))
                 .andExpect(status().isUnprocessableContent())
@@ -295,15 +295,15 @@ class MgoDataApiApplicationTests {
         PurchasePlan first = plan(owner);
         PurchasePlan second = plan(owner);
         when(users.resolve("buyer", null)).thenReturn(owner);
-        when(plans.findByUser(owner)).thenReturn(List.of(first, second));
-        when(plans.insert(any(), any(), any(), any())).thenReturn(plan(owner));
+        when(plans.findByUser(owner, "org_a")).thenReturn(List.of(first, second));
+        when(plans.insert(any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("org_a"))).thenReturn(plan(owner));
 
-        mvc.perform(get("/api/v1/purchase-plans").with(jwt().jwt(t -> t.subject("buyer"))))
+        mvc.perform(get("/api/v1/purchase-plans").with(jwt().jwt(t -> t.subject("buyer").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.plans.length()").value(2))
                 .andExpect(jsonPath("$.plans[0].plan_id").value(first.planId().toString()))
                 .andExpect(jsonPath("$.plans[1].plan_id").value(second.planId().toString()));
-        mvc.perform(post("/api/v1/purchase-plans").with(jwt().jwt(t -> t.subject("buyer")))
+        mvc.perform(post("/api/v1/purchase-plans").with(jwt().jwt(t -> t.subject("buyer").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer"))))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity_mt\":500,\"purchase_deadline\":\"2025-11-15\"}"))
                 .andExpect(status().isCreated());
@@ -315,27 +315,27 @@ class MgoDataApiApplicationTests {
         PurchasePlan selected = plan(owner);
         UUID id = selected.planId();
         when(users.resolve("buyer", null)).thenReturn(owner);
-        when(plans.findByIdAndUser(id, owner)).thenReturn(java.util.Optional.of(selected));
+        when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(java.util.Optional.of(selected));
         when(plans.update(id, owner, new BigDecimal("500"), LocalDate.parse("2025-11-15"),
-                LocalDate.parse("2025-10-24"))).thenReturn(java.util.Optional.of(selected));
-        when(plans.delete(id, owner)).thenReturn(true);
+                LocalDate.parse("2025-10-24"), "org_a")).thenReturn(java.util.Optional.of(selected));
+        when(plans.delete(id, owner, "org_a")).thenReturn(true);
         String url = "/api/v1/purchase-plans/" + id;
 
-        mvc.perform(get(url).with(jwt().jwt(t -> t.subject("buyer"))))
+        mvc.perform(get(url).with(jwt().jwt(t -> t.subject("buyer").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.plan.plan_id").value(id.toString()));
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(url)
-                        .with(jwt().jwt(t -> t.subject("buyer")))
+                        .with(jwt().jwt(t -> t.subject("buyer").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer"))))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity_mt\":500,\"purchase_deadline\":\"2025-11-15\"}"))
                 .andExpect(status().isOk());
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(url)
-                        .with(jwt().jwt(t -> t.subject("buyer"))))
+                        .with(jwt().jwt(t -> t.subject("buyer").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isNoContent());
-        verify(plans).findByIdAndUser(id, owner);
+        verify(plans).findByIdAndUser(id, owner, "org_a");
         verify(plans).update(id, owner, new BigDecimal("500"), LocalDate.parse("2025-11-15"),
-                LocalDate.parse("2025-10-24"));
-        verify(plans).delete(id, owner);
+                LocalDate.parse("2025-10-24"), "org_a");
+        verify(plans).delete(id, owner, "org_a");
     }
 
     @Test
@@ -344,23 +344,23 @@ class MgoDataApiApplicationTests {
         UUID other = UUID.randomUUID();
         PurchasePlan selected = plan(owner);
         when(users.resolve("other", null)).thenReturn(other);
-        when(plans.findByIdAndUser(selected.planId(), other)).thenReturn(java.util.Optional.empty());
-        when(plans.update(any(), any(), any(), any(), any())).thenReturn(java.util.Optional.empty());
+        when(plans.findByIdAndUser(selected.planId(), other, "org_a")).thenReturn(java.util.Optional.empty());
+        when(plans.update(any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("org_a"))).thenReturn(java.util.Optional.empty());
         String url = "/api/v1/purchase-plans/" + selected.planId();
-        mvc.perform(get(url).with(jwt().jwt(t -> t.subject("other"))))
+        mvc.perform(get(url).with(jwt().jwt(t -> t.subject("other").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isNotFound());
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(url)
-                        .with(jwt().jwt(t -> t.subject("other")))
+                        .with(jwt().jwt(t -> t.subject("other").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer"))))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"quantity_mt\":500,\"purchase_deadline\":\"2025-11-15\"}"))
                 .andExpect(status().isNotFound());
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(url)
-                        .with(jwt().jwt(t -> t.subject("other"))))
+                        .with(jwt().jwt(t -> t.subject("other").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isNotFound());
-        verify(plans).findByIdAndUser(selected.planId(), other);
+        verify(plans).findByIdAndUser(selected.planId(), other, "org_a");
         verify(plans).update(selected.planId(), other, new BigDecimal("500"),
-                LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"));
-        verify(plans).delete(selected.planId(), other);
+                LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"), "org_a");
+        verify(plans).delete(selected.planId(), other, "org_a");
     }
 
     @Test
@@ -373,9 +373,9 @@ class MgoDataApiApplicationTests {
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(url))
                 .andExpect(status().isUnauthorized());
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/purchase-plans")
-                        .with(jwt())).andExpect(status().isMethodNotAllowed());
+                        .with(jwt().jwt(t -> t.subject("buyer").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer"))))).andExpect(status().isMethodNotAllowed());
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/purchase-plan")
-                        .with(jwt())).andExpect(status().isNotFound());
+                        .with(jwt().jwt(t -> t.subject("buyer").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer"))))).andExpect(status().isForbidden());
         org.mockito.Mockito.verifyNoInteractions(plans);
     }
 

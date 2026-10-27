@@ -14,13 +14,14 @@ type PageState =
 
 export interface PurchasePlanPageProps {
   service: PurchasePlanService;
+  canEdit?: boolean;
   /** Required even before a plan exists: the API's null response has no date. */
   scenarioDate: string;
   /** Future analysis consumers clear cached results on context changes or successful writes. */
   onInvalidateAnalysis?: () => void;
 }
 
-export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }: PurchasePlanPageProps) {
+export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, canEdit = true }: PurchasePlanPageProps) {
   const [state, setState] = useState<PageState>({ mode: 'loading' });
   const [plans, setPlans] = useState<PurchasePlan[]>([]);
   const [attempt, setAttempt] = useState(0);
@@ -81,7 +82,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
   }, [state]);
 
   async function save(input: PlanInput) {
-    if (state.mode !== 'form') return;
+    if (!canEdit || state.mode !== 'form') return;
     setWritingServices(previous => new Set(previous).add(service));
     let response;
     try {
@@ -104,7 +105,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
   }
 
   async function remove() {
-    if (state.mode !== 'view' || !state.plan) return;
+    if (!canEdit || state.mode !== 'view' || !state.plan) return;
     const planId = state.plan.plan_id;
     setWritingServices(previous => new Set(previous).add(service));
     try {
@@ -145,12 +146,12 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
     <div className="pp-sr-only" role="status">{announcement}</div>
     {state.mode === 'loading' ? <LoadingState /> : <>
       <header className="pp-heading">
-        <div><h1>Purchase plans</h1><p>{saving ? 'Saving your purchase plan...' : 'Manage your purchase quantity and deadline.'}</p></div>
-        <div className="pp-create">
+        <div><h1>{canEdit ? "Purchase plans" : "Organisation purchase plans"}</h1><p>{saving ? 'Saving your purchase plan...' : canEdit ? 'Manage your purchase quantity and deadline.' : 'View plans in your organisation. Only buyers can create or change their own plans.'}</p></div>
+        {canEdit && <div className="pp-create">
           <PlanButton ref={createRef} disabled={writing || state.mode !== 'view'} onClick={() => {
             setAnnouncement(''); setState({ mode: 'form', plan: null });
           }}><Icon name="plus" />Create plan</PlanButton>
-        </div>
+        </div>}
       </header>
       {writing && state.mode === 'view' && <p role="status">Finishing your previous plan change before another edit can be made.</p>}
       {state.mode === 'error' && <section className="pp-card pp-load-error" aria-label="Unable to load purchase plan">
@@ -159,20 +160,20 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis }
         <PlanButton onClick={() => setAttempt(value => value + 1)}>Retry</PlanButton>
       </section>}
       {state.mode === 'view' && plans.length === 0 && <section className="pp-empty" aria-label="No purchase plan">
-        <p>You haven't created a purchase plan yet.</p>
+        <p>{canEdit ? "You haven't created a purchase plan yet." : 'No purchase plans have been assigned to this organisation yet.'}</p>
       </section>}
-      {state.mode === 'view' && plans.map(plan => <PurchasePlanSummary key={plan.plan_id} plan={plan} busy={writing}
+      {state.mode === 'view' && plans.map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} busy={writing}
         editRef={state.plan?.plan_id === plan.plan_id ? editRef : undefined}
         deleteRef={state.plan?.plan_id === plan.plan_id ? deleteRef : undefined} onEdit={() => {
           setAnnouncement(''); setState({ mode: 'form', plan });
         }} onDelete={() => { setAnnouncement(''); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}
-      {state.mode === 'form' && <PurchasePlanForm plan={state.plan} scenarioDate={scenarioDate} onSave={save} onBusyChange={busy => {
+      {canEdit && state.mode === 'form' && <PurchasePlanForm plan={state.plan} scenarioDate={scenarioDate} onSave={save} onBusyChange={busy => {
         if (activeContext.current === context) setSaving(busy);
       }} onCancel={() => {
         focusAfterRender.current = state.plan ? 'edit' : 'create';
         setState({ mode: 'view', plan: state.plan });
       }} />}
-      {showDelete && <DeletePlanDialog description={state.mode === 'view' && state.plan ? `${state.plan.quantity_mt.toLocaleString('en-GB')} MT - Due ${state.plan.purchase_deadline}` : undefined} onCancel={() => setShowDelete(false)} onDelete={remove} />}
+      {canEdit && showDelete && <DeletePlanDialog description={state.mode === 'view' && state.plan ? `${state.plan.quantity_mt.toLocaleString('en-GB')} MT - Due ${state.plan.purchase_deadline}` : undefined} onCancel={() => setShowDelete(false)} onDelete={remove} />}
     </>}
   </main>;
 }
