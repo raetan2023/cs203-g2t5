@@ -152,9 +152,9 @@ class ForecastServiceTests {
                 LocalDate.parse("2026-10-30"), service.today());
         var response = analysis.read(context, false, 7, run);
         @SuppressWarnings("unchecked") var guidance = (Result<Guidance>) response.get("recommendation");
-        assertTrue(guidance.value().action().contains("purchase window"));
+        assertEquals("MONITOR", guidance.value().action());
         assertFalse(guidance.value().explanation().contains("70,000 to 82,000"));
-        assertTrue(guidance.value().explanation().contains("after your deadline"));
+        assertTrue(guidance.value().evidence().limitations().stream().anyMatch(s -> s.contains("exceeds the purchase deadline")));
         assertEquals("unavailable", ((Result<?>) analysis.read(context, true, 7, run).get("cost_impact")).status());
         assertEquals(HttpStatus.CONFLICT, assertThrows(ApiException.class,
                 () -> analysis.read(context, false, 7, UUID.randomUUID())).status());
@@ -162,21 +162,21 @@ class ForecastServiceTests {
         value.put("news_window_end", "2026-10-25T00:00:00Z");
         publish(value, service.today());
         assertEquals("unavailable", provider.prices(service.today(), 7).forecast().status());
-        assertEquals("unavailable", provider.recommendation(context).recommendation().status());
+        assertEquals("MONITOR", provider.recommendation(context).recommendation().value().action());
     }
     @Test void purchaseGuidanceExplainsIntervalDirectionWithoutInventingCertainty() {
         var provider = new PublishedForecastAnalysisProvider(service);
         var context = new PlanAnalysisService.Context(UUID.randomUUID(), new BigDecimal("100"),
                 LocalDate.parse("2026-11-03"), service.today());
-        assertEquals("No clear price advantage from waiting", provider.recommendation(context).recommendation().value().action());
+        assertEquals("SPLIT", provider.recommendation(context).recommendation().value().action());
         value.put("high", 790); value.put("raw_q90_price", 780);
         publish(value, service.today());
-        assertTrue(provider.recommendation(context).recommendation().value().action().contains("lower prices"));
+        assertEquals("SPLIT", provider.recommendation(context).recommendation().value().action());
         value.put("low", 810).put("high", 900).put("raw_q10_price", 820).put("raw_q90_price", 880);
         publish(value, service.today());
-        assertTrue(provider.recommendation(context).recommendation().value().action().contains("earlier"));
+        assertEquals("SPLIT", provider.recommendation(context).recommendation().value().action());
         var overdue = new PlanAnalysisService.Context(context.plan_id(), context.quantity_mt(), service.today().minusDays(1), service.today());
-        assertTrue(provider.recommendation(overdue).recommendation().value().action().contains("overdue"));
+        assertEquals("MONITOR", provider.recommendation(overdue).recommendation().value().action());
     }
 
     @Test void storageFailureIs503AndUnsupportedHorizonIs422() {
