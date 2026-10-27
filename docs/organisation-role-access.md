@@ -69,6 +69,20 @@ before loading private pages, then hides write actions for read-only roles and
 blocks admin plan URLs. UI gating complements, not replaces, backend enforcement.
 Organisation/role changes reset page state and invalidate old adapters.
 
+## Shared forecast access
+
+`GET /api/v1/forecast?horizon_days=7` requires a verified Clerk session with an
+active organisation and one of `org:buyer`, `org:manager` or `org:analyst`. Admin
+membership is denied, consistent with the plan business-data policy. Missing or
+invalid sessions return 401; missing, unsupported, malformed or conflicting
+organisation/role claims return 403. A shared API key alone does not grant access.
+
+Forecast publications remain shared market information: this rule verifies active
+membership and role, not ownership of a separate organisation-specific forecast.
+No database migration is required. Role permissions still need team agreement if
+the intended admin policy differs. Forecast data, horizon validation and response
+format are unchanged.
+
 ## Database rollout and legacy plans
 
 The nullable `clerk_org_id` column and non-unique `(clerk_org_id, user_id)` index
