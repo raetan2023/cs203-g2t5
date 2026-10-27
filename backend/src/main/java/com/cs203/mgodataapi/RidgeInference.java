@@ -17,11 +17,17 @@ public class RidgeInference {
     private final String python;
     private final JsonMapper mapper;
     public RidgeInference(@Value("${mgo.ridge.root:../ridge-regression-model}") String root,
-            @Value("${mgo.ridge.python:../.venv/bin/python}") String python, JsonMapper mapper, PurchaseForecastRepository repository) {
+            @Value("${mgo.ridge.python:}") String python, JsonMapper mapper, PurchaseForecastRepository repository) {
         this.root = Path.of(root).toAbsolutePath().normalize();
-        this.python = Path.of(python).toAbsolutePath().normalize().toString();
+        this.python = pythonExecutable(python, System.getProperty("os.name"));
         this.mapper = mapper;
         this.repository = repository;
+    }
+    static String pythonExecutable(String configured, String osName) {
+        String executable = configured.isBlank()
+                ? (osName.startsWith("Windows") ? "../.venv/Scripts/python.exe" : "../.venv/bin/python")
+                : configured;
+        return Path.of(executable).toAbsolutePath().normalize().toString();
     }
     public synchronized JsonNode predict(int horizon, LocalDate asOf) {
         var observations = repository.modelObservations(asOf);

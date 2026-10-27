@@ -233,12 +233,52 @@ Supabase credentials or writes are needed.
 
 Authenticated GET `/api/v1/purchase-plans/recommendation` and `/api/v1/purchase-plans/cost-impact` now expose independent guidance and cost availability. Both select an owned plan using the `plan_id` query parameter and require saved-context query preconditions; see [the complete API/provider contract](../docs/sprint-4-purchase-plan-api-contract.md). Ownership uses the existing verified Clerk subject mapping. Saved-plan GET derives days from the current Singapore date, including previously saved/overdue plans, without updating stored rows.
 
-`PlanAnalysisProvider` uses `PublishedForecastAnalysisProvider` in normal mode. It reads the same run/horizon as the forecast widget; no recommendation policy is implemented, so guidance remains unavailable. To test synthetic cost calculations locally, both profile `analysis-fixture` and property `mgo.analysis.fixture-enabled=true` are required. All fixture responses are labelled and authentication remains enabled. Do not enable this profile for real-model output. Forecasts exist independently of plans; calculations are on demand, with no persisted totals or recommendation FK/table changes.
+`PlanAnalysisProvider` uses `PublishedForecastAnalysisProvider` in normal mode. It reads the selected purchase forecast run/horizon and generates deadline-aware guidance from the forecast bounds, reference quote and quote age. To test synthetic cost calculations locally, both profile `analysis-fixture` and property `mgo.analysis.fixture-enabled=true` are required. All fixture responses are labelled and authentication remains enabled. Do not enable this profile for real-model output. Forecasts exist independently of plans; calculations are on demand, with no persisted totals or recommendation FK/table changes.
 
 Run `./mvnw clean test` (`.\mvnw.cmd clean test` on Windows). `PlanAnalysisHttpTests` starts a real local HTTP server on a random port, while stubbing identity decoding and database repositories. It verifies fixture costs, authentication requirements, two-owner isolation, conflicts and active-scenario reads. Unit tests cover signed/fractional calculations, missing inputs, incompatible basis, invalid ranges, provider failure/context checks and fixture opt-in isolation. No shared database credentials or writes are needed by these tests; real Clerk/DB/ML deployment checks remain pending.
 
 
-### Daily forecast publications
+### Purchase recommendation engine and Windows setup
+
+The purchase recommendation page is connected through these files:
+
+- `frontend/src/app/ClerkApp.tsx` supplies the authenticated purchase forecast and recommendation adapters.
+- `frontend/src/features/recommendations/RecommendationsPage.tsx` displays the selected plan's guidance and costs; `TimingComparison.tsx` compares the 7, 14 and 30 day options.
+- `PublishedForecastAnalysisProvider.java` contains the recommendation rules (deadline, quote freshness and forecast range versus reference price).
+- `PurchaseForecastService.java` loads database observations and news inputs, then calls `RidgeInference.java`.
+- `ridge-regression-model/src/purchase_inference.py` executes `src/predict.py` with the saved Ridge artifacts and the database snapshot supplied by Java.
+
+From the repository root in PowerShell, install the model's matching dependencies once:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r ridge-regression-model/requirements-lock.txt
+```
+
+Start Spring Boot from `backend` with the usual database and Clerk configuration.
+The backend selects `../.venv/Scripts/python.exe` on Windows and
+`../.venv/bin/python` on macOS/Linux. `MGO_RIDGE_PYTHON` can override this with an
+explicit executable path; `MGO_RIDGE_ROOT` overrides the model directory.
+Restart an already-running backend after changing these settings. The purchase
+engine runs Python privately as a subprocess; it does not require a separate FastAPI server.
+
+To verify the saved-model adapter against the repository's historical test data,
+run from the repository root:
+
+```powershell
+$env:MGO_DATA_DIR = (Resolve-Path 'models/ridge-regression/data/raw').Path
+Push-Location ridge-regression-model
+try { ..\.venv\Scripts\python.exe -m pytest -q tests/test_purchase_inference.py }
+finally { Pop-Location; Remove-Item Env:MGO_DATA_DIR }
+```
+
+This CSV is only test input; purchase-plan serving still requires database observations.
+
+Ready estimates still require compatible stored MGO/benchmark observations, the
+previous completed UTC day's GDELT count and tone, sufficient news history, and
+a supported model target. Missing inputs remain unavailable rather than producing demo advice.
+
+### Daily forecast publication API
 
 Authenticated `GET /api/v1/forecast?horizon_days=7` accepts 7, 14 or 30 and needs
 only `Authorization: Bearer <Clerk token>`, not `X-API-Key`. Ready responses contain
