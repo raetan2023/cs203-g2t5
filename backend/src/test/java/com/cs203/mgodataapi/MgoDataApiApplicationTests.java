@@ -87,11 +87,13 @@ class MgoDataApiApplicationTests {
         mvc.perform(get("/api/v1/purchase-plans/forecast")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/purchase-plans/forecast").header("X-API-Key", KEY)).andExpect(status().isUnauthorized());
         // No stored news is supplied by this test repository; do not fabricate a range.
-        mvc.perform(get("/api/v1/purchase-plans/forecast").with(jwt()))
+        mvc.perform(get("/api/v1/purchase-plans/forecast").with(jwt().jwt(token -> token
+                .claim("org_id", "org_a").claim("org_role", "org:buyer"))))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.status").value("unavailable"))
                 .andExpect(jsonPath("$.reason").value("missing_previous_day_news"));
-        mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=5").with(jwt()))
+        mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=5").with(jwt().jwt(token -> token
+                .claim("org_id", "org_a").claim("org_role", "org:buyer"))))
                 .andExpect(status().isUnprocessableEntity());
     }
 
