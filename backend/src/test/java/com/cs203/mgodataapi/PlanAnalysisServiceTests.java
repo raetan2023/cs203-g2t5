@@ -91,7 +91,7 @@ class PlanAnalysisServiceTests {
         org.mockito.Mockito.when(provider.recommendation(context)).thenReturn(new Recommendation(context,
                 Result.unavailable("recommendation_unavailable", "No policy")));
         PlanAnalysisService service = new PlanAnalysisService(provider);
-        assertEquals("model", service.read(context, false).get("provenance"));
+        assertEquals(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, assertThrows(ApiException.class, () -> service.read(context, false)).status());
         assertEquals(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, assertThrows(ApiException.class, () -> service.read(context, true)).status());
         org.mockito.Mockito.reset(provider);
         org.mockito.Mockito.when(provider.prices(date, 7)).thenReturn(new Prices(date.minusDays(1), Result.ready(reference),

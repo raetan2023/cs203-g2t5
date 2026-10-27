@@ -6,7 +6,7 @@ import { sameContext, type RecommendationService } from './service';
 /** Independent request state for guidance and cost impact. No result cache. */
 export function useAnalysis(service: RecommendationService | undefined, context: PlanResultContext, kind: 'read' | 'readImpact', horizonDays?: number, runId?: string) {
   const [attempt, setAttempt] = useState(0);
-  const scope = useMemo(() => ({}), [service, context.plan_id, context.quantity_mt, context.purchase_deadline, context.scenario_as_of_date, kind, attempt, horizonDays, runId]);
+  const scope = useMemo(() => ({}), [service, context.plan_id, context.quantity_mt, context.purchase_deadline, context.scenario_as_of_date, context.urgency, kind, attempt, horizonDays, runId]);
   const [result, setResult] = useState<{ scope: object; analysis?: PlanAnalysis; error?: boolean; message?: string; changed?: boolean }>();
   const request = useRef<{ scope: object; promise: Promise<PlanAnalysis> } | null>(null);
   const operation = service?.[kind];

@@ -143,3 +143,33 @@ it('accepts point estimates outside ordered quantile bounds without changing eit
   expect(out.forecast).toEqual(body.forecast);
   expect(out.cost_impact).toEqual(body.cost_impact);
 });
+
+it('passes urgency to the authenticated endpoint and rejects responses for a different urgency', async () => {
+  const body = payload();
+  const fetcher = vi.fn().mockResolvedValue(response({ ...body, context: { ...body.context, urgency: 'HIGH' } }));
+  vi.stubGlobal('fetch', fetcher);
+  const expected = { ...context, urgency: 'HIGH' as const };
+  const service = createApiRecommendationService({ baseUrl: 'https://backend.test', getToken: () => 'token' });
+  expect((await service.read(expected)).context.urgency).toBe('HIGH');
+  expect(new URL(fetcher.mock.calls[0][0]).searchParams.get('urgency')).toBe('HIGH');
+  expect(() => parseAnalysis(body, expected)).toThrow('Reload');
+});
+
+it('preserves structured SPLIT evidence and rejects invalid allocations and outcomes', () => {
+  const body = payload();
+  body.recommendation = { status: 'ready', value: { recommendation_id: 'policy-test', action: 'SPLIT', explanation: 'Illustrative timing split.',
+    evidence: { policy_version: 'buyer-heuristic-v1', urgency: 'NORMAL', direction: 'DOWN', interval_width_fraction: 0.2,
+      buy_now_cost_usd: 70000, alternative_cost_usd: 68000, alternative_minus_now_usd: -2000,
+      reference_age_days: 0, supported_target_date: context.purchase_deadline, horizon_description: 'Selected model target',
+      reasons: ['Wide interval'], limitations: ['Illustrative only'], allocations: [
+        { date: context.scenario_as_of_date, quantity_mt: context.quantity_mt / 2 },
+        { date: context.purchase_deadline, quantity_mt: context.quantity_mt / 2 },
+      ] },
+  } };
+  const parsed = parseAnalysis(body, context);
+  expect(parsed.recommendation.status === 'ready' && parsed.recommendation.value.evidence?.alternative_minus_now_usd).toBe(-2000);
+  body.recommendation.value.evidence!.allocations[1].quantity_mt++;
+  expect(() => parseAnalysis(body, context)).toThrow('invalid');
+  body.recommendation.value.action = 'GUARANTEED_PROFIT';
+  expect(() => parseAnalysis(body, context)).toThrow('invalid');
+});
