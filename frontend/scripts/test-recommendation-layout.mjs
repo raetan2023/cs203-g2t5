@@ -54,25 +54,24 @@ try {
   for (const width of [1920, 1440, 1280, 1024, 768, 600, 390, 320]) {
     await page.setViewportSize({ width, height: 1100 });
     for (const expanded of [false, true]) {
-      await page.locator('.timing-chart-disclosure').evaluate((el, open) => { el.open = open; }, expanded);
-      await page.locator('.rec-assumptions').evaluate((el, open) => { el.open = open; }, expanded);
-      await page.locator('.rec-impact details').evaluate((el, open) => { el.open = open; }, expanded);
+      await page.locator('.rec-fine').evaluateAll((elements, open) => elements.forEach(el => { el.open = open; }), expanded);
       const layout = await page.evaluate(() => {
         const rect = selector => {
           const {x,y,right,bottom} = document.querySelector(selector).getBoundingClientRect();
           return {x,y,right,bottom};
         };
-        return { scrollWidth: document.documentElement.scrollWidth, impact: rect('.rec-impact'), guidance: rect('.rec-guidance'),
-          overflow: [...document.querySelectorAll('.recommendations button, .recommendations select, .rec-evidence-grid dd')].filter(el => el.getClientRects().length && (el.getBoundingClientRect().right > innerWidth + 1 || el.scrollWidth > el.clientWidth + 2)).map(el => el.textContent) };
+        return { scrollWidth: document.documentElement.scrollWidth, answer: rect('.rec-answer'), rail: rect('.rec-rail'), evidence: rect('.rec-evidence'),
+          overflow: [...document.querySelectorAll('.recommendations button, .rec-tile-value, .rec-detail-grid dd, .rec-col-values strong, .rec-rail-facts dd')].filter(el => el.getClientRects().length && (el.getBoundingClientRect().right > innerWidth + 1 || el.scrollWidth > el.clientWidth + 2)).map(el => el.textContent) };
       });
       assert.ok(layout.scrollWidth <= width, `page overflow at ${width}px, expanded=${expanded}`);
       assert.deepEqual(layout.overflow, [], `content overflow at ${width}px`);
-      if (width >= 1280) {
-        assert.equal(layout.impact.y, layout.guidance.y, 'desktop panels share a row');
-        assert.ok(layout.guidance.x >= layout.impact.right - 1, 'desktop panels do not overlap');
-        if (!expanded) assert.ok(layout.impact.y < 1000, 'cost summary appears within the first desktop scroll');
+      if (width > 1050) {
+        assert.equal(layout.answer.y, layout.rail.y, 'desktop answer and decision rail share a row');
+        assert.ok(layout.rail.x >= layout.answer.right - 1, 'desktop rail does not overlap the answer');
+        assert.ok(layout.answer.y < 400, 'the recommendation is the first thing on the page');
       } else {
-        assert.ok(layout.guidance.y >= layout.impact.bottom - 1, 'narrow panels stack');
+        assert.ok(layout.rail.y >= layout.answer.bottom - 1, 'narrow: decision rail follows the answer');
+        assert.ok(layout.evidence.y >= layout.rail.bottom - 1, 'narrow: evidence follows the decision rail');
       }
       console.log('PASS ' + width + 'px / details ' + (expanded ? 'open' : 'closed'));
     }
@@ -82,20 +81,22 @@ try {
       await page.screenshot({ path: process.env.LAYOUT_SCREENSHOT_DIR + '/recommendation-' + width + '.png', fullPage: true });
     }
   }
-  assert.match(await page.locator('.rec-total-value').innerText(), /USD 11\.87bn–13\.72bn/);
-  await page.getByRole('button', { name: /14 days/ }).first().click();
-  await page.waitForFunction(() => document.querySelector('.timing-option[aria-pressed="true"]')?.textContent.includes('14 days'));
-  assert.match(await page.locator('.rec-horizon-bar').innerText(), /09 Nov 2026/);
-  assert.equal(await page.getByRole('button', { name: /30 days/ }).first().isDisabled(), true);
+  assert.match(await page.locator('.rec-tile-value').nth(1).innerText(), /USD 11\.87bn–13\.72bn/);
+  await page.getByRole('button', { name: '14 days', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('.rec-col[aria-pressed="true"]')?.textContent.includes('14 days'));
+  assert.match(await page.locator('.rec-detail h2').innerText(), /Mon 09 Nov \(14 days\)/);
+  const late = page.getByRole('button', { name: '30 days', exact: true });
+  assert.equal(await late.isDisabled(), false, 'late targets stay explorable');
+  assert.match(await late.getAttribute('aria-describedby').then(ids => page.evaluate(ids => ids.split(' ').map(id => document.getElementById(id).textContent).join(' '), ids)), /After deadline/);
   assert.equal(await page.getByLabel('Urgency for this analysis', {exact: true}).count(), 0);
   assert.equal(await page.getByRole('region', {name: 'Recommendation', exact: true}).count(), 1);
   await page.getByRole('heading', {name: 'Monitor', exact: true}).waitFor();
-  assert.equal(await page.locator('.rec-assumptions').getAttribute('open'), null);
-  await page.getByText('Assumptions and limitations', {exact: true}).focus();
+  await page.locator('.rec-fine').evaluateAll(elements => elements.forEach(el => { el.open = false; }));
+  await page.getByText('Assumptions and data sources', {exact: true}).focus();
   await page.keyboard.press('Enter');
   assert.equal(await page.getByText('Experimental; no guaranteed savings.', {exact: true}).isVisible(), true);
   assert.deepEqual(errors, []);
-  console.log('PASS horizon selection, deadline guard, single recommendation, disclosure and billion-dollar formatting');
+  console.log('PASS column selection, deadline guard, single recommendation, disclosure and billion-dollar formatting');
 } finally {
   await browser?.close();
   await server.close();
