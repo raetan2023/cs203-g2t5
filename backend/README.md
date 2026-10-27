@@ -123,6 +123,22 @@ logs a message when the frontend falls back.
 
 ### Purchase plans
 
+Organisation access now requires the active Clerk organisation and membership role
+in the verified session token. Buyers can manage multiple own plans within that
+organisation. Managers and analysts can read organisation plans and their analysis
+but cannot create/edit/delete them. Admin membership manages access and does not
+automatically grant purchase-plan access. See [the complete role contract](../docs/organisation-role-access.md).
+
+Apply the additive `migrations/20261027_purchase_plan_organisation.sql` schema step
+before running this backend if it has not already been applied. It was reported
+applied in the shared project; do not assign existing plans automatically. Legacy
+NULL organisation rows are preserved but hidden until reviewed assignment. The
+later NOT NULL step is not yet applied.
+
+`GET /api/v1/organisation` returns verified active-organisation capabilities and
+requires a Clerk Bearer token. `X-API-Key` alone does not establish membership.
+
+
 Apply the database migration in `migrations/20261021_multiple_purchase_plans.sql`
 if the unique constraint on `purchase_plans.user_id` has not already been removed.
 Existing rows are preserved. The backend does not run this migration automatically.
@@ -141,7 +157,7 @@ from the verified token, never a client-supplied user ID.
 POST and PUT accept `{"quantity_mt": 500, "purchase_deadline": "2025-11-15"}`.
 Plan responses contain `plan_id`, `quantity_mt`, `purchase_deadline`,
 `scenario_as_of_date` and derived `days_remaining`. Lists are ordered by deadline,
-then plan ID. Scenario-date behavior is unchanged.
+then plan ID and filtered by the verified organisation and applicable owner scope. Scenario-date behavior is unchanged.
 
 Missing plans and other users' plans both return `404`. Missing or invalid tokens
 return `401`. Invalid quantities and deadlines return `422` with `field_errors`.

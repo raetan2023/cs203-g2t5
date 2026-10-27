@@ -1,8 +1,9 @@
-# Clerk organisation selection and role recognition
+# Clerk organisation membership, roles and purchase-plan access
 
-This branch adds the frontend organisation flow. It does **not** implement backend
-role authorization, organisation-scoped purchase plans, approval workflows or
-new manager/analyst/admin consoles yet.
+This branch includes frontend organisation selection and backend enforcement for
+organisation-scoped purchase plans. Approval workflows and dedicated manager,
+analyst and admin business consoles remain later work. The frontend foundation was introduced in commit `78e6bab`; this guide also
+covers the organisation-scoped backend and matching frontend permissions.
 
 ## Clerk development setup
 
@@ -33,19 +34,63 @@ organisation and membership role exposed by Clerk's `useAuth` and `useOrganizati
 - Account, organisation and role changes reset application state. Old adapters do
   not send requests if the context changes while a token request is pending.
 
-## Current data boundary
+## Enforced plan permissions
 
-Purchase-plan APIs still enforce **individual user ownership only**. The frontend
-explicitly says that purchase plans are personal and not yet shared with the
-organisation. Selecting another organisation does not move or duplicate those
-plans. Shared market data remains global reference data.
+| Membership role | Read plans and their analysis | Create/edit/delete plans |
+| --- | --- | --- |
+| `org:buyer` | Own plans in the active organisation | Own plans in the active organisation |
+| `org:manager` | All assigned plans in the active organisation | Denied |
+| `org:analyst` | All assigned plans in the active organisation | Denied |
+| `org:admin` | Denied by default; membership administration does not imply business-data access | Denied |
 
-The organisation selector and role labels are UI integration, **not proof of backend
-role enforcement or tenant isolation**. Do not deploy this as a completed RBAC system.
-Next work must add verified organisation/role checks in Spring Security and scope
-plan reads/writes to the active organisation. Prepare a migration and review an
-explicit backfill for existing plans before applying it; never infer the organisation
-for an existing plan from whichever organisation its owner selects first.
+The admin policy deliberately grants no automatic purchase-plan privileges. Admins
+can still manage organisation members through Clerk's organisation UI. No purchase
+approval route is implemented here. Roles do not inherit privileges from each other.
+
+Spring Security checks the role on each route. Controller checks provide defense
+in depth. Buyers resolve their internal user ID from the verified Clerk subject;
+all plan SQL filters by `clerk_org_id`, and buyer reads/writes additionally filter
+by `user_id`. A user's collection can contain multiple plans in one organisation;
+no unique user/organisation constraint has been added. Request-supplied owner or
+organisation fields cannot override the token scope. Cross-owner/cross-organisation
+plan IDs return 404 rather than disclosing the other plan.
+
+Clerk v2 tokens use the verified `o.id` (organisation) and `o.rol` (unprefixed role).
+Explicit legacy `org_id`/`org_role` claims are also supported for v1 sessions.
+Missing, malformed, unknown or conflicting membership claims are denied. A global
+user-level `app_role` is not used. Missing/invalid sessions receive 401; a signed-in
+session without the required membership/role receives 403.
+
+`GET /api/v1/organisation` requires a verified session and one of the four known
+roles. It returns `organisation_id`, `role`, `can_read_plans`, `can_write_plans` and
+`plan_scope` (`own`, `organisation` or `none`) with `Cache-Control: no-store`.
+The frontend verifies this response against Clerk's selected organisation/role
+before loading private pages, then hides write actions for read-only roles and
+blocks admin plan URLs. UI gating complements, not replaces, backend enforcement.
+Organisation/role changes reset page state and invalidate old adapters.
+
+## Database rollout and legacy plans
+
+The nullable `clerk_org_id` column and non-unique `(clerk_org_id, user_id)` index
+were added manually on 27 October 2026. After Nelson explicitly authorised the
+assignment and supplied Bunker Buddy's Clerk ID, the 9 legacy NULL rows were assigned
+to `org_3LGX9KPpydIuo5jlZbgae1xLdGr` in one checked transaction. Their user ownership,
+quantities and dates were preserved. Post-commit verification found 10 total plans
+and 0 unassigned plans; the other already-assigned row was not updated. See
+[the database change record](organisation-database-migration.md).
+
+New plans get the verified active organisation on insert. NULL rows, should any be
+created by an older backend, remain excluded from all scoped reads and mutations.
+Membership and role assignments stay in Clerk; a database assignment does not invite
+or grant a role to an owner. Buyer ownership filtering continues within Bunker Buddy.
+
+The NOT NULL constraint has not been applied. Keep all backend instances consistent:
+an older instance can still insert NULL rows until upgraded. Shared market data
+remains global reference data and is unchanged by this work.
+
+JWT roles reflect token issuance time. Clerk role changes may take until token
+refresh to reach the backend; the UI requests a fresh token for its access check.
+This does not implement immediate revocation of every previously issued token.
 
 ## Verification
 
@@ -57,9 +102,15 @@ npm run build
 ```
 
 The Clerk integration tests mock the SDK and cover sign-in, selection, all four
-role labels, unknown roles, loading transitions, sign-out, stale page responses and
-delayed token requests during organisation switching. They do not verify live
-Clerk configuration. For the manual check, sign in as Bunker Buddy's admin, select
+roles, server-confirmed permissions, read-only manager/analyst views, admin URL
+restrictions, unknown roles, stale responses and delayed token requests. Backend
+HTTP tests exercise role denials, scoped reads/writes, tampered request fields and
+multiple plans. H2 PostgreSQL-mode tests execute organisation/owner read and delete
+queries with two organisations and NULL legacy rows; PostgreSQL INSERT/UPDATE
+RETURNING bindings are checked at the JDBC boundary. No shared plan data is written
+by the tests. They do not verify live Clerk configuration or a live plan-write journey.
+
+Run backend checks with `cd backend && ./mvnw test`. For the manual check, sign in as Bunker Buddy's admin, select
 Bunker Buddy, confirm the Admin label and switcher, then sign out. Invitations
 and other-role accounts can be tested after they are created.
 
