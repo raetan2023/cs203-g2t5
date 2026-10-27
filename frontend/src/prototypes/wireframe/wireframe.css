@@ -1,8 +1,9 @@
-/* Theme-only overrides; controls and form behavior belong to the shared preview. */
+/* Theme-only overrides; controls and form behavior belong to the shared preview.
+   The vessel's drawing and animation live in features/auth/wireframe-vessel.css. */
 body { background: #0c0d0e; }
 .wireframe-theme { --oris-text: #eeede7; --oris-muted: #aaa9a5; --oris-border: #ffffff26; --oris-accent: #e5e2d9; background: #0c0d0e; box-sizing: border-box; }
-.wireframe-scene { position: relative; margin-top: 24px; width: 100%; overflow: hidden; pointer-events: none; }
-.wireframe-vessel { display: block; width: 100%; height: auto; color: #eeede3; }
+.wireframe-scene { margin-top: 24px; }
+.wireframe-vessel { color: #eeede3; }
 .wireframe-theme .oris-intro { min-width: 0; align-self: start; padding-top: clamp(32px, 6vh, 70px); padding-bottom: 0; }
 .wireframe-theme .oris-intro p { color: #b9b8b3; }
 .wireframe-theme .oris-card { background: #1a1b1c; box-shadow: 0 16px 60px #00000026; }
@@ -16,11 +17,6 @@ body { background: #0c0d0e; }
 .wireframe-theme .oris-field input[aria-invalid=true] { border-color: #e3b3a9; }
 .wireframe-theme .oris-field-error { color: #efb9af; }
 .wireframe-theme .oris-error { background: #382b29; color: #f2d9d2; }
-/* Trace the stationary vessel once, then leave the complete mesh visible. */
-.wireframe-build { stroke-dasharray: 1; stroke-dashoffset: 0; animation: vessel-build var(--build-duration) ease-out var(--build-delay) both; }
-.wireframe-sweep { animation: vessel-light 1.25s ease-in-out 3.75s both; }
-@keyframes vessel-build { from { stroke-dashoffset: 1; opacity: 0; } 10% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
-@keyframes vessel-light { from { transform: translateX(0); } to { transform: translateX(1120px); } }
 /* Include page padding in viewport height; scale the illustration before controls. */
 @media (min-width: 761px) {
   .wireframe-theme { display: flex; flex-direction: column; min-height: 100svh; padding-block: 24px; }
@@ -44,9 +40,4 @@ body { background: #0c0d0e; }
 @media (max-width: 760px) {
   .wireframe-theme .oris-intro { padding-top: 0; }
   .wireframe-scene { margin-top: 20px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wireframe-build { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; opacity: 1; }
-  .wireframe-sweep { animation: none; transform: none; }
-  .wireframe-highlight { display: none; }
 }
