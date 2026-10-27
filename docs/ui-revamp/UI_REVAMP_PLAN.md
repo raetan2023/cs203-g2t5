@@ -176,7 +176,7 @@ source in `frontend/src/prototypes/wireframe/`).
 | Scope | **Restyle + layout tweaks, plus explicitly requested functional work.** Phase 3A changes the active date to today; Phase 3B explores the post-signup Home experience; Phase 6 adds verified indicator-direction presentation. Other logic, data, API calls, routes and validation stay unchanged unless required by those scoped tasks and documented. |
 | Theme | **Dark only.** No light mode, no toggle. |
 | Colour | **Dark-and-beige by default, semantic exceptions only.** Recommendations carry rise/fall price colour; dashboard indicators explicitly use green for upward and red for downward movement. Direction is not buyer benefit. Exact tokens and contrast are reviewed in Phases 5–6. |
-| Delivery | **Prototype checkpoint commits on feature/ui-revamp-wireframe. Do not merge into main.** Earlier per-phase PR instructions are superseded by the owner. |
+| Delivery | **2026-10-27: owner decided to merge this branch into `main` via PR** so a teammate can take over the recommendations page logic. Further revamp work continues on this branch and syncs with `main` per `SYNC_WITH_MAIN.md`. (Earlier rule "prototype checkpoints only, do not merge into main" is superseded.) |
 | Reference | The wireframe login is the visual source of truth; `docs/ui-mockups/*.png` are the **state checklist** (which loading/empty/error/saving states each screen must cover), not the visual target. |
 
 ## 2. Non-negotiable guardrails
@@ -651,6 +651,7 @@ unavailable state. Any necessary data/helper changes are documented and tested; 
 | Today's date policy | Phase 3A | Resolve timezone, rollover, old plans and unsupported analysis; keep observation dates distinct |
 | Inviting post-signup Home | Phase 3B | Brainstorm first-time and returning-user content/layout; Impeccable/Claude if available; owner selects direction |
 | Row-first plan cards | Phase 4 | Readable card width, horizontal fill then wrap, stable source/keyboard order |
+| Visible save/delete confirmation | Phase 4 follow-up (next: `/impeccable harden`) | After a successful create/edit show "Plan saved", after delete "Plan deleted", visibly near the page heading (today only a screen-reader announcement, `PurchasePlanPage.tsx` `pp-sr-only` status). Briefly highlight the new or edited card. Presentation only: no change to save/delete logic or timing; keep the existing `role="status"` announcement; respect reduced motion. From the 2026-10-27 critique (P1 #3). |
 | Plan sort switch | Phase 4 — done 2026-10-27 | "Soonest deadline / Largest volume" switch above the grid (`aria-pressed`), display order only; default soonest deadline. |
 | Dashboard trend comparison | Phase 6 | Define interval per indicator; truthful green-up/red-down with neutral flat/missing states |
 
