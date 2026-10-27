@@ -67,3 +67,15 @@ describe('PurchasePlanSummary status and actions', () => {
     expect(screen.getByRole('link', { name: /View recommendation/ })).toBeInTheDocument();
   });
 });
+
+
+describe('approval workflow in the redesigned cards', () => {
+  it.each(['submitted', 'approved', 'rejected'] as const)('keeps a %s plan locked and links to its saved recommendation', status => {
+    const onEdit = vi.fn(), onDelete = vi.fn();
+    render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status }} onEdit={onEdit} onDelete={onDelete} />);
+    expect(screen.getByText(status === 'submitted' ? 'Submitted for approval' : status.charAt(0).toUpperCase() + status.slice(1))).toBeVisible();
+    expect(screen.queryByRole('button', { name: /More actions|Edit|Delete/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /View submitted recommendation/ })).toHaveAttribute('href', `/purchase-plans/recommendation?plan_id=${DEMO_PLAN.plan_id}`);
+    expect(onEdit).not.toHaveBeenCalled(); expect(onDelete).not.toHaveBeenCalled();
+  });
+});

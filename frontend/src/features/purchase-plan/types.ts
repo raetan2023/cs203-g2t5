@@ -1,10 +1,48 @@
+export type PlanStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
+export interface ApprovalNotification {
+  notification_id: string;
+  plan_id: string;
+  created_at: string;
+  quantity_mt: number;
+  purchase_deadline: string;
+  status: PlanStatus;
+}
+
 export interface PurchasePlan {
+  /** Optional for standalone previews created before the approval workflow. */
+  status?: PlanStatus;
+  submitted_at?: string | null;
   plan_id: string;
   quantity_mt: number;
   purchase_deadline: string;
   scenario_as_of_date: string;
   days_remaining: number;
 }
+
+export interface RecommendationSelection {
+  horizon_days: 7 | 14 | 30;
+  run_id: string;
+  recommendation_id: string;
+  approval_fingerprint: string;
+  urgency: Urgency;
+  quantity_mt: number;
+  purchase_deadline: string;
+  scenario_as_of_date: string;
+}
+export interface ApprovalDecision {
+  decision_id: string;
+  decision: 'approved' | 'rejected';
+  comment: string;
+  manager_clerk_user_id: string;
+  manager_label: string;
+  decided_at: string;
+}
+export interface DecisionInput {
+  decision: 'approved' | 'rejected';
+  comment: string;
+  approval_fingerprint: string;
+}
+export interface SubmittedRecommendation { horizon_days: 7 | 14 | 30; analysis: PlanAnalysis }
 
 export interface PlanInput {
   quantity_mt: number;
@@ -104,6 +142,7 @@ export interface CurrentRecommendation {
 
 export interface PlanAnalysis {
   source: 'mock' | 'api';
+  approval_fingerprint?: string;
   provenance?: 'fixture' | 'model' | 'unavailable';
   context: PlanResultContext;
   reference: AvailableResult<ReferencePrice>;
@@ -124,6 +163,10 @@ export type FieldErrors = Partial<Record<keyof PlanInput, string>>;
 
 /** Wunna's future request-helper adapter can implement this interface. */
 export interface PurchasePlanService {
+  submit?(planId: string, selection: RecommendationSelection): Promise<SavedPlanResponse>;
+  decide?(planId: string, input: DecisionInput): Promise<SavedPlanResponse>;
+  readSubmission?(planId: string): Promise<{ submission: SubmittedRecommendation | null; decision?: ApprovalDecision | null }>;
+  notifications?(): Promise<{ notifications: ApprovalNotification[] }>;
   list(): Promise<PlansResponse>;
   read(planId: string): Promise<PlanResponse>;
   create(input: PlanInput): Promise<SavedPlanResponse>;

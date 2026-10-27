@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ForecastProvider, useForecastContext } from '../forecast/ForecastContext';
 import { buildMockForecast as baseForecast } from '../forecast/mockService';
@@ -15,6 +15,9 @@ const buildMockForecast = (h: 7 | 14 | 30) => ({ ...baseForecast(h),
 
 const plans = () => createMockPlanService({ initialPlan: plan, delayMs: 0 });
 const ready = () => createMockRecommendationService({ delayMs: 0 });
+// The decision rail repeats the action, so read the answer from the recommendation itself.
+const findInAnswer = async (text: string) => within(await screen.findByRole('region', { name: 'Recommendation' })).findByText(text);
+const getInAnswer = (text: string) => within(screen.getByRole('region', { name: 'Recommendation' })).getByText(text);
 
 describe('recommendation page', () => {
   it('loads and retries recommendations independently without clearing a ready cost estimate', async () => {
@@ -24,7 +27,7 @@ describe('recommendation page', () => {
     expect(await screen.findByText('USD 67,000–70,000')).toBeVisible();
     fireEvent.click(await screen.findByRole('button', { name: 'Retry recommendation' }));
     expect(screen.getByText('USD 67,000–70,000')).toBeVisible();
-    expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
+    expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
     expect(impactRead).toHaveBeenCalledOnce();
   });
 
@@ -32,9 +35,9 @@ describe('recommendation page', () => {
     const service = createMockRecommendationService({ delayMs: 0, impactFailOnce: true });
     const recommendationRead = vi.spyOn(service, 'read');
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />);
-    expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
+    expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
     fireEvent.click(await screen.findByRole('button', { name: 'Retry cost impact' }));
-    expect(screen.getByText('Consider purchasing on 29 October')).toBeVisible();
+    expect(getInAnswer('Consider purchasing on 29 October')).toBeVisible();
     expect(await screen.findByText('USD 67,000–70,000')).toBeVisible();
     expect(recommendationRead).toHaveBeenCalledOnce();
   });
@@ -48,9 +51,9 @@ describe('recommendation page', () => {
 
   it('shows supplied guidance and lets users expand and collapse forecast details', async () => {
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />);
-    expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
+    expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
     expect(screen.getAllByText(/Synthetic demo data/).length).toBeGreaterThan(0);
-    const disclosure = await screen.findByText('Data sources and calculation');
+    const disclosure = await screen.findByText('Assumptions and data sources');
     expect(disclosure.closest('details')).not.toHaveAttribute('open');
     fireEvent.click(disclosure);
     expect(disclosure.closest('details')).toHaveAttribute('open');
@@ -72,14 +75,14 @@ describe('recommendation page', () => {
   it('retains forecasts when recommendations are unavailable', async () => {
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={createMockRecommendationService({ delayMs: 0, example: 'unavailable' })} scenarioDate={plan.scenario_as_of_date} />);
     expect(await screen.findByText('No recommendation available')).toBeVisible();
-    fireEvent.click(await screen.findByText('Data sources and calculation'));
+    fireEvent.click(await screen.findByText('Assumptions and data sources'));
     expect(await screen.findByText(/Price range: USD 670–700\/MT/)).toBeVisible();
   });
 
   it('retries failed reads without replacing them with mock success', async () => {
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={createMockRecommendationService({ delayMs: 0, failOnce: true })} scenarioDate={plan.scenario_as_of_date} />);
     fireEvent.click(await screen.findByRole('button', { name: 'Retry recommendation' }));
-    expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
+    expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
   });
 
   it('does not invent data when no analysis adapter is connected', async () => {
@@ -112,13 +115,13 @@ describe('recommendation page', () => {
     await act(async () => pending[0](obsolete));
     expect(screen.queryByText('Obsolete guidance')).not.toBeInTheDocument();
     await act(async () => pending[2](await ready().read(plan)));
-    expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
+    expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
   });
 
   it('clears old analysis when a different account service has no plan', async () => {
     const service = ready();
     const view = render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />);
-    await screen.findByText('Consider purchasing on 29 October');
+    await findInAnswer('Consider purchasing on 29 October');
     view.rerender(<RecommendationsPage planId={plan.plan_id} planService={createMockPlanService({ delayMs: 0 })} service={service} scenarioDate={plan.scenario_as_of_date} />);
     expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();
     expect(await screen.findByText('No saved purchase plan')).toBeVisible();
@@ -138,7 +141,7 @@ it('pins guidance and impact to the selected publication and clears both when it
   </ForecastProvider>);
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
   expect(impact).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run');
-  expect(screen.getByRole('button', { name: '14 days' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/After deadline/);
   current = false;
   await act(async () => document.dispatchEvent(new Event('visibilitychange')));
   expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
@@ -159,7 +162,7 @@ it('labels experimental plan ranges without displaying confidence coverage claim
   expect(screen.getByText('Last-quote fallback · Ridge unavailable')).toBeVisible();
   expect(await screen.findByText(/Coverage has not been measured/)).toBeVisible();
   expect(screen.queryByText(/Target coverage:/)).not.toBeInTheDocument();
-  fireEvent.click(screen.getByText('Data sources and calculation'));
+  fireEvent.click(screen.getByText('Assumptions and data sources'));
   expect(screen.getByText('Last observed quote (persistence)')).toBeVisible();
 });
 
@@ -192,7 +195,7 @@ it('identifies a published Ridge result separately from the last-quote fallback'
   </ForecastProvider>);
   expect(await screen.findByText('Ridge regression')).toBeVisible();
   expect(screen.queryByText('Last-quote fallback · Ridge unavailable')).not.toBeInTheDocument();
-  fireEvent.click(await screen.findByText('Data sources and calculation'));
+  fireEvent.click(await screen.findByText('Assumptions and data sources'));
   expect(screen.getByText('Ridge regression (published)')).toBeVisible();
 });
 
@@ -204,7 +207,7 @@ it('shows a current executed Ridge estimate when its target fits the deadline', 
     <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
   expect(await screen.findByText('Executed Ridge · experimental bounds')).toBeVisible();
-  expect(await screen.findByText('Consider purchasing on 29 October')).toBeVisible();
+  expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
 });
 
 it('blocks every horizon for a five-day deadline and shows only the observed reference cost', async () => {
@@ -217,8 +220,8 @@ it('blocks every horizon for a five-day deadline and shows only the observed ref
     <RecommendationsPage planId={shortPlan.plan_id} planService={createMockPlanService({ initialPlan: shortPlan, delayMs: 0, getScenarioDate: () => shortPlan.scenario_as_of_date })} service={service} scenarioDate={shortPlan.scenario_as_of_date} />
   </ForecastProvider>);
   expect(await screen.findByText('Your deadline is before the available forecasts')).toBeVisible();
-  for (const h of [7,14,30]) expect(screen.getByRole('button', { name: `${h} days` })).toBeDisabled();
-  expect(screen.getByText('USD 84,444,000')).toBeVisible();
+  for (const h of [7,14,30]) expect(await screen.findByRole('button', { name: `${h} days` })).toHaveAccessibleDescription(/After deadline/);
+  expect(getInAnswer('USD 84,444,000')).toBeVisible();
   expect(impact).not.toHaveBeenCalled();
   expect(guidance).toHaveBeenCalled();
 });
@@ -243,34 +246,18 @@ it('returns to a fitting horizon when a shared longer horizon exceeds the plan d
   expect(impact).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, buildMockForecast(7).run_id);
 });
 
-it('refreshes urgency, renders policy evidence, and ignores a late previous urgency response', async () => {
+it('renders one final recommendation with positive savings and no urgency override', async () => {
   const body = await ready().read(plan);
-  let resolveOld!: (value: PlanAnalysis) => void;
-  const service = { read: vi.fn((context: PlanAnalysis['context']) => {
-    if (context.urgency === 'NORMAL') return new Promise<PlanAnalysis>(resolve => { resolveOld = resolve; });
-    return Promise.resolve({ ...body, context, recommendation: { status: 'ready' as const, value: {
-      recommendation_id: 'high-urgency', action: 'BUY_NOW', explanation: 'Secure supply because urgency is high.',
-      evidence: { policy_version: 'buyer-heuristic-v1', urgency: 'HIGH' as const, direction: 'DOWN', interval_width_fraction: 0.2,
-        buy_now_cost_usd: 70000, alternative_cost_usd: 68500, alternative_minus_now_usd: -1500,
-        reference_age_days: 0, supported_target_date: '2025-10-29', horizon_description: '7 calendar days',
-        reasons: ['High urgency takes precedence over falling prices.'], limitations: ['Experimental; no guaranteed savings.'], allocations: [] },
-    } } });
-  }) };
-  render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />);
-  await waitFor(() => expect(service.read).toHaveBeenCalledOnce());
-  fireEvent.change(screen.getByLabelText('Urgency for this analysis'), { target: { value: 'HIGH' } });
-  expect(await screen.findByText('BUY_NOW')).toBeVisible();
-  expect(screen.getByText('$70,000.00')).toBeVisible();
-  expect(screen.getByText('-$1,500.00')).toBeVisible();
-  expect(screen.getByText('High urgency takes precedence over falling prices.')).toBeVisible();
-  expect(screen.getByText('Current date: 24 Oct 2025')).toBeVisible();
-  const assumptions = screen.getByText('Assumptions and limitations');
-  expect(assumptions.closest('details')).not.toHaveAttribute('open');
-  expect(screen.getByText(/^Reference: USD/)).not.toBeVisible();
-  fireEvent.click(assumptions);
-  expect(screen.getByText(/^Reference: USD/)).toBeVisible();
-  expect(screen.getByText('Experimental; no guaranteed savings.')).toBeVisible();
-  await act(async () => resolveOld(body));
-  expect(screen.getByText('BUY_NOW')).toBeVisible();
-  expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();
+  body.recommendation = { status: 'ready', value: {
+    recommendation_id: 'deadline', action: 'WAIT', explanation: 'Buy in 14 days.',
+    evidence: { policy_version: 'deadline-minimum-v1', urgency: 'NORMAL', direction: 'DOWN', interval_width_fraction: 0.2,
+      buy_now_cost_usd: 72000, alternative_cost_usd: 69500, alternative_minus_now_usd: -2500,
+      reference_age_days: 0, supported_target_date: '2025-11-07', horizon_description: 'Deadline comparison',
+      reasons: ['Cheapest eligible price.'], limitations: ['Experimental; no guaranteed savings.'], allocations: [] },
+  } };
+  render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={{read: async () => body}} scenarioDate={plan.scenario_as_of_date} />);
+  expect(await screen.findByText('Buy in 14 days.')).toBeVisible();
+  expect(screen.getAllByRole('region', {name: 'Recommendation'})).toHaveLength(1);
+  expect(screen.getAllByText(/About USD 2,500 less than buying today/)[0]).toBeVisible();
+  expect(screen.queryByLabelText('Urgency for this analysis')).not.toBeInTheDocument();
 });

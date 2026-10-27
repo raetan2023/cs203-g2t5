@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Shared published forecasts require a verified Clerk session, like purchase plans. */
+/** Shared published forecasts require an active Clerk organisation and buyer, manager or analyst role. */
 @RestController
 public class ForecastController {
     private final ForecastService forecasts;

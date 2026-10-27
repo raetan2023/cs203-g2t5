@@ -13,7 +13,13 @@ public record PurchasePlan(
         UUID userId,
         BigDecimal quantityMt,
         LocalDate purchaseDeadline,
-        LocalDate scenarioAsOfDate) {
+        LocalDate scenarioAsOfDate,
+        String status,
+        java.time.Instant submittedAt) {
+
+    public PurchasePlan(UUID planId, UUID userId, BigDecimal quantityMt, LocalDate purchaseDeadline, LocalDate scenarioAsOfDate) {
+        this(planId, userId, quantityMt, purchaseDeadline, scenarioAsOfDate, "draft", null);
+    }
 
     /** Calendar days from the scenario date to the deadline; negative if the deadline has passed. */
     public long daysRemaining() {
@@ -29,6 +35,8 @@ public record PurchasePlan(
     public Map<String, Object> toResponse(LocalDate activeScenario) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("plan_id", planId.toString());
+        body.put("status", status);
+        body.put("submitted_at", submittedAt == null ? null : submittedAt.toString());
         body.put("quantity_mt", quantityMt);
         body.put("purchase_deadline", purchaseDeadline.toString());
         body.put("scenario_as_of_date", activeScenario.toString());

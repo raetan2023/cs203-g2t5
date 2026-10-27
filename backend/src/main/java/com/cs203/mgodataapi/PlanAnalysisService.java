@@ -42,9 +42,25 @@ public class PlanAnalysisService {
                 throw new ApiException(HttpStatus.CONFLICT, "The forecast run changed. Reload the forecast and cost impact.");
             Result<Impact> cost = calculate(context, reference, forecast);
             Result<Guidance> guidance = Result.unavailable("recommendation_unavailable", "Recommendations are loaded separately.");
+            java.util.List<Prices> recommendationInputs = java.util.List.of();
             if (!impact) {
-                guidance = Result.ready(RecommendationPolicy.evaluate(context,
-                        new Prices(context.scenario_as_of_date, reference, forecast)));
+                var candidates = new java.util.ArrayList<Prices>();
+                Forecast snapshot = null;
+                for (int days : new int[] {7, 14, 30}) {
+                    Prices candidate = days == horizon ? prices : provider.prices(context.scenario_as_of_date, days);
+                    if (!context.scenario_as_of_date.equals(candidate.scenario_as_of_date()))
+                        throw new IllegalArgumentException("Provider scenario mismatch");
+                    Result<Forecast> candidateForecast = validateForecast(candidate.forecast(), context.scenario_as_of_date);
+                    if ("ready".equals(candidateForecast.status())) {
+                        if (snapshot != null && !java.util.Objects.equals(snapshot.run_id(), candidateForecast.value().run_id()))
+                            throw new ApiException(HttpStatus.CONFLICT, "Forecast sources changed. Reload the comparison.");
+                        snapshot = candidateForecast.value();
+                    }
+                    candidates.add(new Prices(context.scenario_as_of_date,
+                            validateReference(candidate.reference(), context.scenario_as_of_date), candidateForecast));
+                }
+                recommendationInputs = java.util.List.copyOf(candidates);
+                guidance = Result.ready(RecommendationPolicy.evaluateAvailable(context, candidates));
                 validateResult(guidance);
                 if ("ready".equals(guidance.status()) && (guidance.value() == null
                         || blank(guidance.value().recommendation_id()) || blank(guidance.value().action()) || blank(guidance.value().explanation())))
@@ -55,13 +71,21 @@ public class PlanAnalysisService {
                     || ("unavailable".equals(provenance) && ("ready".equals(reference.status())
                     || "ready".equals(forecast.status()))))
                 throw new IllegalArgumentException("Invalid provenance");
+            String approvalFingerprint = fingerprint(context + ":" + horizon + ":" + provenance + ":" + reference + ":" + forecast + ":" + cost + ":" + guidance + ":" + recommendationInputs);
             return Map.of("provenance", provenance, "context", context, "reference", reference,
-                    "forecast", forecast, "cost_impact", cost, "recommendation", guidance);
+                    "forecast", forecast, "cost_impact", cost, "recommendation", guidance, "approval_fingerprint", approvalFingerprint, "recommendation_inputs", recommendationInputs);
         } catch (ApiException failure) {
             throw failure;
         } catch (RuntimeException failure) {
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "The analysis provider could not complete this request. Please retry.");
         }
+    }
+
+    private static String fingerprint(String value) {
+        try {
+            return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (java.security.NoSuchAlgorithmException failure) { throw new IllegalStateException(failure); }
     }
 
     private static void validateResult(Result<?> result) {

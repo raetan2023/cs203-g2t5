@@ -9,11 +9,14 @@ import './preview.css';
 import { buildMockForecast } from '../features/forecast/mockService';
 import ForecastWidget from '../features/forecast/ForecastWidget';
 import type { ReadyForecast } from '../features/forecast/apiService';
+import { createScenarioForecastService, createScenarioRecommendationService, PREVIEW_BUYER, scenarioPlan, SCENARIO_DATE, withPreviewApproval, type RecommendationScenario } from './recommendationScenarios';
+import type { PurchasePlanService } from '../features/purchase-plan/types';
 function PreviewMarketDashboard() { return <main><ForecastWidget /></main>; }
 
 const examples = {
   market: 'Market dashboard - synthetic forecast',
-  'rec-ready': 'Recommendation - ready', 'rec-loading': 'Recommendation - loading', 'rec-error': 'Recommendation - fails once', 'rec-unavailable': 'Recommendation - unavailable', 'rec-missing': 'Recommendation - missing forecast', 'rec-unsupported': 'Recommendation - unsupported context',
+  'rec-monitor': 'Recommendation - Monitor (8-day plan)', 'rec-buy': 'Recommendation - Buy now (33-day plan)', 'rec-wait': 'Recommendation - Wait (33-day plan)',
+  'rec-ready': 'Recommendation - legacy fixture, no horizon fits', 'rec-loading': 'Recommendation - loading', 'rec-error': 'Recommendation - fails once', 'rec-unavailable': 'Recommendation - unavailable', 'rec-missing': 'Recommendation - missing forecast', 'rec-unsupported': 'Recommendation - unsupported context',
   'rec-empty': 'Recommendation - no saved plan',
   login: 'Sign in', signup: 'Create account', home: 'Home', 'home-loading': 'Home loading (8 seconds)',
   'session-error': 'Session load fails once', 'login-error': 'Sign-in fails once', 'signup-error': 'Signup fails once', 'logout-error': 'Sign-out fails once',
@@ -23,12 +26,15 @@ const examples = {
 };
 type Example = keyof typeof examples;
 const publicExamples = ['login', 'signup', 'login-error', 'signup-error'];
+const recommendationScenarios: Partial<Record<Example, RecommendationScenario>> = { 'rec-monitor': 'monitor', 'rec-buy': 'buy', 'rec-wait': 'wait' };
 
 export function PreviewApp() {
-  const [example, setExample] = useState<Example>('rec-ready');
+  const [example, setExample] = useState<Example>('rec-monitor');
   const [revision, setRevision] = useState(0);
   const [slow, setSlow] = useState(false);
-  const [scenarioDate, setScenarioDate] = useState(DEMO_SCENARIO_DATE);
+  const [scenarioDate, setScenarioDate] = useState(SCENARIO_DATE);
+  const scenario = recommendationScenarios[example];
+  const withScenarioApproval = (plans: PurchasePlanService) => scenario ? withPreviewApproval(plans, scenario) : plans;
   const activeDate = useRef(scenarioDate);
   activeDate.current = scenarioDate;
   const auth = useMemo(() => createMockAuthService({
@@ -40,17 +46,17 @@ export function PreviewApp() {
   function select(next: Example) {
     navigate(next === 'market' ? '/market-dashboard' : next.startsWith('rec-') ? `/purchase-plans/recommendation?plan_id=${RECOMMENDATION_DEMO_PLAN.plan_id}` : next.startsWith('signup') ? '/signup' : publicExamples.includes(next) ? '/login' : ['home', 'home-loading', 'session-error', 'logout-error'].includes(next) ? '/home' : '/purchase-plans', true);
     setExample(next); setRevision(value => value + 1);
-    setScenarioDate(DEMO_SCENARIO_DATE);
+    setScenarioDate(recommendationScenarios[next] ? SCENARIO_DATE : DEMO_SCENARIO_DATE);
   }
 
   return <>
-    <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock MarketDashboard={PreviewMarketDashboard} createForecastService={() => ({ read: async horizon => buildMockForecast(horizon) as ReadyForecast })} createRecommendationService={() => createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} createPlanService={() => createMockPlanService({
+    <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock MarketDashboard={PreviewMarketDashboard} createForecastService={() => scenario ? createScenarioForecastService(scenario) : ({ read: async horizon => buildMockForecast(horizon) as ReadyForecast })} createRecommendationService={() => scenario ? createScenarioRecommendationService(scenario, slow ? 3500 : 600) : createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} planAccess={scenario ? PREVIEW_BUYER : undefined} createPlanService={() => withScenarioApproval(createMockPlanService({
       initialPlans: example === 'multiple' ? [DEMO_PLAN, { ...DEMO_PLAN, plan_id: 'second-demo-plan', quantity_mt: 250 }] : undefined,
-      initialPlan: example === 'rec-empty' ? null : example.startsWith('rec-') ? RECOMMENDATION_DEMO_PLAN : ['saved', 'edit-error', 'delete-error'].includes(example) ? DEMO_PLAN : null,
+      initialPlan: scenario ? scenarioPlan(scenario) : example === 'rec-empty' ? null : example.startsWith('rec-') ? RECOMMENDATION_DEMO_PLAN : ['saved', 'edit-error', 'delete-error'].includes(example) ? DEMO_PLAN : null,
       getScenarioDate: () => activeDate.current,
       delayMs: example === 'loading' ? 8000 : slow ? 3500 : 700,
       failOnce: { read: example === 'load-error', create: example === 'save-error', update: example === 'edit-error', delete: example === 'delete-error' },
-    })} />
+    }))} />
     <details className="preview-tools">
       <summary>Demo controls</summary>
       <div className="preview-tools-body">
