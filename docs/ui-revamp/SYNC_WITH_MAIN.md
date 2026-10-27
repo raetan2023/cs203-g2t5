@@ -82,3 +82,14 @@ update `STATES` in `docs/ui-revamp/tools/screens.spec.ts` for any new preview st
   `features/forecast/` (13), `TimingComparison`, restructured recommendations page, new `market` preview state.
 - Housekeeping: the 12 modified `*.class` files were stashed (`git stash list`, "build-artifacts-before-main-sync"); drop the
   stash if you don't need those local builds. Tag `backup/ui-before-sync-2026-10-27` points at the pre-sync tip.
+
+### 2026-10-27 (evening) — after PR #32 merged, 7 commits behind
+
+- Before: 0 ahead, 7 behind (PR #32 brought this branch into `main`; #33 deadline-weighted recommendation, #34 approval
+  workflow and forecast role access followed). merge-tree predicted no conflicts: **fast-forward** to `d09beb8`.
+- Presentation kept: `main` built on the purchase-plans redesign (status pill "Submitted for approval", Edit/Delete only
+  for draft plans, manager `ApprovalInbox`), all in `--bb-*` tokens. Recommendations page restructured for one
+  deadline-weighted recommendation plus approval (`RecommendationApproval`, `ManagerDecisionForm`,
+  `RecommendationEvidence`); its CSS still has 59 old colour literals (no new ones).
+- Backend changes (approval, migrations `20261027_*`) are `main`'s; nothing to resolve here.
+- Checks: vitest 24 files / 227 tests pass; `tsc` clean; `vite build` OK. Tag `backup/ui-before-sync-2026-10-27b` = pre-sync tip.

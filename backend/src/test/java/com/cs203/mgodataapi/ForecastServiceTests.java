@@ -152,9 +152,9 @@ class ForecastServiceTests {
                 LocalDate.parse("2026-10-30"), service.today());
         var response = analysis.read(context, false, 7, run);
         @SuppressWarnings("unchecked") var guidance = (Result<Guidance>) response.get("recommendation");
-        assertEquals("MONITOR", guidance.value().action());
+        assertEquals("BUY_NOW", guidance.value().action());
         assertFalse(guidance.value().explanation().contains("70,000 to 82,000"));
-        assertTrue(guidance.value().evidence().limitations().stream().anyMatch(s -> s.contains("exceeds the purchase deadline")));
+        assertTrue(guidance.value().evidence().limitations().stream().anyMatch(s -> s.contains("No available forecast fits")));
         assertEquals("unavailable", ((Result<?>) analysis.read(context, true, 7, run).get("cost_impact")).status());
         assertEquals(HttpStatus.CONFLICT, assertThrows(ApiException.class,
                 () -> analysis.read(context, false, 7, UUID.randomUUID())).status());
@@ -168,13 +168,13 @@ class ForecastServiceTests {
         var provider = new PublishedForecastAnalysisProvider(service);
         var context = new PlanAnalysisService.Context(UUID.randomUUID(), new BigDecimal("100"),
                 LocalDate.parse("2026-11-03"), service.today());
-        assertEquals("SPLIT", provider.recommendation(context).recommendation().value().action());
+        assertEquals("MONITOR", provider.recommendation(context).recommendation().value().action());
         value.put("high", 790); value.put("raw_q90_price", 780);
         publish(value, service.today());
-        assertEquals("SPLIT", provider.recommendation(context).recommendation().value().action());
+        assertEquals("MONITOR", provider.recommendation(context).recommendation().value().action());
         value.put("low", 810).put("high", 900).put("raw_q10_price", 820).put("raw_q90_price", 880);
         publish(value, service.today());
-        assertEquals("SPLIT", provider.recommendation(context).recommendation().value().action());
+        assertEquals("BUY_NOW", provider.recommendation(context).recommendation().value().action());
         var overdue = new PlanAnalysisService.Context(context.plan_id(), context.quantity_mt(), service.today().minusDays(1), service.today());
         assertEquals("MONITOR", provider.recommendation(overdue).recommendation().value().action());
     }

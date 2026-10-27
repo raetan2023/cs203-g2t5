@@ -62,7 +62,8 @@ export function parseAnalysis(payload: unknown, expected: PlanResultContext): Pl
   if (!sameContext(context, expected)) throw new PlanError('Your saved plan or scenario changed. Reload the purchase plan.', {}, 409);
   if (!['fixture', 'model', 'unavailable'].includes(text(v.provenance))) throw invalid();
   const analysis: PlanAnalysis = {
-    source: 'api', provenance: v.provenance as PlanAnalysis['provenance'], context,
+    source: 'api',
+    ...(v.approval_fingerprint != null && { approval_fingerprint: text(v.approval_fingerprint) }), provenance: v.provenance as PlanAnalysis['provenance'], context,
     reference: result(v.reference, r => ({ price: number(r.price, true), observation_date: date(r.observation_date), basis: basis(r.basis) })),
     forecast: result(v.forecast, f => {
       const prices = range(f.prices, true);

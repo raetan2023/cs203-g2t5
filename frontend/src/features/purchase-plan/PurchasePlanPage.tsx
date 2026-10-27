@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ApprovalInbox } from './components/ApprovalInbox';
 import { DeletePlanDialog } from './components/DeletePlanDialog';
 import { formatDate } from './dates';
 import { ErrorBanner, Icon, LoadingState, PlanButton } from './components/Primitives';
@@ -16,13 +17,14 @@ type PageState =
 export interface PurchasePlanPageProps {
   service: PurchasePlanService;
   canEdit?: boolean;
+  isManager?: boolean;
   /** Required even before a plan exists: the API's null response has no date. */
   scenarioDate: string;
   /** Future analysis consumers clear cached results on context changes or successful writes. */
   onInvalidateAnalysis?: () => void;
 }
 
-export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, canEdit = true }: PurchasePlanPageProps) {
+export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, canEdit = true, isManager = false }: PurchasePlanPageProps) {
   const [state, setState] = useState<PageState>({ mode: 'loading' });
   const [plans, setPlans] = useState<PurchasePlan[]>([]);
   const [attempt, setAttempt] = useState(0);
@@ -155,6 +157,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
           }}><Icon name="plus" />Create plan</PlanButton>
         </div>}
       </header>
+      {isManager && service.notifications && <ApprovalInbox service={service} />}
       {writing && state.mode === 'view' && <p role="status">Finishing your previous plan change before another edit can be made.</p>}
       {state.mode === 'error' && <section className="pp-card pp-load-error" aria-label="Unable to load purchase plan">
         <h2>Unable to load your purchase plan</h2>

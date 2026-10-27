@@ -148,3 +148,12 @@
   .pp-spinner { animation: none; }
   .pp-button { transition: none; }
 }
+
+.pp-summary-badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2); min-width: 0; }
+.pp-plan-status { display: inline-block; margin: 0; padding: var(--bb-space-1) var(--bb-space-2); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font-size: 12px; font-weight: 600; color: var(--bb-text); }
+.pp-plan-status--submitted { background: var(--bb-surface-input); }
+.pp-approval-inbox { margin-bottom: 1.5rem; }
+.pp-approval-list { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.pp-approval-list li { padding: 1rem 0; border-top: 1px solid var(--bb-border-subtle); }
+.pp-approval-list p { font-size: .9rem; }
+.pp-approval-list a { color: inherit; text-decoration: underline; }

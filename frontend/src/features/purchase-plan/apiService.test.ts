@@ -173,3 +173,76 @@ describe('multiple-plan transport', () => {
     expect(deletion).not.toHaveBeenCalled();
   });
 });
+
+describe('approval API contracts', () => {
+  const selection = { horizon_days: 14 as const, run_id: 'run', recommendation_id: 'rec', approval_fingerprint: 'a'.repeat(64),
+    urgency: 'NORMAL' as const, quantity_mt: 500, purchase_deadline: '2026-11-15', scenario_as_of_date: '2026-10-27' };
+  it('submits with bearer authentication, no supplied owner or organisation and validates status', async () => {
+    const plan = { plan_id: 'p1', quantity_mt: 500, purchase_deadline: '2026-11-15', scenario_as_of_date: '2026-10-27', days_remaining: 19, status: 'submitted', submitted_at: '2026-10-27T08:00:00Z' };
+    const fetchMock = mockFetch(200, { plan });
+    await expect(service.submit!('p1', selection)).resolves.toEqual({ plan });
+    expect(fetchMock.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/p1/submit');
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'POST', cache: 'no-store', headers: { Authorization: 'Bearer session-token' } });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual(selection);
+    mockFetch(200, { plan: { ...plan, status: 'draft' } });
+    await expect(service.submit!('p1', selection)).rejects.toMatchObject({ status: 502 });
+  });
+  it('reads and validates the manager inbox, propagating forbidden responses', async () => {
+    const fetchMock = mockFetch(200, { notifications: [] });
+    await expect(service.notifications!()).resolves.toEqual({ notifications: [] });
+    expect(fetchMock.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/approval-notifications');
+    mockFetch(200, { notifications: [{ notification_id: 'n1', quantity_mt: 'invalid' }] });
+    await expect(service.notifications!()).rejects.toMatchObject({ status: 502 });
+    mockFetch(403, { detail: 'Manager membership is required.' });
+    await expect(service.notifications!()).rejects.toMatchObject({ status: 403, detail: 'Manager membership is required.' });
+  });
+});
+
+describe('saved recommendation transport', () => {
+  const raw = {
+    provenance: 'model', approval_fingerprint: 'a'.repeat(64),
+    context: { plan_id: 'p1', quantity_mt: 500, purchase_deadline: '2026-11-15', scenario_as_of_date: '2026-10-27', urgency: 'HIGH' },
+    reference: { status: 'ready', value: { price: 700, observation_date: '2026-10-27', basis: { commodity: 'MGO', currency: 'USD', unit: 'MT' } } },
+    forecast: { status: 'ready', value: { run_id: 'saved-run', model_version: 'ridge-saved', prices: { lower: 680, upper: 740 },
+      central_estimate: 710, target_date: '2026-11-10', basis: { commodity: 'MGO', currency: 'USD', unit: 'MT' }, range_description: 'Experimental range' } },
+    cost_impact: { status: 'ready', value: { currency: 'USD', target_date: '2026-11-10', reference_total: 350000,
+      forecast_total: { lower: 340000, upper: 370000 }, difference_total: { lower: -10000, upper: 20000 }, central_total: 355000 } },
+    recommendation: { status: 'ready', value: { recommendation_id: 'saved-rec', action: 'WAIT', explanation: 'Saved at submission.' } },
+  };
+  it('reads the stored choice, including historical context and the original forecast version', async () => {
+    const request = mockFetch(200, { submission: { horizon_days: 14, analysis: raw } });
+    const result = await service.readSubmission!('p1');
+    expect(request.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/p1/submission');
+    expect(result.submission).toMatchObject({ horizon_days: 14, analysis: { source: 'api', approval_fingerprint: 'a'.repeat(64),
+      context: { urgency: 'HIGH' }, forecast: { value: { run_id: 'saved-run', model_version: 'ridge-saved' } } } });
+  });
+  it('rejects snapshots for another plan or an unsupported horizon', async () => {
+    mockFetch(200, { submission: { horizon_days: 14, analysis: { ...raw, context: { ...raw.context, plan_id: 'other' } } } });
+    await expect(service.readSubmission!('p1')).rejects.toMatchObject({ status: 502 });
+    mockFetch(200, { submission: { horizon_days: 5, analysis: raw } });
+    await expect(service.readSubmission!('p1')).rejects.toMatchObject({ status: 502 });
+  });
+  it('preserves the absence of a snapshot on a legacy submission', async () => {
+    mockFetch(200, { submission: null });
+    await expect(service.readSubmission!('p1')).resolves.toEqual({ submission: null, decision: null });
+  });
+});
+
+describe('manager decision transport', () => {
+  it('posts only the final choice, comment and reviewed fingerprint using the session token', async () => {
+    const input = { decision: 'approved' as const, comment: '', approval_fingerprint: 'a'.repeat(64) };
+    const request = mockFetch(200, { plan: { ...DEMO_PLAN, status: 'approved' } });
+    await expect(service.decide!('p1', input)).resolves.toMatchObject({ plan: { status: 'approved' } });
+    expect(request.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/p1/decision');
+    expect(JSON.parse(request.mock.calls[0][1].body)).toEqual(input);
+    expect(request.mock.calls[0][1].headers.Authorization).toBe('Bearer session-token');
+    mockFetch(409, { detail: 'Already decided.' });
+    await expect(service.decide!('p1', input)).rejects.toMatchObject({ status: 409, detail: 'Already decided.' });
+  });
+  it('rejects a response with the wrong final status or a malformed audit record', async () => {
+    mockFetch(200, { plan: { ...DEMO_PLAN, status: 'submitted' } });
+    await expect(service.decide!('p1', { decision: 'rejected', comment: 'Budget', approval_fingerprint: 'a'.repeat(64) })).rejects.toMatchObject({ status: 502 });
+    mockFetch(200, { submission: null, decision: { decision: 'rejected', comment: '' } });
+    await expect(service.readSubmission!('p1')).rejects.toMatchObject({ status: 502 });
+  });
+});

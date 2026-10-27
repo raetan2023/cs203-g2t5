@@ -6,7 +6,7 @@
  *
  * Pending (values not decided, add here only when the owning phase decides them):
  *   price-up / price-down / price-flat (+ -surface)  Phase 5
- *   success-*  Phase 4    warning-*  Phase 5    chart-*  Phase 6
+ *   success-*  Phase 4    chart-*  Phase 6
  */
 :root {
   color-scheme: dark;
@@ -40,6 +40,11 @@
   --bb-error-surface: #382b29;
   --bb-error-border: #e3b3a9;
   --bb-error-alert-text: #f2d9d2;
+
+  /* warnings: experimental, stale or unavailable data (Phase 5, 2026-10-28; differs from errors by icon and label too) */
+  --bb-warning-text: #e2c48a;
+  --bb-warning-surface: #211e19;
+  --bb-warning-border: #6a542f;
 
   /* type */
   --bb-font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
