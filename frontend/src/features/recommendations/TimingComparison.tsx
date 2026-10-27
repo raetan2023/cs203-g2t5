@@ -26,8 +26,8 @@ export function timingChoice(entries: Entry[], today: string, deadline: string) 
 }
 
 /** Read every horizon as a group; never combine forecasts from different snapshots. */
-export function TimingComparison({ service, today, deadline, revision, selectedRun, refresh, select }: {
-  service: ForecastService; today: string; deadline: string; revision?: string; selectedRun?: string; refresh?(): void;
+export function TimingComparison({ service, today, deadline, revision, selectedRun, selectedHorizon, refresh, select }: {
+  service: ForecastService; today: string; deadline: string; revision?: string; selectedRun?: string; selectedHorizon?: Horizon; refresh?(): void;
   select(horizon: Horizon): void;
 }) {
   const [attempt, retry] = useState(0);
@@ -57,11 +57,16 @@ export function TimingComparison({ service, today, deadline, revision, selectedR
   const y = (price: number) => 235 - (price - min) / Math.max(max - min, 1) * 190;
   const x = (h: Horizon) => 135 + horizons.indexOf(h) * 220;
   return <section className="timing-comparison" aria-label="Compare purchase timing" aria-busy={!entries}>
-    <div className="timing-heading"><div><p className="rec-eyebrow">When to buy</p><h2>{choice?.title ?? 'Comparing 7, 14 and 30 days…'}</h2><p>{choice?.reason ?? 'Loading model prices and uncertainty for all three horizons.'}</p></div>
+    <div className="timing-heading"><div><p className="rec-eyebrow">Compare model horizons</p><h2>{choice?.horizon ? `Lowest central estimate · ${choice.horizon} days` : choice?.title ?? 'Comparing 7, 14 and 30 days…'}</h2><p>{choice?.reason ?? 'Loading model prices and uncertainty for all three horizons.'}</p></div>
       <button className="bb-button" onClick={() => { refresh?.(); retry(n => n + 1); }}>Refresh comparison</button></div>
     {entries && <>
+      <div className="timing-options">{entries.map(e => <button key={e.horizon} className={`timing-option ${choice?.horizon === e.horizon ? 'timing-best' : ''} ${selectedHorizon === e.horizon ? 'timing-selected' : ''}`} aria-pressed={selectedHorizon === e.horizon} disabled={!e.forecast || e.forecast.target_date <= today || e.forecast.target_date > deadline} onClick={() => select(e.horizon)}>
+        <span className="timing-option-heading"><span className="rec-eyebrow">{e.horizon} days {choice?.horizon === e.horizon ? '· Suggested' : ''}</span>{selectedHorizon === e.horizon && <> <span className="timing-selection">Selected</span></>}</span>
+        {e.forecast ? <><strong>USD {money(e.forecast.forecast)}<small>/MT</small></strong><span>{money(e.forecast.low)}–{money(e.forecast.high)} uncertainty</span><span>Target {formatDate(e.forecast.target_date)}</span>{e.forecast.target_date > deadline && <span>After your deadline</span>}</> : <><strong>Unavailable</strong><span>Model status: {e.message}</span></>}
+      </button>)}</div>
+      <details className="rec-forecast timing-chart-disclosure"><summary>View price ranges chart</summary>
       <div className="timing-legend"><span><i /> Central price</span><span><i className="timing-band-key" /> Experimental uncertainty range</span><span>USD / MT</span></div>
-      <svg className="timing-chart" viewBox="0 0 700 295" role="img" aria-label="Central MGO price and experimental lower and upper bounds for 7, 14 and 30 day model horizons">
+      <div className="timing-chart-scroll" role="region" aria-label="Price ranges chart, scroll horizontally on small screens" tabIndex={0}><svg className="timing-chart" viewBox="0 0 700 295" role="img" aria-label="Central MGO price and experimental lower and upper bounds for 7, 14 and 30 day model horizons">
         {[0, 1, 2, 3, 4].map(i => { const price = min + (max - min) * i / 4; return <g key={i}><line x1="75" x2="665" y1={y(price)} y2={y(price)} stroke="#284052" strokeDasharray="4 6" /><text x="62" y={y(price) + 4} textAnchor="end" fill="#92a8bc" fontSize="12">{points.length ? money(price) : '—'}</text></g>; })}
         {horizons.map(h => { const f = entries.find(e => e.horizon === h)?.forecast; return <g key={h}>
           <text x={x(h)} y="270" textAnchor="middle" fill="#e4edf5" fontSize="14">{h} days</text>
@@ -72,11 +77,8 @@ export function TimingComparison({ service, today, deadline, revision, selectedR
             <circle cx={x(h)} cy={y(f.forecast)} r="7" fill="#e4fff9" stroke="#113c3b" strokeWidth="3" />
           </> : <text x={x(h)} y="145" textAnchor="middle" fill="#91a4ba" fontSize="13">Unavailable</text>}
         </g>; })}
-      </svg>
-      <div className="timing-options">{entries.map(e => <button key={e.horizon} className={`timing-option ${choice?.horizon === e.horizon ? 'timing-best' : ''}`} disabled={!e.forecast || e.forecast.target_date <= today || e.forecast.target_date > deadline} onClick={() => select(e.horizon)}>
-        <span className="rec-eyebrow">{e.horizon} days {choice?.horizon === e.horizon ? '· Suggested' : ''}</span>
-        {e.forecast ? <><strong>USD {money(e.forecast.forecast)}<small>/MT</small></strong><span>{money(e.forecast.low)}–{money(e.forecast.high)} uncertainty</span><span>Target {formatDate(e.forecast.target_date)}</span>{e.forecast.target_date > deadline && <span>After your deadline</span>}</> : <><strong>Unavailable</strong><span>Model status: {e.message}</span></>}
-      </button>)}</div>
+      </svg></div>
+      </details>
       <p className="timing-footnote">Horizons run from the model’s observed quote. Exact target dates appear above. Experimental bounds have no measured confidence coverage.</p>
     </>}
   </section>;
