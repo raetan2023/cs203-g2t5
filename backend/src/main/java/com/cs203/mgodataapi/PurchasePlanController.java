@@ -70,21 +70,22 @@ public class PurchasePlanController {
             @RequestParam("purchase_deadline") LocalDate deadline,
             @RequestParam("scenario_as_of_date") LocalDate scenario,
             @RequestParam(defaultValue = "7") int horizon_days,
+            @RequestParam(defaultValue = "NORMAL") String urgency,
             @RequestParam(required = false) UUID run_id,
             jakarta.servlet.http.HttpServletRequest request) {
         LocalDate scenarioDate = LocalDate.now(clock);
         UUID owner = ownerOf(token);
         PurchasePlan plan = plans.findByIdAndUser(planId, owner).orElseThrow(() ->
                 new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
-        PlanAnalysisService.Context context = PlanAnalysisService.Context.of(plan, scenarioDate);
-        if (!context.matches(new PlanAnalysisService.Context(planId, quantity, deadline, scenario))) {
+        PlanAnalysisService.Context context = PlanAnalysisService.Context.of(plan, scenarioDate).withUrgency(urgency);
+        if (!context.matches(new PlanAnalysisService.Context(planId, quantity, deadline, scenario, urgency))) {
             throw new ApiException(HttpStatus.CONFLICT, "Your saved plan or scenario changed. Reload the purchase plan.");
         }
         if (!java.util.Set.of(7, 14, 30).contains(horizon_days))
             throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "horizon_days must be 7, 14 or 30.");
         Map<String, Object> result = analysis.read(context, request.getRequestURI().endsWith("/cost-impact"), horizon_days, run_id);
         // A slow provider must not publish results for inputs edited/deleted during its request.
-        if (!plans.findByIdAndUser(planId, owner).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate))).orElse(false)) {
+        if (!plans.findByIdAndUser(planId, owner).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate).withUrgency(urgency))).orElse(false)) {
             throw new ApiException(HttpStatus.CONFLICT, "Your saved plan changed while analysis was loading. Reload the purchase plan.");
         }
         return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(result);

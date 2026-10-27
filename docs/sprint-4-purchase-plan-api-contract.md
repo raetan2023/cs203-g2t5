@@ -1,4 +1,6 @@
 > Multiple-plan update (21 October 2026): CRUD now uses `GET/POST /api/v1/purchase-plans`
+
+Current implementation note (26 October 2026): the buyer heuristic is now connected to the saved-plan recommendation endpoint, including explicit urgency, four outcomes and structured evidence. See [buyer recommendation policy](buyer-recommendation-policy.md) for the current contract and checks. Earlier unavailable-policy notes below describe the previous branch state.
 > and `GET/PUT/DELETE /api/v1/purchase-plans/{planId}`. Collection GET returns
 > `{"plans": [...]}`. Analysis uses the plural paths below and selects the owned
 > plan by the existing `plan_id` query parameter. Missing/foreign plans return

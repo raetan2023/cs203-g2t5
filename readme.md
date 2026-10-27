@@ -13,7 +13,7 @@ The app uses **React + TypeScript + Vite**, a **Java Spring Boot API**, **Clerk 
 - Authenticated recommendation and cost-impact interfaces with independent loading, error and unavailable states.
 - Standalone linear regression, CatBoost and Random Forest experiments, with a [model comparison](modelcomparison.md).
 
-The normal app reads daily published GDELT-informed ranges through the authenticated backend forecast API; both dashboard and purchase-plan cost analysis use the same publication. Forecasts remain explicitly unavailable until fresh inputs and sufficient validated historical news evidence exist. Buy/wait guidance remains unavailable without an approved policy. See [daily forecast operations](docs/daily-forecast-operations.md). Synthetic preview/fixture outputs are explicitly labelled and do not establish real model performance.
+The normal app reads daily published GDELT-informed ranges through the authenticated backend forecast API; both dashboard and purchase-plan cost analysis use the same publication. Forecasts remain explicitly unavailable until fresh inputs and sufficient validated historical news evidence exist. Saved-plan guidance uses the documented [experimental buyer heuristic](docs/buyer-recommendation-policy.md), with explicit uncertainty, urgency and deadline constraints. See [daily forecast operations](docs/daily-forecast-operations.md). Synthetic preview/fixture outputs are explicitly labelled and do not establish real model performance.
 
 ## Repository map
 
