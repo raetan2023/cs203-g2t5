@@ -11,13 +11,18 @@ import static com.cs203.mgodataapi.PlanAnalysisProvider.*;
 
 @Service
 public class PlanAnalysisService {
-    public record Context(UUID plan_id, BigDecimal quantity_mt, LocalDate purchase_deadline, LocalDate scenario_as_of_date) {
+    public record Context(UUID plan_id, BigDecimal quantity_mt, LocalDate purchase_deadline, LocalDate scenario_as_of_date, String urgency) {
+        public Context(UUID id, BigDecimal quantity, LocalDate deadline, LocalDate scenario) {
+            this(id, quantity, deadline, scenario, "NORMAL");
+        }
+        public Context withUrgency(String value) { return new Context(plan_id, quantity_mt, purchase_deadline, scenario_as_of_date, value); }
         static Context of(PurchasePlan plan, LocalDate date) {
             return new Context(plan.planId(), plan.quantityMt(), plan.purchaseDeadline(), date);
         }
         boolean matches(Context other) {
             return other != null && plan_id.equals(other.plan_id) && quantity_mt.compareTo(other.quantity_mt) == 0
-                    && purchase_deadline.equals(other.purchase_deadline) && scenario_as_of_date.equals(other.scenario_as_of_date);
+                    && purchase_deadline.equals(other.purchase_deadline) && scenario_as_of_date.equals(other.scenario_as_of_date)
+                    && java.util.Objects.equals(urgency, other.urgency);
         }
     }
     public record Impact(String currency, LocalDate target_date, BigDecimal reference_total, Range forecast_total,
@@ -27,27 +32,19 @@ public class PlanAnalysisService {
 
     public Map<String, Object> read(Context context, boolean impact) { return read(context, impact, 7, null); }
     public Map<String, Object> read(Context context, boolean impact, int horizon, UUID expectedRunId) {
+        RecommendationPolicy.validate(context);
         try {
-            Result<Reference> reference = Result.unavailable("missing_reference", "Reference prices are loaded separately.");
-            Result<Forecast> forecast = Result.unavailable("missing_forecast", "Forecast prices are loaded separately.");
-            Result<Impact> cost = Result.unavailable("missing_forecast", "Cost impact is loaded separately.");
+            Prices prices = provider.prices(context.scenario_as_of_date, horizon);
+            if (!context.scenario_as_of_date.equals(prices.scenario_as_of_date())) throw new IllegalArgumentException("Provider scenario mismatch");
+            Result<Reference> reference = validateReference(prices.reference(), context.scenario_as_of_date);
+            Result<Forecast> forecast = validateForecast(prices.forecast(), context.scenario_as_of_date);
+            if (expectedRunId != null && (!"ready".equals(forecast.status()) || !expectedRunId.equals(forecast.value().run_id())))
+                throw new ApiException(HttpStatus.CONFLICT, "The forecast run changed. Reload the forecast and cost impact.");
+            Result<Impact> cost = calculate(context, reference, forecast);
             Result<Guidance> guidance = Result.unavailable("recommendation_unavailable", "Recommendations are loaded separately.");
-            if (impact || expectedRunId != null || provider.recommendationUsesPrices()) {
-                Prices prices = provider.prices(context.scenario_as_of_date, horizon);
-                if (!context.scenario_as_of_date.equals(prices.scenario_as_of_date())) throw new IllegalArgumentException("Provider scenario mismatch");
-                reference = validateReference(prices.reference(), context.scenario_as_of_date);
-                forecast = validateForecast(prices.forecast(), context.scenario_as_of_date);
-                if (expectedRunId != null && (!"ready".equals(forecast.status())
-                        || !expectedRunId.equals(forecast.value().run_id())))
-                    throw new ApiException(HttpStatus.CONFLICT, "The forecast run changed. Reload the forecast and cost impact.");
-                cost = calculate(context, reference, forecast);
-            }
             if (!impact) {
-                Recommendation result = provider.recommendationUsesPrices()
-                        ? provider.recommendation(context, new Prices(context.scenario_as_of_date, reference, forecast))
-                        : provider.recommendation(context);
-                if (!context.matches(result.context())) throw new IllegalArgumentException("Provider context mismatch");
-                guidance = result.recommendation();
+                guidance = Result.ready(RecommendationPolicy.evaluate(context,
+                        new Prices(context.scenario_as_of_date, reference, forecast)));
                 validateResult(guidance);
                 if ("ready".equals(guidance.status()) && (guidance.value() == null
                         || blank(guidance.value().recommendation_id()) || blank(guidance.value().action()) || blank(guidance.value().explanation())))
@@ -56,7 +53,7 @@ public class PlanAnalysisService {
             String provenance = provider.provenance();
             if (!Set.of("fixture", "model", "unavailable").contains(provenance)
                     || ("unavailable".equals(provenance) && ("ready".equals(reference.status())
-                    || "ready".equals(forecast.status()) || "ready".equals(guidance.status()))))
+                    || "ready".equals(forecast.status()))))
                 throw new IllegalArgumentException("Invalid provenance");
             return Map.of("provenance", provenance, "context", context, "reference", reference,
                     "forecast", forecast, "cost_impact", cost, "recommendation", guidance);

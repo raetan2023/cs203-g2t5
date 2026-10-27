@@ -1,5 +1,7 @@
 # Sprint 4 recommendations: branch status and testing
 
+Current implementation note (26 October 2026): the buyer heuristic is now connected to the saved-plan recommendation endpoint, including explicit urgency, four outcomes and structured evidence. See [buyer recommendation policy](buyer-recommendation-policy.md) for the current contract and checks. Earlier unavailable-policy notes below describe the previous branch state.
+
 Updated: 11 October 2026. Branch: `rae/sprint-4-recommendations`.
 
 ## Where this branch is now

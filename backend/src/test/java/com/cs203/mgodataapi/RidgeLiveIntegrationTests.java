@@ -37,12 +37,14 @@ class RidgeLiveIntegrationTests {
     @MockitoBean UserAccounts users;
 
     @Test void realSavedPlanUsesExecutedRidgeStoredNewsAndExactDecimalCosts() throws Exception {
-        var saved = jdbc.queryForMap("select plan_id,user_id,quantity_mt,purchase_deadline from purchase_plans order by purchase_deadline desc limit 1");
+        var saved = jdbc.queryForMap("select plan_id,user_id,quantity_mt,purchase_deadline,clerk_org_id from purchase_plans where clerk_org_id is not null order by purchase_deadline desc limit 1");
         UUID owner = (UUID) saved.get("user_id");
         when(users.resolve(anyString(), any())).thenReturn(owner);
+        String organisationId = (String) saved.get("clerk_org_id");
+        var membership = jwt().jwt(token -> token.claim("o", java.util.Map.of("id", organisationId, "rol", "buyer")));
         LocalDate today = forecasts.today();
         var standalone = ridge.predict(30, today);
-        var response = mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=30").with(jwt()))
+        var response = mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=30").with(membership))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.status").value("ready"))
                 .andReturn().getResponse().getContentAsString();
@@ -54,7 +56,7 @@ class RidgeLiveIntegrationTests {
                 + "&horizon_days=30&run_id=" + forecast.path("run_id").asText();
         LocalDate deadline = saved.get("purchase_deadline") instanceof LocalDate d ? d : ((java.sql.Date) saved.get("purchase_deadline")).toLocalDate();
         boolean fits = !LocalDate.parse(forecast.path("target_date").asText()).isAfter(deadline);
-        var impact = mapper.readTree(mvc.perform(get("/api/v1/purchase-plans/cost-impact" + query).with(jwt()))
+        var impact = mapper.readTree(mvc.perform(get("/api/v1/purchase-plans/cost-impact" + query).with(membership))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cost_impact.status").value(fits ? "ready" : "unavailable"))
                 .andReturn().getResponse().getContentAsString());
@@ -64,10 +66,10 @@ class RidgeLiveIntegrationTests {
                     .compareTo(new BigDecimal(impact.at("/cost_impact/value/forecast_total/lower").asText())));
         } else assertEquals("unsupported_horizon", impact.at("/cost_impact/reason").asText());
         assertEquals(forecast.path("run_id").asText(), impact.at("/forecast/value/run_id").asText());
-        mvc.perform(get("/api/v1/purchase-plans/recommendation" + query).with(jwt()))
+        mvc.perform(get("/api/v1/purchase-plans/recommendation" + query).with(membership))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.recommendation.status").value("ready"));
         for (int h : new int[]{7,14}) {
-            var current = mapper.readTree(mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=" + h).with(jwt()))
+            var current = mapper.readTree(mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=" + h).with(membership))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ready"))
                 .andReturn().getResponse().getContentAsString());
             assertEquals(today.toString(), current.path("anchor_quote_date").asText());

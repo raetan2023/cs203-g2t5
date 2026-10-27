@@ -46,9 +46,13 @@ class OperationalPlanDateTests {
         var plan = new PurchasePlan(id, owner, BigDecimal.TEN, today.plusDays(3), today);
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(plan));
         when(dates.today()).thenReturn(today, today.plusDays(1));
-        when(analysis.read(any(), anyBoolean())).thenReturn(Map.of());
+        when(analysis.read(any(), anyBoolean(), eq(7), isNull())).thenReturn(Map.of());
         var request = mock(jakarta.servlet.http.HttpServletRequest.class);
         when(request.getRequestURI()).thenReturn("/api/v1/purchase-plans/recommendation");
-        assertThrows(ApiException.class, () -> controller.analyze(token, id, BigDecimal.TEN, plan.purchaseDeadline(), today, request));
+        var failure = assertThrows(ApiException.class, () -> controller.analyze(token, id, BigDecimal.TEN,
+                plan.purchaseDeadline(), today, 7, "HIGH", null, request));
+        assertEquals(org.springframework.http.HttpStatus.CONFLICT, failure.status());
+        verify(analysis).read(argThat(context -> context.urgency().equals("HIGH")
+                && context.scenario_as_of_date().equals(today)), eq(false), eq(7), isNull());
     }
 }

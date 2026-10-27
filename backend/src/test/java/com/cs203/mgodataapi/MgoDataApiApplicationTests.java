@@ -87,11 +87,11 @@ class MgoDataApiApplicationTests {
         mvc.perform(get("/api/v1/purchase-plans/forecast")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/purchase-plans/forecast").header("X-API-Key", KEY)).andExpect(status().isUnauthorized());
         // No stored news is supplied by this test repository; do not fabricate a range.
-        mvc.perform(get("/api/v1/purchase-plans/forecast").with(jwt()))
+        mvc.perform(get("/api/v1/purchase-plans/forecast").with(jwt().jwt(token -> token.claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.status").value("unavailable"))
                 .andExpect(jsonPath("$.reason").value("missing_previous_day_news"));
-        mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=5").with(jwt()))
+        mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=5").with(jwt().jwt(token -> token.claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -125,7 +125,7 @@ class MgoDataApiApplicationTests {
                     .with(jwt().jwt(token -> token.subject("analysis_owner").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.provenance").value("unavailable"))
-                    .andExpect(jsonPath("$.recommendation.status").value("unavailable"))
+                    .andExpect(jsonPath("$.recommendation.status").value(section.equals("recommendation") ? "ready" : "unavailable"))
                     .andExpect(jsonPath("$.cost_impact.status").value("unavailable"));
         }
     }
