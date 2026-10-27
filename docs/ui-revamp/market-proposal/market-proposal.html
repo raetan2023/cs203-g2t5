@@ -172,11 +172,11 @@ th.num, td.num { text-align: right; }
 .caveat { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 12px; line-height: 18px; color: var(--muted); }
 
 /* Forecast details: provenance, range quality and drivers, closed by default. */
-details.card { padding: 0 var(--pad); }
-details.card > summary { display: flex; align-items: center; justify-content: space-between; min-height: 52px; cursor: pointer; font-size: 15px; font-weight: 600; list-style: none; }
+details.card { padding: 14px var(--pad); }
+details.card > summary { display: flex; align-items: center; justify-content: space-between; min-height: 24px; cursor: pointer; font-size: 15px; font-weight: 600; list-style: none; }
 details.card > summary::-webkit-details-marker { display: none; }
 details.card[open] > summary svg { transform: rotate(180deg); }
-.details-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; padding: 4px 0 var(--pad); }
+.details-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; padding: 18px 0 6px; }
 .details-grid h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
 .kv { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--rule); }
 .kv span:first-child { color: var(--muted); }
@@ -219,7 +219,7 @@ details.card[open] > summary svg { transform: rotate(180deg); }
   .sale-val { grid-area: val; }
   .search { width: 100%; } .search input { width: 100%; }
   .details-grid { grid-template-columns: 1fr; gap: 20px; }
-  details.card { padding: 0 16px; }
+  details.card { padding: 14px 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } .btn:active:not(:disabled) { transform: none; } }
 </style>
