@@ -1,0 +1,52 @@
+/* Imported only by the standalone oris.html entry. */
+html, body, #root { margin: 0; min-width: 320px; min-height: 100%; }
+body { background: #0b1d30; }
+.oris-page { --oris-text: #f6f7f8; --oris-muted: #bdc9d5; --oris-border: #ffffff30; --oris-accent: #cb4524; position: relative; isolation: isolate; min-height: 100svh; padding: 42px clamp(24px, 4.5vw, 88px) 56px; color: var(--oris-text); font: 15px/1.5 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; color-scheme: dark; }
+.oris-page *, .oris-page *::before, .oris-page *::after { box-sizing: border-box; }
+.oris-page button, .oris-page input { font: inherit; }
+.oris-page button { cursor: pointer; }
+.oris-page button:disabled { cursor: wait; opacity: .65; }
+.oris-page :focus-visible { outline: 2px solid #ffb69a; outline-offset: 4px; }
+.oris-scene { position: absolute; inset: 0; z-index: -1; overflow: hidden; background: #16374c; }
+.oris-vessel { position: absolute; width: 100%; height: 100%; object-fit: cover; object-position: 48% 50%; }
+.oris-shade { position: absolute; inset: 0; background: linear-gradient(0deg, #061321ef 0%, #06132138 55%, #0e28434d 100%), linear-gradient(90deg, #091b3038 0%, #091b300a 48%, #091b307d 100%); }
+.oris-header { display: flex; align-items: center; min-height: 48px; }
+.oris-header .bb-brand { display: inline-flex; align-items: center; gap: 12px; color: #fff; font-size: 23px; font-weight: 500; letter-spacing: -.5px; }
+.oris-header .bb-brand-mark { display: grid; place-items: center; width: 43px; height: 43px; border: 1px solid #ffffff85; border-radius: 50%; }
+.oris-header .bb-brand-mark svg { width: 24px; height: 24px; }
+.oris-layout { min-height: calc(100svh - 146px); display: grid; grid-template-columns: minmax(0, 1fr) 410px; align-items: center; gap: clamp(32px, 5vw, 90px); padding-top: 44px; }
+.oris-intro { align-self: end; padding-bottom: clamp(36px, 8vh, 100px); }
+.oris-intro h1 { margin: 0; font-size: clamp(46px, 5.2vw, 90px); font-weight: 300; line-height: 1.09; letter-spacing: -.045em; }
+.oris-intro p { margin: 28px 0 0; color: #d4dce5; font-size: clamp(15px, 1.2vw, 19px); line-height: 1.7; max-width: 540px; }
+.oris-card { padding: 34px; background: #091c2eeb; border: 1px solid var(--oris-border); border-radius: 10px; box-shadow: 0 16px 60px #020a1626; }
+.oris-card h2 { margin: 0; font-size: 31px; font-weight: 400; line-height: 1.25; letter-spacing: -.7px; }
+.oris-card h2:focus { outline: none; }
+.oris-subtitle { margin: 10px 0 28px; color: var(--oris-muted); font-size: 14px; }
+.oris-providers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.oris-providers button { display: flex; justify-content: center; align-items: center; gap: 9px; min-height: 46px; padding: 10px; color: var(--oris-text); background: #ffffff05; border: 1px solid var(--oris-border); border-radius: 5px; font-size: 13px; transition: background .15s; }
+.oris-providers button:hover { background: #ffffff12; }
+.oris-providers svg { width: 16px; height: 16px; flex-shrink: 0; }
+.oris-divider { display: flex; align-items: center; gap: 12px; margin: 23px 0; color: var(--oris-muted); font-size: 11px; }
+.oris-divider::before, .oris-divider::after { content: ''; height: 1px; flex: 1; background: var(--oris-border); }
+.oris-field { margin-bottom: 20px; }
+.oris-field label { display: block; margin-bottom: 8px; font-size: 13px; color: #e0e6ec; }
+.oris-field input { width: 100%; min-width: 0; height: 48px; padding: 12px 14px; border: 1px solid #ffffff40; border-radius: 5px; color: var(--oris-text); background: #0b2136; font-size: 15px; }
+.oris-field input::placeholder { color: #a6b7c8; opacity: 1; }
+.oris-field input:focus { border-color: #e5a48c; }
+.oris-field input[aria-invalid=true] { border-color: #f9aa96; }
+.oris-password { position: relative; }
+.oris-password input { padding-right: 52px; }
+.oris-password button { position: absolute; right: 2px; top: 2px; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 4px; color: #c3d0dd; background: transparent; }
+.oris-field-error { margin: 7px 0 0; color: #ffb7a5; font-size: 12px; }
+.oris-error { padding: 12px; background: #533023; color: #ffe0d4; border-radius: 5px; font-size: 13px; }
+.oris-submit { width: 100%; min-height: 50px; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 20px; margin-top: 8px; border: 0; border-radius: 5px; color: #fff; background: var(--oris-accent); font-size: 14px; font-weight: 600 !important; transition: background .15s; }
+.oris-submit:hover:not(:disabled) { background: #b83b1d; }
+.oris-switch { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; margin: 24px 0 0; color: var(--oris-muted); font-size: 12px; }
+.oris-switch button { padding: 0; border: 0; background: none; color: #f3f5f7; text-decoration: underline; text-underline-offset: 4px; }
+.oris-preview-note { margin: 21px 0 0; color: #a9b8c7; font-size: 11px; text-align: center; }
+.oris-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (min-width: 1700px) { .oris-layout { grid-template-columns: minmax(0, 1fr) 450px; } .oris-card { padding: 40px; } }
+@media (max-width: 1000px) { .oris-layout { grid-template-columns: minmax(0, 1fr) 370px; gap: 30px; } .oris-card { padding: 28px; } .oris-intro h1 { font-size: 48px; } .oris-desktop-break { display: none; } }
+@media (max-width: 760px) { .oris-page { padding: 26px 24px 40px; } .oris-header .bb-brand { font-size: 20px; } .oris-header .bb-brand-mark { width: 38px; height: 38px; } .oris-layout { display: flex; flex-direction: column; align-items: stretch; gap: 32px; padding-top: 62px; min-height: auto; max-width: 520px; margin: 0 auto; } .oris-intro { align-self: stretch; padding-bottom: 0; } .oris-intro h1 { font-size: clamp(39px, 7.5vw, 55px); line-height: 1.1; } .oris-intro p { margin-top: 20px; font-size: 15px; max-width: 360px; } .oris-vessel { object-position: 43% center; } .oris-shade { background: linear-gradient(180deg, #061a3040, #07172b88 28%, #061321ed 68%); } .oris-card { padding: 28px; } .oris-field input { font-size: 16px; } }
+@media (max-width: 360px) { .oris-page { padding-inline: 16px; } .oris-card { padding: 22px; } .oris-intro h1 { font-size: 35px; } }
+@media (prefers-reduced-motion: reduce) { .oris-page *, .oris-page *::before, .oris-page *::after { transition: none !important; animation: none !important; } }
