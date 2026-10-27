@@ -47,10 +47,10 @@ brainstorm lists freely; move an idea up into Direction once it is chosen.
 
 | Order (§4.1) | Screen | Status | Tool to start with |
 | --- | --- | --- | --- |
-| 1 | Purchase plans | Undecided | Impeccable critique, inspo if needed |
-| 2 | Recommendations | Cluttered, needs inspo | **Impeccable first**, then optional Claude Design (§3.4) |
+| 1 | Purchase plans | **Built 2026-10-27** (§3.3) | Impeccable critique → reference image → polish |
+| 2 | Recommendations | Cluttered; Taste review done (`critique-rec/TASTE_REVIEW.md`) | §4.2 loop: Taste → Claude Design → refine → Impeccable |
 | 2½ (flexible) | Sign up / login | Direction OK | Claude Design (imagery + mood) |
-| 3 | Market dashboard | Visibility + colour + news | Impeccable + direct build (§3.5) |
+| 3 | Market dashboard | Visibility + colour + news | §4.2 loop (Taste `--app`) |
 | 4 | Home | Direction OK, last | Claude Design |
 
 ### 3.1 Sign-up / sign-in (first priority: it is the first impression)
@@ -128,7 +128,8 @@ Reached by opening a purchase plan. Today it stacks many blocks with similar vis
 | Recommendation | Action, explanation, evidence grid, reasons, current date |
 | Labels and notices | Demo/synthetic label, source label, notices, loading/error/unavailable for each block |
 
-**Claude Design or Impeccable first? Impeccable first.** Reasons:
+**Claude Design or Impeccable first? (Superseded 2026-10-27 by the §4.2 loop: a Taste review now comes first, and
+Claude Design gets the content inventory below so it cannot drop states.)** Original reasoning:
 - Impeccable runs on the real page and code, so it sees every field and every state above. Claude Design only sees what you
   paste in, and is likely to drop states (unavailable, overdue, after-deadline) and caveats (experimental, demo) that
   matter here.
@@ -143,12 +144,16 @@ Suggested order:
    **layout options for this content**, not a new design. Treat the result as a sketch.
 4. Build here, block by block, keeping every state and test.
 
+**Constraints (owner, 2026-10-27):** keep **all information** unless it duplicates or is redundant with something
+else on the screen, and flag those for a decision first (list: `critique-rec/TASTE_REVIEW.md`, D1-D6, R1). Keep
+**three evidence blocks** (timing comparison, estimate for the selected horizon, cost impact); do not merge them.
+
 **Brainstorm:**
 - **Answer first.** One hero card at the top: the action ("Buy within 7 days" / "Wait" / "No recommendation yet"), the
   estimated cost range for the plan quantity, and the deadline. Everything else is supporting evidence below it.
 - **Progressive disclosure:** method notes, evidence grid and the news-width explanation go in "How we got this" expanders.
-- **One chart instead of several blocks:** cost range across 7 / 14 / 30 days with the deadline marked as a vertical line.
-  The timing comparison and horizon bar both fold into it.
+- ~~One chart instead of several blocks~~ (ruled out: three evidence blocks stay). A chart can still live inside the
+  timing-comparison block: cost range across 7 / 14 / 30 days with the deadline marked as a vertical line.
 - **Two-column on desktop:** left = the decision (action, cost, reasons); right = the plan summary pinned as a sticky card.
 - **Fewer badges and eyebrows.** Keep one status label per block (Demo, Experimental, Unavailable), in one consistent style.
 - **Unavailable state as a calm single card**, not several "unavailable" blocks stacked on each other.
@@ -220,22 +225,42 @@ Before step 1, answer open question 1 (keep dark-and-beige or not). Every later 
 
 ### 4.2 Loop for each screen
 
+**Taste diagnoses and deals a direction → Claude Design sketches → refine here → Impeccable finishes.**
+Playwright does the mechanical work at every step (opening each state, screenshots, clicking through flows), so
+skills and reviewers judge real renders, not code. Use one critic per step: Taste and Impeccable score against
+different rules.
+
+Skill settings that protect our spec: Taste runs as an **app screen** (`--app`) for recommendations and the
+market dashboard, as a **page** for home and sign-up, always with `--keep palette,type` (Taste deals composition
+only) and `--allow <rule>` only where `DESIGN_SYSTEM.md` needs something Taste bans. Working files go to
+`.taste-skill/` and `.impeccable/` (both git-ignored); anything worth keeping is copied into
+`docs/ui-revamp/critique-<screen>/`.
+
 1. **Sync** with `main` (2-minute drift check in `SYNC_WITH_MAIN.md`). Teammates are still changing these pages.
-2. **Capture** the current screen and its states (ready, empty, loading, error) with the Playwright tools in
-   `docs/ui-revamp/tools/`.
-3. **Critique.** Run `/impeccable critique` on the screen. Optionally `/impeccable audit` for accessibility and
-   contrast. Read the findings and pick what to act on. You don't need to know Impeccable well: the critique tells you
-   what is wrong, and you choose.
-4. **Inspo (only if stuck).** Collect 3–5 references in `assets/inspo/<screen>/` with one line each on what you like.
-   If you want options drawn, give Claude Design the screen's content inventory (as in §3.4) plus screenshots, and ask
-   for layout options for that content only. Bring back screenshots or HTML (§5).
-5. **Propose.** Ask Claude here for 2–3 concrete directions based on the critique and inspo. Pick one and record it under
-   the screen's **Direction** in §3.
-6. **Build.** Restyle with the `--bb-*` tokens; keep `main`'s behaviour, states and tests. Use Impeccable's targeted
-   commands where they fit (`layout`, `distill` for clutter, `harden` for states, `colorize` for rise/fall).
-7. **Polish.** `/impeccable polish`, then `/impeccable critique` once more to confirm nothing regressed.
-8. **Verify and commit.** `npm test`, `npm run build`, the Playwright checks, then look at the screenshots yourself and
-   commit on this branch.
+2. **Capture every state with Playwright.** Open `preview.html`, pick each state from "Demo controls", wait for it
+   to settle, and save a 1440px screenshot plus a static HTML snapshot (rendered DOM with inlined styles, scripts
+   removed) to `.taste-skill/before/states/`. The snapshots let Taste's inspector measure states that the preview
+   only reaches through its controls. Scripts live in `docs/ui-revamp/tools/` (Playwright is installed there).
+3. **Taste review (before).** Run `inspect.mjs --app` on the ready-state snapshot and `lint.mjs --app` on the
+   feature's source, critique the screenshots with Taste's rubric, and write down the three changes that would
+   move the screen most (example: `critique-rec/TASTE_REVIEW.md`). No code changes.
+4. **Taste direction.** Deal options with `draw.mjs --app --keep palette,type` (or the page draw for home and
+   sign-up). Pick the one that fits the content and note why.
+5. **Claude Design sketch.** Give Claude Design the screen's content inventory (every block and state, as in
+   §3.4), the before screenshots, the three Taste changes and the chosen direction. Ask for layout options for
+   this content only, in our palette. Save what comes back in `assets/inspo/<screen>/` (HTML export preferred,
+   screenshots otherwise, §5).
+6. **Refine here.** Compare the sketch against the content inventory and the states; agree the direction in chat
+   and record it under the screen's **Direction** in §3. Anything that would change behaviour or need backend
+   work is called out before building.
+7. **Build** inside the existing components with the `--bb-*` tokens; keep `main`'s behaviour, states and tests
+   (update a test only when the agreed UI changes how it is reached, and say so).
+8. **Impeccable finish.** `harden` (loading, empty, error, success states), then `polish`; targeted commands where
+   they fit (`layout`, `distill`, `colorize` for rise/fall). `impeccable detect` on the changed files.
+9. **Verify with Playwright, then Taste after.** Walk every state and flow (create, edit, delete, menus, keyboard
+   focus) at 1440 and 390, check for console errors and horizontal overflow, then re-run Taste's inspector into
+   `.taste-skill/after` and compare before and after side by side.
+10. **Commit.** `npm test`, `npm run build`, look at the screenshots yourself, commit on this branch.
 
 Motion (Emil Kowalski's skill) comes after all screens are done, starting with sign up / login.
 
