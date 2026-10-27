@@ -45,6 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @org.springframework.test.context.ActiveProfiles("test")
 @AutoConfigureMockMvc
 class MgoDataApiApplicationTests {
+    @MockitoBean OperationalDate operationalDate;
 
     private static final String KEY = "mgo_public_demo_2026";
 
@@ -96,6 +97,7 @@ class MgoDataApiApplicationTests {
 
     @BeforeEach
     void storedMarketData() {
+        when(operationalDate.today()).thenReturn(LocalDate.parse("2025-10-24"));
         for (String source : Source.ALL.keySet()) {
             when(marketData.availability(source)).thenReturn(Map.of(
                     "available", true, "records", 2L, "start", "2026-10-13", "end", "2026-10-14"));
