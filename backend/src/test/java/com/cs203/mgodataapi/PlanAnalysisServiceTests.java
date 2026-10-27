@@ -108,4 +108,20 @@ class PlanAnalysisServiceTests {
         assertEquals("invalid_bounds", ((Result<?>) body.get("forecast")).reason());
         assertEquals("invalid_bounds", ((Result<?>) body.get("cost_impact")).reason());
     }
+    @Test void recommendationIgnoresDisplayedHorizonAndRejectsMixedSnapshots() {
+        var provider = org.mockito.Mockito.mock(PlanAnalysisProvider.class);
+        org.mockito.Mockito.when(provider.provenance()).thenReturn("model");
+        UUID run = UUID.randomUUID();
+        for (int h : new int[] {7, 14, 30}) {
+            var f = forecast("600", "800", basis, date.plusDays(h), h == 14 ? "650" : "680");
+            f = new Forecast(f.prices(), f.target_date(), f.basis(), f.range_description(), h + " days", f.central_estimate(), run, "model-" + h);
+            org.mockito.Mockito.when(provider.prices(date, h)).thenReturn(new Prices(date, Result.ready(reference), Result.ready(f)));
+        }
+        var service = new PlanAnalysisService(provider);
+        assertEquals(service.read(context, false, 7, run).get("recommendation"), service.read(context, false, 30, run).get("recommendation"));
+        var changed = forecast("600", "800", basis, date.plusDays(14), "650");
+        org.mockito.Mockito.when(provider.prices(date, 14)).thenReturn(new Prices(date, Result.ready(reference), Result.ready(
+                new Forecast(changed.prices(), changed.target_date(), basis, "Bounds", "14 days", changed.central_estimate(), UUID.randomUUID(), "model-14"))));
+        assertEquals(org.springframework.http.HttpStatus.CONFLICT, assertThrows(ApiException.class, () -> service.read(context, false, 7, run)).status());
+    }
 }
