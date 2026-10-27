@@ -90,7 +90,7 @@ class OrganisationPlanHttpTests {
                 .param("plan_id", id.toString()).param("quantity_mt", "100")
                 .param("purchase_deadline", deadline.toString()).param("scenario_as_of_date", today.toString()))
                 .andExpect(status().isNotFound());
-        verify(plans, times(2)).findByIdAndUser(id, owner, "org_b");
+        verify(plans, times(4)).findByIdAndUser(id, owner, "org_b");
         verify(plans).update(id, owner, new BigDecimal("100"), deadline, today, "org_b");
         verify(plans).delete(id, owner, "org_b");
     }

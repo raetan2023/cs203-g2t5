@@ -1,8 +1,9 @@
 # Clerk organisation membership, roles and purchase-plan access
 
 This branch includes frontend organisation selection and backend enforcement for
-organisation-scoped purchase plans. Approval workflows and dedicated manager,
-analyst and admin business consoles remain later work. The frontend foundation was introduced in commit `78e6bab`; this guide also
+organisation-scoped purchase plans. Draft submission and the shared manager inbox
+are documented in [plan submission](plan-submission.md). Manager decisions and audit records are included.
+Dedicated analyst and admin business consoles remain later work. The frontend foundation was introduced in commit `78e6bab`; this guide also
 covers the organisation-scoped backend and matching frontend permissions.
 
 ## Clerk development setup
@@ -38,14 +39,15 @@ organisation and membership role exposed by Clerk's `useAuth` and `useOrganizati
 
 | Membership role | Read plans and their analysis | Create/edit/delete plans |
 | --- | --- | --- |
-| `org:buyer` | Own plans in the active organisation | Own plans in the active organisation |
+| `org:buyer` | Own plans in the active organisation | Own drafts in the active organisation |
 | `org:manager` | All assigned plans in the active organisation | Denied |
 | `org:analyst` | All assigned plans in the active organisation | Denied |
 | `org:admin` | Denied by default; membership administration does not imply business-data access | Denied |
 
 The admin policy deliberately grants no automatic purchase-plan privileges. Admins
-can still manage organisation members through Clerk's organisation UI. No purchase
-approval route is implemented here. Roles do not inherit privileges from each other.
+can still manage organisation members through Clerk's organisation UI. Buyers can
+submit drafts, and managers can read their organisation approval inbox. Managers can approve/reject a submitted saved recommendation, with a required
+rejection reason and a final audit record. Roles do not inherit privileges from each other.
 
 Spring Security checks the role on each route. Controller checks provide defense
 in depth. Buyers resolve their internal user ID from the verified Clerk subject;

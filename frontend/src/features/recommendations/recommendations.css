@@ -156,3 +156,20 @@
 .timing-chart-disclosure { margin-top: 16px; padding-top: 8px; }
 .recommendations .timing-footnote { margin-top: 8px; font-size: 12px; }
 @media (max-width: 600px) { .timing-comparison { padding: 18px 12px; } .timing-heading { flex-direction: column; gap: 12px; } .timing-options { grid-template-columns: 1fr; } .timing-option { padding: 16px; } .timing-chart { min-width: 700px; } }
+
+.rec-approval { margin-top: 24px; padding-top: 24px; border-top: 1px solid #30485b; }
+.rec-approval p { margin: 10px 0; }
+.rec-approval-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.rec-approval .bb-button { max-width: 100%; white-space: normal; }
+.rec-approval [role=alert] { color: #ffb3ba; }
+
+.rec-manager-decision { margin-top: 24px; padding-top: 24px; border-top: 1px solid #30485b; }
+.rec-manager-decision p { margin: 12px 0; }
+.rec-manager-decision label { display: block; margin: 16px 0 8px; }
+.rec-manager-decision textarea { display: block; width: 100%; resize: vertical; padding: 12px; border: 1px solid #527086; border-radius: 8px; background: #081826; color: #ecf3f8; font: inherit; }
+.rec-manager-decision .bb-button { max-width: 100%; white-space: normal; }
+.rec-manager-decision [role=alert] { margin-top: 16px; color: #ffb3ba; }
+.rec-decision { margin-bottom: 24px; }
+.rec-decision--approved { border-color: #44867a; }
+.rec-decision--rejected { border-color: #b8747e; }
+.rec-decision-comment { white-space: pre-wrap; overflow-wrap: anywhere; }

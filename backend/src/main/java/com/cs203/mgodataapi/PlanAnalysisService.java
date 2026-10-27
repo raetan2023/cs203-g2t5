@@ -55,13 +55,21 @@ public class PlanAnalysisService {
                     || ("unavailable".equals(provenance) && ("ready".equals(reference.status())
                     || "ready".equals(forecast.status()))))
                 throw new IllegalArgumentException("Invalid provenance");
+            String approvalFingerprint = fingerprint(context + ":" + horizon + ":" + provenance + ":" + reference + ":" + forecast + ":" + cost + ":" + guidance);
             return Map.of("provenance", provenance, "context", context, "reference", reference,
-                    "forecast", forecast, "cost_impact", cost, "recommendation", guidance);
+                    "forecast", forecast, "cost_impact", cost, "recommendation", guidance, "approval_fingerprint", approvalFingerprint);
         } catch (ApiException failure) {
             throw failure;
         } catch (RuntimeException failure) {
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "The analysis provider could not complete this request. Please retry.");
         }
+    }
+
+    private static String fingerprint(String value) {
+        try {
+            return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (java.security.NoSuchAlgorithmException failure) { throw new IllegalStateException(failure); }
     }
 
     private static void validateResult(Result<?> result) {

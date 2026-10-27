@@ -24,14 +24,14 @@ class PurchasePlanRepositoryTests {
     @BeforeEach void database() {
         jdbc = new JdbcTemplate(new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID()
                 + ";MODE=PostgreSQL;DB_CLOSE_DELAY=-1", "sa", ""));
-        jdbc.execute("CREATE TABLE purchase_plans (plan_id UUID PRIMARY KEY, user_id UUID NOT NULL, quantity_mt NUMERIC NOT NULL, purchase_deadline DATE NOT NULL, scenario_as_of_date DATE NOT NULL, clerk_org_id TEXT)");
+        jdbc.execute("CREATE TABLE purchase_plans (plan_id UUID PRIMARY KEY, user_id UUID NOT NULL, quantity_mt NUMERIC NOT NULL, purchase_deadline DATE NOT NULL, scenario_as_of_date DATE NOT NULL, clerk_org_id TEXT, status TEXT NOT NULL DEFAULT 'draft', submitted_at TIMESTAMP WITH TIME ZONE)");
         repository = new PurchasePlanRepository(jdbc);
         first = row(buyer, "org_a"); second = row(buyer, "org_a");
         otherBuyer = row(colleague, "org_a"); otherOrg = row(buyer, "org_b"); legacy = row(buyer, null);
     }
     UUID row(UUID owner, String org) {
         UUID id = UUID.randomUUID();
-        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, ?, ?, ?, ?)", id, owner,
+        jdbc.update("INSERT INTO purchase_plans (plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, clerk_org_id) VALUES (?, ?, ?, ?, ?, ?)", id, owner,
                 BigDecimal.TEN, java.sql.Date.valueOf(date), java.sql.Date.valueOf(date), org);
         return id;
     }
