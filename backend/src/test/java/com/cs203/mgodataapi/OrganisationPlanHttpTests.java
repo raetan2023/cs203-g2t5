@@ -32,6 +32,7 @@ class OrganisationPlanHttpTests {
     @MockitoBean UserAccounts users;
     @MockitoBean PurchasePlanRepository plans;
     @MockitoBean OperationalDate dates;
+    @MockitoBean PlanAnalysisProvider provider;
     final UUID owner = UUID.randomUUID(), colleague = UUID.randomUUID(), id = UUID.randomUUID();
     final LocalDate today = LocalDate.parse("2026-10-27"), deadline = LocalDate.parse("2026-11-01");
     final String input = "{\"quantity_mt\":100,\"purchase_deadline\":\"2026-11-01\",\"clerk_org_id\":\"org_attacker\",\"user_id\":\"untrusted\"}";
@@ -111,6 +112,30 @@ class OrganisationPlanHttpTests {
         verify(plans, never()).insert(any(), any(), any(), any(), any());
         verify(plans, never()).update(any(), any(), any(), any(), any(), any());
         verify(plans, never()).delete(any(), any(), any());
+    }
+    @Test void recommendationPreservesUrgencyAndOrganisationReadPermissions() throws Exception {
+        when(provider.provenance()).thenReturn("unavailable");
+        when(provider.prices(today, 7)).thenReturn(new PlanAnalysisProvider.Prices(today,
+                PlanAnalysisProvider.Result.unavailable("missing_reference", "No current reference"),
+                PlanAnalysisProvider.Result.unavailable("missing_forecast", "No current forecast")));
+        when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(plan(id, owner)));
+        when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan(id, colleague)));
+        for (String role : List.of("buyer", "manager", "analyst")) {
+            mvc.perform(get("/api/v1/purchase-plans/recommendation").with(membership("org_a", role))
+                    .param("plan_id", id.toString()).param("quantity_mt", "100")
+                    .param("purchase_deadline", deadline.toString()).param("scenario_as_of_date", today.toString())
+                    .param("urgency", "HIGH"))
+                    .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                    .andExpect(jsonPath("$.context.urgency").value("HIGH"))
+                    .andExpect(jsonPath("$.recommendation.value.action").value("MONITOR"))
+                    .andExpect(jsonPath("$.recommendation.value.evidence.urgency").value("HIGH"));
+            mvc.perform(get("/api/v1/purchase-plans/recommendation").with(membership("org_b", role))
+                    .param("plan_id", id.toString()).param("quantity_mt", "100")
+                    .param("purchase_deadline", deadline.toString()).param("scenario_as_of_date", today.toString())
+                    .param("urgency", "HIGH")).andExpect(status().isNotFound());
+        }
+        mvc.perform(get("/api/v1/purchase-plans/recommendation").with(membership("org_a", "admin")))
+                .andExpect(status().isForbidden());
     }
     @Test void adminMembershipDoesNotBypassPlanPolicy() throws Exception {
         mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", "admin"))).andExpect(status().isForbidden());

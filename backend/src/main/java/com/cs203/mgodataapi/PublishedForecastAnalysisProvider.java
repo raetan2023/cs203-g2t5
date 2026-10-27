@@ -41,41 +41,7 @@ public class PublishedForecastAnalysisProvider implements PlanAnalysisProvider {
         return recommendation(context, prices(context.scenario_as_of_date()));
     }
     public Recommendation recommendation(PlanAnalysisService.Context context, Prices prices) {
-        if (!"ready".equals(prices.forecast().status()) || !"ready".equals(prices.reference().status()))
-            return new Recommendation(context, Result.unavailable("recommendation_unavailable",
-                    "Current news-informed prices are unavailable. Your plan remains saved."));
-        Forecast f = prices.forecast().value();
-        Reference r = prices.reference().value();
-        String action, reason;
-        if (context.purchase_deadline().isBefore(context.scenario_as_of_date())) {
-            action = "Review your overdue purchase plan";
-            reason = "The saved purchase deadline has passed.";
-        } else if (f.target_date().isAfter(context.purchase_deadline())) {
-            action = "Obtain a supplier quote within your purchase window";
-            reason = "This forecast targets " + f.target_date() + ", after your deadline of "
-                    + context.purchase_deadline() + ". The model supports 7, 14 and 30 days from its quote anchor; a shorter estimate may not be available. Do not wait beyond your deadline based on this forecast.";
-        } else if (r.observation_date().isBefore(context.scenario_as_of_date().minusDays(7))) {
-            action = "Review this estimate against a current supplier quote";
-            reason = "The reference price is dated " + r.observation_date()
-                    + ". This experimental scenario cannot establish whether buying now or waiting is better.";
-        } else if (f.prices().upper().compareTo(r.price()) < 0) {
-            action = "Potential lower prices within your purchase window";
-            reason = "Both forecast bounds are below the reference price. Waiting may reduce cost, but the interval can miss the actual price.";
-        } else if (f.prices().lower().compareTo(r.price()) > 0) {
-            action = "Consider purchasing earlier within your deadline";
-            reason = "Both forecast bounds are above the reference price. Earlier purchasing may limit exposure to an increase.";
-        } else {
-            action = "No clear price advantage from waiting";
-            reason = "The forecast range includes the reference price, so prices could rise or fall.";
-        }
-        String explanation = f.target_date().isAfter(context.purchase_deadline()) ? reason : reason + " For " + context.quantity_mt().stripTrailingZeros().toPlainString()
-                + " MT, the estimated cost at " + f.target_date() + " is USD "
-                + String.format(java.util.Locale.ROOT, "%,.0f", f.prices().lower().multiply(context.quantity_mt())) + " to "
-                + String.format(java.util.Locale.ROOT, "%,.0f", f.prices().upper().multiply(context.quantity_mt()))
-                + ". This is an experimental comparison against the dated reference quote, not a live supplier offer or a proven purchasing advantage.";
-        String identity = context.toString() + ":" + f.run_id() + ":" + f.target_date();
-        return new Recommendation(context, Result.ready(new Guidance(
-                java.util.UUID.nameUUIDFromBytes(identity.getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString(), action, explanation)));
+        return new Recommendation(context, Result.ready(RecommendationPolicy.evaluate(context, prices)));
     }
     private static Prices unavailable(LocalDate date, String message) {
         return new Prices(date, Result.unavailable("missing_reference", message), Result.unavailable("missing_forecast", message));
