@@ -56,7 +56,7 @@ export function DeletePlanDialog({ onCancel, onDelete, description }: { descript
     {description && <p>{description}</p>}
     <div className="pp-dialog-actions">
       <PlanButton ref={cancel} variant="secondary" disabled={pending} onClick={onCancel}>Cancel</PlanButton>
-      <PlanButton variant={pending || error ? 'primary' : 'danger'} disabled={pending} onClick={remove}>{pending ? 'Deleting plan' : error ? 'Retry' : 'Delete plan'}</PlanButton>
+      <PlanButton variant="danger" disabled={pending} onClick={remove}>{pending ? 'Deleting plan' : error ? 'Retry' : 'Delete plan'}</PlanButton>
     </div>
   </dialog>;
 }

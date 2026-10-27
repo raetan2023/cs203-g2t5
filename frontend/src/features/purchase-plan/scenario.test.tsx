@@ -6,6 +6,13 @@ import { DEMO_PLAN, DEMO_SCENARIO_DATE } from './fixtures';
 import { createMockPlanService } from './mockService';
 import type { PlansResponse, SavedPlanResponse } from './types';
 
+/** Delete lives in each plan card's "More actions" menu. */
+async function chooseDelete(user: ReturnType<typeof userEvent.setup>, scope: Pick<typeof screen, 'findByRole' | 'getByRole'> = screen) {
+  await user.click(await scope.findByRole('button', { name: /More actions/ }));
+  await user.click(scope.getByRole('button', { name: 'Delete' }));
+}
+
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>(done => { resolve = done; });
@@ -76,7 +83,7 @@ describe('active historical scenario', () => {
     view.rerender(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
     expect(await screen.findByText('14 days')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /More actions/ })).toBeDisabled();
     await act(async () => pending.resolve({ plan: { ...DEMO_PLAN, quantity_mt: 600 } }));
     expect(await screen.findByText('600 MT')).toBeVisible();
     expect(screen.getByText('14 days')).toBeVisible();
@@ -109,7 +116,7 @@ describe('active historical scenario', () => {
       .mockResolvedValueOnce({ plans: [refreshed] }).mockResolvedValue({ plans: [] });
     vi.spyOn(service, 'delete').mockReturnValue(pending.promise);
     const view = render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} />);
-    await user.click(await screen.findByRole('button', { name: 'Delete' }));
+    await chooseDelete(user);
     await user.click(screen.getByRole('button', { name: 'Delete plan' }));
     view.rerender(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
     expect(await screen.findByText('14 days')).toBeVisible();
@@ -152,7 +159,7 @@ describe('active historical scenario', () => {
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     await screen.findByText('500 MT');
     expect(invalidate).toHaveBeenCalledTimes(1);
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await chooseDelete(user);
     await user.click(screen.getByRole('button', { name: 'Delete plan' }));
     await waitFor(() => expect(invalidate).toHaveBeenCalledTimes(2));
   });
