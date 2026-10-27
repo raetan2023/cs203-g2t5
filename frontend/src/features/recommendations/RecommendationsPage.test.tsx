@@ -136,7 +136,7 @@ it('pins guidance and impact to the selected publication and clears both when it
   render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
     <RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
-  await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id })));
+  await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
   expect(impact).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run');
   expect(screen.getByRole('button', { name: '14 days' })).toBeDisabled();
   current = false;

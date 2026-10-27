@@ -27,7 +27,7 @@ The response keeps its existing shape. Evidence includes direction (`UP`, `DOWN`
 
 The UI reverses the signed difference to display positive potential savings. It labels these totals as estimates from the recommendation signal, separately from the selected horizon's cost impact. Monetary rounding is for display only. Estimated costs exclude freight, fees, taxes and live supplier pricing. Confirm a current supplier quote before acting.
 
-Provider errors remain HTTP 503, invalid inputs 422, missing/inaccessible plans 404, missing authentication 401 and saved-plan/run conflicts 409. No new database migration or persisted recommendation is introduced.
+Provider errors remain HTTP 503, invalid inputs 422, missing/inaccessible plans 404, missing authentication 401 and saved-plan/run conflicts 409. The policy itself requires no database migration. The approval workflow stores the validated recommendation and selected cost detail in its existing submission snapshot; see [plan submission](plan-submission.md).
 
 ## Verification
 

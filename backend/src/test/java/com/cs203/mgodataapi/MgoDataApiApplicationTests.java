@@ -74,12 +74,15 @@ class MgoDataApiApplicationTests {
     @Test void publishedForecastRequiresClerkAndFailsClosedWithoutPublication() throws Exception {
         mvc.perform(get("/api/v1/forecast")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/forecast").header("X-API-Key", KEY)).andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/v1/forecast").with(jwt().jwt(token -> token.subject("buyer"))))
+        mvc.perform(get("/api/v1/forecast").with(jwt())).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/forecast").with(jwt().jwt(token -> token.subject("buyer")
+                        .claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.status").value("unavailable"))
                 .andExpect(jsonPath("$.reason").value("missing_run"))
                 .andExpect(jsonPath("$.forecast").doesNotExist());
-        mvc.perform(get("/api/v1/forecast?horizon_days=5").with(jwt()))
+        mvc.perform(get("/api/v1/forecast?horizon_days=5").with(jwt().jwt(token ->
+                        token.claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -357,7 +360,7 @@ class MgoDataApiApplicationTests {
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(url)
                         .with(jwt().jwt(t -> t.subject("other").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")))))
                 .andExpect(status().isNotFound());
-        verify(plans).findByIdAndUser(selected.planId(), other, "org_a");
+        verify(plans, org.mockito.Mockito.times(3)).findByIdAndUser(selected.planId(), other, "org_a");
         verify(plans).update(selected.planId(), other, new BigDecimal("500"),
                 LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24"), "org_a");
         verify(plans).delete(selected.planId(), other, "org_a");

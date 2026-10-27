@@ -36,6 +36,24 @@ class RidgeLiveIntegrationTests {
     @MockitoBean JwtDecoder decoder;
     @MockitoBean UserAccounts users;
 
+    @Test void realRecommendationCarriesTheSelectedRunAndApprovalFingerprint() throws Exception {
+        var saved = jdbc.queryForMap("select plan_id,user_id,quantity_mt,purchase_deadline,clerk_org_id from purchase_plans where clerk_org_id is not null and status='draft' order by purchase_deadline desc limit 1");
+        when(users.resolve(anyString(), any())).thenReturn((UUID) saved.get("user_id"));
+        var membership = jwt().jwt(token -> token.claim("o", java.util.Map.of("id", saved.get("clerk_org_id").toString(), "rol", "buyer")));
+        var forecast = assertInstanceOf(ForecastService.Ready.class, forecasts.read(14));
+        String query = "?plan_id=" + saved.get("plan_id") + "&quantity_mt=" + saved.get("quantity_mt")
+                + "&purchase_deadline=" + saved.get("purchase_deadline") + "&scenario_as_of_date=" + forecasts.today()
+                + "&horizon_days=14&urgency=NORMAL&run_id=" + forecast.run_id();
+        var response = mvc.perform(get("/api/v1/purchase-plans/recommendation" + query).with(membership))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.provenance").value("model"))
+                .andExpect(jsonPath("$.recommendation.status").value("ready"))
+                .andExpect(jsonPath("$.cost_impact.status").value("ready"))
+                .andExpect(jsonPath("$.forecast.value.run_id").value(forecast.run_id().toString()))
+                .andReturn().getResponse().getContentAsString();
+        assertTrue(mapper.readTree(response).path("approval_fingerprint").asText().matches("[a-f0-9]{64}"));
+        System.out.println("Read-only live check: selected recommendation has model provenance, matching run, ready costs and approval fingerprint.");
+    }
+
     @Test void realSavedPlanUsesExecutedRidgeStoredNewsAndExactDecimalCosts() throws Exception {
         var saved = jdbc.queryForMap("select plan_id,user_id,quantity_mt,purchase_deadline,clerk_org_id from purchase_plans where clerk_org_id is not null order by purchase_deadline desc limit 1");
         UUID owner = (UUID) saved.get("user_id");

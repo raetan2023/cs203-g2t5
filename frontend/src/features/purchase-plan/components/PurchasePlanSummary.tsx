@@ -18,6 +18,7 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
   deleteRef?: RefObject<HTMLButtonElement | null>;
 }) {
   const headingId = useId();
+  const draft = !plan.status || plan.status === 'draft';
   const quantity = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt);
   const overdue = plan.days_remaining < 0;
   const days = Math.abs(plan.days_remaining);
@@ -27,10 +28,12 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
   // Guide: docs/ui-revamp/assets/inspo/purchase-plans-page/image.png. Quantity leads; deadline and time left follow.
   return <section className={`pp-card pp-summary pp-summary--${status}`} aria-labelledby={headingId}>
     <div className="pp-summary-top">
-      <span className={`pp-badge pp-badge--${status}`}>
+      <div className="pp-summary-badges"><span className={`pp-badge pp-badge--${status}`}>
         <Icon name={overdue ? 'alert' : 'clock'} />{overdue ? 'Overdue' : status === 'soon' ? 'Due soon' : 'On track'}
       </span>
-      {canEdit && <PlanMenu quantity={quantity} busy={busy} triggerRef={deleteRef} onDelete={onDelete} />}
+      {plan.status && <span className={`pp-plan-status pp-plan-status--${plan.status}`}>{plan.status === 'submitted' ? 'Submitted for approval' : plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</span>}
+      </div>
+      {canEdit && draft && <PlanMenu quantity={quantity} busy={busy} triggerRef={deleteRef} onDelete={onDelete} />}
     </div>
     <h3 id={headingId} className="pp-summary-title">
       {/* Read as one phrase; drawn with a smaller unit. */}
@@ -45,9 +48,10 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
         ? <span className="pp-countdown-value">Overdue by {days} {unit}</span>
         : <><span className="pp-countdown-value">{days} {unit}</span> {days === 0 ? 'left · due today' : 'left'}</>}
     </p>
+    {plan.status === 'submitted' && <p className="pp-card-description">All managers in your organisation have been notified. This plan is locked while awaiting review.</p>}
     <div className="pp-actions">
-      {!busy && <AppLink className="pp-button pp-button--primary pp-summary-link" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>View recommendation &rarr;</AppLink>}
-      {canEdit && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}
+      {!busy && <AppLink className="pp-button pp-button--primary pp-summary-link" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>{plan.status && plan.status !== 'draft' ? 'View submitted recommendation' : 'View recommendation'} &rarr;</AppLink>}
+      {canEdit && draft && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}
     </div>
   </section>;
 }

@@ -113,7 +113,7 @@ public class PurchasePlanController {
         UUID userId = ownerOf(token);
         validate(request, scenarioDate);
         PurchasePlan updated = plans.update(planId, userId, request.quantityMt(), request.purchaseDeadline(), scenarioDate, access.organisationId())
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
+                .orElseThrow(() -> mutationFailure(planId, userId, access.organisationId()));
         return Map.of("plan", updated.toResponse());
     }
 
@@ -122,9 +122,15 @@ public class PurchasePlanController {
         var access = OrganisationAccess.requireBuyer(token);
         UUID userId = ownerOf(token);
         if (!plans.delete(planId, userId, access.organisationId())) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found.");
+            throw mutationFailure(planId, userId, access.organisationId());
         }
         return ResponseEntity.noContent().build();
+    }
+
+    private ApiException mutationFailure(UUID planId, UUID userId, String orgId) {
+        return plans.findByIdAndUser(planId, userId, orgId).isPresent()
+                ? new ApiException(HttpStatus.CONFLICT, "Only draft plans can be edited or deleted.")
+                : new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found.");
     }
 
     private java.util.Optional<PurchasePlan> readPlan(Jwt token, UUID planId) {
