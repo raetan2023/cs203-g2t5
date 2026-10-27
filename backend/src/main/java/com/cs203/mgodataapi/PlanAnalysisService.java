@@ -43,8 +43,22 @@ public class PlanAnalysisService {
             Result<Impact> cost = calculate(context, reference, forecast);
             Result<Guidance> guidance = Result.unavailable("recommendation_unavailable", "Recommendations are loaded separately.");
             if (!impact) {
-                guidance = Result.ready(RecommendationPolicy.evaluate(context,
-                        new Prices(context.scenario_as_of_date, reference, forecast)));
+                var candidates = new java.util.ArrayList<Prices>();
+                Forecast snapshot = null;
+                for (int days : new int[] {7, 14, 30}) {
+                    Prices candidate = days == horizon ? prices : provider.prices(context.scenario_as_of_date, days);
+                    if (!context.scenario_as_of_date.equals(candidate.scenario_as_of_date()))
+                        throw new IllegalArgumentException("Provider scenario mismatch");
+                    Result<Forecast> candidateForecast = validateForecast(candidate.forecast(), context.scenario_as_of_date);
+                    if ("ready".equals(candidateForecast.status())) {
+                        if (snapshot != null && !java.util.Objects.equals(snapshot.run_id(), candidateForecast.value().run_id()))
+                            throw new ApiException(HttpStatus.CONFLICT, "Forecast sources changed. Reload the comparison.");
+                        snapshot = candidateForecast.value();
+                    }
+                    candidates.add(new Prices(context.scenario_as_of_date,
+                            validateReference(candidate.reference(), context.scenario_as_of_date), candidateForecast));
+                }
+                guidance = Result.ready(RecommendationPolicy.evaluateAvailable(context, candidates));
                 validateResult(guidance);
                 if ("ready".equals(guidance.status()) && (guidance.value() == null
                         || blank(guidance.value().recommendation_id()) || blank(guidance.value().action()) || blank(guidance.value().explanation())))
