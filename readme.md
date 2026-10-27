@@ -13,7 +13,7 @@ The app uses **React + TypeScript + Vite**, a **Java Spring Boot API**, **Clerk 
 - Authenticated recommendation and cost-impact interfaces with independent loading, error and unavailable states.
 - Standalone linear regression, CatBoost and Random Forest experiments, with a [model comparison](modelcomparison.md).
 
-The normal app uses the backend analysis API, whose default provider reports unavailable forecasts and guidance. The Python models are **not connected to the app**. Synthetic preview/fixture outputs are explicitly labelled and do not establish real model performance.
+The normal app reads daily published GDELT-informed ranges through the authenticated backend forecast API; both dashboard and purchase-plan cost analysis use the same publication. Forecasts remain explicitly unavailable until fresh inputs and sufficient validated historical news evidence exist. Saved-plan guidance uses the documented [experimental buyer heuristic](docs/buyer-recommendation-policy.md), with explicit uncertainty, urgency and deadline constraints. See [daily forecast operations](docs/daily-forecast-operations.md). Synthetic preview/fixture outputs are explicitly labelled and do not establish real model performance.
 
 ## Repository map
 
@@ -30,7 +30,7 @@ The normal app uses the backend analysis API, whose default provider reports una
 
 ## Run the main app locally
 
-Requires **Node.js 22.12+**, **Java 21+**, access to the team's PostgreSQL database, and a Clerk publishable key. The backend includes Maven wrappers; a separate Maven installation is not needed. First-time dependency installation needs internet access.
+Requires **Node.js 22.12+**, **Java 21+**, **Python 3** for purchase-plan inference, access to the team's PostgreSQL database, and a Clerk publishable key. The backend includes Maven wrappers; a separate Maven installation is not needed. First-time dependency installation needs internet access.
 
 ```bash
 git clone https://github.com/raetan2023/cs203-g2t5.git
@@ -50,7 +50,16 @@ MGO_API_KEY='mgo_public_demo_2026'
 PORT='8000'
 ```
 
-Configure `frontend/.env.local` as shown below, then run from the repository root:
+Configure `frontend/.env.local` as shown below. Install the purchase model's Python dependencies once from the repository root:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r ridge-regression-model/requirements.txt
+```
+
+The saved Ridge/quantile artifacts and series dictionary are included in the repository. Purchase inference reads the configured database and does not require another checkout or the ignored historical CSV. Some historical Python tests separately require `ridge-regression-model/data/market_observations.csv`; that dataset is not included in Git.
+
+Then launch from the repository root:
 
 ```bash
 ./run.command

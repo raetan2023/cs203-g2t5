@@ -1,0 +1,541 @@
+{
+  "synthetic_test_only": true,
+  "news": {
+    "version": 1,
+    "news_date": "2026-10-25",
+    "start": "2026-10-25T00:00:00Z",
+    "end": "2026-10-26T00:00:00Z",
+    "status": "complete",
+    "retrieved_at": "2026-10-26T01:16:18.796342Z",
+    "query": "(oil OR crude OR \"marine fuel\" OR bunker OR OPEC OR refinery OR tanker OR Hormuz OR \"Red Sea\" OR sanctions OR \"Suez Canal\") sourcelang:english",
+    "source": "gdelt_doc_2_artlist",
+    "coverage_scope": "Enumerated matching API records, not all world news; GDELT indexing can change.",
+    "article_count": 0,
+    "relevant_count": 0,
+    "unique_source_count": 0,
+    "event_category_proportions": {
+      "sanctions": 0.0,
+      "shipping_disruption": 0.0,
+      "refinery_outage": 0.0,
+      "production_disruption": 0.0,
+      "production_decision": 0.0,
+      "oil_infrastructure_conflict": 0.0,
+      "strategic_stock_release": 0.0,
+      "demand_shock": 0.0
+    },
+    "bias_proportions": {
+      "bearish": 0.0,
+      "bullish": 0.0,
+      "neutral": 0.0
+    },
+    "bias_disagreement": 0.0,
+    "tone_dispersion": null,
+    "tone_article_count": 0,
+    "classification_version": "synthetic-contract-v1",
+    "classifier_id": "synthetic-test-only",
+    "classification_fingerprint": "d3602d72eb65e99f8339010c694aa297bdbd99f6850b20d7605f0a0a80631e96",
+    "features": {
+      "news_article_count": 0.0,
+      "news_relevant_count": 0.0,
+      "news_unique_source_count": 0.0,
+      "news_category_sanctions": 0.0,
+      "news_category_shipping_disruption": 0.0,
+      "news_category_refinery_outage": 0.0,
+      "news_category_production_disruption": 0.0,
+      "news_category_production_decision": 0.0,
+      "news_category_oil_infrastructure_conflict": 0.0,
+      "news_category_strategic_stock_release": 0.0,
+      "news_category_demand_shock": 0.0,
+      "news_bias_bearish": 0.0,
+      "news_bias_bullish": 0.0,
+      "news_bias_neutral": 0.0,
+      "news_bias_disagreement": 0.0,
+      "news_tone_std": 0.0,
+      "news_tone_available": 0.0
+    },
+    "records": [],
+    "records_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "error": null
+  },
+  "run": {
+    "id": "0606997c-6dbf-4367-b5fe-10c1382919be",
+    "origin_date": "2026-10-26",
+    "model_version": "332b4a04-7669-45bf-8247-0e0c9c309668",
+    "payload": {
+      "run_started_at": "2026-10-26T01:16:18.796342+00:00",
+      "code_revision": "local",
+      "forecast_origin_date": "2026-10-26",
+      "as_of_date": "2026-10-26",
+      "news_window_start": "2026-10-25T00:00:00Z",
+      "news_window_end": "2026-10-26T00:00:00Z",
+      "news_feature_version": "1:synthetic-contract-v1:synthetic-test-only",
+      "source_dates": {
+        "mgo": "2026-10-25",
+        "gasoil": "2026-10-25",
+        "brent": "2026-10-23",
+        "dubai": "2026-10-25",
+        "usd": "2026-10-21"
+      },
+      "market_sha256": "9f5d580b0f0c94246bba04018600f9804cd5d2268ae34ff6476c95a188921691",
+      "news_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "model_trained_at": "2026-10-26T01:16:18.796342+00:00",
+      "completed_at": "2026-10-26T01:16:20.157999+00:00",
+      "status": "ready"
+    }
+  },
+  "forecasts": [
+    {
+      "status": "ready",
+      "horizon_days": 7,
+      "forecast_origin_date": "2026-10-26",
+      "as_of_date": "2026-10-26",
+      "target_date": "2026-11-02",
+      "anchor_quote_date": "2026-10-25",
+      "anchor_price": 811.602056962172,
+      "quote_age_days": 1,
+      "forecast": 811.602056962172,
+      "low": 571.8346882302253,
+      "high": 641.9139305484548,
+      "raw_q10_price": 571.8346882302253,
+      "raw_q90_price": 641.9139305484548,
+      "unit": "USD/metric tonne",
+      "evidence": "weak",
+      "mae_skill_vs_persistence": null,
+      "backtest_rows": 49,
+      "top_drivers": [
+        {
+          "feature": "gasoil_ret5",
+          "contribution": -0.0
+        },
+        {
+          "feature": "gasoil_ret20",
+          "contribution": -0.0
+        },
+        {
+          "feature": "brent_ret5",
+          "contribution": 0.0
+        },
+        {
+          "feature": "brent_ret20",
+          "contribution": 0.0
+        },
+        {
+          "feature": "dubai_ret5",
+          "contribution": -0.0
+        }
+      ],
+      "interval": {
+        "method": "gdelt_error_quantiles",
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.8571428571428571,
+        "evaluation_rows": 49,
+        "mean_width": 70.38470772296323,
+        "baseline_coverage": 0.7755102040816326,
+        "baseline_mean_width": 51.893481950297144,
+        "evaluation_scope": "Chronological retrospective, paired news-eligible origins; exact observed targets.",
+        "limitations": "Experimental news-conditioned range. Dependent outcomes; nominal coverage is not guaranteed. Central estimate may lie outside bounds."
+      },
+      "run_started_at": "2026-10-26T01:16:18.796342+00:00",
+      "code_revision": "local",
+      "news_window_start": "2026-10-25T00:00:00Z",
+      "news_window_end": "2026-10-26T00:00:00Z",
+      "news_feature_version": "1:synthetic-contract-v1:synthetic-test-only",
+      "source_dates": {
+        "mgo": "2026-10-25",
+        "gasoil": "2026-10-25",
+        "brent": "2026-10-23",
+        "dubai": "2026-10-25",
+        "usd": "2026-10-21"
+      },
+      "market_sha256": "9f5d580b0f0c94246bba04018600f9804cd5d2268ae34ff6476c95a188921691",
+      "news_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "model_trained_at": "2026-10-26T01:16:18.796342+00:00",
+      "model_version": "332b4a04-7669-45bf-8247-0e0c9c309668",
+      "run_id": "0606997c-6dbf-4367-b5fe-10c1382919be",
+      "history": [
+        {
+          "date": "2026-10-06",
+          "price": 809.4194816540677
+        },
+        {
+          "date": "2026-10-07",
+          "price": 798.4401939661001
+        },
+        {
+          "date": "2026-10-08",
+          "price": 786.2194555101524
+        },
+        {
+          "date": "2026-10-09",
+          "price": 779.9865235895609
+        },
+        {
+          "date": "2026-10-10",
+          "price": 790.0649014234876
+        },
+        {
+          "date": "2026-10-11",
+          "price": 784.3270476335257
+        },
+        {
+          "date": "2026-10-12",
+          "price": 775.0971864747326
+        },
+        {
+          "date": "2026-10-13",
+          "price": 787.8510214815801
+        },
+        {
+          "date": "2026-10-14",
+          "price": 787.1109630878531
+        },
+        {
+          "date": "2026-10-15",
+          "price": 787.9600046261809
+        },
+        {
+          "date": "2026-10-16",
+          "price": 793.1607331523429
+        },
+        {
+          "date": "2026-10-17",
+          "price": 783.0698162432436
+        },
+        {
+          "date": "2026-10-18",
+          "price": 802.1591048766574
+        },
+        {
+          "date": "2026-10-19",
+          "price": 820.1368215880284
+        },
+        {
+          "date": "2026-10-20",
+          "price": 810.0351853855904
+        },
+        {
+          "date": "2026-10-21",
+          "price": 799.8070085099451
+        },
+        {
+          "date": "2026-10-22",
+          "price": 805.3662952011223
+        },
+        {
+          "date": "2026-10-23",
+          "price": 806.5708174819173
+        },
+        {
+          "date": "2026-10-24",
+          "price": 799.3723683164951
+        },
+        {
+          "date": "2026-10-25",
+          "price": 811.602056962172
+        }
+      ]
+    },
+    {
+      "status": "ready",
+      "horizon_days": 14,
+      "forecast_origin_date": "2026-10-26",
+      "as_of_date": "2026-10-26",
+      "target_date": "2026-11-09",
+      "anchor_quote_date": "2026-10-25",
+      "anchor_price": 811.602056962172,
+      "quote_age_days": 1,
+      "forecast": 811.602056962172,
+      "low": 571.8346882302253,
+      "high": 641.9139305484548,
+      "raw_q10_price": 571.8346882302253,
+      "raw_q90_price": 641.9139305484548,
+      "unit": "USD/metric tonne",
+      "evidence": "weak",
+      "mae_skill_vs_persistence": null,
+      "backtest_rows": 49,
+      "top_drivers": [
+        {
+          "feature": "gasoil_ret5",
+          "contribution": -0.0
+        },
+        {
+          "feature": "gasoil_ret20",
+          "contribution": -0.0
+        },
+        {
+          "feature": "brent_ret5",
+          "contribution": 0.0
+        },
+        {
+          "feature": "brent_ret20",
+          "contribution": 0.0
+        },
+        {
+          "feature": "dubai_ret5",
+          "contribution": -0.0
+        }
+      ],
+      "interval": {
+        "method": "gdelt_error_quantiles",
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.8571428571428571,
+        "evaluation_rows": 49,
+        "mean_width": 70.38470772296323,
+        "baseline_coverage": 0.7755102040816326,
+        "baseline_mean_width": 51.893481950297144,
+        "evaluation_scope": "Chronological retrospective, paired news-eligible origins; exact observed targets.",
+        "limitations": "Experimental news-conditioned range. Dependent outcomes; nominal coverage is not guaranteed. Central estimate may lie outside bounds."
+      },
+      "run_started_at": "2026-10-26T01:16:18.796342+00:00",
+      "code_revision": "local",
+      "news_window_start": "2026-10-25T00:00:00Z",
+      "news_window_end": "2026-10-26T00:00:00Z",
+      "news_feature_version": "1:synthetic-contract-v1:synthetic-test-only",
+      "source_dates": {
+        "mgo": "2026-10-25",
+        "gasoil": "2026-10-25",
+        "brent": "2026-10-23",
+        "dubai": "2026-10-25",
+        "usd": "2026-10-21"
+      },
+      "market_sha256": "9f5d580b0f0c94246bba04018600f9804cd5d2268ae34ff6476c95a188921691",
+      "news_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "model_trained_at": "2026-10-26T01:16:18.796342+00:00",
+      "model_version": "332b4a04-7669-45bf-8247-0e0c9c309668",
+      "run_id": "0606997c-6dbf-4367-b5fe-10c1382919be",
+      "history": [
+        {
+          "date": "2026-10-06",
+          "price": 809.4194816540677
+        },
+        {
+          "date": "2026-10-07",
+          "price": 798.4401939661001
+        },
+        {
+          "date": "2026-10-08",
+          "price": 786.2194555101524
+        },
+        {
+          "date": "2026-10-09",
+          "price": 779.9865235895609
+        },
+        {
+          "date": "2026-10-10",
+          "price": 790.0649014234876
+        },
+        {
+          "date": "2026-10-11",
+          "price": 784.3270476335257
+        },
+        {
+          "date": "2026-10-12",
+          "price": 775.0971864747326
+        },
+        {
+          "date": "2026-10-13",
+          "price": 787.8510214815801
+        },
+        {
+          "date": "2026-10-14",
+          "price": 787.1109630878531
+        },
+        {
+          "date": "2026-10-15",
+          "price": 787.9600046261809
+        },
+        {
+          "date": "2026-10-16",
+          "price": 793.1607331523429
+        },
+        {
+          "date": "2026-10-17",
+          "price": 783.0698162432436
+        },
+        {
+          "date": "2026-10-18",
+          "price": 802.1591048766574
+        },
+        {
+          "date": "2026-10-19",
+          "price": 820.1368215880284
+        },
+        {
+          "date": "2026-10-20",
+          "price": 810.0351853855904
+        },
+        {
+          "date": "2026-10-21",
+          "price": 799.8070085099451
+        },
+        {
+          "date": "2026-10-22",
+          "price": 805.3662952011223
+        },
+        {
+          "date": "2026-10-23",
+          "price": 806.5708174819173
+        },
+        {
+          "date": "2026-10-24",
+          "price": 799.3723683164951
+        },
+        {
+          "date": "2026-10-25",
+          "price": 811.602056962172
+        }
+      ]
+    },
+    {
+      "status": "ready",
+      "horizon_days": 30,
+      "forecast_origin_date": "2026-10-26",
+      "as_of_date": "2026-10-26",
+      "target_date": "2026-11-25",
+      "anchor_quote_date": "2026-10-25",
+      "anchor_price": 811.602056962172,
+      "quote_age_days": 1,
+      "forecast": 811.602056962172,
+      "low": 571.8346882302253,
+      "high": 641.9139305484548,
+      "raw_q10_price": 571.8346882302253,
+      "raw_q90_price": 641.9139305484548,
+      "unit": "USD/metric tonne",
+      "evidence": "weak",
+      "mae_skill_vs_persistence": null,
+      "backtest_rows": 49,
+      "top_drivers": [
+        {
+          "feature": "gasoil_ret5",
+          "contribution": -0.0
+        },
+        {
+          "feature": "gasoil_ret20",
+          "contribution": -0.0
+        },
+        {
+          "feature": "brent_ret5",
+          "contribution": 0.0
+        },
+        {
+          "feature": "brent_ret20",
+          "contribution": 0.0
+        },
+        {
+          "feature": "dubai_ret5",
+          "contribution": -0.0
+        }
+      ],
+      "interval": {
+        "method": "gdelt_error_quantiles",
+        "nominal_coverage": 0.8,
+        "empirical_coverage": 0.8571428571428571,
+        "evaluation_rows": 49,
+        "mean_width": 70.38470772296323,
+        "baseline_coverage": 0.7755102040816326,
+        "baseline_mean_width": 51.893481950297144,
+        "evaluation_scope": "Chronological retrospective, paired news-eligible origins; exact observed targets.",
+        "limitations": "Experimental news-conditioned range. Dependent outcomes; nominal coverage is not guaranteed. Central estimate may lie outside bounds."
+      },
+      "run_started_at": "2026-10-26T01:16:18.796342+00:00",
+      "code_revision": "local",
+      "news_window_start": "2026-10-25T00:00:00Z",
+      "news_window_end": "2026-10-26T00:00:00Z",
+      "news_feature_version": "1:synthetic-contract-v1:synthetic-test-only",
+      "source_dates": {
+        "mgo": "2026-10-25",
+        "gasoil": "2026-10-25",
+        "brent": "2026-10-23",
+        "dubai": "2026-10-25",
+        "usd": "2026-10-21"
+      },
+      "market_sha256": "9f5d580b0f0c94246bba04018600f9804cd5d2268ae34ff6476c95a188921691",
+      "news_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "model_trained_at": "2026-10-26T01:16:18.796342+00:00",
+      "model_version": "332b4a04-7669-45bf-8247-0e0c9c309668",
+      "run_id": "0606997c-6dbf-4367-b5fe-10c1382919be",
+      "history": [
+        {
+          "date": "2026-10-06",
+          "price": 809.4194816540677
+        },
+        {
+          "date": "2026-10-07",
+          "price": 798.4401939661001
+        },
+        {
+          "date": "2026-10-08",
+          "price": 786.2194555101524
+        },
+        {
+          "date": "2026-10-09",
+          "price": 779.9865235895609
+        },
+        {
+          "date": "2026-10-10",
+          "price": 790.0649014234876
+        },
+        {
+          "date": "2026-10-11",
+          "price": 784.3270476335257
+        },
+        {
+          "date": "2026-10-12",
+          "price": 775.0971864747326
+        },
+        {
+          "date": "2026-10-13",
+          "price": 787.8510214815801
+        },
+        {
+          "date": "2026-10-14",
+          "price": 787.1109630878531
+        },
+        {
+          "date": "2026-10-15",
+          "price": 787.9600046261809
+        },
+        {
+          "date": "2026-10-16",
+          "price": 793.1607331523429
+        },
+        {
+          "date": "2026-10-17",
+          "price": 783.0698162432436
+        },
+        {
+          "date": "2026-10-18",
+          "price": 802.1591048766574
+        },
+        {
+          "date": "2026-10-19",
+          "price": 820.1368215880284
+        },
+        {
+          "date": "2026-10-20",
+          "price": 810.0351853855904
+        },
+        {
+          "date": "2026-10-21",
+          "price": 799.8070085099451
+        },
+        {
+          "date": "2026-10-22",
+          "price": 805.3662952011223
+        },
+        {
+          "date": "2026-10-23",
+          "price": 806.5708174819173
+        },
+        {
+          "date": "2026-10-24",
+          "price": 799.3723683164951
+        },
+        {
+          "date": "2026-10-25",
+          "price": 811.602056962172
+        }
+      ]
+    }
+  ]
+}

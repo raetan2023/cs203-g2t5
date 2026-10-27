@@ -7,13 +7,12 @@ import { ErrorBanner, PlanButton } from './Primitives';
 interface Props {
   plan: PurchasePlan | null;
   scenarioDate: string;
-  blocked?: boolean;
   onSave(input: PlanInput): Promise<void>;
   onCancel(): void;
   onBusyChange(busy: boolean): void;
 }
 
-export function PurchasePlanForm({ plan, scenarioDate, blocked = false, onSave, onCancel, onBusyChange }: Props) {
+export function PurchasePlanForm({ plan, scenarioDate, onSave, onCancel, onBusyChange }: Props) {
   const id = useId();
   const [draft, setDraft] = useState<PlanDraft>({ quantity: plan ? String(plan.quantity_mt) : '', deadline: plan?.purchase_deadline ?? '' });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -25,7 +24,7 @@ export function PurchasePlanForm({ plan, scenarioDate, blocked = false, onSave, 
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (lock.current || blocked) return;
+    if (lock.current) return;
     const validation = validateDraft(draft, scenarioDate);
     setErrors(validation);
     setMessage('');
@@ -71,7 +70,7 @@ export function PurchasePlanForm({ plan, scenarioDate, blocked = false, onSave, 
         {errors.purchase_deadline && <p className="pp-field-error" id={`${id}-deadline-error`}>{errors.purchase_deadline}</p>}
       </div>
       <div className="pp-field">
-        <span className="pp-label" id={`${id}-scenario-label`}>Current date</span>
+        <span className="pp-label" id={`${id}-scenario-label`}>Application date</span>
         <div className="pp-readonly" aria-labelledby={`${id}-scenario-label`}><time dateTime={scenarioDate}>{formatDate(scenarioDate)}</time></div>
       </div>
     </div>
@@ -79,7 +78,7 @@ export function PurchasePlanForm({ plan, scenarioDate, blocked = false, onSave, 
       {message && <ErrorBanner>{message}</ErrorBanner>}
       <div className="pp-actions">
         <PlanButton variant="secondary" onClick={onCancel} disabled={saving}>Cancel</PlanButton>
-        <PlanButton type="submit" disabled={saving || blocked}>{saving ? 'Saving...' : plan ? 'Save changes' : 'Save plan'}</PlanButton>
+        <PlanButton type="submit" disabled={saving}>{saving ? 'Saving...' : plan ? 'Save changes' : 'Save plan'}</PlanButton>
       </div>
     </div>
   </form>;

@@ -14,8 +14,24 @@ class FeatureContribution(BaseModel):
     contribution: float = Field(description="Signed contribution to predicted log return, after gamma shrinkage.")
 
 
+class IntervalMetadata(BaseModel):
+    method: Literal["split_conformal_quantile"]
+    nominal_coverage: float = Field(ge=0, le=1)
+    empirical_coverage: Optional[float] = Field(ge=0, le=1)
+    evaluation_rows: int = Field(ge=0)
+    evaluation_scope: str
+    baseline_coverage: Optional[float] = Field(ge=0, le=1)
+    baseline_mean_width: Optional[float] = Field(ge=0)
+    mean_width: Optional[float] = Field(ge=0)
+    limitations: str
+
+
 class PredictResponse(BaseModel):
     horizon_days: int
+    target_date: date
+    interval: IntervalMetadata
+    raw_q10_price: float
+    raw_q90_price: float
     as_of_date: date
     anchor_quote_date: date
     anchor_price: float

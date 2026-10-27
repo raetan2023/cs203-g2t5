@@ -85,8 +85,8 @@ describe('real analysis adapter', () => {
     expect(await screen.findByText('Policy not connected.')).toBeInTheDocument();
     await userEvent.click(await screen.findByRole('button', { name: 'Retry cost impact' }));
     expect(await screen.findByText('USD 70,000')).toBeInTheDocument();
-    expect(screen.getByText('USD -2,000 to +4,000')).toBeInTheDocument();
-    expect(screen.getByText(/Synthetic demo data — estimates/)).toBeInTheDocument();
+    expect(screen.getByText('USD 2,000 less to USD 4,000 more')).toBeInTheDocument();
+    expect(screen.getByText(/Synthetic demo data · Estimates/)).toBeInTheDocument();
     expect(fetcher.mock.calls.filter(([url]) => url.includes('/recommendation?'))).toHaveLength(1);
     expect(document.querySelector('details')).not.toHaveAttribute('open');
   });
@@ -116,4 +116,60 @@ describe('real analysis adapter', () => {
     await userEvent.click(await within(guidance).findByRole('button', { name: 'Reload saved plan' }));
     await waitFor(() => expect(screen.getByText('No saved purchase plan')).toBeInTheDocument());
   });
+});
+
+
+it('pins cost impact to the selected shared horizon and run and rejects a different run', async () => {
+  const body = payload();
+  if (body.forecast.status !== 'ready') throw new Error('Ready fixture required');
+  body.forecast.value.run_id = 'active-run';
+  const fetcher = vi.fn().mockImplementation(async () => response(body));
+  vi.stubGlobal('fetch', fetcher);
+  const service = createApiRecommendationService({ baseUrl: 'https://backend.test', getToken: () => 'session' });
+  await service.readImpact!(context, 14, 'active-run');
+  const url = new URL(fetcher.mock.calls[0][0]);
+  expect(url.searchParams.get('horizon_days')).toBe('14');
+  expect(url.searchParams.get('run_id')).toBe('active-run');
+  body.forecast.value.run_id = 'replaced-run';
+  await expect(service.readImpact!(context, 14, 'active-run')).rejects.toMatchObject({ status: 409 });
+});
+
+it('accepts point estimates outside ordered quantile bounds without changing either', () => {
+  const body = payload();
+  if (body.forecast.status !== 'ready' || body.cost_impact.status !== 'ready') throw new Error('Ready fixture required');
+  body.forecast.value.central_estimate = body.forecast.value.prices.upper + 10;
+  body.cost_impact.value.central_total = body.cost_impact.value.forecast_total.upper + 1000;
+  const out = parseAnalysis(body, context);
+  expect(out.forecast).toEqual(body.forecast);
+  expect(out.cost_impact).toEqual(body.cost_impact);
+});
+
+it('passes urgency to the authenticated endpoint and rejects responses for a different urgency', async () => {
+  const body = payload();
+  const fetcher = vi.fn().mockResolvedValue(response({ ...body, context: { ...body.context, urgency: 'HIGH' } }));
+  vi.stubGlobal('fetch', fetcher);
+  const expected = { ...context, urgency: 'HIGH' as const };
+  const service = createApiRecommendationService({ baseUrl: 'https://backend.test', getToken: () => 'token' });
+  expect((await service.read(expected)).context.urgency).toBe('HIGH');
+  expect(new URL(fetcher.mock.calls[0][0]).searchParams.get('urgency')).toBe('HIGH');
+  expect(() => parseAnalysis(body, expected)).toThrow('Reload');
+});
+
+it('preserves structured SPLIT evidence and rejects invalid allocations and outcomes', () => {
+  const body = payload();
+  body.recommendation = { status: 'ready', value: { recommendation_id: 'policy-test', action: 'SPLIT', explanation: 'Illustrative timing split.',
+    evidence: { policy_version: 'buyer-heuristic-v1', urgency: 'NORMAL', direction: 'DOWN', interval_width_fraction: 0.2,
+      buy_now_cost_usd: 70000, alternative_cost_usd: 68000, alternative_minus_now_usd: -2000,
+      reference_age_days: 0, supported_target_date: context.purchase_deadline, horizon_description: 'Selected model target',
+      reasons: ['Wide interval'], limitations: ['Illustrative only'], allocations: [
+        { date: context.scenario_as_of_date, quantity_mt: context.quantity_mt / 2 },
+        { date: context.purchase_deadline, quantity_mt: context.quantity_mt / 2 },
+      ] },
+  } };
+  const parsed = parseAnalysis(body, context);
+  expect(parsed.recommendation.status === 'ready' && parsed.recommendation.value.evidence?.alternative_minus_now_usd).toBe(-2000);
+  body.recommendation.value.evidence!.allocations[1].quantity_mt++;
+  expect(() => parseAnalysis(body, context)).toThrow('invalid');
+  body.recommendation.value.action = 'GUARANTEED_PROFIT';
+  expect(() => parseAnalysis(body, context)).toThrow('invalid');
 });
