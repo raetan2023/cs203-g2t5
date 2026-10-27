@@ -49,7 +49,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
 
   function scenarioError(plan: PurchasePlan | null): string | null {
     return plan && plan.scenario_as_of_date !== scenarioDate
-      ? 'Your plan has not been refreshed for the active historical scenario. Please retry.'
+      ? 'Your plan has not been refreshed for the current application date. Please retry.'
       : null;
   }
 

@@ -70,6 +70,8 @@ public class PurchasePlanController {
             @RequestParam("quantity_mt") BigDecimal quantity,
             @RequestParam("purchase_deadline") LocalDate deadline,
             @RequestParam("scenario_as_of_date") LocalDate scenario,
+            @RequestParam(defaultValue = "7") int horizon_days,
+            @RequestParam(required = false) UUID run_id,
             jakarta.servlet.http.HttpServletRequest request) {
         LocalDate scenarioDate = dates.today();
         PurchasePlan plan = readPlan(token, planId).orElseThrow(() ->
@@ -78,7 +80,9 @@ public class PurchasePlanController {
         if (!context.matches(new PlanAnalysisService.Context(planId, quantity, deadline, scenario))) {
             throw new ApiException(HttpStatus.CONFLICT, "Your saved plan or scenario changed. Reload the purchase plan.");
         }
-        Map<String, Object> result = analysis.read(context, request.getRequestURI().endsWith("/cost-impact"));
+        if (!java.util.Set.of(7, 14, 30).contains(horizon_days))
+            throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "horizon_days must be 7, 14 or 30.");
+        Map<String, Object> result = analysis.read(context, request.getRequestURI().endsWith("/cost-impact"), horizon_days, run_id);
         // A slow provider must not publish results for inputs edited/deleted during its request.
         if (!scenarioDate.equals(dates.today()) || !readPlan(token, planId).map(latest -> context.matches(PlanAnalysisService.Context.of(latest, scenarioDate))).orElse(false)) {
             throw new ApiException(HttpStatus.CONFLICT, "Your saved plan changed while analysis was loading. Reload the purchase plan.");

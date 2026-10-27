@@ -25,7 +25,7 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
     <dl className="pp-details">
       <div><dt>Quantity</dt><dd>{new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt)} MT</dd></div>
       <div><dt>Purchase deadline</dt><dd><time dateTime={plan.purchase_deadline}>{formatDate(plan.purchase_deadline)}</time></dd></div>
-      <div><dt>Historical scenario date</dt><dd><time dateTime={plan.scenario_as_of_date}>{formatDate(plan.scenario_as_of_date)}</time></dd></div>
+      <div><dt>Application date</dt><dd><time dateTime={plan.scenario_as_of_date}>{formatDate(plan.scenario_as_of_date)}</time></dd></div>
       <div><dt>Time remaining</dt><dd>{timeRemaining}<span className="pp-time-note">Calculated from scenario date</span></dd></div>
     </dl>
     <div className="pp-actions">
