@@ -651,6 +651,7 @@ unavailable state. Any necessary data/helper changes are documented and tested; 
 | Today's date policy | Phase 3A | Resolve timezone, rollover, old plans and unsupported analysis; keep observation dates distinct |
 | Inviting post-signup Home | Phase 3B | Brainstorm first-time and returning-user content/layout; Impeccable/Claude if available; owner selects direction |
 | Row-first plan cards | Phase 4 | Readable card width, horizontal fill then wrap, stable source/keyboard order |
+| Plan sort switch | Phase 4 — done 2026-10-27 | "Soonest deadline / Largest volume" switch above the grid (`aria-pressed`), display order only; default soonest deadline. |
 | Dashboard trend comparison | Phase 6 | Define interval per indicator; truthful green-up/red-down with neutral flat/missing states |
 
 ## 7. Workflow: you, the lead session, and subagents
@@ -736,8 +737,8 @@ the blanket prohibition on all logic, copy and test changes.
 **Lead (start of a phase):**
 
 ```
-Phase <N> of docs/UI_REVAMP_PLAN.md. Read DESIGN_SYSTEM.md, frontend/PRODUCT.md,
-docs/UI_REVAMP_PLAN.md §2 and §5 Phase <N>, frontend/AGENTS.md and
+Phase <N> of docs/ui-revamp/UI_REVAMP_PLAN.md. Read DESIGN_SYSTEM.md, frontend/PRODUCT.md,
+docs/ui-revamp/UI_REVAMP_PLAN.md §2 and §5 Phase <N>, frontend/AGENTS.md and
 docs/frontend-design-guidelines.md. Do not read feature files yourself yet.
 Spawn an Explore subagent to scope <feature folder(s)>, then a Plan subagent to map literals to
 --bb-* tokens. Show me the plan and stop for approval.
@@ -760,7 +761,7 @@ is needed, write it to <scratch path>/explore-<phase>.md and return only the pat
 
 ```
 You are implementing Phase <N> (<feature>) of the Bunker Buddy UI revamp in your own worktree.
-Read docs/UI_REVAMP_PLAN.md §2 (rules) and §5 Phase <N>, DESIGN_SYSTEM.md, and only these files: <list>.
+Read docs/ui-revamp/UI_REVAMP_PLAN.md §2 (rules) and §5 Phase <N>, DESIGN_SYSTEM.md, and only these files: <list>.
 You may edit only: <list>. You may NOT edit tokens.css, theme.ts, app.css, any service/hook/test file,
 or add dependencies. Use --bb-* tokens only; if one is missing, stop and report "token needed: name, use".
 No logic, data, route or copy changes. Run `npm run build && npm test` in frontend/ before you finish.
@@ -1112,3 +1113,23 @@ node gallery.mjs && start gallery.html
 7. ~~Hook mode~~ Decided: hook off, you run `detect` manually (Phase 0, §10.1).
 8. Are you happy to run the two parallel worktree phases (3 and 4, §7.4), or keep everything sequential?
 9. Should the Phase 6 dashboard get a mock state in `PreviewApp.tsx` so Playwright can reach it (§10.5)?
+
+## 12. Keeping the UI branch in sync with `main`
+
+The full runbook (rules, drift check, procedure, subagent roles and a dated sync log) lives in
+**`docs/ui-revamp/SYNC_WITH_MAIN.md`**. Read it before merging or comparing with `main`. Summary:
+
+- `main` owns behaviour, this branch owns presentation. Merge (never rebase), with `rerere` on, rehearsed on a throwaway
+  `sync/main-<date>` branch, then fast-forward.
+- Sync at the start of every phase, before every phase PR, and when a teammate PR touching `frontend/` lands.
+- Last sync: **2026-10-27**, 0 behind `origin/main`. All 7 conflicts were resolved to `main`'s version (they were this
+  branch's earlier date-wording work, not restyling). New un-themed UI from `main` to add to the phases: organisation,
+  forecast, timing comparison.
+- Do Phase 5 (recommendations) on top of the synced page, not before.
+
+## 13. Creative direction and revamp order (draft)
+
+The look-and-feel brief for the Claude Design round (product summary, feature list, sign-up and home imagery ideas,
+asset folders, how to import designs back) is **`docs/ui-revamp/CREATIVE_BRIEF.md`**. Assets live in
+`docs/ui-revamp/assets/{inspo,aim,actual}`. It is a draft; its open questions decide whether this plan's dark-and-beige
+theme and guardrail 9 still hold.

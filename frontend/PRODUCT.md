@@ -36,11 +36,11 @@ Singapore MGO data is expensive and often paywalled. The product's intended mech
 - Features: Clerk sign-in/sign-up/logout; historical market dashboard (prices, charts, indicators); multiple saved purchase plans per user with create, view, edit, delete; authenticated recommendation and cost-impact views.
 - Navigation: Dashboard, purchase plan(s), log out.
 - Undecided product facts: urgency thresholds and counting rules (calendar vs trading days), supported scenario dates, separate delivery date and budget, whether the Gasoil-to-MGO mapping stays.
-- The UI revamp must not change logic, data, API calls, routes, validation, or user flows (see docs/UI_REVAMP_PLAN.md).
+- The UI revamp must not change logic, data, API calls, routes, validation, or user flows (see docs/ui-revamp/UI_REVAMP_PLAN.md).
 
 ## Brand Commitments
 
-Name "Bunker Buddy" is the current name. Nothing is confirmed as binding: the approved black-and-white, dark-only wireframe theme (DESIGN_SYSTEM.md, docs/UI_REVAMP_PLAN.md) is the current working direction, not a locked identity.
+Name "Bunker Buddy" is the current name. Nothing is confirmed as binding: the approved black-and-white, dark-only wireframe theme (DESIGN_SYSTEM.md, docs/ui-revamp/UI_REVAMP_PLAN.md) is the current working direction, not a locked identity.
 
 ## Evidence on Hand
 
