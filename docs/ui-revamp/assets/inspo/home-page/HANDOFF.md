@@ -35,9 +35,18 @@ The app has four roles (`OrganisationAccess.Role`: `BUYER, MANAGER, ANALYST, ADM
 
 Everything in the four designs can be built on the current backend. No new endpoints needed.
 
-- **Price card:** use `GET /api/v1/market/dashboard` — the `SGP_MGO_DERIVED` ticker (value, `changePct`, `observedDate`) and its `chartSeries` points for the sparkline. Market routes are API-key guarded, not role-guarded, so **admins can load it too**. Don't use `/api/v1/forecast` for this: admins get a 403 there.
-- **Price card caveats:** the series is labelled "Singapore MGO (derived est.)" — it's an estimate from the gasoil proxy, so the card should say "est." rather than "quote". Its date is the app's scenario date (a 2025 demo date), not today, while the greeting shows today's date.
-- **Greeting name:** `ClerkApp.tsx` sets `displayName` to the full name first, so the greeting would read "GOOD EVENING, JORDAN LEE". The mock uses the first name only; add a `firstName` to `SessionUser`.
+- **Price card:** use `GET /api/v1/market/stored` (what the live Market dashboard reads) — the `SGP_MGO_OBSERVED` series: its `ticker` (value, change, `observedDate`) and up to 60 `history` points for the sparkline. Market routes are API-key guarded, not role-guarded, so **admins can load it too**. Don't use:
+  - `/api/v1/market/dashboard` — legacy: exact-date match on the old `SGP_MGO_DERIVED` proxy series, and it falls back to hard-coded mock values (USD 614.50) when nothing matches.
+  - `/api/v1/forecast` — admins get a 403.
+- **Fallback to the previous price is already built in.** `/stored` returns each series' most recent observations, newest first, whatever today's date is. If today has no quote, the latest entry *is* the previous available day's price. MGO quotes are sparse (not every day has one), so "previous" can be a few days back — always show the observation's own date on the card.
+- **Is it refreshed daily?** `.github/workflows/import-market.yml` (on `main`) imports at 07:37 SGT every day, but it only writes when the repo variable `MARKET_DAILY_IMPORT_ENABLED` is `true`. Not verified whether that's switched on (`gh run list --workflow import-market.yml`). The daily *model* job (`daily-forecasts.yml`, 08:17 SGT) publishes forecasts, not the price observations.
+- **The app's date is today.** `/api/v1/config` returns the runtime Singapore date (`OperationalDate.today()`), so the greeting's date line and the rest of the app agree.
+
+## Decisions (2026-10-28)
+
+- Price card wording: label the price **"est."**
+- Greeting date: **today's date**. The price card shows its own quote date; when there's no quote today, it shows the most recent earlier one.
+- Greeting name: the user's **full name** (`displayName`, as `ClerkApp.tsx` already sets it). The mock's fit-to-width logic splits onto two lines when the name is long.
 - **Role:** `HomePage` doesn't receive the role yet. `App.tsx` has it as `planAccess.role`; `ClerkApp.tsx` already builds a display label (`roleLabel`).
 
 ## Open questions
