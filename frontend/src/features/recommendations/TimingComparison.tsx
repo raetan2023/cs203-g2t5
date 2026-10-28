@@ -52,9 +52,10 @@ export function buildColumns(entries: Entry[], today: string, deadline: string):
   return columns;
 }
 
-export function CompareBuyingDates({ entries, quantity, today, deadline, explored, recommended, badge, onExplore }: {
+export function CompareBuyingDates({ entries, quantity, today, deadline, explored, recommended, badge, knownMessage, onExplore }: {
   entries?: Entry[]; quantity: number; today: string; deadline: string; explored?: ColumnId; recommended: ColumnId[];
-  badge?: string; onExplore(id: ColumnId): void;
+  /** A forecast failure the page already shows, so the comparison need not repeat it. */
+  badge?: string; knownMessage?: string; onExplore(id: ColumnId): void;
 }) {
   const id = useId();
   const [unit, setUnit] = useState<'total' | 'mt'>('total');
@@ -67,6 +68,9 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
   const quoteDate = entries?.find(e => e.forecast)?.forecast?.anchor_quote_date;
   const before = columns.filter(c => !c.late), after = columns.filter(c => c.late);
   const value = (n: number) => unit === 'total' ? total(n * quantity) : `${usd(n)}/MT`;
+  // Every horizon failing for one reason is a single fact; say it once instead of on three empty cards.
+  const messages = entries && !entries.some(e => e.forecast) ? new Set(entries.map(e => e.message)) : undefined;
+  const sharedMessage = messages?.size === 1 ? [...messages][0] : undefined;
   const column = (c: Column) => {
     const available = c.observed || !!c.forecast;
     const status = !available ? 'Unavailable' : c.late ? 'After deadline' : c.past ? 'Past target'
@@ -96,15 +100,18 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
     <div className="rec-section-head">
       <div><h2 id={`${id}-title`}>Compare buying dates</h2>
         <p>Today’s observed price and the model’s 7, 14 and 30-day forecasts. Each is a separate estimate for its own date.</p></div>
-      <div className="rec-compare-tools">
+      {sharedMessage === undefined && <div className="rec-compare-tools">
         {badge && <span className="rec-badge">{badge}</span>}
         <div className="rec-toggle" role="group" aria-label="Show prices as">
           <button type="button" aria-pressed={unit === 'total'} onClick={() => setUnit('total')}>Total</button>
           <button type="button" aria-pressed={unit === 'mt'} onClick={() => setUnit('mt')}>Per MT</button>
         </div>
-      </div>
+      </div>}
     </div>
     {!entries ? <div className="rec-skeleton rec-skeleton--block" role="status" aria-label="Loading forecasts" />
+      : sharedMessage !== undefined ? <p className="rec-compare-unavailable">
+        <WarningIcon />No 7, 14 or 30-day forecast is available{sharedMessage === knownMessage ? ', for the reason shown above.' : <>. Model status: {sharedMessage}</>}
+      </p>
       : <>
         {/* repeat(0, …) is invalid CSS, so the late group is only added when it has columns. */}
         <div className="rec-columns" style={{ '--rec-columns': `repeat(${before.length}, minmax(0, 1fr)) 64px${after.length ? ` repeat(${after.length}, minmax(0, 1fr))` : ''}` } as CSSProperties}>
