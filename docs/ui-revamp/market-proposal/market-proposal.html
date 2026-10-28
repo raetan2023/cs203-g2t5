@@ -486,7 +486,7 @@ details.card[open] > summary svg { transform: rotate(180deg); }
     };
   }
 
-  // ---- forecast (horizon shared with the purchase estimate through ForecastProvider) ----
+  // ---- market forecast (/api/v1/forecast); the purchase estimate has its own provider and horizon ----
   function renderForecast() {
     const el = $('#forecast'), f = forecastFor(S.horizon);
     const seg = `<div class="seg" role="group" aria-label="Forecast horizon">${[7, 14, 30].map((h) => `<button type="button" data-horizon="${h}" aria-pressed="${S.horizon === h}">${h} days</button>`).join('')}</div>`;

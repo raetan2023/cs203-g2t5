@@ -57,7 +57,7 @@ Legend: ✅ kept · ⚠️ kept but changed · ❌ missing · ➕ new.
 
 | Current behaviour | Mock | Proposal |
 |---|---|---|
-| One horizon 7/14/30, **shared with the purchase-estimate page**; cached per horizon; re-read every 60 s when visible and on tab return; new run invalidates | ⚠️ shows all three at once, no picker | ✅ picker kept (shared state unchanged) |
+| One horizon 7/14/30 from `/api/v1/forecast`; cached per horizon; re-read every 60 s when visible and on tab return; new run invalidates. **Not shared with the purchase estimate:** `App.tsx` wraps that page in its own `ForecastProvider` (`/api/v1/purchase-plans/forecast`), so its horizon is separate | ⚠️ shows all three at once, no picker | ✅ picker kept, state unchanged |
 | States: loading, error + Retry, unavailable + last successful run, not connected | ⚠️ unavailable only | ✅ all four |
 | "Experimental forecast" / "Synthetic preview" label | ⚠️ experimental note only | ✅ coverage note; synthetic note in details |
 | Evidence badge (supported/weak/no edge) | ❌ | ✅ when present (see bugs: never present in production) |
@@ -103,5 +103,6 @@ Legend: ✅ kept · ⚠️ kept but changed · ❌ missing · ➕ new.
 
 1. **Colour meaning.** CREATIVE_BRIEF §3.5 says green = up, red = down. The mock and this proposal use buyer meaning instead: green lowers cost, orange raises it, and the USD index stays grey. Taste supports buyer meaning, but fails the beige + orange pairing as an "assistant palette". Either way the pressure hue needs to change.
 2. **Plans on the market page.** This is a cross-feature block. It needs the plan list plus one recommendation read per plan, or it shows only deadlines and links.
-3. **Forecast horizons.** One shared picker (proposal, matches the purchase estimate) vs all three at once (mock, three reads).
+3. **Forecast horizons.** One picker (proposal, the current behaviour) vs all three at once (mock, three reads). Either
+   way, this is the market forecast; a plan's estimate uses the purchase-plan forecast and its own horizon choice.
 4. **Sparklines** from the mock are dropped. Taste bans them on KPIs; the brief lists them only as a brainstorm idea.
