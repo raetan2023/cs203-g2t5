@@ -1,14 +1,17 @@
 import { AppLink } from '../../../app/router';
 import { formatDate } from '../dates';
-import type { PurchasePlan } from '../types';
+import type { PurchasePlan, PurchasePlanService } from '../types';
 import { Icon, PlanButton } from './Primitives';
+import { PlanDecisionNote } from './PlanDecisionNote';
 import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 
 /** A plan is "due soon" within this many days of its deadline (presentation rule, not stored). */
 export const DUE_SOON_DAYS = 7;
 
-export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef, busy = false, canEdit = true, saved = false }: {
+export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, deleteRef, busy = false, canEdit = true, saved = false }: {
   plan: PurchasePlan;
+  /** Reads a decided plan's manager note; without it the card shows the status only. */
+  service?: PurchasePlanService;
   busy?: boolean;
   canEdit?: boolean;
   /** Just created or edited: the card briefly highlights (presentation only). */
@@ -51,9 +54,9 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
         ? <span className="pp-countdown-value">Overdue by {days} {unit}</span>
         : <><span className="pp-countdown-value">{days} {unit}</span> {days === 0 ? 'left · due today' : 'left'}</>}
     </p>
-    {plan.status === 'submitted' && <p className="pp-card-description">All managers in your organisation have been notified. This plan is locked while awaiting review.</p>}
+    <PlanDecisionNote plan={plan} service={service} />
     <div className="pp-actions">
-      {!busy && <AppLink className="pp-button pp-button--primary pp-summary-link" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>{plan.status && plan.status !== 'draft' ? 'View submitted recommendation' : 'View recommendation'} &rarr;</AppLink>}
+      {!busy && <AppLink className="pp-button pp-button--primary pp-summary-link" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>{draft ? 'View recommendation' : plan.status === 'submitted' ? 'View submitted recommendation' : 'View decision'} &rarr;</AppLink>}
       {canEdit && draft && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}
     </div>
   </section>;

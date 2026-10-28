@@ -2,7 +2,7 @@ import type { ForecastService, Horizon, ReadyForecast } from '../features/foreca
 import { buildMockForecast } from '../features/forecast/mockService';
 import type { RecommendationService } from '../features/recommendations/service';
 import { RECOMMENDATION_DEMO_PLAN } from '../features/recommendations/mockService';
-import type { CurrentRecommendation, PlanAnalysis, PlanResultContext, PurchasePlan, PurchasePlanService, SubmittedRecommendation } from '../features/purchase-plan/types';
+import type { ApprovalDecision, CurrentRecommendation, PlanAnalysis, PlanResultContext, PurchasePlan, PurchasePlanService, SubmittedRecommendation } from '../features/purchase-plan/types';
 import type { OrganisationPermissions } from '../features/organisation/apiService';
 
 /**
@@ -117,23 +117,65 @@ export function createScenarioRecommendationService(scenario: RecommendationScen
 /** Preview buyer: can write plans, so the decision rail offers "Submit for approval". */
 export const PREVIEW_BUYER: OrganisationPermissions = { organisation_id: 'preview-organisation', role: 'org:buyer', can_read_plans: true, can_write_plans: true, plan_scope: 'own' };
 
-/** Adds a local submit and saved-snapshot read to the preview plan service; nothing leaves the browser. */
-export function withPreviewApproval(plans: PurchasePlanService, scenario: RecommendationScenario): PurchasePlanService {
+/** Preview manager: reviews submitted requests and cannot edit plans. */
+export const PREVIEW_MANAGER: OrganisationPermissions = { ...PREVIEW_BUYER, role: 'org:manager', can_write_plans: false, plan_scope: 'organisation' };
+
+const previewDecision = (decision: 'approved' | 'rejected', comment: string, decided_at = `${SCENARIO_DATE}T01:30:00Z`): ApprovalDecision => ({
+  decision_id: `preview-${decision}`, decision, comment, manager_clerk_user_id: 'user_preview_manager', manager_label: 'Procurement Manager (preview)', decided_at });
+export const PREVIEW_REJECTION = 'Over this month’s budget. Split the quantity across two plans and resubmit.';
+
+/**
+ * Adds a local submit, manager decision and saved-snapshot read to the preview plan service; nothing leaves the browser.
+ * `start` opens the plan already submitted, approved or rejected.
+ */
+export function withPreviewApproval(plans: PurchasePlanService, scenario: RecommendationScenario, start?: 'submitted' | 'approved' | 'rejected'): PurchasePlanService {
   const recommendations = createScenarioRecommendationService(scenario, 0);
-  let submitted: { plan: PurchasePlan; submission: SubmittedRecommendation } | undefined;
+  let submitted: { plan: PurchasePlan; submission: SubmittedRecommendation; decision: ApprovalDecision | null } | undefined;
+  async function save(planId: string, horizon: Horizon) {
+    const { plan } = await plans.read(planId);
+    if (!plan) throw new Error('No saved purchase plan.');
+    const analysis = await recommendations.read(plan, horizon);
+    submitted = { plan: { ...plan, status: 'submitted', submitted_at: `${SCENARIO_DATE}T00:45:00Z` }, submission: { horizon_days: horizon, analysis }, decision: null };
+    return submitted;
+  }
+  let opening: Promise<unknown> | undefined;
+  const opened = () => opening ??= start ? save(scenarioPlan(scenario).plan_id, 7).then(saved => {
+    if (start === 'submitted') return;
+    saved.decision = previewDecision(start, start === 'approved' ? 'Within budget. Go ahead.' : PREVIEW_REJECTION);
+    saved.plan = { ...saved.plan, status: start };
+  }) : Promise.resolve();
   return {
     ...plans,
-    async read(planId) { return submitted && submitted.plan.plan_id === planId ? { plan: submitted.plan } : plans.read(planId); },
-    async submit(planId, selection) {
-      const { plan } = await plans.read(planId);
-      if (!plan) throw new Error('No saved purchase plan.');
-      const analysis = await recommendations.read({ ...plan, urgency: selection.urgency }, selection.horizon_days);
-      const saved: PurchasePlan = { ...plan, status: 'submitted', submitted_at: new Date().toISOString() };
-      submitted = { plan: saved, submission: { horizon_days: selection.horizon_days, analysis } };
-      return { plan: saved };
+    async read(planId) { await opened(); return submitted && submitted.plan.plan_id === planId ? { plan: submitted.plan } : plans.read(planId); },
+    async submit(planId, selection) { await opened(); return { plan: (await save(planId, selection.horizon_days)).plan }; },
+    async decide(planId, input) {
+      await opened();
+      if (!submitted || submitted.plan.plan_id !== planId || submitted.decision) throw new Error('This request has already been decided.');
+      submitted.decision = previewDecision(input.decision, input.comment, new Date().toISOString());
+      submitted.plan = { ...submitted.plan, status: input.decision };
+      return { plan: submitted.plan };
     },
     async readSubmission(planId) {
-      return { submission: submitted && submitted.plan.plan_id === planId ? submitted.submission : null, decision: null };
+      await opened();
+      const own = submitted && submitted.plan.plan_id === planId ? submitted : undefined;
+      return { submission: own?.submission ?? null, decision: own?.decision ?? null };
     },
   };
+}
+
+/** Plans list with one card in each approval state; decided cards read their manager note through readSubmission. */
+export function previewDecisionPlans(): { plans: PurchasePlan[]; withDecisions(service: PurchasePlanService): PurchasePlanService } {
+  const base = scenarioPlan('wait');
+  const card = (id: string, quantity: number, deadline: string, status: PurchasePlan['status']): PurchasePlan => ({
+    ...base, plan_id: id, quantity_mt: quantity, purchase_deadline: deadline, status,
+    days_remaining: Math.round((Date.parse(deadline) - Date.parse(SCENARIO_DATE)) / 86_400_000),
+    submitted_at: status === 'draft' ? null : `${SCENARIO_DATE}T00:45:00Z` });
+  const plans = [card('preview-draft', 47, '2026-11-30', 'draft'), card('preview-submitted', 120, '2026-11-12', 'submitted'),
+    card('preview-approved', 80, '2026-11-20', 'approved'), card('preview-rejected', 300, '2026-11-05', 'rejected')];
+  const decisions: Record<string, ApprovalDecision> = {
+    'preview-approved': previewDecision('approved', 'Within budget. Go ahead.'),
+    'preview-rejected': previewDecision('rejected', PREVIEW_REJECTION),
+  };
+  return { plans, withDecisions: service => ({ ...service,
+    async readSubmission(planId) { await new Promise(resolve => setTimeout(resolve, 400)); return { submission: null, decision: decisions[planId] ?? null }; } }) };
 }
