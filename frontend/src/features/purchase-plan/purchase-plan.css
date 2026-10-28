@@ -25,7 +25,10 @@
 .pp-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 22px; }
 .pp-heading p { color: var(--pp-muted); margin-top: 4px; }
 .pp-create { display: flex; align-items: center; gap: 16px; }
-.pp-button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border: 1px solid transparent; border-radius: var(--bb-radius-control); font: inherit; line-height: 20px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.pp-button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border: 1px solid transparent; border-radius: var(--bb-radius-control); font: inherit; line-height: 20px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: background-color var(--bb-motion-fast), border-color var(--bb-motion-fast), color var(--bb-motion-fast), transform var(--bb-motion-fast) var(--bb-ease-out); }
+/* Press feedback: a slight give that confirms the click landed. */
+.pp-button:active:not(:disabled), .pp-sort button:active { transform: scale(.97); }
 .pp-button svg { width: 14px; height: 14px; }
 .pp-button--primary { background: var(--bb-action); color: var(--bb-text-on-action); }
 .pp-button--primary:hover:not(:disabled) { background: var(--bb-action-hover); }
@@ -84,7 +87,7 @@
 .pp-summary--overdue .pp-countdown-value { color: var(--bb-error-text); }
 /* "More actions" disclosure; sits above the card-wide recommendation link. */
 .pp-menu { position: relative; z-index: 2; }
-.pp-menu-trigger { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid transparent; border-radius: var(--bb-radius-control); background: transparent; color: var(--pp-muted); cursor: pointer; }
+.pp-menu-trigger { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid transparent; border-radius: var(--bb-radius-control); background: transparent; color: var(--pp-muted); cursor: pointer; transition: background-color var(--bb-motion-fast), color var(--bb-motion-fast); }
 .pp-menu-trigger:hover:not(:disabled), .pp-menu-trigger[aria-expanded=true] { background: var(--bb-surface-hover); color: var(--pp-text); }
 .pp-menu-trigger:disabled { cursor: not-allowed; opacity: .45; }
 .pp-menu-list { position: absolute; top: calc(100% + 4px); right: 0; min-width: 160px; padding: var(--bb-space-1); background: var(--pp-surface); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); box-shadow: var(--bb-shadow-card); }
@@ -115,7 +118,8 @@
 /* "Sort by" text toggle: options read as quiet text; only the selected one (aria-pressed) sits on a raised chip. */
 .pp-sort { display: inline-flex; align-items: center; gap: var(--bb-space-1); font-size: 13px; }
 .pp-sort-label { margin-right: var(--bb-space-2); color: var(--pp-muted); }
-.pp-sort button { min-height: 36px; padding: 6px 14px; border: 1px solid transparent; border-radius: var(--bb-radius-control); background: transparent; color: var(--pp-muted); font: inherit; cursor: pointer; }
+.pp-sort button { min-height: 36px; padding: 6px 14px; border: 1px solid transparent; border-radius: var(--bb-radius-control); background: transparent; color: var(--pp-muted); font: inherit; cursor: pointer;
+  transition: background-color var(--bb-motion-fast), border-color var(--bb-motion-fast), color var(--bb-motion-fast), transform var(--bb-motion-fast) var(--bb-ease-out); }
 .pp-sort button:hover { color: var(--pp-text); }
 .pp-sort button[aria-pressed=true] { border-color: var(--bb-border-subtle); background: var(--bb-surface); color: var(--pp-text); font-weight: 500; }
 .pp-loading { min-height: calc(100dvh - 130px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; color: var(--pp-muted); font-size: 18px; font-weight: 500; text-align: center; }
@@ -149,6 +153,7 @@
 /* Reduced motion keeps feedback that carries meaning (fades, colour) and drops movement. */
 @media (prefers-reduced-motion: reduce) {
   .pp-spinner { animation: pp-pulse 1.2s ease-in-out infinite alternate; }
+  .pp-button:active:not(:disabled), .pp-sort button:active { transform: none; }
 }
 
 .pp-summary-badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2); min-width: 0; }
