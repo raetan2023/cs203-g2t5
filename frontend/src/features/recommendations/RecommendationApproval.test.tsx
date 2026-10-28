@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { RecommendationApproval, SubmittedRecommendationView } from './RecommendationApproval';
@@ -102,4 +102,20 @@ it('allows the deadline policy buy-now request using the reference price when no
   await user.click(screen.getByRole('button', { name: 'Submit for approval' }));
   await user.click(screen.getByRole('button', { name: 'Confirm submission' }));
   expect(api.submit).toHaveBeenCalledWith(draft.plan_id, expect.objectContaining({ recommendation_id: 'buy-now-plan' }));
+});
+
+it('leads a decided request with its status, who decided, the comment and the next step', async () => {
+  const api = service();
+  api.readSubmission.mockResolvedValue({ submission: { horizon_days: 14, analysis: analysis() }, decision: {
+    decision_id: 'd1', decision: 'approved', comment: 'Within budget', manager_clerk_user_id: 'user_m',
+    manager_label: 'Procurement Manager', decided_at: '2026-10-28T01:30:00Z' } });
+  render(<SubmittedRecommendationView plan={{ ...submitted, status: 'approved' }} planService={api} />);
+  const status = await screen.findByRole('region', { name: 'Approval status' });
+  expect(within(status).getByRole('heading', { name: 'Recommendation approved' })).toBeVisible();
+  expect(within(status).getByText(/Decided by Procurement Manager/)).toBeVisible();
+  expect(within(status).getByText('Within budget')).toBeVisible();
+  expect(within(status).getByText(/recording the purchase here isn’t available yet/)).toBeVisible();
+  expect(within(screen.getByRole('complementary', { name: 'Saved recommendation summary' })).getByText('Wait')).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Plan recommendation · WAIT' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Approve recommendation' })).not.toBeInTheDocument();
 });
