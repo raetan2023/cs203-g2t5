@@ -33,6 +33,8 @@ Each page file lists any extra reading. You can skip the forecast, Ridge and rev
 
 ### Mockups and screenshots
 
+Each page file has a **Design inspiration** section listing the same six sources: the revamp mockup, the brief section, the original mockups, screenshots before the revamp, what's built now, and patterns to reuse.
+
 - **Mockups:** `docs/ui-revamp/assets/inspo/<page>/`. Each folder has a `README.md` or `HANDOFF.md`. Serve the folder (`python -m http.server`) and open the `.dc.html` file; its inline styles carry the exact spacing and sizes.
 - **Screenshots of what's built:** under `docs/ui-revamp/critique-*/` and each page's review folder.
 

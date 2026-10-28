@@ -26,11 +26,13 @@ Each needs backend, database and UI work. The recommended design is below; agree
 
 ## Design inspiration
 
-There are no mockups for these screens yet. Match the pages already shipped:
+There are no mockups for the after-the-decision screens yet. Match the pages already shipped:
 
-- `docs/ui-revamp/assets/inspo/recommendations-page/`: the request page layout (answer card, sticky side rail, fine print).
-- `docs/ui-revamp/assets/inspo/purchase-plans-page/image.png`: the plan cards and list.
-- What's built now: `docs/ui-revamp/critique-rec/decision-views/` (approval states and plan cards) and `docs/ui-revamp/critique-rec/revamp-v1/` (recommendation page).
+- **Revamp mockup:** [`docs/ui-revamp/assets/inspo/recommendations-page/`](../ui-revamp/assets/inspo/recommendations-page/), one Claude Design export per answer (Buy now, Wait, Monitor, Split). It sets the request page layout: answer card, sticky side rail, fine print. For the plan cards and list, use `docs/ui-revamp/assets/inspo/purchase-plans-page/image.png`.
+- **Brief:** [`CREATIVE_BRIEF.md`](../ui-revamp/CREATIVE_BRIEF.md) §3.4 "Recommendations": the content inventory (no financial detail may be dropped) and the answer-first structure.
+- **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `Purchase recommendation · *.png` (loading, couldn't load, unavailable, updating), `recommendation*.png`.
+- **Screenshots before the revamp:** `docs/ui-revamp/before/rec-*.png` (every state, desktop and mobile).
+- **What's built now:** [`docs/ui-revamp/critique-rec/decision-views/`](../ui-revamp/critique-rec/decision-views/) (approval states and plan cards) and [`critique-rec/revamp-v1/`](../ui-revamp/critique-rec/revamp-v1/) (recommendation page). `critique-rec/TASTE_REVIEW.md` lists the duplicates the owner decided on.
 - **Patterns to reuse:**
   - forms: `PurchasePlanForm.tsx`
   - confirm-before-acting buttons: `RecommendationApproval.tsx` and `ManagerDecisionForm.tsx`
