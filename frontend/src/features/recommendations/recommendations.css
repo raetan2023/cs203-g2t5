@@ -164,9 +164,18 @@
 .rec-manager-decision textarea { display: block; width: 100%; resize: vertical; padding: 12px; border: 1px solid var(--bb-border-control); border-radius: 8px; background: var(--bb-surface-input); color: var(--bb-text); font: inherit; }
 .rec-manager-decision .bb-button { max-width: 100%; white-space: normal; }
 .rec-manager-decision [role=alert] { margin-top: 16px; color: var(--bb-error-text); }
-.rec-decision { margin-bottom: var(--bb-space-6); }
-.rec-decision--approved, .rec-decision--rejected { border-color: var(--bb-border-control); }
 .rec-decision-comment { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Submitted / approved / rejected request: status first, then the saved recommendation. */
+.recommendations .rec-status .rec-verdict h2 { font-size: 32px; line-height: 38px; }
+.rec-status--submitted .rec-verdict-icon { background: var(--bb-surface-input); color: var(--bb-text); border: 1px solid var(--bb-border-control); }
+.rec-status--rejected .rec-verdict-icon { background: var(--bb-error-surface); color: var(--bb-error-text); border: 1px solid var(--bb-error-border); }
+.rec-status-comment { padding: var(--bb-space-4) var(--bb-space-5); border-left: 3px solid var(--bb-border-control); background: var(--bb-surface-input); border-radius: 0 var(--bb-radius-card) var(--bb-radius-card) 0; }
+.recommendations .rec-status-comment p { margin-top: var(--bb-space-1); color: var(--bb-text); font-size: 15px; }
+.recommendations .rec-next { padding-top: var(--bb-space-5); border-top: 1px solid var(--bb-border-subtle); font-size: 14px; }
+.rec-next strong { display: block; margin-bottom: 2px; color: var(--bb-text); font-weight: 600; }
+.rec-status .rec-manager-decision { margin-top: 0; }
+.recommendations .rec-detail-note { font-size: 14px; }
 
 @media (max-width: 1050px) {
   .rec-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'answer' 'rail' 'evidence'; grid-template-rows: none; }

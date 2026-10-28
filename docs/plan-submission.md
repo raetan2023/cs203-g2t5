@@ -39,6 +39,9 @@ locked. `approved` and `rejected` are reserved schema states: **manager approval
 Only a current manager in the same active organisation can decide a submitted
 request. The first decision is final; concurrent/later attempts return 409.
 Rejected requests stay locked; revising a proposal requires a new draft plan.
+Nothing happens after the decision yet (recording the purchase, withdrawing,
+revising a rejected plan, telling the buyer). The proposed design for those is in
+[plan-after-decision.md](plan-after-decision.md); it is not implemented.
 
 ## API and role matrix
 

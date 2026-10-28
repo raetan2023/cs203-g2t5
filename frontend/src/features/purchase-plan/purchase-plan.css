@@ -152,6 +152,18 @@
 .pp-summary-badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2); min-width: 0; }
 .pp-plan-status { display: inline-block; margin: 0; padding: var(--bb-space-1) var(--bb-space-2); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font-size: 12px; font-weight: 600; color: var(--bb-text); }
 .pp-plan-status--submitted { background: var(--bb-surface-input); }
+/* Where a submitted plan stands. Icon shape and wording carry the state; colour only reinforces it. */
+.pp-decision { display: flex; align-items: flex-start; gap: var(--bb-space-3); margin-top: var(--bb-space-3); padding: var(--bb-space-3) var(--bb-space-4); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface-input); }
+.pp-decision > svg { flex-shrink: 0; margin-top: 1px; color: var(--bb-text-secondary); }
+.pp-decision--approved > svg { color: var(--bb-action); }
+.pp-decision--rejected { border-color: var(--bb-border-control); }
+.pp-decision--rejected > svg { color: var(--bb-error-text); }
+.pp-decision > div { min-width: 0; }
+.purchase-plan .pp-decision p { margin: 0; font-size: 13px; line-height: 19px; color: var(--bb-text-supporting); }
+.purchase-plan .pp-decision p + p { margin-top: var(--bb-space-1); }
+.pp-decision strong { color: var(--bb-text); font-weight: 600; }
+.purchase-plan .pp-decision-comment { color: var(--bb-text); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.purchase-plan .pp-decision-meta { color: var(--bb-text-secondary); }
 .pp-approval-inbox { margin-bottom: 1.5rem; }
 .pp-approval-list { list-style: none; padding: 0; display: grid; gap: 1rem; }
 .pp-approval-list li { padding: 1rem 0; border-top: 1px solid var(--bb-border-subtle); }
