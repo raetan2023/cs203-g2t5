@@ -20,11 +20,11 @@
   - What the spec still lacks is in `MISSING.md`.
 - **Decisions made:** buyer-meaning colour, MGO first, Past/Next range labels (see [Decided](#decided-2026-10-28)).
 - **Handed over to you:** the "Your plans" block, the horizon choice, the admin 403, and the build itself (see [Handed over](#handed-over-yours-to-decide-and-build)).
-- **Branch:** all of this is on `ui-revamp/market-proposal` (PR #41 into wireframe). No app code was changed.
+- **Branch:** all of this is on `feature/ui-revamp-wireframe` (merged via PR #41 on 2026-10-28). No app code was changed.
 
 ## Where your agent should continue
 
-1. After PR #41 merges, branch from `feature/ui-revamp-wireframe` (e.g. `feature/market-dashboard-revamp`).
+1. Branch from `feature/ui-revamp-wireframe` (e.g. `feature/market-dashboard-revamp`).
 2. **Fix the three bugs first** (listed under [Handed over](#handed-over-yours-to-decide-and-build), item 5), each with a test. They're small, and they change what the new UI shows.
 3. **Build the spec in React, one block per PR:**
    1. price strip
