@@ -1,0 +1,370 @@
+<!doctype html>
+<meta charset="utf-8"><style data-dc-design-system-vars>@layer{:root{--ground:#0c0d0e;--surface-card:#1a1b1c;--surface-border:#2d2c29;--surface-input:#2c3443;--beige:#eadfc9;--on-accent:#0c0d0e;--ink:#f0e6d2;--ink-soft:#c5bba7;--ink-muted:#b5ac9b;--hero-water:#080a0c;--hero-haze:#2a241b;--hero-light:#eadfc9;--space-1:4px;--space-2:8px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;--radius-sm:6px;--radius-md:8px;--radius-lg:12px;--font-sans:system-ui, -apple-system, "Segoe UI", sans-serif;--text-display:300 64px/70px var(--font-sans);--text-title:400 32px/40px var(--font-sans);--text-lead:400 18px/32px var(--font-sans);--text-body:400 14px/20px var(--font-sans);--text-label:600 13px/18px var(--font-sans);}}</style>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bunker Buddy login — reactive ship</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0c0d0e}
+.scene{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+.bob{animation:bob 9s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.sail{transition:transform 2.6s cubic-bezier(.45,0,.2,1)}
+.scene.go .sail{transform:translateX(70px)}
+.wake{opacity:0;transition:opacity 1.2s ease .3s}
+.scene.go .wake{opacity:1}
+.draw{stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset 1.8s ease .6s}
+.scene.go .draw{stroke-dashoffset:0}
+.wp{opacity:0;transition:opacity .6s ease 2.2s}
+.scene.go .wp{opacity:1}
+.wpring{animation:pulse 2s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.lt,.hl,.bridge,.refl,.deckglow,.beam{transition:opacity .45s ease}
+.lt.on{opacity:.9}.lt.hot{opacity:1}.lt.off{opacity:.4}
+.hl.on{opacity:.4}.hl.hot{opacity:.7}.hl.off{opacity:.12}
+.bridge.on{opacity:.9}.bridge.hot{opacity:1}.bridge.off{opacity:.55}
+.bglow{opacity:.25;transition:opacity .6s ease}
+.bridge.hot .bglow{opacity:.42}
+.refl{opacity:.55}.deckglow{opacity:.3}
+.scene.dim .refl{opacity:.35}.scene.dim .deckglow{opacity:.18}
+.rf{animation:shimmer 4.5s ease-in-out infinite alternate}
+.w1{animation:flick 11s ease-in-out infinite}
+.w2{animation:flick 17s ease-in-out infinite -5s}
+.twinkle{opacity:.4}
+.t2{animation-delay:-2s}.t3{animation-delay:-3.5s}
+.shake{animation:shake .45s ease}
+.spin{animation:spin .9s linear infinite;transform-origin:center;transform-box:fill-box}
+.scene.still *{animation:none !important}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(1.6px) rotate(.12deg)}}
+@keyframes flick{0%,100%{opacity:1}46%{opacity:1}50%{opacity:.25}54%{opacity:1}}
+@keyframes shimmer{0%{transform:translateX(-3px)}100%{transform:translateX(3px)}}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:.7}}
+@keyframes flash{0%{opacity:1}100%{opacity:.05}}
+@keyframes sweep{0%{transform:rotate(-14deg)}100%{transform:rotate(10deg)}}
+@keyframes pulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.2);opacity:0}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.scene *,.shake{animation:none !important;transition:none !important}}
+.uline{transition:border-color .2s,box-shadow .2s}
+.uline:focus{outline:none;border-bottom-color:#17140f;box-shadow:0 1px 0 0 #17140f}
+.pill{transition:background .15s,transform .1s}
+.pill:active{transform:scale(.985)}
+.pill-dark:hover{background:#2b261f}
+.pill-light:hover{background:#e1d7c4}
+.card a{color:#17140f}
+.card button:focus-visible,.card a:focus-visible,.card input[type=checkbox]:focus-visible{outline:2px solid #17140f;outline-offset:2px}
+input::placeholder{color:#857b6a}
+</style>
+</helmet>
+<div style="position:relative;width:100%;min-height:900px;box-sizing:border-box;background:#0c0d0e;color:#f0e6d2;font-family:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden">
+
+<svg class="scene {{sceneCls}}" viewBox="0 0 1440 900" preserveAspectRatio="xMinYMax slice" role="img" aria-label="A tanker at dusk on moonlit water. Its lights respond as you fill in the sign-in form.">
+<defs>
+<linearGradient id="hSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0c0e"></stop><stop offset=".55" stop-color="#121317"></stop><stop offset=".85" stop-color="#1f1b18"></stop><stop offset="1" stop-color="#33281c"></stop></linearGradient>
+<linearGradient id="hSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2218"></stop><stop offset=".22" stop-color="#141416"></stop><stop offset="1" stop-color="#0a0b0c"></stop></linearGradient>
+<radialGradient id="hMoon" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#eadfc9" stop-opacity=".22"></stop><stop offset=".4" stop-color="#eadfc9" stop-opacity=".07"></stop><stop offset="1" stop-color="#eadfc9" stop-opacity="0"></stop></radialGradient>
+<linearGradient id="hBeam" x1="200" y1="0" x2="780" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#eadfc9" stop-opacity=".32"></stop><stop offset="1" stop-color="#eadfc9" stop-opacity="0"></stop></linearGradient>
+<linearGradient id="hFadeGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"></stop><stop offset=".6" stop-color="#fff" stop-opacity=".25"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop></linearGradient>
+<mask id="hFade"><rect x="0" y="0" width="1" height="1" fill="url(#hFadeGrad)"></rect></mask>
+<pattern id="hDash" width="14" height="14" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="10" height="2" fill="#eadfc9"></rect><rect x="5" y="7" width="9" height="2" fill="#eadfc9"></rect></pattern>
+<filter id="hBlur6" x="-60%" y="-200%" width="220%" height="500%"><feGaussianBlur stdDeviation="6"></feGaussianBlur></filter>
+<filter id="hBlur3" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="3"></feGaussianBlur></filter>
+<mask id="hRouteMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1440" height="900"><path class="draw" d="M722 644 Q 784 634 846 632" stroke="#fff" stroke-width="8" fill="none" pathLength="100"></path></mask>
+<g id="hRf"><rect x="0" y="0" width="12" height="70" fill="url(#hDash)" mask="url(#hFade)"></rect></g>
+</defs>
+
+<rect x="0" y="0" width="1440" height="640" fill="url(#hSky)"></rect>
+<g fill="#f0e6d2">
+<circle class="twinkle" cx="120" cy="60" r="1"></circle><circle class="twinkle t2" cx="330" cy="96" r="1"></circle><circle class="twinkle t3" cx="520" cy="42" r="1.2"></circle><circle class="twinkle" cx="690" cy="88" r="1"></circle><circle class="twinkle t2" cx="900" cy="52" r="1.2"></circle><circle class="twinkle t3" cx="1060" cy="120" r="1"></circle><circle class="twinkle" cx="1220" cy="64" r="1"></circle><circle class="twinkle t2" cx="1370" cy="128" r="1.2"></circle><circle class="twinkle t3" cx="620" cy="300" r="1"></circle><circle class="twinkle" cx="420" cy="380" r="1"></circle>
+</g>
+<circle cx="790" cy="190" r="150" fill="url(#hMoon)"></circle>
+<circle cx="790" cy="190" r="20" fill="#efe5d1" opacity=".92"></circle>
+
+<rect x="0" y="640" width="1440" height="260" fill="url(#hSea)"></rect>
+<line x1="0" y1="640.5" x2="1440" y2="640.5" stroke="#4a3c29" stroke-opacity=".8"></line>
+<rect class="rf" x="772" y="642" width="36" height="230" fill="url(#hDash)" mask="url(#hFade)" opacity=".45"></rect>
+<path d="M60 690H300M480 712H760M200 760H620M900 740H1260M80 820H420" stroke="#eadfc9" stroke-opacity=".05"></path>
+
+<path d="M722 644 Q 784 634 846 632" stroke="#eadfc9" stroke-width="1.6" stroke-dasharray="3 6" fill="none" mask="url(#hRouteMask)"></path>
+<g class="wp">
+<circle class="wpring" cx="850" cy="632" r="6" fill="none" stroke="#eadfc9" stroke-width="1.2"></circle>
+<circle cx="850" cy="632" r="3" fill="#eadfc9"></circle>
+</g>
+
+<g transform="translate(-90 378) scale(1.1)">
+<g class="sail">
+
+<g class="refl">
+<rect class="rf" x="172" y="240" width="58" height="90" fill="url(#hDash)" mask="url(#hFade)"></rect>
+<use class="rf" href="#hRf" x="276" y="240"></use>
+<use class="rf" href="#hRf" x="320" y="240" style="animation-delay:-1.8s"></use>
+<use class="rf" href="#hRf" x="364" y="240" style="animation-delay:-2.6s"></use>
+<use class="rf" href="#hRf" x="408" y="240" style="animation-delay:-3.4s"></use>
+<use class="rf" href="#hRf" x="452" y="240" style="animation-delay:-.9s"></use>
+<use class="rf" href="#hRf" x="496" y="240" style="animation-delay:-2.1s"></use>
+<use class="rf" href="#hRf" x="540" y="240" style="animation-delay:-3.9s"></use>
+<use class="rf" href="#hRf" x="584" y="240" style="animation-delay:-1.2s"></use>
+<use class="rf" href="#hRf" x="628" y="240" style="animation-delay:-2.9s"></use>
+<use class="rf" href="#hRf" x="672" y="240" style="animation-delay:-.2s"></use>
+</g>
+
+<path class="wake" d="M118 234 L-40 222 M118 238 L-50 252 M676 238 L560 246" stroke="#eadfc9" stroke-opacity=".3" stroke-width="1.5" fill="none"></path>
+
+<g class="bob">
+
+<path d="M182 130L188 84H212L218 130Z" fill="#1f2328"></path>
+<rect x="186" y="80" width="28" height="4" fill="#2a2e34"></rect>
+<rect x="187" y="100" width="26" height="2" fill="#eadfc9" opacity=".5"></rect>
+<path d="M188 84L182 130" stroke="#8a7d66" stroke-opacity=".5"></path>
+
+<path d="M118 198H706L734 188L676 238H118Z" fill="#1b1e23"></path>
+<path d="M118 220H690L676 238H118Z" fill="#15171b"></path>
+<path d="M118 198H706L734 188" fill="none" stroke="#8a7d66" stroke-opacity=".7" stroke-width="1.2"></path>
+<path class="deckglow" d="M118 237.5H676" stroke="#eadfc9" stroke-width="1"></path>
+
+<rect x="146" y="160" width="108" height="38" fill="#20242a"></rect>
+<rect x="158" y="130" width="84" height="30" fill="#23272d"></rect>
+<rect x="166" y="108" width="68" height="22" fill="#262b31"></rect>
+<rect x="160" y="124" width="80" height="3" fill="#2d3239"></rect>
+<path d="M146 160.5H254M158 130.5H242M166 108.5H234" stroke="#8a7d66" stroke-opacity=".55"></path>
+
+<path d="M200 108V56M192 70H208" stroke="#3a3f46" stroke-width="2"></path>
+<circle cx="200" cy="56" r="7" fill="#eadfc9" opacity=".35" filter="url(#hBlur3)"></circle>
+<circle cx="200" cy="56" r="2" fill="#eadfc9"></circle>
+
+<g class="bridge {{bridgeCls}}">
+<rect class="bglow" x="166" y="104" width="68" height="26" fill="#eadfc9" filter="url(#hBlur6)"></rect>
+<g fill="#eadfc9">
+<rect x="174" y="114" width="6" height="5"></rect><rect x="184" y="114" width="6" height="5"></rect><rect x="194" y="114" width="6" height="5"></rect><rect x="204" y="114" width="6" height="5"></rect><rect x="214" y="114" width="6" height="5"></rect><rect x="224" y="114" width="6" height="5"></rect>
+</g>
+</g>
+<g fill="#eadfc9" opacity=".85">
+<rect x="168" y="141" width="5" height="5"></rect><rect x="180" y="141" width="5" height="5"></rect><rect class="w1" x="204" y="141" width="5" height="5"></rect><rect x="216" y="141" width="5" height="5"></rect>
+<rect class="w2" x="156" y="173" width="5" height="5"></rect><rect x="180" y="173" width="5" height="5"></rect><rect x="216" y="173" width="5" height="5"></rect><rect class="w1" x="240" y="173" width="5" height="5"></rect>
+</g>
+
+<path d="M262 192H700" stroke="#2a2e34" stroke-width="3"></path>
+<rect x="436" y="182" width="48" height="16" fill="#20242a"></rect>
+<path d="M436 182.5H484" stroke="#8a7d66" stroke-opacity=".45"></path>
+<path d="M300 198V192M350 198V192M400 198V192M540 198V192M600 198V192M650 198V192" stroke="#2a2e34" stroke-width="2"></path>
+<path d="M520 198V158L574 176" fill="none" stroke="#3a3f46" stroke-width="2"></path>
+<rect x="640" y="176" width="52" height="22" fill="#20242a"></rect>
+<path d="M640 176.5H692" stroke="#8a7d66" stroke-opacity=".45"></path>
+<path d="M690 176V164M684 168H696" stroke="#3a3f46" stroke-width="2"></path>
+<circle cx="690" cy="164" r="2" fill="#eadfc9"></circle>
+
+<path d="M282 198V190M326 198V190M370 198V190M414 198V190M458 198V190M502 198V190M546 198V190M590 198V190M634 198V190M678 198V190" stroke="#3a3f46" stroke-width="1.4"></path>
+<g fill="#eadfc9">
+<circle class="hl {{d0}}" cx="282" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d0}}" cx="282" cy="189" r="2"></circle>
+<circle class="hl {{d1}}" cx="326" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d1}}" cx="326" cy="189" r="2"></circle>
+<circle class="hl {{d2}}" cx="370" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d2}}" cx="370" cy="189" r="2"></circle>
+<circle class="hl {{d3}}" cx="414" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d3}}" cx="414" cy="189" r="2"></circle>
+<circle class="hl {{d4}}" cx="458" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d4}}" cx="458" cy="189" r="2"></circle>
+<circle class="hl {{d5}}" cx="502" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d5}}" cx="502" cy="189" r="2"></circle>
+<circle class="hl {{d6}}" cx="546" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d6}}" cx="546" cy="189" r="2"></circle>
+<circle class="hl {{d7}}" cx="590" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d7}}" cx="590" cy="189" r="2"></circle>
+<circle class="hl {{d8}}" cx="634" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d8}}" cx="634" cy="189" r="2"></circle>
+<circle class="hl {{d9}}" cx="678" cy="189" r="6" filter="url(#hBlur3)"></circle><circle class="lt {{d9}}" cx="678" cy="189" r="2"></circle>
+</g>
+</g>
+</g>
+</g>
+</svg>
+
+<div style="position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;gap:32px 64px;padding:32px clamp(20px,6vw,86px) 48px;min-height:900px;box-sizing:border-box">
+
+<section style="flex:1 1 480px;min-width:0;display:flex;flex-direction:column;gap:56px">
+<header style="display:flex;align-items:center;gap:12px">
+<span style="width:32px;height:32px;border-radius:50%;background:#eadfc9;display:inline-flex;align-items:center;justify-content:center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0c0d0e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>
+</span>
+<span style="font-size:20px;font-weight:600;letter-spacing:-0.02em">Bunker Buddy</span>
+</header>
+<div style="display:flex;flex-direction:column;gap:20px;max-width:620px">
+<h1 style="margin:0;font-size:clamp(40px,4.4vw,58px);line-height:1.06;font-weight:500;letter-spacing:-0.035em;color:#f0e6d2">A clearer course.<br>A smarter purchase.</h1>
+<p style="margin:0;max-width:420px;font-size:18px;line-height:30px;color:#c5bba7">Navigate MGO price uncertainty with forecasts and a purchase plan built around you.</p>
+</div>
+</section>
+
+<div class="cardwrap" style="flex:0 1 440px;width:100%;max-width:440px;align-self:center">
+<section class="card {{cardCls}}" aria-label="Sign in" style="box-sizing:border-box;background:#f5efe3;color:#17140f;border-radius:20px;padding:40px 36px 32px;box-shadow:0 30px 80px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:28px">
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">
+<span style="width:44px;height:44px;border-radius:50%;background:#17140f;display:inline-flex;align-items:center;justify-content:center">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f5efe3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>
+</span>
+<h2 style="margin:0;font-size:28px;line-height:34px;font-weight:600;letter-spacing:-0.01em">Sign in</h2>
+</div>
+
+<sc-if value="{{ notSuccess }}" hint-placeholder-val="{{ true }}">
+<form onSubmit="{{submit}}" novalidate="" style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<label for="h-email" style="font-size:12px;line-height:16px;font-weight:600;color:#5f574b">Email</label>
+<input id="h-email" name="email" class="uline" type="email" placeholder="you@company.com" autocomplete="email" onFocus="{{fEmail}}" onBlur="{{blur}}" onInput="{{inEmail}}" style="box-sizing:border-box;width:100%;min-height:44px;padding:8px 0;background:transparent;border:0;border-bottom:1.5px solid #b9ae99;border-radius:0;color:#17140f;font:inherit;font-size:17px">
+</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<label for="h-pw" style="font-size:12px;line-height:16px;font-weight:600;color:#5f574b">Password</label>
+<div style="position:relative;display:flex">
+<input id="h-pw" name="password" class="uline" type="{{pwType}}" placeholder="Your password" autocomplete="current-password" onFocus="{{fPw}}" onBlur="{{blur}}" onInput="{{inPw}}" style="box-sizing:border-box;width:100%;min-height:44px;padding:8px 48px 8px 0;background:transparent;border:0;border-bottom:1.5px solid #b9ae99;border-radius:0;color:#17140f;font:inherit;font-size:17px">
+<button type="button" onClick="{{togglePw}}" aria-label="{{eyeLabel}}" aria-pressed="{{showPw}}" style="position:absolute;right:-6px;top:0;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;color:#3a342b;cursor:pointer">
+<sc-if value="{{ showPw }}" hint-placeholder-val="{{ false }}">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+</sc-if>
+<sc-if value="{{ hidePw }}" hint-placeholder-val="{{ true }}">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg>
+</sc-if>
+</button>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
+<label style="display:inline-flex;align-items:center;gap:8px;min-height:32px;font-size:13px;color:#3a342b;cursor:pointer"><input type="checkbox" name="remember" style="width:16px;height:16px;margin:0;accent-color:#17140f">Remember for 30 days</label>
+<a href="#forgot" style="font-size:13px;font-weight:600">Forgot password?</a>
+</div>
+
+<sc-if value="{{ hasErr }}" hint-placeholder-val="{{ false }}">
+<p role="alert" style="margin:-8px 0 0;font-size:13px;line-height:18px;color:#9b2c1a">{{errMsg}}</p>
+</sc-if>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<button type="submit" class="pill pill-dark" aria-busy="{{loading}}" style="min-height:52px;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#17140f;border:0;border-radius:26px;color:#f5efe3;font:inherit;font-size:15px;font-weight:600;cursor:pointer">
+<sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+<svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f5efe3" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg>
+</sc-if>
+{{btnLabel}}
+</button>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<button type="button" class="pill pill-light" style="flex:1 1 150px;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#ebe3d3;border:0;border-radius:24px;color:#17140f;font:inherit;font-size:14px;font-weight:600;cursor:pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.55-5.17 3.55-8.87z"></path><path fill="#34A853" d="M12 24c3.24 0 5.95-1.080 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.130 0-5.78-2.11-6.73-4.96H1.27v3.09A12 12 0 0 0 12 24z"></path><path fill="#FBBC05" d="M5.27 14.29A7.2 7.2 0 0 1 4.9 12c0-.8.14-1.57.37-2.29V6.62H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.09z"></path><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l4 3.09C6.22 6.86 8.87 4.75 12 4.75z"></path></svg>
+Google
+</button>
+<button type="button" class="pill pill-light" style="flex:1 1 150px;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#ebe3d3;border:0;border-radius:24px;color:#17140f;font:inherit;font-size:14px;font-weight:600;cursor:pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"></rect><rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"></rect><rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"></rect><rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"></rect></svg>
+Microsoft
+</button>
+</div>
+</div>
+</form>
+</sc-if>
+
+<sc-if value="{{ success }}" hint-placeholder-val="{{ false }}">
+<div aria-live="polite" style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:24px 0 8px">
+<span style="width:52px;height:52px;border-radius:50%;border:1.5px solid #17140f;display:inline-flex;align-items:center;justify-content:center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#17140f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</span>
+<p style="margin:0;font-size:20px;line-height:28px;font-weight:600">You're signed in</p>
+<p style="margin:0;font-size:14px;line-height:20px;color:#5f574b">Plotting your course to the dashboard…</p>
+<button type="button" onClick="{{replay}}" class="pill pill-light" style="margin-top:8px;min-height:44px;padding:0 22px;background:#ebe3d3;border:0;border-radius:22px;color:#17140f;font:inherit;font-size:14px;font-weight:600;cursor:pointer">Replay demo</button>
+</div>
+</sc-if>
+
+<p style="margin:0;text-align:center;font-size:14px;line-height:20px;color:#5f574b">Don't have an account? <a href="#signup" style="font-weight:700">Sign up</a></p>
+</section>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"motion":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  componentWillUnmount() { clearTimeout(this._t); }
+  renderVals() {
+    const s = this.state || {};
+    const focus = s.focus || null;
+    const emailLen = s.emailLen || 0;
+    const showPw = !!s.showPw;
+    const phase = s.phase || 'idle';
+    const beam = s.beam == null ? -8 : s.beam;
+    const errMsg = s.errMsg || '';
+    const motion = this.props.motion !== false;
+    const busy = phase === 'loading' || phase === 'success';
+    const hiding = !busy && focus === 'pw' && !showPw;
+
+    const level = (i) => {
+      if (busy) return 'hot';
+      if (hiding) return 'off';
+      if (focus === 'email') return i < emailLen ? 'hot' : 'off';
+      return 'on';
+    };
+    const vals = {};
+    for (let i = 0; i < 10; i++) vals['d' + i] = level(i);
+
+    const bridgeCls = busy ? 'hot' : hiding ? 'off' : focus === 'email' ? 'hot' : 'on';
+    const sceneCls = [
+      motion ? '' : 'still',
+      hiding ? 'dim' : '',
+      phase === 'error' ? 'err' : '',
+      phase === 'loading' ? 'loading' : '',
+      phase === 'success' ? 'go' : ''
+    ].join(' ');
+
+    const set = (patch) => this.setState(Object.assign({}, this.state || {}, patch));
+    const emailOk = (v) => /\S+@\S+\.\S+/.test(v);
+
+    return Object.assign(vals, {
+      beam,
+      bridgeCls,
+      sceneCls,
+      cardCls: '',
+      showPw,
+      hidePw: !showPw,
+      pwType: showPw ? 'text' : 'password',
+      eyeLabel: showPw ? 'Hide password' : 'Show password',
+      loading: phase === 'loading',
+      btnLabel: phase === 'loading' ? 'Signing in…' : 'Sign in',
+      success: phase === 'success',
+      notSuccess: phase !== 'success',
+      hasErr: !!errMsg,
+      errMsg,
+      fEmail: () => set({ focus: 'email' }),
+      fPw: () => set({ focus: 'pw' }),
+      blur: () => set({ focus: null }),
+      inEmail: (e) => set({ emailLen: e.target.value.length, errMsg: '' }),
+      inPw: () => { if (errMsg) set({ errMsg: '' }); },
+      togglePw: () => set({ showPw: !showPw }),
+      onMove: (e) => {
+        if (busy) return;
+        const r = e.currentTarget.getBoundingClientRect();
+        const sc = Math.max(r.width / 1440, Math.min(r.height, 900) / 900);
+        const x = (e.clientX - r.left) / sc;
+        const y = (e.clientY - r.top - (Math.min(r.height, 900) - 900 * sc)) / sc;
+        const a = Math.atan2(y - 499, x - 130) * 180 / Math.PI;
+        const clamped = Math.max(-28, Math.min(18, a));
+        if (Math.abs(clamped - beam) > 0.5) set({ beam: Math.round(clamped * 10) / 10 });
+      },
+      submit: (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (busy) return;
+        const f = e.currentTarget.elements;
+        const em = (f.email && f.email.value) || '';
+        const pw = (f.password && f.password.value) || '';
+        let msg = '';
+        if (!em) msg = 'Enter your email address.';
+        else if (!emailOk(em)) msg = 'That email address doesn’t look right.';
+        else if (!pw) msg = 'Enter your password.';
+        clearTimeout(this._t);
+        if (msg) {
+          set({ phase: 'error', errMsg: msg });
+          this._t = setTimeout(() => set({ phase: 'idle' }), 1200);
+          return;
+        }
+        set({ phase: 'loading', focus: null, errMsg: '' });
+        this._t = setTimeout(() => set({ phase: 'success' }), 1800);
+      },
+      replay: () => {
+        clearTimeout(this._t);
+        set({ phase: 'idle', focus: null, emailLen: 0, showPw: false, errMsg: '', beam: -8 });
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>
