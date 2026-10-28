@@ -24,6 +24,20 @@ Everything is in [`docs/ui-revamp/market-proposal/`](../ui-revamp/market-proposa
 | `TASTE_REVIEW.md` + `taste-review/` | Taste's review and screenshots. Now 0 FAIL, 2 WARN: the beige text, which is the accepted brand, and the uneven card rows. |
 | `snapshot.mjs` | With the backend running, swaps the sample data for the real stored read |
 
+## Design inspiration
+
+- **Revamp mockup:** [`docs/ui-revamp/assets/inspo/mkt-dashboard-page/`](../ui-revamp/assets/inspo/mkt-dashboard-page/)
+  - `Market overview (redesign)-html/Market.dc.html`: the Claude Design export the spec's layout comes from. Its data is hard-coded, and `PARITY.md` lists where the spec departs from it.
+  - `image.png`: a third-party finance dashboard, for mood only (dark cards, large figures). None of its content applies.
+- **Brief:** [`CREATIVE_BRIEF.md`](../ui-revamp/CREATIVE_BRIEF.md) §3.5 "Market dashboard": visibility, colour and news. Its green-up / red-down line is superseded (see [Decided](#decided-2026-10-28)).
+- **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `market-dashboard.png`, `market-dashboard-loading.png`, `market-dashboard-failed.png`.
+- **Screenshots before the revamp:** none are committed. Open `/market-dashboard` on the running app.
+- **What's built now:** the spec itself, [`market-proposal.html`](../ui-revamp/market-proposal/market-proposal.html), and its screenshots at 1440, 768 and 390 px in [`taste-review/`](../ui-revamp/market-proposal/taste-review/).
+- **Patterns to reuse:**
+  - data: `useDatabaseMarket` and `ForecastProvider` stay as they are
+  - today's panels: `features/market-dashboard/StoredMarketPanel.jsx`, `features/forecast/ForecastWidget`
+  - icons, buttons, error banner and loading state: `features/purchase-plan/components/Primitives.tsx`
+
 ## Decided (2026-10-28)
 
 - **Colour means what's good for a buyer.** Green = the change makes fuel cheaper. Red (`#f2849e`) = dearer. Grey = no direct effect (the USD index) or no change. Always pair the colour with an arrow and a sign.
