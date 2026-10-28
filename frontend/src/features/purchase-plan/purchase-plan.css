@@ -119,7 +119,9 @@
 .pp-sort button:hover { color: var(--pp-text); }
 .pp-sort button[aria-pressed=true] { border-color: var(--bb-border-subtle); background: var(--bb-surface); color: var(--pp-text); font-weight: 500; }
 .pp-loading { min-height: calc(100dvh - 130px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; color: var(--pp-muted); font-size: 18px; font-weight: 500; text-align: center; }
-.pp-spinner { width: 56px; height: 56px; border: 5px solid var(--bb-text-secondary); border-right-color: transparent; border-radius: 50%; }
+.pp-spinner { width: 56px; height: 56px; border: 5px solid var(--bb-text-secondary); border-right-color: transparent; border-radius: 50%; animation: pp-spin .9s linear infinite; }
+@keyframes pp-spin { to { transform: rotate(360deg); } }
+@keyframes pp-pulse { from { opacity: .4; } }
 
 .pp-load-error { max-width: 580px; display: grid; justify-items: start; gap: 20px; }
 .pp-dialog { width: 440px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); margin: auto; padding: 31px; border: 1px solid var(--pp-border); border-radius: var(--pp-radius); background: var(--pp-surface); color: var(--pp-text); box-shadow: var(--bb-shadow-card); font: inherit; }
@@ -144,9 +146,9 @@
   .pp-dialog { padding: 24px; }
   .pp-dialog-actions { gap: 10px; }
 }
+/* Reduced motion keeps feedback that carries meaning (fades, colour) and drops movement. */
 @media (prefers-reduced-motion: reduce) {
-  .pp-spinner { animation: none; }
-  .pp-button { transition: none; }
+  .pp-spinner { animation: pp-pulse 1.2s ease-in-out infinite alternate; }
 }
 
 .pp-summary-badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2); min-width: 0; }
