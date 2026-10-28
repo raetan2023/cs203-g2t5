@@ -1,7 +1,7 @@
 # Purchase-plan submission and manager notification
 
 > **Building what comes after the decision** (record purchase, withdraw, revise a rejected plan, notify the buyer)?
-> Start at [plan-after-decision.md](plan-after-decision.md). It says which parts of this file to read.
+> Start at [handover.md](handover.md). It says which parts of this file to read.
 
 Implemented on `fix-forecast-role-access`. The Supabase migration was **applied
 on 2026-10-27 (Asia/Singapore)** to the shared project with Nelson’s authorisation. No email, Clerk admin API key or external notification provider
@@ -44,7 +44,7 @@ request. The first decision is final; concurrent/later attempts return 409.
 Rejected requests stay locked; revising a proposal requires a new draft plan.
 Nothing happens after the decision yet (recording the purchase, withdrawing,
 revising a rejected plan, telling the buyer). The proposed design for those is in
-[plan-after-decision.md](plan-after-decision.md); it is not implemented.
+[handover.md](handover.md); it is not implemented.
 
 ## API and role matrix
 
