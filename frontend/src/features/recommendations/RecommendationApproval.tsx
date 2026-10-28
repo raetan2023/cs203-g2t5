@@ -5,6 +5,8 @@ import { requestError, type PlanAnalysis, type PurchasePlan, type PurchasePlanSe
 import type { Horizon } from '../forecast/apiService';
 import { ManagerDecisionForm } from './ManagerDecisionForm';
 import { EvidenceView } from './RecommendationEvidence';
+import { actionLabel, amount, dayDate, readableDates, usd } from './format';
+import { decisionTime } from '../purchase-plan/components/PlanDecisionNote';
 
 export function RecommendationApproval({ analysis, plan, horizon, planService, onSubmitted }: {
   analysis: PlanAnalysis; plan: PurchasePlan; horizon: Horizon; planService: PurchasePlanService; onSubmitted(plan: PurchasePlan): void;
@@ -70,35 +72,82 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
   const analysis = submission?.analysis;
   const rec = analysis?.recommendation.status === 'ready' ? analysis.recommendation.value : undefined;
   const cost = analysis?.cost_impact.status === 'ready' ? analysis.cost_impact.value : undefined;
-  const usd = (value: number) => value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+  const saved = analysis?.forecast.status === 'ready' ? analysis.forecast.value : undefined;
+  const quantity = (analysis?.context.quantity_mt ?? plan.quantity_mt).toLocaleString('en-GB', { maximumFractionDigits: 20 });
+  const deadline = analysis?.context.purchase_deadline ?? plan.purchase_deadline;
+  const approved = status === 'approved';
+  const deciding = canDecide && status === 'submitted' && !decision && !!planService.decide && !!analysis?.approval_fingerprint;
+  // The workflow ends at the decision for now; say plainly what the reader can and cannot do next.
+  const nextStep = deciding ? 'Review the saved recommendation, then approve or reject it. The first decision is final.'
+    : status === 'submitted' ? 'Nothing to do yet. The decision will appear here and on the purchase plans list. Withdrawing a request isn’t available yet.'
+    : approved ? 'Buy using a current supplier quote. Approval doesn’t place an order, and recording the purchase here isn’t available yet.'
+    : 'This plan stays locked. To try again, create a new purchase plan. Editing and resubmitting a rejected plan isn’t available yet.';
   return <main className="recommendations">
-    <header className="rec-header"><div><p className="rec-eyebrow">Approval request · {status}</p><h1>Submitted recommendation</h1>
-    <p>Saved at submission. These estimates do not change when a new forecast is published.</p></div><AppLink href="/purchase-plans">Back to purchase plans</AppLink></header>
-    {decision && <section className={`rec-card rec-decision rec-decision--${decision.decision}`} aria-label="Approval decision">
-      <h2>{decision.decision === 'approved' ? 'Recommendation approved' : 'Recommendation rejected'}</h2>
-      <p>Decided by {decision.manager_label} · {new Date(decision.decided_at).toLocaleString('en-GB')}</p>
-      {decision.manager_label !== decision.manager_clerk_user_id && <p className="rec-context">Manager account: {decision.manager_clerk_user_id}</p>}
-      {decision.comment && <p className="rec-decision-comment">{decision.comment}</p>}
-      <p>The decision is final for this request. No purchase has been executed by the app.</p>
-    </section>}
-    {!current ? <p role="status">Loading submitted recommendation…</p> : current.error ? <section className="rec-card" role="alert"><p>{current.error}</p><button className="bb-button" onClick={() => { setResult(undefined); setAttempt(value => value + 1); }}>Retry submission</button></section>
-      : !analysis || !submission ? <section className="rec-card"><h2>Earlier plan-only submission</h2><p>This request was submitted before recommendation snapshots were introduced. No selected recommendation was saved.</p></section>
-      : <section className="rec-card" aria-label="Saved recommendation for approval">
-        <h2>Plan recommendation · {rec?.action.replaceAll('_', ' ')}</h2>
-        {cost ? <p>Saved cost detail: {submission.horizon_days}-day forecast{analysis.forecast.status === 'ready' ? ` · target ${formatDate(analysis.forecast.value.target_date)}` : ''}.</p>
-          : <p>Reference-price-only request. No supported forecast cost was available within the deadline.</p>}
-        <p>{analysis.context.quantity_mt.toLocaleString('en-GB')} MT · Deadline {formatDate(analysis.context.purchase_deadline)}</p>
-        <p>Planning date: {formatDate(analysis.context.scenario_as_of_date)} · Urgency: {analysis.context.urgency ?? 'NORMAL'}</p>
-        {plan.submitted_at && <p>Submitted: {new Date(plan.submitted_at).toLocaleString('en-GB')}</p>}
-        <p>{rec?.explanation}</p>
-        {cost && <dl className="rec-evidence-grid"><div><dt>Saved reference cost</dt><dd>{usd(cost.reference_total)}</dd></div>
-          <div><dt>Saved estimated total</dt><dd>{cost.central_total == null ? 'Unavailable' : usd(cost.central_total)}</dd></div>
-          <div><dt>Saved experimental cost range</dt><dd>{usd(cost.forecast_total.lower)}–{usd(cost.forecast_total.upper)}</dd></div></dl>}
-        <EvidenceView analysis={analysis} />
-        {canDecide && status === 'submitted' && !decision && planService.decide && analysis.approval_fingerprint
-          && <ManagerDecisionForm key={`${plan.plan_id}:${analysis.approval_fingerprint}`} planId={plan.plan_id}
-            fingerprint={analysis.approval_fingerprint} service={planService} onDecided={refreshDecision} onRefresh={refreshDecision} />}
-        {analysis.forecast.status === 'ready' && <p className="rec-context">Model version: {analysis.forecast.value.model_version} · Forecast run: {analysis.forecast.value.run_id}</p>}
-      </section>}
+    <header className="rec-header">
+      <AppLink href="/purchase-plans" aria-label="Back to purchase plans"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>Purchase plans</AppLink>
+      <h1>Submitted recommendation</h1>
+      <p>{quantity} MT · due {dayDate(deadline, true)}{plan.submitted_at && <> · submitted <time dateTime={plan.submitted_at}>{decisionTime(plan.submitted_at)}</time></>}</p>
+    </header>
+    {!current ? <section className="rec-card" role="status"><h2>Loading submitted recommendation…</h2><div className="rec-skeleton" aria-hidden="true" /></section>
+      : current.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load this request</h2><p>{current.error}</p><button className="bb-button" onClick={refreshDecision}>Retry submission</button></section>
+      : <div className="rec-layout">
+        <section className={`rec-answer rec-status rec-status--${status}`} aria-label="Approval status">
+          <div className="rec-verdict">
+            <span className="rec-verdict-icon" aria-hidden="true"><StatusIcon status={status} /></span>
+            <div><span className="rec-kicker">Approval status</span>
+              <h2>{decision ? (approved ? 'Recommendation approved' : 'Recommendation rejected') : 'Awaiting manager approval'}</h2>
+              <p className="rec-tagline">{decision ? <>Decided by {decision.manager_label} · <time dateTime={decision.decided_at}>{decisionTime(decision.decided_at)}</time></>
+                : 'All managers in your organisation have been notified. The plan is locked while it’s reviewed.'}</p>
+              {decision && decision.manager_label !== decision.manager_clerk_user_id && <p className="rec-context">Manager account: {decision.manager_clerk_user_id}</p>}
+            </div>
+          </div>
+          {decision?.comment && <div className="rec-status-comment"><span className="rec-kicker">{approved ? 'Manager’s comment' : 'Reason for rejection'}</span><p className="rec-decision-comment">{decision.comment}</p></div>}
+          <p className="rec-next"><strong>Next step</strong> {nextStep}</p>
+          {deciding && <ManagerDecisionForm key={`${plan.plan_id}:${analysis!.approval_fingerprint}`} planId={plan.plan_id}
+            fingerprint={analysis!.approval_fingerprint!} service={planService} onDecided={refreshDecision} onRefresh={refreshDecision} />}
+        </section>
+
+        <aside className="rec-rail" aria-label="Saved recommendation summary">
+          <div className="rec-rail-card">
+            <div><span className="rec-kicker">Saved recommendation</span><strong className="rec-rail-action">{rec ? actionLabel(rec.action) : 'Not saved'}</strong></div>
+            <dl className="rec-rail-facts">
+              <div><dt>Plan</dt><dd>{quantity} MT</dd></div>
+              <div><dt>Deadline</dt><dd>{dayDate(deadline)}</dd></div>
+              {submission && <div><dt>Cost detail</dt><dd>{cost ? `${submission.horizon_days}-day${saved ? ` · ${dayDate(saved.target_date)}` : ''}` : 'Reference price'}</dd></div>}
+              {cost && <div><dt>Saved estimate</dt><dd>{cost.central_total == null ? `${usd(cost.forecast_total.lower)}–${amount(cost.forecast_total.upper)}` : usd(cost.central_total)}</dd></div>}
+            </dl>
+          </div>
+          <p className="rec-rail-note">Saved at submission. These figures don’t change when new prices are published.</p>
+        </aside>
+
+        <div className="rec-evidence">
+          {!analysis || !submission ? <section className="rec-card"><h2>Earlier plan-only submission</h2><p>This request was submitted before recommendation snapshots were introduced. No selected recommendation was saved.</p></section>
+            : <section className="rec-detail" aria-label="Saved recommendation for approval">
+              <div className="rec-section-head"><div>
+                <h2>Plan recommendation · {rec?.action.replaceAll('_', ' ')}</h2>
+                {rec && <p>{readableDates(rec.explanation)}</p>}
+              </div></div>
+              {cost ? <dl className="rec-detail-grid">
+                <div><dt>Saved reference cost</dt><dd>{usd(cost.reference_total)}</dd></div>
+                <div><dt>Saved estimated total</dt><dd>{cost.central_total == null ? 'Unavailable' : usd(cost.central_total)}</dd></div>
+                <div><dt>Saved experimental cost range</dt><dd>{usd(cost.forecast_total.lower)}–{amount(cost.forecast_total.upper)}</dd></div>
+              </dl> : <p className="rec-detail-note">Reference-price-only request. No supported forecast cost was available within the deadline.</p>}
+              <div className="rec-detail-foot">
+                <span>Cost detail: {submission.horizon_days}-day forecast{saved ? ` · target ${formatDate(saved.target_date)}` : ''}</span>
+                <span>Planning date {formatDate(analysis.context.scenario_as_of_date)} · Urgency {analysis.context.urgency ?? 'NORMAL'}</span>
+                {saved && <span>Model {saved.model_version} · run {saved.run_id}</span>}
+              </div>
+            </section>}
+          {analysis && <details className="rec-fine"><summary>How this recommendation was calculated</summary>
+            <div className="rec-fine-body"><EvidenceView analysis={analysis} /></div></details>}
+        </div>
+      </div>}
   </main>;
+}
+
+function StatusIcon({ status }: { status?: string }) {
+  const path = status === 'approved' ? <path d="M5 12.5l4.5 4.5L19 7.5" />
+    : status === 'rejected' ? <path d="M6 6l12 12M18 6L6 18" />
+    : <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>;
+  return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{path}</svg>;
 }

@@ -189,7 +189,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
               onClick={() => setSort(option)}>{option === 'deadline' ? 'Deadline' : 'Volume'}</button>)}
           </div>
         </div>
-        <div className="pp-plan-grid">{sortPlans(plans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} busy={writing}
+        <div className="pp-plan-grid">{sortPlans(plans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} service={service} busy={writing}
           saved={notice?.planId === plan.plan_id}
           editRef={state.plan?.plan_id === plan.plan_id ? editRef : undefined}
           deleteRef={state.plan?.plan_id === plan.plan_id ? deleteRef : undefined} onEdit={() => {
