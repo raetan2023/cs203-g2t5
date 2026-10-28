@@ -46,6 +46,17 @@
   --bb-warning-surface: #211e19;
   --bb-warning-border: #6a542f;
 
+  /* sign-in card (light surface, auth pages only; 2026-10-27 reactive-ship design) */
+  --bb-auth-card: #f5efe3;
+  --bb-auth-ink: #17140f;
+  --bb-auth-ink-hover: #2b261f;
+  --bb-auth-label: #5f574b;
+  --bb-auth-line: #8c826f; /* underline; darker than the mock's #b9ae99 for 3:1 control contrast */
+  --bb-auth-placeholder: #6f6556; /* darker than the mock's #857b6a for 4.5:1 */
+  --bb-auth-soft: #ebe3d3;
+  --bb-auth-soft-hover: #e1d7c4;
+  --bb-auth-error: #9b2c1a;
+
   /* type */
   --bb-font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 

@@ -181,3 +181,13 @@ comparison; an interface-review skill for accessibility. [Graphify](https://grap
 offers a code graph and [MCP queries](https://graphiffy.com/mcp), useful for dependency
 and impact discovery, not aesthetic judgement. If trying it, scope indexing to
 `frontend` first and verify results against source. No plugin was installed here.
+
+## Sign-in and sign-up pages (2026-10-27)
+
+- Light card on these pages only: `--bb-auth-*` tokens (card `#f5efe3`, ink `#17140f`, label `#5f574b`, underline
+  `#8c826f` at 3.3:1, placeholder `#6f6556` at 5.0:1, error `#9b2c1a`). The design export's `#b9ae99` / `#857b6a` were
+  darkened for contrast.
+- Typeface exception: Geist (Google Fonts) on `.auth-content` only; the app keeps the system font.
+- The dusk scene (`ReactiveShip.tsx`) carries its own illustration colours (sky, sea, hull greys, `#eadfc9` lights).
+  They are artwork, not UI tokens, and must not be reused in UI.
+
