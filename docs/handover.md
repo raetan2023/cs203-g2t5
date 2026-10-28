@@ -8,7 +8,7 @@
 | [Home](#home) | Done (PR #40) | No new endpoints needed | — | Photo / time-of-day choice |
 | [Purchase plans](#purchase-plans) | Done | Done | — | Small follow-ups after the new statuses exist |
 | [Recommendations](#recommendations) | Done up to the manager's decision | **Missing: everything after the decision** | **Recommendations teammate** | Agree the [open questions](#open-questions), then build |
-| [Market dashboard](#market-dashboard) | **Spec done** (HTML proposal); live page unchanged | Small additions | **Handing over** (owner to confirm) | Build the spec in React; decide "Your plans" |
+| [Market dashboard](#market-dashboard) | **Spec done** (HTML proposal); live page unchanged | Small additions | **Market dashboard teammate** | Build the spec in React; decide "Your plans" |
 
 ---
 
@@ -295,7 +295,7 @@ Agree these with the team before building:
 ## Market dashboard
 
 **Status:** the redesign is specified as a working HTML proposal. The live page (`/market-dashboard`) hasn't changed.
-**Owner:** handing over. Owner to confirm (`App.tsx` names Anjali as the dashboard owner).
+**Owner:** the market dashboard teammate (a different teammate from recommendations). The "handed over" items below are yours to decide and build.
 **What's left:** mostly building the spec in React, plus a few backend and data items. Little design work remains.
 
 ### What's live today
@@ -339,7 +339,7 @@ Everything is in `docs/ui-revamp/market-proposal/`. Start with its `README.md`.
    - An experimental forecast shows "Target coverage: 0%" (`ForecastCard`; `nominal_coverage` is null).
    - The evidence badge and skill line never render in production: `parseForecast` drops `evidence`, `mae_skill_vs_persistence` and `synthetic`.
    - `StoredMarketPanel` sorts an unlisted price series *before* MGO.
-   - Unused files to delete, with the dashboard owner's agreement: `TickerCards.jsx`, `MGOChart.jsx`, `IndicatorsTable.jsx`, `useMarketDashboard.js` (hard-coded prices), `BrentMarketPanel.jsx` + `brent-market.css`, `dashboard.css`.
+   - Unused files to delete (check nothing imports them first): `TickerCards.jsx`, `MGOChart.jsx`, `IndicatorsTable.jsx`, `useMarketDashboard.js` (hard-coded prices), `BrentMarketPanel.jsx` + `brent-market.css`, `dashboard.css`.
 6. **Remaining polish from taste** (`TASTE_REVIEW.md`):
    - Uneven card rows.
    - Captions explaining the colours and the units; put that meaning in tooltips and accessible text instead.

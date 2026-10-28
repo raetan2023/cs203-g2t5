@@ -7,7 +7,7 @@ Each item is tagged with where it would be fixed:
 - **[design]** this proposal, presentation only;
 - **[frontend]** frontend behaviour, owned by `main`;
 - **[backend]** API or database work, owned by `main`;
-- **[decision]** needs the team, the dashboard owner, or Nelson for approvals.
+- **[decision]** needs the team, the market dashboard teammate, or Nelson for approvals.
 
 ## 1. Two answers first
 
