@@ -1,6 +1,6 @@
 {
  "url": "docs/ui-revamp/market-proposal/market-proposal.html",
- "at": "2026-10-27T18:24:49.273Z",
+ "at": "2026-10-28T06:06:21.788Z",
  "allow": [],
  "viewports": [
   {
@@ -185,14 +185,14 @@
       },
       {
        "color": "#f0e6d2",
-       "share": 0.19
+       "share": 0.2
       },
       {
        "color": "#eadfc9",
        "share": 0.03
       },
       {
-       "color": "#f2a172",
+       "color": "#f2849e",
        "share": 0.02
       }
      ],
@@ -274,7 +274,7 @@
     "pageH": 1537,
     "margins": {
      "left": 100,
-     "right": 112
+     "right": 113
     },
     "sections": [
      {
@@ -293,7 +293,7 @@
       "left": 100,
       "right": 101,
       "textLeft": 100,
-      "textRight": 112,
+      "textRight": 117,
       "fullBleed": false,
       "footer": false,
       "hero": true,
@@ -739,14 +739,14 @@
       },
       {
        "color": "#f0e6d2",
-       "share": 0.19
+       "share": 0.2
       },
       {
        "color": "#eadfc9",
        "share": 0.03
       },
       {
-       "color": "#f2a172",
+       "color": "#f2849e",
        "share": 0.02
       }
      ],
@@ -868,7 +868,7 @@
       "left": 24,
       "right": 25,
       "textLeft": 24,
-      "textRight": 38,
+      "textRight": 43,
       "fullBleed": false,
       "footer": false,
       "hero": true,
@@ -1078,7 +1078,7 @@
    "load": "load",
    "screens": 4,
    "filled": [
-    0.86,
+    0.85,
     0.86,
     0.86,
     0.83
@@ -1452,7 +1452,7 @@
        "share": 0.03
       },
       {
-       "color": "#f2a172",
+       "color": "#f2849e",
        "share": 0.02
       }
      ],
@@ -1763,18 +1763,18 @@
      "size": 24,
      "top": 76
     },
-    "colourShare": 0.004
+    "colourShare": 0.003
    },
    "consoleErrors": []
   }
  ],
  "findings": [
   {
-   "level": "FAIL",
-   "id": "palette-claude",
+   "level": "WARN",
+   "id": "palette-cream",
    "width": 1440,
-   "message": "Cream + terracotta palette (text #f0e6d2, text #f2a172).",
-   "fix": "Re-draw the palette from the library. This pairing reads as an assistant brand, not yours.",
+   "message": "Yellow-cream background (text #f0e6d2).",
+   "fix": "Use the drawn palette. If you want warmth, take a low-chroma stone or bone, not a yellow cream.",
    "alsoAt": [
     768,
     390

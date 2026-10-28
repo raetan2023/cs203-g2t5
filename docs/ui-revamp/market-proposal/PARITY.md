@@ -99,7 +99,9 @@ Legend: ✅ kept · ⚠️ kept but changed · ❌ missing · ➕ new.
 3. `StoredMarketPanel` sorts prices by `order.indexOf`, so a series that isn't in the list (index −1) is placed **first**, ahead of MGO.
 4. Unused files still in the folder: `TickerCards.jsx`, `MGOChart.jsx`, `IndicatorsTable.jsx`, `useMarketDashboard.js` (hard-coded fallback prices 614.5 / 78.45), `BrentMarketPanel.jsx` + `brent-market.css`, `dashboard.css`.
 
-## Decisions for the owner (and the dashboard owner, per `App.tsx`)
+## Decisions (and the dashboard owner, per `App.tsx`)
+
+**Update 2026-10-28:** decision 1 is made (buyer meaning; the dearer colour is now red `#f2849e`, not orange). Decisions 2 and 3 are handed over in [`docs/handover.md` → Market dashboard](../../handover.md#market-dashboard).
 
 1. **Colour meaning.** CREATIVE_BRIEF §3.5 says green = up, red = down. The mock and this proposal use buyer meaning instead: green lowers cost, orange raises it, and the USD index stays grey. Taste supports buyer meaning, but fails the beige + orange pairing as an "assistant palette". Either way the pressure hue needs to change.
 2. **Plans on the market page.** This is a cross-feature block. It needs the plan list plus one recommendation read per plan, or it shows only deadlines and links.
