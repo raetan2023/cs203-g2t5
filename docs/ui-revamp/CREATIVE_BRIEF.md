@@ -170,15 +170,17 @@ else on the screen, and flag those for a decision first (list: `critique-rec/TAS
 
 **Direction:**
 - Better visibility: the key prices should read in one glance (bigger current price, change, date of observation).
-- **Colour = price movement:** green for up, red for down, neutral for flat or no comparison, always with an arrow and a
-  signed change (+1.2% / −0.8%). This was already requested (plan Phase 6) and needs accessible shades on the dark canvas.
+- **Colour = what's good for a buyer** (decided 2026-10-28, replacing green up / red down): green when the change makes
+  fuel cheaper, red (`#f2849e`) when it makes fuel dearer, grey for no direct effect (the USD index), flat or no
+  comparison. Always pair it with an arrow and a signed change (+1.2% / −0.8%). This was already requested (plan Phase 6)
+  and needs accessible shades on the dark canvas.
   Decide what "change" compares against for each indicator (previous observation? 7 days?) and show it ("vs 7 Oct").
 - **Improve the news display.** Today the "Market pulse" panel shows two GDELT numbers: matched article count and
   average news tone. There are no headlines in the data.
 
 **Brainstorm:**
 - Ticker strip across the top: each price with arrow, signed change and colour, like a trading terminal.
-- Tint the chart line or area by direction over the selected range (green if the range ended higher). Keep the line
+- Tint the chart line or area by direction over the selected range (green if the range ended cheaper). Keep the line
   itself readable when colour is not visible.
 - Tiny sparklines in each price card.
 - News, using what we already have: show article count and tone as small charts over time, with a plain-language label
