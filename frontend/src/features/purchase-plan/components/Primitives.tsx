@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef } from 'react';
 
-export function Icon({ name }: { name: 'plus' | 'trash' | 'alert' | 'anchor' | 'menu' | 'more' | 'clock' }) {
+export function Icon({ name }: { name: 'plus' | 'trash' | 'alert' | 'anchor' | 'menu' | 'more' | 'clock' | 'check' }) {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     {name === 'plus' && <path d="M12 5v14M5 12h14" />}
     {name === 'trash' && <><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" /></>}
@@ -9,6 +9,7 @@ export function Icon({ name }: { name: 'plus' | 'trash' | 'alert' | 'anchor' | '
     {name === 'menu' && <path d="M3 5h18M3 12h18M3 19h18" />}
     {name === 'more' && <><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></>}
     {name === 'clock' && <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>}
+    {name === 'check' && <path d="M5 12.5l4.5 4.5L19 7" />}
   </svg>;
 }
 

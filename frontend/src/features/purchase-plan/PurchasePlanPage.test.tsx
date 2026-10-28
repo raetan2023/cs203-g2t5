@@ -35,8 +35,10 @@ describe('purchase plan journeys', () => {
     expect(screen.getByText('22 days')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Create plan' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
+    expect(screen.getByText('Plan saved')).toBeVisible();
 
     await user.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.queryByText('Plan saved')).not.toBeInTheDocument();
     await user.clear(screen.getByLabelText('Quantity'));
     await user.type(screen.getByLabelText('Quantity'), '600');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -64,6 +66,7 @@ describe('purchase plan journeys', () => {
     await user.click(screen.getByRole('button', { name: 'Delete plan' }));
     expect(await screen.findByText("You haven't created a purchase plan yet.")).toBeVisible();
     expect(screen.getByRole('button', { name: 'Create plan' })).toHaveFocus();
+    expect(screen.getByText('Plan deleted')).toBeVisible();
     await createDraft(user, '250', '2025-10-24');
     await user.click(screen.getByRole('button', { name: 'Save plan' }));
     expect(await screen.findByText('250 MT')).toBeVisible();

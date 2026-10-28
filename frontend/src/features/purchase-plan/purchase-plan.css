@@ -25,6 +25,12 @@
 .pp-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 22px; }
 .pp-heading p { color: var(--pp-muted); margin-top: 4px; }
 .pp-create { display: flex; align-items: center; gap: 16px; }
+/* Save/delete confirmation beside Create plan: rises in, holds ~4s, fades out, then unmounts (onAnimationEnd). */
+.pp-notice { display: inline-flex; align-items: center; gap: var(--bb-space-2); color: var(--pp-text); font-size: 13px; animation: pp-notice 4s var(--bb-ease-out) both; }
+.pp-notice svg { width: 16px; height: 16px; color: var(--bb-action); }
+.pp-notice:hover { animation-play-state: paused; }
+@keyframes pp-notice { from { opacity: 0; transform: translateY(4px); } 5%, 96% { opacity: 1; transform: none; } to { opacity: 0; } }
+@keyframes pp-notice-fade { from { opacity: 0; } 5%, 96% { opacity: 1; } to { opacity: 0; } }
 .pp-button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border: 1px solid transparent; border-radius: var(--bb-radius-control); font: inherit; line-height: 20px; font-weight: 600; cursor: pointer; white-space: nowrap;
   transition: background-color var(--bb-motion-fast), border-color var(--bb-motion-fast), color var(--bb-motion-fast), transform var(--bb-motion-fast) var(--bb-ease-out); }
 /* Press feedback: a slight give that confirms the click landed. */
@@ -100,6 +106,9 @@
 .pp-summary-link { text-decoration: none; }
 /* The recommendation link covers the card; Edit and Delete sit above it. */
 .pp-summary-link::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+/* Just-saved card: a beige ring that holds, then fades evenly (linear reads better than a front-loaded ease for a passive highlight). Opacity only, so reduced motion keeps it. */
+.pp-summary--saved::before { content: ''; position: absolute; inset: -1px; border: 1px solid var(--bb-action); border-radius: inherit; box-shadow: 0 0 0 3px var(--bb-surface-hover); pointer-events: none; animation: pp-saved 2s linear both; }
+@keyframes pp-saved { 40% { opacity: 1; } to { opacity: 0; } }
 .pp-summary .pp-actions .pp-button:not(.pp-summary-link) { position: relative; z-index: 1; }
 .pp-summary .pp-actions .pp-summary-link { flex: 1; }
 /* Page summary: three figures in one panel, divided rather than boxed separately. */
@@ -155,11 +164,13 @@
   .pp-dialog { padding: 24px; }
   .pp-dialog-actions { gap: 10px; }
 }
-/* Reduced motion keeps feedback that carries meaning (fades, colour) and drops movement. */
+/* Reduced motion: base.css cuts every animation to .01ms. These three are opacity-only and carry meaning
+   (still loading, plan saved), so they keep their timing; without this the notice would vanish unseen. */
 @media (prefers-reduced-motion: reduce) {
-  .pp-spinner { animation: pp-pulse 1.2s ease-in-out infinite alternate; }
+  .pp-spinner { animation: pp-pulse 1.2s ease-in-out infinite alternate !important; }
+  .pp-notice { animation: pp-notice-fade 4s var(--bb-ease-out) both !important; }
+  .pp-summary--saved::before { animation-duration: 2s !important; }
   .pp-button:active:not(:disabled), .pp-sort button:active { transform: none; }
-  .pp-dialog[open] { animation-name: pp-fade-in; }
 }
 
 .pp-summary-badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2); min-width: 0; }
