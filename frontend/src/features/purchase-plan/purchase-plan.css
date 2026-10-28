@@ -130,6 +130,11 @@
 .pp-load-error { max-width: 580px; display: grid; justify-items: start; gap: 20px; }
 .pp-dialog { width: 440px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); margin: auto; padding: 31px; border: 1px solid var(--pp-border); border-radius: var(--pp-radius); background: var(--pp-surface); color: var(--pp-text); box-shadow: var(--bb-shadow-card); font: inherit; }
 .pp-dialog::backdrop { background: var(--bb-backdrop); }
+/* Enter only: the dialog closes instantly once the choice is made. */
+.pp-dialog[open] { animation: pp-dialog-in var(--bb-motion-base) var(--bb-ease-out); }
+.pp-dialog[open]::backdrop { animation: pp-fade-in var(--bb-motion-base) var(--bb-ease-out); }
+@keyframes pp-dialog-in { from { opacity: 0; transform: scale(.96); } }
+@keyframes pp-fade-in { from { opacity: 0; } }
 .pp-dialog-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: var(--bb-error-surface); color: var(--bb-error-text); margin-bottom: var(--bb-space-3); }
 .pp-dialog-icon--pending { background: var(--bb-surface-input); color: var(--bb-text-secondary); }
 .pp-dialog p { color: var(--pp-muted); line-height: 1.5; margin-top: var(--bb-space-2); }
@@ -154,6 +159,7 @@
 @media (prefers-reduced-motion: reduce) {
   .pp-spinner { animation: pp-pulse 1.2s ease-in-out infinite alternate; }
   .pp-button:active:not(:disabled), .pp-sort button:active { transform: none; }
+  .pp-dialog[open] { animation-name: pp-fade-in; }
 }
 
 .pp-summary-badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2); min-width: 0; }
