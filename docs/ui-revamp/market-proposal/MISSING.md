@@ -65,7 +65,7 @@ What is really missing is everything **after** step 5 (section 3).
 
 ## 3. Everything after the manager decides
 
-Moved to [`docs/handover.md` → Recommendations](../../handover.md#recommendations), which the recommendations
+Moved to [`docs/handover/recommendations.md`](../../handover/recommendations.md), which the recommendations
 teammate owns: recording the purchase, rejected plans, withdrawal, buyer notifications, expiry, split purchases and
 the buyer's accept/reject/ignore (PRD FR-08). Analyst and admin consoles and change-detection alerts (PRD FR-10)
 remain later work.
@@ -74,7 +74,7 @@ remain later work.
 
 - **Decided:** colour = buyer meaning (green cheaper, red `#f2849e` dearer, grey no direct effect); MGO first;
   two range controls labelled Past and Next (M4). The palette FAIL in M9 is fixed.
-- **Handed over** in [`docs/handover.md` → Market dashboard](../../handover.md#market-dashboard): the "Your plans"
+- **Handed over** in [`docs/handover/market-dashboard.md`](../../handover/market-dashboard.md): the "Your plans"
   block (M1, M2, M3), the horizon question, the admin forecast 403, building the spec in React, and the bugs from
   PARITY.md.
 - **Still open in the spec:** M5–M8, M10, and the rest of M9 (uneven rows, captions, range bar, news charts).
