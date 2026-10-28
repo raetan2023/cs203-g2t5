@@ -33,7 +33,8 @@ export function PurchasePlanSummary({ plan, onEdit, onDelete, editRef, deleteRef
       <div className="pp-summary-badges"><span className={`pp-badge pp-badge--${status}`}>
         <Icon name={overdue ? 'alert' : 'clock'} />{overdue ? 'Overdue' : status === 'soon' ? 'Due soon' : 'On track'}
       </span>
-      {plan.status && <span className={`pp-plan-status pp-plan-status--${plan.status}`}>{plan.status === 'submitted' ? 'Submitted for approval' : plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</span>}
+      {/* No pill for drafts (the normal, editable state); submitted / approved / rejected keep theirs. */}
+      {plan.status && !draft && <span className={`pp-plan-status pp-plan-status--${plan.status}`}>{plan.status === 'submitted' ? 'Submitted for approval' : plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</span>}
       </div>
       {canEdit && draft && <PlanMenu quantity={quantity} busy={busy} triggerRef={deleteRef} onDelete={onDelete} />}
     </div>
