@@ -36,8 +36,22 @@ it('dates today’s detail by the observed quote, not by the planning date', () 
 
 it('rejects a comparison assembled from different source snapshots', async () => {
   render(<Harness service={{ read: async h => ({ ...entry(h, 1000), run_id: String(h) }) }} />);
-  expect(await screen.findAllByText(/Source data changed. Refresh the comparison./)).toHaveLength(3);
-  for (const h of [7, 14, 30]) expect(screen.getByRole('button', { name: `${h} days` })).toBeDisabled();
+  // One shared reason is said once, not on three empty cards.
+  expect(await screen.findAllByText(/Source data changed. Refresh the comparison./)).toHaveLength(1);
+  expect(screen.queryByRole('button', { name: '7 days' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('group', { name: 'Show prices as' })).not.toBeInTheDocument();
+});
+
+it('does not repeat a forecast failure the page already shows, and keeps cards when reasons differ', async () => {
+  const unavailable = (message: string) => ({ status: 'unavailable' as const, reason: 'missing_previous_day_news', message });
+  const { unmount } = render(<CompareBuyingDates entries={[7, 14, 30].map(h => ({ horizon: h as Horizon, message: 'News missing.' }))}
+    quantity={10} today="2026-10-26" deadline="2026-12-01" recommended={[]} knownMessage="News missing." onExplore={() => {}} />);
+  expect(screen.getByText(/No 7, 14 or 30-day forecast is available, for the reason shown above\./)).toBeVisible();
+  expect(screen.queryByText(/News missing\./)).not.toBeInTheDocument();
+  unmount();
+  render(<Harness service={{ read: async h => h === 7 ? unavailable('Quote too old.') : entry(h, 1000) }} />);
+  expect(await screen.findByRole('button', { name: '7 days' })).toBeDisabled();
+  expect(screen.getByText('Model status: Quote too old.')).toBeVisible();
 });
 
 it('marks late targets after the deadline but still lets them be explored for comparison', async () => {

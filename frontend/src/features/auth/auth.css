@@ -1,65 +1,91 @@
-/* Wireframe login (ported from prototypes/wireframe). Layout: brand header, intro + vessel left, form card right. */
-.auth-page { display: flex; flex-direction: column; min-height: 100svh; padding: var(--bb-space-6) clamp(24px, 4.5vw, 88px); background: var(--bb-canvas); }
-.auth-header { display: flex; align-items: center; flex: 0 0 48px; }
-.auth-header .bb-brand { font-size: 23px; letter-spacing: -.5px; }
-.auth-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 440px; align-items: center; gap: clamp(32px, 5vw, 90px); padding-top: var(--bb-space-4); }
-.auth-intro { min-width: 0; }
-.auth-intro h1 { margin: 0; font-size: clamp(38px, min(5.2vw, 7svh), 76px); font-weight: 300; line-height: 1.09; letter-spacing: -.045em; }
-.auth-intro p { margin: 18px 0 0; color: var(--bb-text-supporting); font-size: clamp(15px, 1.2vw, 19px); line-height: 1.7; max-width: 540px; }
-.auth-intro .wireframe-scene { margin-top: var(--bb-space-3); color: var(--bb-text); }
-.auth-intro .wireframe-vessel { height: clamp(140px, calc(100svh - 440px), 360px); }
-.auth-form-area { min-width: 0; }
-.clerk-auth-host { width: 100%; }
+/* Sign-in / sign-up: full-bleed dusk scene (ReactiveShip), headline left, cream card right.
+   Design: docs/ui-revamp/assets/inspo/sign-in-page ("Login — hybrid, reactive ship"). Geist is used on these pages only. */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap');
 
-/* Mock/preview form card (AuthPage); the Clerk card is themed by clerkAppearance in styles/theme.ts. */
-.auth-card { padding: 34px; background: var(--bb-surface); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); box-shadow: var(--bb-shadow-card); }
-.auth-card h2 { margin: 0; font-size: 31px; font-weight: 400; line-height: 1.25; letter-spacing: -.7px; }
-.auth-subtitle { margin: 10px 0 28px; color: var(--bb-text-secondary); font-size: 14px; }
-.auth-social { display: grid; gap: var(--bb-space-3); }
-.auth-social button { min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-control); background: transparent; color: var(--bb-text); font-size: 13px; }
+/* The page grows (and scrolls) when the viewport is too short; overflow only clips the scene's sky. */
+.auth-page { position: relative; isolation: isolate; min-height: 100svh; overflow: hidden; background: var(--bb-canvas); }
+/* On the content, not .auth-page, so the shared base `font` shorthand on .auth-page cannot override it. */
+.auth-content, .auth-content button, .auth-content input { font-family: 'Geist', var(--bb-font); }
+.auth-page .rship { z-index: -1; }
+.auth-content { position: relative; display: flex; justify-content: space-between; gap: var(--bb-space-8) 64px;
+  min-height: 100svh; padding: var(--bb-space-8) clamp(20px, 6vw, 86px) 48px; }
+/* Space for the ship under the headline: the ship's mast tops out ~32vw above the page bottom (viewBox y 440 of 900). */
+.auth-intro { flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 56px; padding-bottom: 33vw; }
+.auth-header .bb-brand { font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+.auth-copy { display: flex; flex-direction: column; gap: var(--bb-space-5); max-width: 620px; }
+.auth-copy h1 { margin: 0; font-size: clamp(40px, 4.4vw, 58px); line-height: 1.06; font-weight: 500; letter-spacing: -.035em; color: var(--bb-text); }
+.auth-copy p { margin: 0; max-width: 420px; font-size: 18px; line-height: 30px; color: var(--bb-text-supporting); }
+.auth-form-area { flex: 0 1 440px; width: 100%; max-width: 440px; align-self: center; }
+.clerk-auth-host { width: 100%; }
+/* Clerk re-applies its own ring shadow to fields at rest; force the design's underline (focus: heavier ink line). */
+.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]) { box-shadow: inset 0 -1.5px 0 0 var(--bb-auth-line) !important; }
+.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]):focus { box-shadow: inset 0 -2px 0 0 var(--bb-auth-ink) !important; }
+/* Clerk collapses its first-step password row until the field has a value; keep it open (ClerkAuthPage.tsx). */
+.clerk-auth-host .cl-formFieldRow__password { position: static !important; height: auto !important; opacity: 1 !important;
+  overflow: visible !important; pointer-events: auto !important; margin-top: 14px; /* 8px row gap + 14px = the design's 22px */ }
+/* The app's beige focus outline is ~1.1:1 on cream: use ink in the card; fields show focus as the heavier underline. */
+.clerk-auth-host :focus-visible { outline-color: var(--bb-auth-ink) !important; outline-offset: 2px !important; }
+.clerk-auth-host .cl-formFieldInput:focus-visible { outline: none !important; }
+/* Chrome paints autofilled fields white; cover it with the card colour and keep the underline. */
+.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]):-webkit-autofill,
+.auth-field input:-webkit-autofill {
+  -webkit-text-fill-color: var(--bb-auth-ink); caret-color: var(--bb-auth-ink);
+  box-shadow: inset 0 -1.5px 0 0 var(--bb-auth-line), inset 0 0 0 100px var(--bb-auth-card) !important;
+  transition: background-color 100000s 0s; }
+.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]):-webkit-autofill:focus,
+.auth-field input:-webkit-autofill:focus {
+  box-shadow: inset 0 -2px 0 0 var(--bb-auth-ink), inset 0 0 0 100px var(--bb-auth-card) !important; }
+
+/* A returned error shakes the card once (useAuthFormSignals). */
+.auth-shake { animation: auth-shake .45s ease; }
+@keyframes auth-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(7px); }
+  60% { transform: translateX(-5px); } 80% { transform: translateX(3px); } }
+@media (prefers-reduced-motion: reduce) { .auth-shake { animation: none; } }
+
+/* Mock/preview card (AuthPage); the Clerk card gets the same look from clerkAppearance in styles/theme.ts. */
+.auth-card { display: flex; flex-direction: column; gap: 22px; padding: 40px 36px 32px; background: var(--bb-auth-card); color: var(--bb-auth-ink);
+  border-radius: 20px; box-shadow: 0 30px 80px rgb(0 0 0 / .55); }
+.auth-card h2 { margin: 0; text-align: center; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -.01em; }
+.auth-subtitle { margin: -14px 0 0; text-align: center; color: var(--bb-auth-label); font-size: 14px; }
+.auth-card :focus-visible { outline: 2px solid var(--bb-auth-ink); outline-offset: 2px; }
+.auth-social { display: flex; flex-wrap: wrap; gap: 10px; }
+.auth-social button { flex: 1 1 150px; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 0;
+  border-radius: 24px; background: var(--bb-auth-soft); color: var(--bb-auth-ink); font-size: 14px; font-weight: 600; }
 .auth-microsoft { display: grid; grid-template-columns: 7px 7px; grid-template-rows: 7px 7px; gap: 1px; }
 .auth-microsoft i { background: currentColor; }
 .auth-google { font-size: 18px; font-weight: 700; line-height: 1; }
-.auth-helper { color: var(--bb-text-secondary); font-size: 12px; margin: var(--bb-space-2) 0 0; }
-.auth-divider { display: flex; align-items: center; gap: var(--bb-space-3); color: var(--bb-text-secondary); margin: 23px 0; font-size: 11px; }
-.auth-divider::before, .auth-divider::after { content: ''; height: 1px; flex: 1; background: var(--bb-border-subtle); }
-.auth-field { margin-bottom: var(--bb-space-5); }
-.auth-field label { display: block; margin-bottom: var(--bb-space-2); font-size: 13px; color: var(--bb-text-label); }
-.auth-field input { width: 100%; min-width: 0; height: 48px; padding: 12px 14px; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); background: var(--bb-surface-input); color: var(--bb-text); font-size: 15px; }
-.auth-field input::placeholder { color: var(--bb-text-placeholder); opacity: 1; }
-.auth-field input:focus { border-color: var(--bb-focus); }
-.auth-field input[aria-invalid=true] { border-color: var(--bb-error-border); }
+.auth-helper { margin: -12px 0 0; color: var(--bb-auth-label); font-size: 12px; }
+.auth-divider { display: flex; align-items: center; gap: var(--bb-space-3); color: var(--bb-auth-label); font-size: 12px; }
+.auth-divider::before, .auth-divider::after { content: ''; height: 1px; flex: 1; background: var(--bb-auth-line); opacity: .45; }
+.auth-card form { display: flex; flex-direction: column; gap: 22px; }
+.auth-field label { display: block; margin-bottom: var(--bb-space-1); color: var(--bb-auth-label); font-size: 12px; line-height: 16px; font-weight: 600; }
+/* Underline inputs, as in the design. */
+.auth-field input { width: 100%; min-width: 0; min-height: 44px; padding: 8px 0; border: 0; border-bottom: 1.5px solid var(--bb-auth-line); border-radius: 0;
+  background: transparent; color: var(--bb-auth-ink); font-size: 17px; transition: border-color .2s, box-shadow .2s; }
+.auth-field input::placeholder { color: var(--bb-auth-placeholder); opacity: 1; }
+.auth-field input:focus { outline: none; border-bottom-color: var(--bb-auth-ink); box-shadow: 0 1px 0 0 var(--bb-auth-ink); }
+.auth-field input[aria-invalid=true] { border-bottom-color: var(--bb-auth-error); }
 .auth-password { position: relative; }
-.auth-password input { padding-right: 52px; }
-.auth-password button { position: absolute; top: 2px; right: 2px; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 4px; background: transparent; color: var(--bb-text-placeholder); cursor: pointer; }
-.auth-remember { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--bb-text-secondary); font-size: 13px; margin: var(--bb-space-5) 0; }
-.auth-remember input { margin: 0 2px 0 0; }
-.auth-remember span { font-size: 11px; }
-.auth-demo-note { padding: 9px 10px; border-radius: var(--bb-radius-control); background: var(--bb-surface-input); color: var(--bb-text-secondary); font-size: 12px; margin: 18px 0; }
-.auth-error { padding: var(--bb-space-3); background: var(--bb-error-surface); color: var(--bb-error-alert-text); border-radius: var(--bb-radius-control); font-size: 13px; }
-.auth-field-error { margin: 7px 0 0; color: var(--bb-error-text); font-size: 12px; }
-.auth-submit { width: 100%; margin-top: var(--bb-space-2); }
-.auth-switch { text-align: center; color: var(--bb-text-secondary); font-size: 12px; margin: var(--bb-space-6) 0 0; }
-.auth-switch a, .auth-switch-link { color: var(--bb-text); text-underline-offset: 4px; }
+.auth-password input { padding-right: 48px; }
+.auth-password button { position: absolute; top: 0; right: -6px; width: 44px; height: 44px; display: grid; place-items: center; border: 0;
+  background: transparent; color: var(--bb-auth-ink); cursor: pointer; }
+.auth-remember { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--bb-auth-label); font-size: 13px; }
+.auth-remember input { margin: 0; accent-color: var(--bb-auth-ink); }
+.auth-remember span { font-size: 12px; }
+.auth-demo-note { margin: 0; padding: 9px 12px; border-radius: 12px; background: var(--bb-auth-soft); color: var(--bb-auth-label); font-size: 12px; }
+.auth-error { margin: 0; color: var(--bb-auth-error); font-size: 13px; line-height: 18px; }
+.auth-field-error { margin: 6px 0 0; color: var(--bb-auth-error); font-size: 12px; }
+.auth-card .auth-submit { width: 100%; min-height: 52px; border: 0; border-radius: 26px; background: var(--bb-auth-ink); color: var(--bb-auth-card);
+  font-size: 15px; font-weight: 600; transition: background .15s, transform .1s; }
+.auth-card .auth-submit:hover:not(:disabled) { background: var(--bb-auth-ink-hover); }
+.auth-card .auth-submit:active:not(:disabled) { transform: scale(.985); }
+.auth-switch { margin: 0; text-align: center; color: var(--bb-auth-label); font-size: 14px; }
+.auth-switch a, .auth-switch-link { color: var(--bb-auth-ink); font-weight: 700; text-underline-offset: 3px; }
 .auth-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-@media (max-height: 800px) and (min-width: 761px) {
-  .auth-page { padding-block: var(--bb-space-4); }
-  .auth-card { padding: 24px 28px; }
-  .auth-subtitle { margin-bottom: 18px; }
-  .auth-divider { margin-block: var(--bb-space-4); }
-  .auth-field { margin-bottom: 14px; }
+/* Desktop web app: below ~900px the card simply stacks under the headline. */
+@media (max-width: 900px) {
+  .auth-content { flex-direction: column; padding-bottom: calc(33vw + 48px); }
+  .auth-intro { padding-bottom: 0; }
+  .auth-form-area { align-self: flex-start; }
 }
-@media (min-width: 1700px) { .auth-layout { grid-template-columns: minmax(0, 1fr) 470px; } }
-@media (max-width: 1000px) { .auth-layout { grid-template-columns: minmax(0, 1fr) 380px; gap: 30px; } .auth-card { padding: 28px; } .auth-desktop-break { display: none; } }
-@media (max-width: 760px) {
-  .auth-page { padding: 26px var(--bb-space-6) var(--bb-space-10); }
-  .auth-layout { display: flex; flex-direction: column; align-items: stretch; gap: var(--bb-space-8); padding-top: 40px; max-width: 520px; width: 100%; margin: 0 auto; }
-  .auth-intro h1 { font-size: clamp(36px, 7.5vw, 55px); line-height: 1.1; }
-  .auth-intro p { margin-top: var(--bb-space-5); font-size: 15px; }
-  .auth-intro .wireframe-scene { margin-top: var(--bb-space-5); }
-  .auth-intro .wireframe-vessel { height: auto; }
-  .auth-card { padding: 28px; }
-  .auth-field input { font-size: 16px; }
-}
-@media (max-width: 360px) { .auth-page { padding-inline: var(--bb-space-4); } .auth-card { padding: 22px; } }

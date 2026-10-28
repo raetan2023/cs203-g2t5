@@ -50,9 +50,9 @@
 .bb-org-picker { min-width: 0; }
 .bb-org-clerk-list, .bb-org-clerk-list .bb-org-clerk-cardbox { width: 100%; max-width: 100%; }
 .bb-org-clerk-list .bb-org-clerk-card { padding: 0; box-shadow: none; background: transparent; border: 0; }
-.bb-org-clerk-cardbox { box-shadow: none; border: 1px solid #2b4258; }
+.bb-org-clerk-cardbox { box-shadow: none; border: 1px solid var(--bb-border-subtle); }
 .bb-org-clerk-list .bb-org-clerk-cardbox { border: 0; border-radius: 0; background: transparent; }
-.bb-org-clerk-popover { border: 1px solid #2b4258; box-shadow: 0 14px 44px #0008; }
+.bb-org-clerk-popover { border: 1px solid var(--bb-border-subtle); box-shadow: var(--bb-shadow-card); }
 .bb-org-invitation-note { display: flex; align-items: flex-start; gap: 12px; margin-top: 24px; padding-top: 22px; border-top: 1px solid #253d53; }
 .bb-org-invitation-note > svg { flex-shrink: 0; width: 18px; height: 18px; color: #6d8ba3; margin-top: 2px; }
 .bb-org-invitation-note strong { font-size: 12px; font-weight: 550; color: #b4c9dc; }
@@ -66,8 +66,8 @@
 .bb-organisation-control { display: flex; align-items: center; gap: 16px; margin-left: auto; min-width: 0; padding-left: 18px; border-left: 1px solid #263b50; }
 .bb-org-workspace { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
 .bb-org-workspace-label { color: #6d8ba3; font-size: 8px; letter-spacing: .15em; margin-left: 8px; }
-.bb-org-clerk-trigger { padding: 3px 7px; min-height: 30px; max-width: 240px; border-radius: 7px; color: #edf4fc; }
-.bb-org-clerk-trigger:hover { background: #162b3f; }
+.bb-org-clerk-trigger { padding: 3px 7px; min-height: 30px; max-width: 240px; border-radius: 7px; color: var(--bb-text); }
+.bb-org-clerk-trigger:hover { background: var(--bb-surface-hover); }
 .bb-org-clerk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bb-org-role-badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #2d575b; color: #8fe0d4; background: #10313a; font-size: 10px; font-weight: 550; padding: 5px 9px; border-radius: 6px; white-space: nowrap; }
 .bb-org-role-badge > span { width: 5px; height: 5px; background: #54c6b3; border-radius: 50%; }

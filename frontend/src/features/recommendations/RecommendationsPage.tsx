@@ -96,6 +96,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
             </section>}
             {forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
               explored={shown?.id} recommended={recommended} onExplore={explore}
+              knownMessage={!forecast ? (forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : undefined) : undefined}
               badge={!experimental && forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
             {shown && <ExploredDetail column={shown} quantity={plan.quantity_mt} today={scenarioDate} experimental={experimental}
               source={shown.forecast ? `${executedRidge ? 'Ridge model' : experimental ? 'Last quote carried forward' : forecast?.interval.method === 'gdelt_error_quantiles' ? 'Ridge model, published' : 'Model forecast'} · from the ${formatDate(shown.forecast.anchor_quote_date)} quote` : ''} />}

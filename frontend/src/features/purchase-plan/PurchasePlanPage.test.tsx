@@ -35,8 +35,10 @@ describe('purchase plan journeys', () => {
     expect(screen.getByText('22 days')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Create plan' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
+    expect(screen.getByText('Plan saved')).toBeVisible();
 
     await user.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.queryByText('Plan saved')).not.toBeInTheDocument();
     await user.clear(screen.getByLabelText('Quantity'));
     await user.type(screen.getByLabelText('Quantity'), '600');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -64,6 +66,7 @@ describe('purchase plan journeys', () => {
     await user.click(screen.getByRole('button', { name: 'Delete plan' }));
     expect(await screen.findByText("You haven't created a purchase plan yet.")).toBeVisible();
     expect(screen.getByRole('button', { name: 'Create plan' })).toHaveFocus();
+    expect(screen.getByText('Plan deleted')).toBeVisible();
     await createDraft(user, '250', '2025-10-24');
     await user.click(screen.getByRole('button', { name: 'Save plan' }));
     expect(await screen.findByText('250 MT')).toBeVisible();
@@ -219,8 +222,10 @@ describe('plan overview and sorting', () => {
     expect(within(overview).getByText('Overdue plans').nextSibling).toHaveTextContent('0');
     expect(within(overview).getByText('Next deadline').nextSibling).toHaveTextContent(/4\s*days/);
     expect(titles()[0]).toMatch(/^300 MT/);
-    await user.click(screen.getByRole('button', { name: 'Largest volume' }));
-    expect(screen.getByRole('button', { name: 'Largest volume' })).toHaveAttribute('aria-pressed', 'true');
+    const sort = screen.getByRole('group', { name: 'Sort by' });
+    expect(within(sort).getByRole('button', { name: 'Deadline' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(within(sort).getByRole('button', { name: 'Volume' }));
+    expect(within(sort).getByRole('button', { name: 'Volume' })).toHaveAttribute('aria-pressed', 'true');
     expect(titles().map(title => title?.split(' MT')[0])).toEqual(['900', '300', '100']);
     for (const write of writes) expect(write).not.toHaveBeenCalled();
   });
