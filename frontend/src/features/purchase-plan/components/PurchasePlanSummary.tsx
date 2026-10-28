@@ -8,12 +8,14 @@ import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 /** A plan is "due soon" within this many days of its deadline (presentation rule, not stored). */
 export const DUE_SOON_DAYS = 7;
 
-export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, deleteRef, busy = false, canEdit = true }: {
+export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, deleteRef, busy = false, canEdit = true, saved = false }: {
   plan: PurchasePlan;
   /** Reads a decided plan's manager note; without it the card shows the status only. */
   service?: PurchasePlanService;
   busy?: boolean;
   canEdit?: boolean;
+  /** Just created or edited: the card briefly highlights (presentation only). */
+  saved?: boolean;
   onEdit(): void;
   onDelete(): void;
   editRef?: RefObject<HTMLButtonElement | null>;
@@ -29,7 +31,7 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, 
   const status = overdue ? 'overdue' : days <= DUE_SOON_DAYS ? 'soon' : 'on-track';
 
   // Guide: docs/ui-revamp/assets/inspo/purchase-plans-page/image.png. Quantity leads; deadline and time left follow.
-  return <section className={`pp-card pp-summary pp-summary--${status}`} aria-labelledby={headingId}>
+  return <section className={`pp-card pp-summary pp-summary--${status}${saved ? ' pp-summary--saved' : ''}`} aria-labelledby={headingId}>
     <div className="pp-summary-top">
       <div className="pp-summary-badges"><span className={`pp-badge pp-badge--${status}`}>
         <Icon name={overdue ? 'alert' : 'clock'} />{overdue ? 'Overdue' : status === 'soon' ? 'Due soon' : 'On track'}

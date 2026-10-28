@@ -28,7 +28,7 @@ export function PlanDecisionNote({ plan, service }: { plan: PurchasePlan; servic
   const current = result?.planId === plan.plan_id && result.status === plan.status ? result : undefined;
   const decision = current?.decision;
   return <div className={`pp-decision pp-decision--${plan.status}`}>
-    <Icon name={approved ? 'check' : 'cross'} />
+    <Icon name={approved ? 'check-circle' : 'cross-circle'} />
     <div>
       {/* The status pill already names the outcome; this line says who decided and when. */}
       <p>{decision ? <><strong>{decision.manager_label}</strong> {approved ? 'approved' : 'rejected'} this plan · <time dateTime={decision.decided_at}>{decisionTime(decision.decided_at)}</time></>
