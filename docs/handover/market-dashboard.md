@@ -74,7 +74,7 @@ Everything is in [`docs/ui-revamp/market-proposal/`](../ui-revamp/market-proposa
 ## Decided (2026-10-28)
 
 - **Colour means what's good for a buyer.** Green = the change makes fuel cheaper. Red (`#f2849e`) = dearer. Grey = no direct effect (the USD index) or no change. Always pair the colour with an arrow and a sign.
-  - This supersedes CREATIVE_BRIEF §3.5, which said green = up and red = down. That line needs updating.
+  - This supersedes the old green = up / red = down rule. CREATIVE_BRIEF §3.5 now says the same.
 - **MGO comes first.** It's the chart's default series and the largest figure, and the title line states its price and the forecast range.
 - **Two range controls stay, labelled by direction:** **Past 15 · 30 · 60 days** for the chart's history, and **Next 7 · 14 · 30 days** for the forecast.
   - The market forecast's horizon is **not** shared with the purchase estimate, which has its own forecast provider (`/api/v1/purchase-plans/forecast`).
