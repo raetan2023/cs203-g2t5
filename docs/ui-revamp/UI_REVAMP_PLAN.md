@@ -480,9 +480,13 @@ truthful. Functional tests cover the new behavior. Do not mark this complete aft
 
 #### Phase 3B — Auth styling and post-signup Home
 
-**Home design deferred by owner (2026-10-26): may run Impeccable with Claude. No direction selected; no Home redesign implemented. Auth styling below remains pending separately.**
+**Home implemented 2026-10-28 on `feature/home-page`** from the owner's Claude Design mocks (buyer, manager, analyst, admin) in
+`docs/ui-revamp/assets/inspo/home-page/`; decisions and backend check are in that folder's `HANDOFF.md`. Full-bleed photo with the
+shell header laid over it, time-of-day greeting with the full name, today's operational date, one role action, and the latest
+stored `SGP_MGO_OBSERVED` price labelled "est." with its own date. The brainstorm items below were superseded by the owner's designs.
+Auth styling below remains pending separately.
 
-- [ ] **Owner request — brainstorm before building:** the landing page after signup is too plain and
+- [x] **Owner request — brainstorm before building:** the landing page after signup is too plain and
       uninviting. Scope this to authenticated `/home`, not a new public marketing page.
       Establish what a first-time user should understand/do, and what a returning user needs.
 - [ ] Develop and show 2–3 concrete Home directions with real available content; review hierarchy,
