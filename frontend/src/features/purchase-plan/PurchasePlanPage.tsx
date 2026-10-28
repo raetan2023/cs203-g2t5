@@ -171,9 +171,10 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
         <PlanOverview plans={plans} />
         <div className="pp-list-heading">
           <h2>{canEdit ? 'Your plans' : 'Plans'}</h2>
-          <div className="pp-sort" role="group" aria-label="Sort plans">
+          <div className="pp-sort" role="group" aria-labelledby="pp-sort-label">
+            <span className="pp-sort-label" id="pp-sort-label">Sort by</span>
             {(['deadline', 'volume'] as const).map(option => <button key={option} type="button" aria-pressed={sort === option}
-              onClick={() => setSort(option)}>{option === 'deadline' ? 'Soonest deadline' : 'Largest volume'}</button>)}
+              onClick={() => setSort(option)}>{option === 'deadline' ? 'Deadline' : 'Volume'}</button>)}
           </div>
         </div>
         <div className="pp-plan-grid">{sortPlans(plans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} busy={writing}

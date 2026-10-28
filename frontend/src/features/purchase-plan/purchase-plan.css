@@ -112,12 +112,12 @@
 .pp-overview--alert .pp-overview-value { color: var(--bb-error-text); }
 .pp-list-heading { display: flex; justify-content: space-between; align-items: center; gap: var(--bb-space-4); margin-bottom: var(--bb-space-4); }
 .purchase-plan .pp-list-heading h2 { font-size: 16px; font-weight: 600; }
-/* Two-option sort switch; aria-pressed carries the selected state. */
-.pp-sort { display: inline-flex; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); overflow: hidden; }
-.pp-sort button { min-height: 36px; padding: 6px 14px; border: 0; background: transparent; color: var(--pp-text); font: inherit; font-size: 13px; cursor: pointer; }
-.pp-sort button + button { border-left: 1px solid var(--bb-border-control); }
-.pp-sort button:hover { background: var(--bb-surface-hover); }
-.pp-sort button[aria-pressed=true] { background: var(--bb-action); color: var(--bb-text-on-action); font-weight: 600; }
+/* "Sort by" text toggle: options read as quiet text; only the selected one (aria-pressed) sits on a raised chip. */
+.pp-sort { display: inline-flex; align-items: center; gap: var(--bb-space-1); font-size: 13px; }
+.pp-sort-label { margin-right: var(--bb-space-2); color: var(--pp-muted); }
+.pp-sort button { min-height: 36px; padding: 6px 14px; border: 1px solid transparent; border-radius: var(--bb-radius-control); background: transparent; color: var(--pp-muted); font: inherit; cursor: pointer; }
+.pp-sort button:hover { color: var(--pp-text); }
+.pp-sort button[aria-pressed=true] { border-color: var(--bb-border-subtle); background: var(--bb-surface); color: var(--pp-text); font-weight: 500; }
 .pp-loading { min-height: calc(100dvh - 130px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; color: var(--pp-muted); font-size: 18px; font-weight: 500; text-align: center; }
 .pp-spinner { width: 56px; height: 56px; border: 5px solid var(--bb-text-secondary); border-right-color: transparent; border-radius: 50%; }
 
