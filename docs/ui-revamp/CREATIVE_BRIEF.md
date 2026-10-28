@@ -55,9 +55,15 @@ brainstorm lists freely; move an idea up into Direction once it is chosen.
 
 ### 3.1 Sign-up / sign-in (first priority: it is the first impression)
 
-**Done 2026-10-27:** the wireframe prototype (traced wireframe container ship, dark-and-beige card) is now the real
-Clerk login and sign-up (`features/auth/AuthLayout.tsx`, `WireframeVessel.tsx`, `clerkAppearance` in `styles/theme.ts`).
-Screenshots: `docs/ui-revamp/login-port/`. The options below are for a later round, if you want to go further.
+**Built 2026-10-27 (replaces the wireframe ship):** "Login — hybrid, reactive ship"
+(`assets/inspo/sign-in-page/Login — hybrid, reactive ship-html/`). Full-bleed dusk scene (moon, stars, tanker) with a
+cream card holding Clerk's real form; Geist on these pages only. The ship reacts to the form: deck lights come on one
+per typed email character, lights dim while a hidden password is focused, a password submit sets the ship off with a
+route to a waypoint, and a returned error turns it back and shakes the card. Same scene and card for sign-up.
+Code: `features/auth/ReactiveShip.tsx`, `useAuthFormSignals.ts` (reads Clerk's DOM; auth unchanged), `AuthLayout.tsx`,
+`clerkAppearance` + `--bb-auth-*` tokens. Reduced motion = lit and still; animation pauses in a hidden tab; idle CPU
+~1.4% main thread (headless Chromium). Not done: playing the "sail" after a *successful* sign-in (Clerk redirects
+immediately). Screenshots: `docs/ui-revamp/login-ship/`. Impeccable flags Geist as an overused font (owner's choice).
 
 **Direction (earlier ideas):** replace the current white ship on a grid. Candidates, pick one or two to prototype:
 
@@ -164,15 +170,17 @@ else on the screen, and flag those for a decision first (list: `critique-rec/TAS
 
 **Direction:**
 - Better visibility: the key prices should read in one glance (bigger current price, change, date of observation).
-- **Colour = price movement:** green for up, red for down, neutral for flat or no comparison, always with an arrow and a
-  signed change (+1.2% / −0.8%). This was already requested (plan Phase 6) and needs accessible shades on the dark canvas.
+- **Colour = what's good for a buyer** (decided 2026-10-28, replacing green up / red down): green when the change makes
+  fuel cheaper, red (`#f2849e`) when it makes fuel dearer, grey for no direct effect (the USD index), flat or no
+  comparison. Always pair it with an arrow and a signed change (+1.2% / −0.8%). This was already requested (plan Phase 6)
+  and needs accessible shades on the dark canvas.
   Decide what "change" compares against for each indicator (previous observation? 7 days?) and show it ("vs 7 Oct").
 - **Improve the news display.** Today the "Market pulse" panel shows two GDELT numbers: matched article count and
   average news tone. There are no headlines in the data.
 
 **Brainstorm:**
 - Ticker strip across the top: each price with arrow, signed change and colour, like a trading terminal.
-- Tint the chart line or area by direction over the selected range (green if the range ended higher). Keep the line
+- Tint the chart line or area by direction over the selected range (green if the range ended cheaper). Keep the line
   itself readable when colour is not visible.
 - Tiny sparklines in each price card.
 - News, using what we already have: show article count and tone as small charts over time, with a plain-language label

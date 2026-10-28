@@ -49,8 +49,8 @@ describe('shared app and auth journeys', () => {
   it('signs in, creates a plan, preserves it across navigation, signs out and clears user data', async () => {
     const { user, factory } = setup();
     await login(user);
-    expect(await screen.findByRole('heading', { name: 'Welcome back, John' })).toBeVisible();
-    await user.click(screen.getByRole('link', { name: 'Go to purchase plans' }));
+    expect(await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening), John$/ })).toBeVisible();
+    await user.click(screen.getByRole('link', { name: 'Go to your plans' }));
     await user.click(await screen.findByRole('button', { name: 'Create plan' }));
     await user.type(screen.getByLabelText('Quantity'), '500');
     fireEvent.change(screen.getByLabelText('Purchase deadline'), { target: { value: '2025-11-15' } });
@@ -60,7 +60,7 @@ describe('shared app and auth journeys', () => {
     expect(within(menu).getByRole('link', { name: 'Purchase plans' })).toHaveAttribute('aria-current', 'page');
     await user.click(within(menu).getByRole('link', { name: 'Home' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('link', { name: 'Go to purchase plans' }));
+    await user.click(screen.getByRole('link', { name: 'Go to your plans' }));
     expect(await screen.findByText('500 MT')).toBeVisible();
     expect(factory).toHaveBeenCalledTimes(1);
     menu = await openMenu(user);
@@ -87,7 +87,7 @@ describe('shared app and auth journeys', () => {
     expect(screen.getByLabelText('Email address')).toHaveAccessibleDescription('That email is already registered.');
     expect(screen.getByLabelText('Full name')).toHaveValue('Rae');
     await user.click(screen.getByRole('button', { name: 'Create account' }));
-    expect(await screen.findByRole('heading', { name: 'Welcome back, Rae' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: /^Good (morning|afternoon|evening), Rae$/ })).toBeVisible();
   });
 
   it('keeps session loading separate from private content and retries a failed session check', async () => {
@@ -96,11 +96,11 @@ describe('shared app and auth journeys', () => {
     const read = vi.spyOn(auth, 'readSession');
     const { user } = setup(auth);
     expect(screen.getByText('Loading your home...')).toBeVisible();
-    expect(screen.queryByText('Welcome back, John')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Good (morning|afternoon|evening), John$/)).not.toBeInTheDocument();
     expect(await screen.findByRole('alert')).toHaveTextContent('Your session could not be loaded.');
     expect(read).toHaveBeenCalledTimes(1);
     await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(await screen.findByText('Welcome back, John')).toBeVisible();
+    expect(await screen.findByText(/^Good (morning|afternoon|evening), John$/)).toBeVisible();
   });
 
   it('retains inputs after login failure and prevents duplicate submits during a pending request', async () => {
@@ -116,7 +116,7 @@ describe('shared app and auth journeys', () => {
     expect(screen.getByRole('button', { name: 'Signing in...' })).toBeDisabled();
     expect(screen.getByLabelText('Email address')).toBeDisabled();
     await act(async () => resolve(DEMO_USER));
-    expect(await screen.findByText('Welcome back, John')).toBeVisible();
+    expect(await screen.findByText(/^Good (morning|afternoon|evening), John$/)).toBeVisible();
   });
 
   it('traps navigation focus, supports Escape, and retains the session when sign-out fails', async () => {
@@ -135,7 +135,7 @@ describe('shared app and auth journeys', () => {
     menu = await openMenu(user);
     await user.click(within(menu).getByRole('button', { name: 'Sign out' }));
     expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't sign you out.");
-    expect(screen.getByText('Welcome back, John')).toBeVisible();
+    expect(screen.getByText(/^Good (morning|afternoon|evening), John$/)).toBeVisible();
     await user.click(within(menu).getByRole('button', { name: 'Sign out' }));
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeVisible();
   });
@@ -157,7 +157,7 @@ describe('shared app and auth journeys', () => {
     window.history.replaceState(null, '', '/home');
     const auth = createMockAuthService({ user: DEMO_USER, delayMs: 0 });
     render(<App auth={auth} scenarioDate={DEMO_SCENARIO_DATE} createPlanService={() => createMockPlanService({ delayMs: 0 })} MarketDashboard={({ scenarioDate }) => <h1>Market component {scenarioDate}</h1>} />);
-    await screen.findByText('Welcome back, John');
+    await screen.findByText(/^Good (morning|afternoon|evening), John$/);
     await act(async () => { window.history.pushState(null, '', '/market-dashboard'); window.dispatchEvent(new PopStateEvent('popstate')); });
     expect(screen.getByText('Market component 2025-10-24')).toBeVisible();
     await act(async () => navigate('/not-a-route'));

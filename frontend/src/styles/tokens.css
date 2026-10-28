@@ -6,7 +6,7 @@
  *
  * Pending (values not decided, add here only when the owning phase decides them):
  *   price-up / price-down / price-flat (+ -surface)  Phase 5
- *   success-*  Phase 4    warning-*  Phase 5    chart-*  Phase 6
+ *   success-*  Phase 4    chart-*  Phase 6
  */
 :root {
   color-scheme: dark;
@@ -41,6 +41,22 @@
   --bb-error-border: #e3b3a9;
   --bb-error-alert-text: #f2d9d2;
 
+  /* warnings: experimental, stale or unavailable data (Phase 5, 2026-10-28; differs from errors by icon and label too) */
+  --bb-warning-text: #e2c48a;
+  --bb-warning-surface: #211e19;
+  --bb-warning-border: #6a542f;
+
+  /* sign-in card (light surface, auth pages only; 2026-10-27 reactive-ship design) */
+  --bb-auth-card: #f5efe3;
+  --bb-auth-ink: #17140f;
+  --bb-auth-ink-hover: #2b261f;
+  --bb-auth-label: #5f574b;
+  --bb-auth-line: #8c826f; /* underline; darker than the mock's #b9ae99 for 3:1 control contrast */
+  --bb-auth-placeholder: #6f6556; /* darker than the mock's #857b6a for 4.5:1 */
+  --bb-auth-soft: #ebe3d3;
+  --bb-auth-soft-hover: #e1d7c4;
+  --bb-auth-error: #9b2c1a;
+
   /* type */
   --bb-font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 
@@ -61,5 +77,7 @@
   --bb-radius-card: 10px;
   --bb-radius-control: 5px;
   --bb-shadow-card: 0 16px 60px #00000026;
-  --bb-motion-fast: 150ms;
+  --bb-motion-fast: 150ms; /* press and hover feedback */
+  --bb-motion-base: 200ms; /* routine state changes: dialogs, notices */
+  --bb-ease-out: cubic-bezier(.23, 1, .32, 1); /* one deceleration for everything that appears or responds */
 }
