@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Market overview · Bunker Buddy</title>
+<style>
+/* Tokens follow frontend/src/styles/tokens.css (beige on near-black). One hue pair carries meaning for a buyer:
+   --ease (a move that lowers fuel cost) and --pressure (a move that raises it). Everything else is ink and greys. */
+:root {
+  --ground: #0c0d0e; --surface: #1a1b1c; --raised: #232220; --border: #2d2c29; --rule: #262523; --control: #3d3b36;
+  --ink: #f0e6d2; --soft: #c5bba7; --muted: #b5ac9b; --accent: #eadfc9; --on-accent: #0c0d0e;
+  --ease: #8fd19e; --pressure: #f2849e; --notice: #e2c48a; --grid: #2a2926;
+  --font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --radius-card: 8px; --radius-control: 6px; --gap: 16px; --pad: 20px;
+}
+* { box-sizing: border-box; }
+html { background: var(--ground); }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 14px/20px var(--font); font-variant-numeric: tabular-nums; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3, p { margin: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+.unit { color: var(--muted); font-size: 13px; font-weight: 400; }
+.ease { color: var(--ease); } .pressure { color: var(--pressure); } .neutral { color: var(--muted); } .stale { color: var(--notice); }
+svg.i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* Shell: matches AppShell (menu, mark, name) with the date and the organisation on the right. */
+.shell { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 60px; padding: 8px 40px; border-bottom: 1px solid var(--border); }
+.shell-left, .shell-right { display: flex; align-items: center; gap: 16px; }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 0; border-radius: var(--radius-control); background: transparent; }
+.icon-btn:hover { background: var(--raised); }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 600; }
+.mark { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--on-accent); }
+.shell-date { color: var(--muted); font-size: 13px; }
+.org { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-control); background: transparent; font-size: 13px; }
+.org:hover { border-color: var(--control); }
+.org-role { color: var(--muted); }
+
+.page { max-width: 1320px; margin: 0 auto; padding: 24px 40px 56px; display: flex; flex-direction: column; gap: var(--gap); }
+
+/* Title row: the h1, the finding, and freshness with its refresh. */
+.title-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; padding-bottom: 4px; }
+.title-row h1 { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.01em; }
+.finding { margin-top: 4px; color: var(--soft); font-size: 14px; max-width: 70ch; }
+.fresh { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 34px; padding: 0 12px; border: 1px solid var(--control); border-radius: var(--radius-control); background: transparent; font-size: 13px; font-weight: 500; }
+.btn:hover:not(:disabled) { background: var(--raised); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { cursor: progress; color: var(--muted); }
+.spin { animation: spin 1.2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.link-btn { border: 0; padding: 0; background: none; color: var(--accent); font-size: inherit; }
+.link-btn:hover { text-decoration: underline; }
+
+/* Notices sit in the flow, inside the page, never as a banner over it. */
+.notice { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); padding: 12px 16px; font-size: 13px; color: var(--soft); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.notice strong { color: var(--ink); font-weight: 600; }
+.notice.warn { border-color: #5a4a2c; }
+.notice.warn .lead { color: var(--notice); }
+details.notice { display: block; }
+details.notice summary { cursor: pointer; color: var(--notice); }
+details.notice p { margin-top: 8px; }
+
+/* Price strip: one container split by dividers. Each cell is a tab that picks the chart's series. */
+.strip { display: grid; grid-template-columns: 1.35fr repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); overflow: hidden; }
+.cell { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 14px 18px 14px; border: 0; border-left: 1px solid var(--border); background: transparent; text-align: left; position: relative; }
+.cell:first-child { border-left: 0; }
+button.cell:hover { background: var(--raised); }
+.cell[aria-pressed="true"] { background: var(--raised); }
+.cell[aria-pressed="true"]::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); }
+.cell-name { font-size: 13px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell[aria-pressed="true"] .cell-name { color: var(--ink); font-weight: 500; }
+.cell-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.cell-price .num { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; }
+.cell.lead .cell-price .num { font-size: 30px; line-height: 36px; }
+.cell-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font-size: 12px; line-height: 16px; }
+.chg { font-weight: 600; white-space: nowrap; }
+.when { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); white-space: nowrap; }
+.when svg.i { width: 12px; height: 12px; }
+.strip-note { font-size: 12px; line-height: 18px; color: var(--muted); }
+.strip-note b { font-weight: 600; }
+
+/* Main row: the chart carries the question, the right column answers "where next" and "what do I do". */
+.main-row { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--gap); align-items: start; }
+.side { display: flex; flex-direction: column; gap: var(--gap); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: var(--pad); min-width: 0; }
+.card-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 16px; }
+.card h2 { font-size: 16px; line-height: 22px; font-weight: 600; }
+.sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.seg { display: inline-flex; border: 1px solid var(--control); border-radius: var(--radius-control); overflow: hidden; }
+.seg button { min-height: 32px; padding: 0 11px; border: 0; border-left: 1px solid var(--control); background: transparent; color: var(--soft); font-size: 13px; font-weight: 500; white-space: nowrap; }
+.seg button:first-child { border-left: 0; }
+.seg button:hover { color: var(--ink); background: var(--raised); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.range-line { margin-top: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; font-size: 13px; }
+.legend { display: inline-flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.chart { position: relative; height: 280px; margin-top: 8px; border-radius: 4px; }
+.chart svg { display: block; overflow: visible; }
+.chart:focus-visible { outline-offset: 6px; }
+.tip { position: absolute; top: 4px; z-index: 2; pointer-events: none; padding: 8px 10px; background: var(--raised); border: 1px solid var(--control); border-radius: var(--radius-control); box-shadow: 0 8px 24px rgba(0,0,0,.45); white-space: nowrap; font-size: 12px; color: var(--muted); }
+.tip strong { display: block; color: var(--ink); font-size: 16px; line-height: 22px; font-weight: 600; }
+.chart-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--muted); }
+.chart-foot details { font-size: 13px; }
+.chart-foot summary { cursor: pointer; color: var(--accent); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { font-weight: 400; color: var(--muted); text-align: left; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+td { padding: 6px 0; border-bottom: 1px solid var(--rule); }
+th.num, td.num { text-align: right; }
+.recent { margin-top: 8px; min-width: 240px; }
+
+/* Forecast card. */
+.fc-target { margin-top: 12px; color: var(--muted); font-size: 13px; }
+.fc-figure { margin-top: 4px; display: flex; align-items: baseline; gap: 6px; }
+.fc-figure .num { font-size: 26px; line-height: 32px; font-weight: 600; }
+.fc-vs { margin-top: 2px; font-size: 13px; font-weight: 500; }
+.fc-band { margin-top: 16px; }
+.fc-band-track { position: relative; height: 10px; border-radius: 5px; background: var(--rule); }
+.fc-band-fill { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: #4f4a40; }
+.fc-band-mid { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--accent); }
+.fc-band-quote { position: absolute; top: -6px; bottom: -6px; width: 0; border-left: 1px dashed var(--soft); }
+.fc-band-ends { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.fc-band-ends b { color: var(--ink); font-weight: 600; }
+.fc-note { margin-top: 14px; font-size: 12px; line-height: 18px; color: var(--notice); }
+.fc-evidence { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 2px 8px; border: 1px solid var(--control); border-radius: 999px; font-size: 12px; color: var(--soft); }
+.fc-foot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.center { padding: 20px 0 4px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--soft); }
+.center strong { color: var(--ink); font-size: 14px; }
+.sk { display: block; background: var(--raised); border-radius: 4px; }
+
+/* Plans card. */
+.plans { display: flex; flex-direction: column; margin-top: 8px; }
+.plan { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: baseline; padding: 12px 0; border-top: 1px solid var(--rule); color: var(--ink); text-decoration: none; }
+.plan:first-child { border-top: 0; }
+.plan:hover { text-decoration: none; }
+.plan:hover .plan-open { text-decoration: underline; }
+.plan-qty { font-size: 16px; font-weight: 600; }
+.plan-action { font-size: 13px; font-weight: 600; text-align: right; }
+.plan-due { font-size: 13px; color: var(--muted); }
+.plan-open { font-size: 13px; color: var(--accent); text-align: right; }
+.plan-due.over { color: var(--pressure); }
+.card-actions { margin-top: 12px; display: flex; gap: 10px; }
+
+/* Lower row: monthly physical market and the news context. */
+.lower-row { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.search { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 10px; border: 1px solid var(--control); border-radius: var(--radius-control); color: var(--muted); }
+.search input { width: 150px; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 13px; }
+.search input::placeholder { color: var(--muted); }
+.search:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sales { margin-top: 10px; }
+.sale { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 110px; gap: 16px; align-items: center; min-height: 44px; border-top: 1px solid var(--rule); }
+.sale-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--soft); }
+.sale.mgo .sale-name { color: var(--ink); font-weight: 600; }
+.sale-bar { display: block; height: 4px; border-radius: 2px; background: var(--rule); }
+.sale-bar span { display: block; height: 4px; border-radius: 2px; background: #6b665c; }
+.sale.mgo .sale-bar span { background: var(--accent); }
+.sale-val { text-align: right; font-weight: 600; }
+.sale-val small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+.sales-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--muted); }
+.empty-row { padding: 14px 0; border-top: 1px solid var(--rule); color: var(--soft); font-size: 13px; }
+.news-sum { margin-top: 4px; font-size: 14px; color: var(--ink); }
+.news-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 16px; }
+.metric-label { font-size: 12px; color: var(--muted); }
+.metric-val { font-size: 22px; line-height: 28px; font-weight: 600; margin-top: 2px; }
+.mini { display: block; width: 100%; height: 48px; margin-top: 8px; overflow: visible; }
+.mini-axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.caveat { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 12px; line-height: 18px; color: var(--muted); }
+
+/* Forecast details: provenance, range quality and drivers, closed by default. */
+details.card { padding: 14px var(--pad); }
+details.card > summary { display: flex; align-items: center; justify-content: space-between; min-height: 24px; cursor: pointer; font-size: 15px; font-weight: 600; list-style: none; }
+details.card > summary::-webkit-details-marker { display: none; }
+details.card[open] > summary svg { transform: rotate(180deg); }
+.details-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; padding: 18px 0 6px; }
+.details-grid h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.kv { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--rule); }
+.kv span:first-child { color: var(--muted); }
+.kv span:last-child { text-align: right; overflow-wrap: anywhere; }
+.mono { font-family: Consolas, 'Cascadia Mono', monospace; font-size: 13px; }
+.prose { font-size: 13px; color: var(--soft); line-height: 19px; margin-top: 8px; }
+.driver { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 5px 0; font-size: 13px; }
+.driver-name { color: var(--soft); }
+.driver-bar { position: relative; height: 8px; }
+.driver-bar::before { content: ''; position: absolute; left: 50%; top: -4px; bottom: -4px; border-left: 1px solid var(--control); }
+.driver-bar span { position: absolute; top: 0; height: 8px; border-radius: 4px; background: var(--soft); }
+.driver-dir { text-align: right; color: var(--muted); white-space: nowrap; }
+.page-note { font-size: 12px; color: var(--muted); }
+
+@media (max-width: 1100px) {
+  .shell, .page { padding-left: 24px; padding-right: 24px; }
+  .main-row { grid-template-columns: 1fr; }
+  .side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .lower-row { grid-template-columns: 1fr; }
+  .strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .strip .cell.lead { grid-column: 1 / -1; border-left: 0; border-bottom: 1px solid var(--border); }
+  .strip .cell:nth-child(2) { border-left: 0; }
+  .details-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .shell { padding: 6px 16px; }
+  .shell-date, .org-name { display: none; }
+  .page { padding: 16px 16px 40px; gap: 14px; }
+  .title-row { align-items: flex-start; flex-direction: column; }
+  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .strip .cell:nth-child(n+2) { border-left: 0; border-top: 1px solid var(--border); }
+  .strip .cell:nth-child(2n+1):not(.lead) { border-left: 1px solid var(--border); }
+  .strip .cell.lead { border-top: 0; border-bottom: 0; }
+  .card { padding: 16px; }
+  .side { display: flex; align-items: stretch; }
+  .chart { height: 220px; }
+  .sale { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'name val' 'bar bar'; gap: 6px 12px; padding: 10px 0; }
+  .sale-name { grid-area: name; white-space: normal; }
+  .sale-bar { grid-area: bar; }
+  .sale-val { grid-area: val; }
+  .search { width: 100%; } .search input { width: 100%; }
+  .details-grid { grid-template-columns: 1fr; gap: 20px; }
+  details.card { padding: 14px 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } .btn:active:not(:disabled) { transform: none; } }
+</style>
+</head>
+<body>
+<header class="shell">
+  <div class="shell-left">
+    <button class="icon-btn" type="button" aria-label="Open navigation"><svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <span class="brand"><span class="mark"><svg class="i" viewBox="0 0 24 24" style="width:17px;height:17px"><circle cx="12" cy="5" r="3"/><path d="M12 22V8M5 12H2a10 10 0 0 0 20 0h-3"/></svg></span>Bunker Buddy</span>
+  </div>
+  <div class="shell-right">
+    <time class="shell-date" id="shell-date"></time>
+    <button class="org" type="button" aria-label="Switch organisation"><span class="org-name" id="org-name"></span><span class="org-role" id="org-role"></span><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M6 9l6 6 6-6"/></svg></button>
+  </div>
+</header>
+
+<main class="page" id="app-content">
+  <div class="title-row">
+    <div><h1>Market overview</h1><p class="finding" id="finding"></p></div>
+    <div class="fresh"><span id="checked" aria-live="polite"></span>
+      <button class="btn" type="button" id="refresh" title="Re-reads stored data. It doesn't import new prices."><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg><span>Refresh</span></button>
+    </div>
+  </div>
+  <div id="notices"></div>
+  <div id="prices"></div>
+  <div class="main-row" id="main-row">
+    <section class="card" id="history" aria-labelledby="history-h"></section>
+    <div class="side"><section class="card" id="forecast" aria-labelledby="forecast-h"></section><section class="card" id="plans" aria-labelledby="plans-h"></section></div>
+  </div>
+  <div class="lower-row">
+    <section class="card" id="sales" aria-labelledby="sales-h"></section>
+    <section class="card" id="news" aria-labelledby="news-h"></section>
+  </div>
+  <details class="card" id="forecast-details"><summary>Forecast details<svg class="i" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary><div id="details-body"></div></details>
+  <p class="page-note">Prices are stored observations and each keeps its own date. This is not a real-time feed: Refresh re-reads stored data and doesn't import new prices.</p>
+</main>
+
+<script src="market-snapshot.js"></script><!-- optional: written by snapshot.mjs from the live backend -->
+<script src="market-data.js"></script>
+<script>
+(() => {
+  const D = window.MARKET_DATA;
+  const PREVIEW = new URLSearchParams(location.search).get('state') || 'ready';
+  const $ = (s) => document.querySelector(s);
+  const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const MINUS = '−', DAY = 86400000, STALE_DAYS = 7;
+  const ORDER = ['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'BRENT_CRUDE', 'DUBAI_CRUDE', 'USD_INDEX'];
+  // A higher price adds cost for an MGO buyer; the dollar index has no direct reading.
+  const COST_UP = new Set(['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'BRENT_CRUDE', 'DUBAI_CRUDE']);
+  const DRIVER_LABELS = { hsfo_lag1: 'High-sulphur fuel oil (prev day)', vlsfo_lag1: 'Very-low-sulphur fuel oil (prev day)',
+    brent_fred_lag1: 'Brent crude (prev day)', dubai_crude_investing_lag1: 'Dubai crude (prev day)', sg_gasoil_investing_lag1: 'Singapore gasoil (prev day)',
+    sg_gasoil_investing_ret20: 'Singapore gasoil 20-day trend', usd_index_lag1: 'USD index (prev day)', mgo_lag_price: 'Last MGO quote' };
+  const ACTIONS = { BUY_NOW: 'Buy now', WAIT: 'Wait', MONITOR: 'Monitor', SPLIT: 'Split purchase' };
+  const I = {
+    clock: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    search: '<svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+  };
+
+  // ---- formatting (same rules as StoredMarketPanel) ----
+  const nf = (v, max, min = 0) => new Intl.NumberFormat('en-US', { maximumFractionDigits: max, minimumFractionDigits: min }).format(v);
+  const utc = (d) => Date.parse(d + 'T00:00:00Z');
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dShort = (d) => { const t = new Date(utc(d)); return t.getUTCDate() + ' ' + MON[t.getUTCMonth()]; };
+  const dLong = (d) => dShort(d) + ' ' + new Date(utc(d)).getUTCFullYear();
+  const dDay = (d) => WD[new Date(utc(d)).getUTCDay()] + ' ' + dShort(d);
+  const dMonth = (d) => { const t = new Date(utc(d)); return MON[t.getUTCMonth()] + ' ' + t.getUTCFullYear(); };
+  const priceDigits = (t) => (t.unit === 'index' || t.unit === 'tone' ? 4 : 2);
+  const priceText = (t, v = t.value) => (t.currency === 'USD' ? '$' : '') + nf(v, priceDigits(t), t.currency === 'USD' || t.unit === 'source-defined' ? 2 : 0);
+  const unitText = (t) => (t.unit === 'source-defined' ? 'unit unverified' : t.unit || 'unit unspecified');
+  const signed = (v, f) => (v > 0 ? '+' : v < 0 ? MINUS : '') + f(Math.abs(v));
+  const arrow = (v) => (v > 0 ? '↗' : v < 0 ? '↘' : '—');
+  const meaning = (key, delta) => (!delta || !COST_UP.has(key) ? 'neutral' : delta > 0 ? 'pressure' : 'ease');
+  const today = D.today || new Date().toISOString().slice(0, 10);
+  const ageDays = (d) => Math.round((utc(today) - utc(d)) / DAY);
+  const ageText = (d) => { const a = ageDays(d); return a <= 0 ? 'today' : a === 1 ? '1 day old' : a + ' days old'; };
+  const fuelName = (label) => label.replace(/^Bunker sales:\s*/i, '').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\b(Lng|Mgo|Mdo|B100)\b/g, (w) => w.toUpperCase());
+  const isMgoFuel = (name) => /marine gas oil|\bmgo\b/i.test(name);
+  const validRow = (r) => Number.isFinite(r.value) && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && Number.isFinite(utc(r.date));
+  const chartable = (s) => ORDER.includes(s.ticker.seriesKey) && new Set(s.history.filter(validRow).map((r) => r.date)).size >= 2;
+
+  // ---- state ----
+  const S = { sel: 'SGP_MGO_OBSERVED', range: 60, horizon: 7, search: PREVIEW === 'search-empty' ? 'methanol' : '', showAll: false, hover: -1 };
+  const market = { status: 'ready', data: D.stored, error: null, refreshing: false, checkedAt: new Date(D.stored.fetchedAt) };
+  if (PREVIEW === 'loading') Object.assign(market, { status: 'loading', data: null, checkedAt: null });
+  if (PREVIEW === 'read-error') market.error = "Couldn't read market data from the database. Check the backend connection.";
+  if (PREVIEW === 'read-error-empty') Object.assign(market, { status: 'error', data: null, checkedAt: null, error: "Couldn't read market data from the database. Check the backend connection." });
+  if (PREVIEW === 'missing') market.data = { ...D.stored, missing: ['GDELT average tone', 'Monthly bunker sales'], series: D.stored.series.filter((s) => s.category === 'prices' || s.ticker.seriesKey === 'GDELT_ARTICLE_COUNT') };
+  if (PREVIEW === 'empty') market.data = { ...D.stored, series: [], missing: ['Singapore MGO', 'Brent crude', 'Singapore gasoil futures', 'Dubai crude futures', 'Broad USD index', 'Monthly bunker sales'] };
+  const fcState = { 'forecast-loading': 'loading', 'forecast-error': 'error', 'forecast-unavailable': 'unavailable', 'forecast-disconnected': 'disconnected' }[PREVIEW] || 'ready';
+  const plans = PREVIEW === 'no-plans' ? [] : D.plans;
+  const access = PREVIEW === 'no-plan-access' ? { can_read_plans: false, can_write_plans: false } : D.access;
+
+  const groups = () => {
+    const series = market.data?.series || [];
+    const rank = (k) => (ORDER.indexOf(k) < 0 ? ORDER.length : ORDER.indexOf(k));
+    return {
+      series,
+      prices: series.filter((s) => s.category === 'prices').sort((a, b) => rank(a.ticker.seriesKey) - rank(b.ticker.seriesKey)),
+      sales: series.filter((s) => s.category === 'sales').sort((a, b) => b.ticker.value - a.ticker.value || a.ticker.label.localeCompare(b.ticker.label)),
+      news: series.filter((s) => s.category === 'news'),
+    };
+  };
+  const forecastFor = (h) => (fcState === 'ready' ? D.forecast[h] : null);
+  const direction = (f) => (f.forecast - f.anchor_price > 1 ? 'up' : f.forecast - f.anchor_price < -1 ? 'down' : 'flat');
+
+  // ---- title, freshness, notices ----
+  function renderTop() {
+    $('#shell-date').textContent = dDay(today) + ' ' + new Date(utc(today)).getUTCFullYear();
+    $('#shell-date').setAttribute('datetime', today);
+    $('#org-name').textContent = D.organisation.name; $('#org-role').textContent = D.organisation.role;
+    const { prices } = groups();
+    const mgo = prices.find((s) => s.ticker.seriesKey === 'SGP_MGO_OBSERVED')?.ticker;
+    const f = forecastFor(S.horizon);
+    let text = '';
+    if (mgo) {
+      const chg = mgo.changeAbs == null ? '' : mgo.changeAbs === 0 ? ', unchanged from the previous stored quote' : `, ${signed(mgo.changePct ?? mgo.changeAbs, (v) => nf(v, 2, 2))}${mgo.changePct != null ? '%' : ''} on the previous stored quote`;
+      text = `Singapore MGO ${priceText(mgo)}/MT on ${dShort(mgo.observedDate)}${chg}.`;
+      if (f) text += ` ${S.horizon}-day forecast range $${nf(f.low, 0)}–$${nf(f.high, 0)}.`;
+    } else if (market.status === 'loading') text = 'Loading stored market data…';
+    else text = 'Singapore bunker market. Each price shows its own latest date.';
+    $('#finding').textContent = text;
+    const t = market.checkedAt;
+    $('#checked').textContent = market.refreshing ? 'Checking…' : t ? `Checked ${t.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })} · re-reads every minute` : 'Connecting to market data';
+    const btn = $('#refresh'); btn.disabled = market.refreshing; btn.setAttribute('aria-busy', market.refreshing);
+    btn.querySelector('svg').classList.toggle('spin', market.refreshing);
+
+    const n = [];
+    if (market.error) n.push(`<div class="notice warn" role="alert"><span><span class="lead">${esc(market.error)}</span>${market.data && t ? ` Showing the ${t.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })} read.` : ''}</span><button class="link-btn" type="button" data-act="refresh">Retry</button></div>`);
+    if (market.data?.missing.length) n.push(`<details class="notice"><summary>${market.data.missing.length} series awaiting data</summary><p><strong>Not yet stored:</strong> ${esc(market.data.missing.join(', '))}. No example prices are substituted. ${groups().series.length} series are stored.</p></details>`);
+    $('#notices').innerHTML = n.join('');
+    $('#notices').style.display = n.length ? 'flex' : 'none';
+    $('#notices').style.flexDirection = 'column'; $('#notices').style.gap = '8px';
+  }
+
+  // ---- price strip ----
+  function renderPrices() {
+    const { prices, series } = groups();
+    const el = $('#prices');
+    if (market.status === 'loading') {
+      el.innerHTML = `<section class="strip" aria-label="Prices" aria-busy="true">${ORDER.map((k, i) => `<div class="cell${i ? '' : ' lead'}"><span class="sk" style="width:60%;height:14px"></span><span class="sk" style="width:70%;height:${i ? 28 : 36}px"></span><span class="sk" style="width:80%;height:14px"></span></div>`).join('')}</section>`;
+      return;
+    }
+    if (!market.data) { el.innerHTML = `<section class="card" aria-label="Prices"><p class="sub">No market data could be read. Retry once the backend is reachable.</p></section>`; return; }
+    if (!series.length) { el.innerHTML = `<section class="card" aria-label="Prices"><h2>No imported market observations yet</h2><p class="sub">Prices, history and sales appear here after the first data import.</p></section>`; return; }
+    if (!prices.length) { el.innerHTML = ''; return; }
+    const cells = prices.map((s, i) => {
+      const t = s.ticker, key = t.seriesKey, canPick = chartable(s), stale = ageDays(t.observedDate) > STALE_DAYS;
+      const chg = t.changeAbs == null ? '<span class="chg neutral">No previous value</span>'
+        : `<span class="chg ${meaning(key, t.changeAbs)}">${arrow(t.changeAbs)} ${t.changePct != null ? signed(t.changePct, (v) => nf(v, 2, 2)) + '%' : signed(t.changeAbs, (v) => nf(v, 4))}</span>`;
+      const when = `<span class="when${stale ? ' stale' : ''}" title="${esc(t.source)} · ${ageText(t.observedDate)}">${stale ? I.clock : ''}<time datetime="${t.observedDate}">${dShort(t.observedDate)}</time></span>`;
+      const body = `<span class="cell-name">${esc(t.label)}</span><span class="cell-price"><span class="num">${priceText(t)}</span><span class="unit">${esc(unitText(t))}</span></span><span class="cell-foot">${chg}${when}</span>`;
+      const cls = `cell${i === 0 && key === 'SGP_MGO_OBSERVED' ? ' lead' : ''}`;
+      return canPick ? `<button type="button" class="${cls}" data-sel="${key}" aria-pressed="${S.sel === key}" aria-label="${esc(t.label)} ${priceText(t)} ${esc(unitText(t))}, show history">${body}</button>` : `<div class="${cls}">${body}</div>`;
+    }).join('');
+    const unverified = prices.filter((s) => s.ticker.unit === 'source-defined').map((s) => s.ticker.label.replace(/ futures$/, ''));
+    const staleOnes = prices.filter((s) => ageDays(s.ticker.observedDate) > STALE_DAYS);
+    const notes = ['<b class="ease">Green</b> lowers cost for a fuel buyer, <b class="pressure">red</b> raises it, grey has no direct effect. Each change is against that price’s previous stored value.'];
+    if (staleOnes.length) notes.push(`<span class="stale">Clock</span>: older than ${STALE_DAYS} days.`);
+    if (unverified.length) notes.push(`${esc(unverified.join(' and '))}: physical unit and contract not verified, so no conversion is applied.`);
+    el.innerHTML = `<section aria-label="Prices" style="display:flex;flex-direction:column;gap:8px"><div class="strip">${cells}</div><p class="strip-note">${notes.join(' ')}</p></section>`;
+  }
+
+  // ---- history chart ----
+  const chartList = () => groups().prices.filter(chartable);
+  const selected = () => { const l = chartList(); return l.find((s) => s.ticker.seriesKey === S.sel) || l[0]; };
+  const windowRows = (s) => {
+    const end = utc(s.ticker.observedDate), start = end - (S.range - 1) * DAY; // calendar days, missing days stay missing
+    return { start, end, rows: s.history.filter(validRow).filter((r) => utc(r.date) >= start && utc(r.date) <= end).sort((a, b) => a.date.localeCompare(b.date)) };
+  };
+  function renderHistory() {
+    const el = $('#history'), s = selected();
+    // With nothing stored, the empty notice above already says so; the forecast and plans keep the row.
+    const nothingStored = market.status !== 'loading' && !groups().series.length;
+    el.style.display = nothingStored ? 'none' : '';
+    $('#main-row').style.gridTemplateColumns = nothingStored ? '1fr' : '';
+    if (nothingStored) return;
+    if (market.status === 'loading') { el.innerHTML = `<h2 id="history-h">Price history</h2><span class="sk" style="height:280px;margin-top:16px"></span>`; return; }
+    if (!s) { el.innerHTML = `<h2 id="history-h">Price history</h2><p class="sub">History appears once a price has two or more stored observations.</p>`; return; }
+    const t = s.ticker, isMgo = t.seriesKey === 'SGP_MGO_OBSERVED', { rows } = windowRows(s), f = isMgo ? forecastFor(S.horizon) : null;
+    const first = rows[0], last = rows.at(-1), delta = rows.length > 1 ? last.value - first.value : 0, pct = rows.length > 1 && first.value ? delta / first.value * 100 : 0;
+    const d = priceDigits(t) === 4 ? 2 : 0;
+    el.innerHTML = `
+      <div class="card-head">
+        <div><h2 id="history-h">${esc(t.label)}${isMgo ? '' : ` <button type="button" class="link-btn" data-sel="SGP_MGO_OBSERVED" style="font-size:13px;font-weight:500;margin-left:8px">Back to MGO</button>`}</h2>
+          <p class="sub">Quote ${dDay(t.observedDate)} · <span class="${ageDays(t.observedDate) > STALE_DAYS ? 'stale' : ''}">${ageText(t.observedDate)}</span> · ${esc(t.source)}${t.unit === 'source-defined' ? ' · unit not verified, no conversion applied' : ''}</p></div>
+        <div class="seg" role="group" aria-label="History length">${[15, 30, 60].map((n) => `<button type="button" data-range="${n}" aria-pressed="${S.range === n}">${n} days</button>`).join('')}</div>
+      </div>
+      <div class="range-line">
+        <span class="${meaning(t.seriesKey, delta)}" style="font-weight:500">${rows.length > 1 ? `${arrow(delta)} ${signed(pct, (v) => nf(v, 1, 1))}% over the ${S.range} days to ${dShort(t.observedDate)} · ${nf(first.value, d, d)} → ${nf(last.value, d, d)}` : 'One stored value in this range'}</span>
+        <span class="legend"><span><svg width="18" height="4" aria-hidden="true"><line x1="0" y1="2" x2="18" y2="2" stroke="${isMgo ? '#eadfc9' : '#c5bba7'}" stroke-width="2"/></svg>Stored values</span>${f ? `<span><svg width="18" height="4" aria-hidden="true"><line x1="0" y1="2" x2="18" y2="2" stroke="#eadfc9" stroke-width="2" stroke-dasharray="4 3"/></svg>${S.horizon}-day forecast</span><span><svg width="12" height="10" aria-hidden="true"><rect width="12" height="10" rx="2" fill="#eadfc9" fill-opacity=".18"/></svg>Range</span>` : ''}</span>
+      </div>
+      <div class="chart" id="chart" tabindex="0" role="img"></div>
+      <div class="chart-foot"><span>${rows.length} stored values · ${rows.length ? `${dShort(rows[0].date)} – ${dShort(last.date)}` : 'none in this range'}</span>
+        <details><summary>Recent values</summary><table class="recent"><thead><tr><th>Date</th><th class="num">Value (${esc(unitText(t))})</th></tr></thead><tbody>${rows.slice(-7).reverse().map((r) => `<tr><td>${r.date}</td><td class="num">${priceText(t, r.value)}</td></tr>`).join('')}</tbody></table></details>
+      </div>`;
+    drawChart();
+  }
+
+  function niceTicks(min, max, count = 4) {
+    if (max === min) max = min + 1;
+    const raw = (max - min) / count, mag = 10 ** Math.floor(Math.log10(raw));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((x) => x >= raw);
+    const lo = Math.floor(min / step) * step; let hi = Math.ceil(max / step) * step; if (hi <= max) hi += step;
+    const out = []; for (let v = lo; v <= hi + step / 2; v += step) out.push(+v.toFixed(8));
+    return { ticks: out, step };
+  }
+  function drawChart() {
+    const el = $('#chart'); if (!el) return;
+    const s = selected(), t = s.ticker, isMgo = t.seriesKey === 'SGP_MGO_OBSERVED', { start, end, rows } = windowRows(s);
+    const f = isMgo ? forecastFor(S.horizon) : null;
+    const W = el.clientWidth, H = el.clientHeight, phone = W < 520;
+    const L = phone ? 44 : 56, R = f ? (phone ? 64 : 92) : (phone ? 44 : 64), T = 10, B = 26, pw = W - L - R, ph = H - T - B;
+    const t1 = f ? utc(f.target_date) : end;
+    const vals = rows.map((r) => r.value).concat(f ? [f.low, f.high, f.forecast, f.anchor_price] : []);
+    const { ticks, step } = niceTicks(Math.min(...vals), Math.max(...vals));
+    const y0 = ticks[0], y1 = ticks.at(-1);
+    const X = (ts) => L + (ts - start) / (t1 - start || 1) * pw, Y = (v) => T + (1 - (v - y0) / (y1 - y0)) * ph;
+    const color = isMgo ? '#eadfc9' : '#c5bba7', tickDec = step < 1 ? 2 : 0;
+    let g = '';
+    for (const v of ticks) g += `<line x1="${L}" x2="${L + pw}" y1="${Y(v)}" y2="${Y(v)}" stroke="#2a2926"/><text x="${L - 10}" y="${Y(v) + 4}" text-anchor="end" font-size="12" fill="#b5ac9b">${nf(v, tickDec, tickDec)}</text>`;
+    const days = (t1 - start) / DAY, cap = Math.max(2, Math.floor(pw / 74));
+    const xStep = [1, 2, 3, 5, 7, 10, 14, 21, 30].find((k) => days / k + 1 <= cap) || 30;
+    for (let ts = start; ts <= t1 + 1; ts += xStep * DAY) {
+      const x = X(ts), anchor = x - L < 24 ? 'start' : L + pw - x < 24 ? 'end' : 'middle';
+      g += `<text x="${x}" y="${T + ph + 18}" text-anchor="${anchor}" font-size="12" fill="#b5ac9b">${dShort(new Date(ts).toISOString().slice(0, 10))}</text>`;
+    }
+    if (f) {
+      const xa = X(utc(f.anchor_quote_date)), ya = Y(f.anchor_price), xt = X(t1);
+      g += `<line x1="${xa}" x2="${xa}" y1="${T}" y2="${T + ph}" stroke="#4a4740" stroke-dasharray="3 3"/>`;
+      g += `<polygon points="${xa},${ya} ${xt},${Y(f.high)} ${xt},${Y(f.low)}" fill="#eadfc9" fill-opacity=".14"/>`;
+      g += `<line x1="${xa}" y1="${ya}" x2="${xt}" y2="${Y(f.forecast)}" stroke="#eadfc9" stroke-width="2" stroke-dasharray="5 4"/>`;
+      g += `<text x="${xt + 8}" y="${Y(f.forecast) + 4}" font-size="12" font-weight="600" fill="#f0e6d2">${nf(f.forecast, 0)}</text>`;
+      g += `<text x="${xt + 8}" y="${Y(f.high) + 4}" font-size="12" fill="#b5ac9b">${nf(f.high, 0)}</text><text x="${xt + 8}" y="${Y(f.low) + 4}" font-size="12" fill="#b5ac9b">${nf(f.low, 0)}</text>`;
+    }
+    const path = rows.map((r, i) => `${i ? 'L' : 'M'}${X(utc(r.date)).toFixed(1)} ${Y(r.value).toFixed(1)}`).join(' ');
+    g += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
+    if (rows.length < 3) g += rows.map((r) => `<circle cx="${X(utc(r.date))}" cy="${Y(r.value)}" r="3.5" fill="${color}"/>`).join('');
+    const lp = rows.at(-1);
+    if (lp) {
+      g += `<circle cx="${X(utc(lp.date))}" cy="${Y(lp.value)}" r="4" fill="${color}" stroke="#1a1b1c" stroke-width="3"/>`;
+      if (!f) g += `<text x="${X(utc(lp.date)) + 10}" y="${Y(lp.value) + 4}" font-size="12" font-weight="600" fill="#f0e6d2">${priceText(t, lp.value).replace('$', '')}</text>`;
+    }
+    const h = rows[S.hover];
+    if (h) g += `<line x1="${X(utc(h.date))}" x2="${X(utc(h.date))}" y1="${T}" y2="${T + ph}" stroke="#8f8878"/><circle cx="${X(utc(h.date))}" cy="${Y(h.value)}" r="5" fill="${color}" stroke="#1a1b1c" stroke-width="3"/>`;
+    el.innerHTML = `<svg width="${W}" height="${H}" aria-hidden="true">${g}</svg>`;
+    el.setAttribute('aria-label', `${t.label}: ${rows.length} stored values from ${rows[0] ? dLong(rows[0].date) : '—'} to ${lp ? dLong(lp.date) : '—'}${f ? `, with the ${S.horizon}-day forecast range to ${dLong(f.target_date)}` : ''}. Use the left and right arrow keys to read each value.`);
+    if (h) {
+      const all = s.history.filter(validRow).sort((a, b) => a.date.localeCompare(b.date)), prev = all[all.findIndex((r) => r.date === h.date) - 1];
+      const dv = prev ? h.value - prev.value : null;
+      const tip = document.createElement('div'); tip.className = 'tip';
+      tip.innerHTML = `${dDay(h.date)} ${new Date(utc(h.date)).getUTCFullYear()}<strong>${priceText(t, h.value)} <span class="unit">${esc(unitText(t))}</span></strong>${dv == null ? 'First stored value' : `<span class="${meaning(t.seriesKey, dv)}">${arrow(dv)} ${signed(dv / prev.value * 100, (v) => nf(v, 2, 2))}%</span> vs previous value`}`;
+      el.appendChild(tip);
+      const x = X(utc(h.date)), w = tip.offsetWidth;
+      tip.style.left = (x + 14 + w > W ? x - 14 - w : x + 14) + 'px';
+    }
+    el.onmousemove = (e) => { const r = el.getBoundingClientRect(), mx = e.clientX - r.left; let bi = 0, bd = Infinity; rows.forEach((row, i) => { const dd = Math.abs(X(utc(row.date)) - mx); if (dd < bd) { bd = dd; bi = i; } }); if (bi !== S.hover) { S.hover = bi; drawChart(); } };
+    el.onmouseleave = () => { S.hover = -1; drawChart(); };
+    el.onblur = el.onmouseleave;
+    el.onkeydown = (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Escape') return;
+      e.preventDefault();
+      S.hover = e.key === 'Escape' ? -1 : Math.max(0, Math.min(rows.length - 1, (S.hover < 0 ? rows.length : S.hover) + (e.key === 'ArrowLeft' ? -1 : 1)));
+      drawChart();
+    };
+  }
+
+  // ---- market forecast (/api/v1/forecast); the purchase estimate has its own provider and horizon ----
+  function renderForecast() {
+    const el = $('#forecast'), f = forecastFor(S.horizon);
+    const seg = `<div class="seg" role="group" aria-label="Forecast horizon">${[7, 14, 30].map((h) => `<button type="button" data-horizon="${h}" aria-pressed="${S.horizon === h}">${h} days</button>`).join('')}</div>`;
+    const head = `<div class="card-head"><h2 id="forecast-h">MGO forecast</h2>${seg}</div>`;
+    if (fcState === 'loading') { el.innerHTML = head + `<div aria-busy="true" style="margin-top:14px;display:flex;flex-direction:column;gap:10px"><span class="sk" style="width:60%;height:14px"></span><span class="sk" style="width:45%;height:30px"></span><span class="sk" style="height:10px;margin-top:10px"></span><span class="sr" role="status">Loading forecast…</span></div>`; return; }
+    if (fcState === 'error') { el.innerHTML = head + `<div class="center" role="alert"><strong>Couldn't load the forecast</strong>Could not reach the forecast service. Please retry.<button class="btn" type="button" data-act="fc-retry">Retry</button></div>`; return; }
+    if (fcState === 'unavailable') { el.innerHTML = head + `<div class="center" role="status"><strong>Forecast unavailable</strong>Today's forecast run did not complete.<span>The last successful forecast, from 5 Oct 2026, is too old to show as current.</span><button class="btn" type="button" data-act="fc-retry">Retry forecast</button></div>`; return; }
+    if (fcState === 'disconnected') { el.innerHTML = head + `<div class="center" role="status"><strong>Forecast unavailable</strong>The forecast service is not connected.</div>`; return; }
+    const dir = direction(f), delta = f.forecast - f.anchor_price, pct = delta / f.anchor_price * 100;
+    const vs = dir === 'flat' ? `<p class="fc-vs neutral">— About the same as the ${dShort(f.anchor_quote_date)} quote of $${nf(f.anchor_price, 2, 2)}</p>`
+      : `<p class="fc-vs ${dir === 'up' ? 'pressure' : 'ease'}">${arrow(delta)} ${signed(delta, (v) => '$' + nf(v, 0))} (${signed(pct, (v) => nf(v, 1, 1))}%) vs the ${dShort(f.anchor_quote_date)} quote of $${nf(f.anchor_price, 2, 2)}</p>`;
+    const lo = Math.min(f.low, f.anchor_price), hi = Math.max(f.high, f.anchor_price), at = (v) => ((v - lo) / (hi - lo || 1) * 100).toFixed(1) + '%';
+    const iv = f.interval;
+    const coverage = iv.nominal_coverage == null ? 'Experimental range. Its coverage has not been measured.'
+      : `Target coverage ${Math.round(iv.nominal_coverage * 100)}%. ${iv.empirical_coverage != null && iv.evaluation_rows > 0 ? `Observed ${nf(iv.empirical_coverage * 100, 1, 1)}% across ${iv.evaluation_rows} past forecasts.` : 'Observed coverage not measured.'}`;
+    el.innerHTML = head + `
+      <p class="fc-target">Target ${dDay(f.target_date)} · ${S.horizon} days after the ${dShort(f.anchor_quote_date)} quote</p>
+      <div class="fc-figure"><span class="num">$${nf(f.forecast, 0)}</span><span class="unit">/MT, central estimate</span></div>
+      ${vs}
+      <div class="fc-band" role="img" aria-label="Range ${nf(f.low, 0)} to ${nf(f.high, 0)} US dollars per tonne, central ${nf(f.forecast, 0)}, last quote ${nf(f.anchor_price, 2)}">
+        <div class="fc-band-track"><span class="fc-band-fill" style="left:${at(f.low)};right:calc(100% - ${at(f.high)})"></span><span class="fc-band-quote" style="left:${at(f.anchor_price)}" title="Last quote"></span><span class="fc-band-mid" style="left:${at(f.forecast)}"></span></div>
+        <div class="fc-band-ends"><span>Low <b>$${nf(f.low, 0)}</b></span><span>High <b>$${nf(f.high, 0)}</b></span></div>
+      </div>
+      ${f.evidence ? `<span class="fc-evidence">Evidence: ${esc({ supported: 'supported', weak: 'weak', no_edge: 'no edge' }[f.evidence] || f.evidence)}</span>` : ''}
+      <p class="fc-note">${coverage}${f.evidence === 'no_edge' ? ' No measurable edge over carrying the last price forward.' : ''}</p>
+      <p class="fc-foot"><span>Published ${new Date(f.published_at).toLocaleString('en-SG', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span><button class="link-btn" type="button" data-act="fc-retry">Refresh</button><a href="#forecast-details" data-act="open-details">How it was made</a></p>`;
+  }
+
+  // ---- plans (gated by plan access, links into the purchase estimate) ----
+  function renderPlans() {
+    const el = $('#plans');
+    el.style.display = access.can_read_plans ? '' : 'none';
+    if (!access.can_read_plans) return;
+    const rows = plans.slice().sort((a, b) => a.days_remaining - b.days_remaining).slice(0, 3);
+    const create = access.can_write_plans ? `<a class="btn" href="#/purchase-plans?new=1">Create plan</a>` : '';
+    el.innerHTML = `<div class="card-head"><h2 id="plans-h">Your plans</h2><a href="#/purchase-plans" style="font-size:13px">All plans (${plans.length})</a></div>
+      ${rows.length ? `<div class="plans">${rows.map((p) => `<a class="plan" href="#/purchase-plans/recommendation?plan_id=${encodeURIComponent(p.plan_id)}">
+        <span class="plan-qty num">${nf(p.quantity_mt, 0)} MT</span><span class="plan-action">${esc(ACTIONS[p.action] || 'Estimate ready')}</span>
+        <span class="plan-due${p.days_remaining < 0 ? ' over' : ''}">${p.days_remaining < 0 ? `Overdue by ${-p.days_remaining} day${p.days_remaining === -1 ? '' : 's'}` : p.days_remaining === 0 ? 'Due today' : `Due ${dDay(p.purchase_deadline)} · ${p.days_remaining} day${p.days_remaining === 1 ? '' : 's'} left`}</span><span class="plan-open">Open estimate →</span></a>`).join('')}</div>`
+      : `<p class="sub" style="margin-top:10px">No purchase plans yet. A plan's estimate uses this forecast.</p>`}
+      ${create ? `<div class="card-actions">${create}</div>` : ''}`;
+  }
+
+  // ---- monthly bunker sales ----
+  function renderSales(rowsOnly) {
+    const el = $('#sales'), { sales } = groups();
+    el.style.display = sales.length ? '' : 'none';
+    if (!sales.length) return;
+    const q = S.search.trim().toLowerCase();
+    const filtered = sales.filter((s) => fuelName(s.ticker.label).toLowerCase().includes(q));
+    const visible = S.showAll || q ? filtered : filtered.slice(0, 6);
+    const max = Math.max(0, ...sales.map((s) => s.ticker.value));
+    const months = new Set(sales.map((s) => s.ticker.observedDate.slice(0, 7))), units = new Set(sales.map((s) => s.ticker.unit));
+    const oneMonth = months.size === 1, oneUnit = units.size === 1;
+    const rows = visible.map(({ ticker: t }) => { const name = fuelName(t.label); return `<div class="sale${isMgoFuel(name) ? ' mgo' : ''}">
+      <span class="sale-name" title="${esc(name)}">${esc(name)}</span>
+      <span class="sale-bar" aria-hidden="true"><span style="width:${max > 0 ? Math.max(t.value / max * 100, t.value > 0 ? 1 : 0) : 0}%"></span></span>
+      <span class="sale-val num">${nf(t.value, 2)}${oneMonth && oneUnit ? '' : `<small>${oneUnit ? '' : esc(t.unit) + ' · '}${oneMonth ? '' : dMonth(t.observedDate)}</small>`}</span></div>`; }).join('')
+      + (q && !visible.length ? `<p class="empty-row">No fuel categories match “${esc(S.search)}”.</p>` : '');
+    const foot = `<span>${q ? `${visible.length} of ${sales.length} categories match` : `${visible.length} of ${sales.length} categories`} · each month's figures describe that month, not the release date</span>${!q && sales.length > 6 ? `<button class="link-btn" type="button" data-act="sales-all" aria-expanded="${S.showAll}">${S.showAll ? 'Show fewer' : `View all ${sales.length}`}</button>` : ''}`;
+    if (rowsOnly) { $('#sales-rows').innerHTML = rows; $('#sales-foot').innerHTML = foot; return; }
+    const unit = oneUnit ? [...units][0].replace(/^thousand tonnes/, 'Thousand tonnes') : 'Units as published';
+    el.innerHTML = `<div class="card-head"><div><h2 id="sales-h">Singapore bunker sales${oneMonth ? ' · ' + dMonth(sales[0].ticker.observedDate) : ''}</h2>
+        <p class="sub">${esc(unit)}. Marine gas oil categories in beige. Categories aren't added together.</p></div>
+        <label class="search">${I.search}<span class="sr">Filter fuel categories</span><input type="search" id="sales-search" placeholder="Find a fuel" value="${esc(S.search)}"></label></div>
+      <div class="sales" id="sales-rows">${rows}</div><div class="sales-foot" id="sales-foot">${foot}</div>`;
+  }
+
+  // ---- news context (GDELT) ----
+  function renderNews() {
+    const el = $('#news'), { news } = groups();
+    el.style.display = news.length ? '' : 'none';
+    if (!news.length) return;
+    const count = news.find((s) => s.ticker.seriesKey === 'GDELT_ARTICLE_COUNT'), tone = news.find((s) => s.ticker.seriesKey === 'GDELT_AVERAGE_TONE');
+    const last14 = (s) => s.history.filter(validRow).sort((a, b) => a.date.localeCompare(b.date)).slice(-14);
+    const parts = [];
+    if (count) {
+      const h = last14(count), prior = h.slice(0, -1).map((r) => r.value).sort((a, b) => a - b), med = prior.length ? prior[Math.floor(prior.length / 2)] : null;
+      if (med) parts.push(count.ticker.value > med * 1.15 ? `Coverage above its ${h.length - 1}-day median` : count.ticker.value < med * 0.85 ? `Coverage below its ${h.length - 1}-day median` : `Coverage near its ${h.length - 1}-day median`);
+    }
+    if (tone) { const v = tone.ticker.value; parts.push(v <= -2 ? 'tone negative' : v < -0.5 ? 'tone slightly negative' : v <= 0.5 ? 'tone neutral' : v < 2 ? 'tone slightly positive' : 'tone positive'); }
+    const bars = (s) => { const h = last14(s), m = Math.max(...h.map((r) => r.value)) || 1, w = 100 / h.length;
+      return `<svg class="mini" viewBox="0 0 100 48" preserveAspectRatio="none" role="img" aria-label="Daily article count, ${dShort(h[0].date)} to ${dShort(h.at(-1).date)}">${h.map((r, i) => `<rect x="${(i * w + w * 0.15).toFixed(2)}" y="${(48 - r.value / m * 46).toFixed(2)}" width="${(w * 0.7).toFixed(2)}" height="${(r.value / m * 46).toFixed(2)}" fill="${i === h.length - 1 ? '#c5bba7' : '#4f4b44'}"/>`).join('')}</svg><div class="mini-axis"><span>${dShort(h[0].date)}</span><span>${dShort(h.at(-1).date)}</span></div>`; };
+    const line = (s) => { const h = last14(s), lo = Math.min(0, ...h.map((r) => r.value)), hi = Math.max(0, ...h.map((r) => r.value)), Y = (v) => 2 + (hi - v) / (hi - lo || 1) * 44;
+      return `<svg class="mini" viewBox="0 0 100 48" preserveAspectRatio="none" role="img" aria-label="Daily average tone, ${dShort(h[0].date)} to ${dShort(h.at(-1).date)}"><line x1="0" x2="100" y1="${Y(0)}" y2="${Y(0)}" stroke="#4a4740" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/><path d="${h.map((r, i) => `${i ? 'L' : 'M'}${(i / (h.length - 1) * 100).toFixed(2)} ${Y(r.value).toFixed(2)}`).join(' ')}" fill="none" stroke="#c5bba7" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg><div class="mini-axis"><span>${dShort(h[0].date)}</span><span>0 at the dashed line</span></div>`; };
+    const metric = (s, label, viz, digits) => `<div><div class="metric-label">${label} · ${dShort(s.ticker.observedDate)}</div><div class="metric-val num" title="${esc(String(s.ticker.value))} ${esc(s.ticker.unit)}">${signed(s.ticker.value, (v) => nf(v, digits, digits)).replace(/^\+/, '')}</div>${s.history.length > 1 ? viz(s) : ''}</div>`;
+    el.innerHTML = `<h2 id="news-h">News context</h2>${parts.length ? `<p class="news-sum">${parts.join(' · ').replace(/^./, (c) => c.toUpperCase())}</p>` : ''}
+      <div class="news-metrics">${count ? metric(count, 'Oil and shipping articles', bars, 0) : ''}${tone ? metric(tone, 'Average news tone', line, 2) : ''}</div>
+      <p class="caveat">Context, not a price signal. Tone measures news language, not oil-price direction, and the latest day's count may be partial. Source: GDELT.</p>`;
+  }
+
+  // ---- forecast details: provenance, range quality, drivers ----
+  function renderDetails() {
+    const box = $('#forecast-details'), f = forecastFor(S.horizon);
+    box.style.display = f ? '' : 'none';
+    if (!f) return;
+    const iv = f.interval, kv = (k, v) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`;
+    const ts = (v) => new Date(v).toLocaleString('en-SG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const drivers = (f.top_drivers || []).slice().sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+    const total = drivers.reduce((s, d) => s + Math.abs(d.contribution || 0), 0), maxC = Math.abs(drivers[0]?.contribution || 1) || 1;
+    const label = (k) => DRIVER_LABELS[k] || String(k).replace(/_lag\d+$/, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    const driverHtml = !drivers.length ? '' : total < 1e-9 ? '<p class="prose">No single market signal is moving the forecast right now; the model shows no edge at this horizon.</p>'
+      : drivers.map((d) => { const w = Math.max(6, Math.round(Math.abs(d.contribution) / maxC * 100)) / 2, up = d.contribution > 0;
+        return `<div class="driver"><span class="driver-name">${esc(label(d.feature))}</span><span class="driver-bar" aria-hidden="true"><span style="left:${up ? 50 : 50 - w}%;width:${w}%"></span></span><span class="driver-dir">${up ? 'pushes up' : 'pushes down'}</span></div>`; }).join('')
+        + '<p class="prose">Relative pull of each signal, biggest first. Left of the line pushes the forecast down, right pushes it up. Not a guarantee of direction.</p>';
+    $('#details-body').innerHTML = `<div class="details-grid">
+      <div><h3>Where it comes from</h3>${kv('Forecast origin', dLong(f.forecast_origin_date))}${kv('Quote used', `${dLong(f.anchor_quote_date)} · $${nf(f.anchor_price, 2, 2)}`)}${kv('Published', ts(f.published_at))}${kv('News window (UTC)', `${f.news_window_start.slice(0, 10)} to ${f.news_window_end.slice(0, 10)}, end exclusive`)}
+        ${Object.entries(f.source_dates || {}).map(([k, v]) => kv(`Latest ${k.replace('_', ' ')}`, v ? dLong(v) : 'unavailable')).join('')}
+        ${kv('Run', `<span class="mono">${esc(f.run_id)}</span>`)}${kv('Model', `<span class="mono">${esc(f.model_version)}</span>`)}
+        <p class="prose">Source observations can predate the forecast origin. This is not a live fuel quote.</p></div>
+      <div><h3>How sure the range is</h3>${kv('Target coverage', iv.nominal_coverage == null ? 'not set (experimental)' : Math.round(iv.nominal_coverage * 100) + '%')}${kv('Observed coverage', iv.empirical_coverage != null && iv.evaluation_rows > 0 ? `${nf(iv.empirical_coverage * 100, 1, 1)}% across ${iv.evaluation_rows}` : 'not measured')}
+        ${iv.baseline_coverage != null ? kv('Persistence baseline', nf(iv.baseline_coverage * 100, 1, 1) + '%') : ''}${iv.mean_width != null && iv.baseline_mean_width != null ? kv('Mean width', `$${nf(iv.mean_width, 2, 2)}/MT vs $${nf(iv.baseline_mean_width, 2, 2)}`) : ''}
+        ${iv.evaluation_rows > 0 ? `<p class="prose">${esc(iv.evaluation_scope)}</p>` : ''}<p class="prose">${esc(iv.limitations)}</p>
+        ${f.synthetic ? '<p class="prose">Illustrative point forecast. Accuracy has not been measured.</p>' : f.mae_skill_vs_persistence != null ? `<p class="prose">About ${Math.round(f.mae_skill_vs_persistence * 100)}% more accurate than carrying the last price forward.</p>` : ''}</div>
+      <div><h3>What's moving the forecast</h3>${driverHtml || '<p class="prose">The model did not report its drivers for this run.</p>'}</div></div>`;
+  }
+
+  function render() { renderTop(); renderPrices(); renderHistory(); renderForecast(); renderPlans(); renderSales(); renderNews(); renderDetails(); }
+
+  // ---- events ----
+  async function refresh() {
+    if (market.refreshing) return;
+    market.refreshing = true; renderTop();
+    await new Promise((r) => setTimeout(r, 700));
+    market.refreshing = false; if (market.data) { market.error = null; market.checkedAt = new Date(); }
+    render();
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sel],[data-range],[data-horizon],[data-act]'); if (!b) return;
+    if (b.dataset.sel) { S.sel = b.dataset.sel; S.hover = -1; renderPrices(); renderHistory(); }
+    else if (b.dataset.range) { S.range = +b.dataset.range; S.hover = -1; renderHistory(); }
+    else if (b.dataset.horizon) { S.horizon = +b.dataset.horizon; renderTop(); renderHistory(); renderForecast(); renderDetails(); }
+    else if (b.dataset.act === 'refresh') refresh();
+    else if (b.dataset.act === 'fc-retry') renderForecast();
+    else if (b.dataset.act === 'sales-all') { S.showAll = !S.showAll; renderSales(true); }
+    else if (b.dataset.act === 'open-details') $('#forecast-details').open = true;
+  });
+  $('#refresh').addEventListener('click', refresh);
+  document.addEventListener('input', (e) => { if (e.target.id === 'sales-search') { S.search = e.target.value; renderSales(true); } });
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawChart, 80); });
+  setInterval(() => { if (document.visibilityState === 'visible' && market.data) { market.checkedAt = new Date(); renderTop(); } }, 60000);
+  render();
+})();
+</script>
+</body>
+</html>

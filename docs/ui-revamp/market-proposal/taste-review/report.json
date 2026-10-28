@@ -1,0 +1,1823 @@
+{
+ "url": "docs/ui-revamp/market-proposal/market-proposal.html",
+ "at": "2026-10-28T06:06:21.788Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.59,
+    0.55
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 1537,
+     "screens": 1.7,
+     "words": 443,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 14,
+     "sections": 6,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Market overview",
+     "words": 2,
+     "chars": 15,
+     "lines": 1,
+     "size": 24,
+     "vw": 1.7,
+     "font": "Segoe UI",
+     "weight": 600,
+     "tracking": -0.01,
+     "leading": 1.33,
+     "top": 84,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "Market overview",
+     "words": 2,
+     "lines": 1,
+     "size": 24,
+     "font": "Segoe UI"
+    },
+    "headings": [
+     {
+      "text": "$1,351.50",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.01,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.09,
+      "top": 221,
+      "tag": "span",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 1,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": null,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Segoe UI",
+       "share": 0.99,
+       "mono": false
+      },
+      {
+       "family": "Consolas",
+       "share": 0.01,
+       "mono": true
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      22,
+      24,
+      26,
+      30
+     ],
+     "sizeCount": 10,
+     "notLoaded": [],
+     "body": {
+      "font": "Segoe UI",
+      "size": 12,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 8.7
+     },
+     "measureChars": 207,
+     "max": {
+      "size": 30,
+      "vw": 2.1,
+      "font": "Segoe UI",
+      "text": "$1,351.50"
+     },
+     "monoShare": 0.01,
+     "monoProseShare": 0.01,
+     "monoFamilies": [
+      "Consolas"
+     ],
+     "monoSamples": [
+      "run-2026-10-26-0105",
+      "ridge-sha256-3f9a0c41d2"
+     ],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.01,
+     "centerShare": 0.02,
+     "smallText": 14
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#0c0d0e",
+     "bodyBgHsl": {
+      "h": 210,
+      "s": 0.08,
+      "l": 0.05
+     },
+     "dark": true,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#b5ac9b",
+       "share": 0.52
+      },
+      {
+       "color": "#c5bba7",
+       "share": 0.21
+      },
+      {
+       "color": "#f0e6d2",
+       "share": 0.2
+      },
+      {
+       "color": "#eadfc9",
+       "share": 0.03
+      },
+      {
+       "color": "#f2849e",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#eadfc9",
+      "hsl": {
+       "h": 40,
+       "s": 0.44,
+       "l": 0.85
+      },
+      "fg": "#0c0d0e"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 5,
+     "inHero": 5,
+     "radius": 6,
+     "height": 34,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Straits Marine Buyer",
+      "Refresh",
+      "60 days",
+      "47 MT Monitor Due Thu 5 Nov · 8 days lef",
+      "Create plan"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 25,
+     "hairlineSamples": [
+      "header.shell 1440px",
+      "div.chart-foot 822px",
+      "p.fc-foot 318px",
+      "a.plan 318px",
+      "div.sale 702px"
+     ],
+     "outlinedBoxes": 6,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 6,
+     "boxRadius": 8,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "svg",
+      "ratio": 0.18
+     }
+    ],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 60,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": []
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 1537,
+    "margins": {
+     "left": 100,
+     "right": 113
+    },
+    "sections": [
+     {
+      "sel": "div#prices",
+      "tag": "div",
+      "top": 180,
+      "height": 158,
+      "words": 94,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "$1,351.50",
+       "size": 30,
+       "tag": "span"
+      },
+      "left": 100,
+      "right": 101,
+      "textLeft": 100,
+      "textRight": 117,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div#main-row.main-row",
+      "tag": "div",
+      "top": 354,
+      "height": 568,
+      "words": 151,
+      "media": 1,
+      "middle": 58,
+      "heading": {
+       "text": "$1,352",
+       "size": 26,
+       "tag": "span"
+      },
+      "left": 121,
+      "right": 121,
+      "textLeft": 121,
+      "textRight": 121,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.lower-row",
+      "tag": "div",
+      "top": 938,
+      "height": 437,
+      "words": 130,
+      "media": 0,
+      "middle": 67,
+      "heading": {
+       "text": "318",
+       "size": 22,
+       "tag": "div"
+      },
+      "left": 121,
+      "right": 121,
+      "textLeft": 121,
+      "textRight": 121,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Market overview",
+      "size": 24,
+      "top": 84,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 121,
+      "n": 3
+     },
+     {
+      "x": 100,
+      "n": 2
+     },
+     {
+      "x": 1001,
+      "n": 2
+     },
+     {
+      "x": 531,
+      "n": 1
+     },
+     {
+      "x": 881,
+      "n": 1
+     },
+     {
+      "x": 941,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 10,
+    "bodySize": 12,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0.08,
+    "voidBox": {
+     "x": 0,
+     "y": 780,
+     "w": 840,
+     "h": 120
+    }
+   },
+   "app": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "dark": true,
+    "ground": "#0c0d0e",
+    "sidebar": null,
+    "topbar": {
+     "h": 60
+    },
+    "canvas": {
+     "left": 100,
+     "right": 100
+    },
+    "hero": {
+     "text": "Market overview",
+     "words": 2,
+     "chars": 15,
+     "lines": 1,
+     "size": 24,
+     "vw": 1.7,
+     "font": "Segoe UI",
+     "weight": 600,
+     "tracking": -0.01,
+     "leading": 1.33,
+     "top": 84,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 3,
+    "layout": {
+     "panels": 6,
+     "firstScreen": 4,
+     "ragged": [
+      {
+       "diff": 121,
+       "top": 354
+      },
+      {
+       "diff": 138,
+       "top": 938
+      }
+     ],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 7,
+     "radii": [
+      [
+       8,
+       6
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 1,
+     "hues": 1,
+     "samples": [
+      {
+       "hue": 40,
+       "size": 30,
+       "radius": "50%"
+      }
+     ]
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 16,
+     "tabularShare": 1,
+     "kpiMax": 30
+    },
+    "rows": {
+     "count": 7,
+     "median": 33
+    },
+    "chartHues": 1,
+    "placeholders": [],
+    "type": {
+     "under13": 0.33,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      22,
+      24,
+      26,
+      30
+     ]
+    },
+    "title": {
+     "text": "Market overview",
+     "size": 24,
+     "top": 84
+    },
+    "colourShare": 0
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 3,
+   "filled": [
+    0.79,
+    0.83,
+    0.77
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 2271,
+     "screens": 2.2,
+     "words": 439,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 14,
+     "sections": 6,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Market overview",
+     "words": 2,
+     "chars": 15,
+     "lines": 1,
+     "size": 24,
+     "vw": 3.1,
+     "font": "Segoe UI",
+     "weight": 600,
+     "tracking": -0.01,
+     "leading": 1.33,
+     "top": 84,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "Market overview",
+     "words": 2,
+     "lines": 1,
+     "size": 24,
+     "font": "Segoe UI"
+    },
+    "headings": [
+     {
+      "text": "$1,351.50",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.01,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.17,
+      "top": 267,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "$1,352",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 26,
+      "vw": 3.4,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.23,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.1,
+      "top": 1113,
+      "tag": "span",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 2,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Segoe UI",
+       "share": 0.99,
+       "mono": false
+      },
+      {
+       "family": "Consolas",
+       "share": 0.01,
+       "mono": true
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      22,
+      24,
+      26,
+      30
+     ],
+     "sizeCount": 10,
+     "notLoaded": [],
+     "body": {
+      "font": "Segoe UI",
+      "size": 12,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 8.7
+     },
+     "measureChars": 120,
+     "max": {
+      "size": 30,
+      "vw": 3.9,
+      "font": "Segoe UI",
+      "text": "$1,351.50"
+     },
+     "monoShare": 0.01,
+     "monoProseShare": 0.01,
+     "monoFamilies": [
+      "Consolas"
+     ],
+     "monoSamples": [
+      "run-2026-10-26-0105",
+      "ridge-sha256-3f9a0c41d2"
+     ],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.01,
+     "centerShare": 0.02,
+     "smallText": 14
+    },
+    "eyebrows": [
+     {
+      "text": "Checked 01:13 am · re-reads every minute",
+      "above": "$1,351.50",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 13,
+      "top": 179
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#0c0d0e",
+     "bodyBgHsl": {
+      "h": 210,
+      "s": 0.08,
+      "l": 0.05
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#1a1b1c",
+       "top": 527,
+       "hsl": {
+        "h": 210,
+        "s": 0.04,
+        "l": 0.11
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#b5ac9b",
+       "share": 0.52
+      },
+      {
+       "color": "#c5bba7",
+       "share": 0.21
+      },
+      {
+       "color": "#f0e6d2",
+       "share": 0.2
+      },
+      {
+       "color": "#eadfc9",
+       "share": 0.03
+      },
+      {
+       "color": "#f2849e",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#eadfc9",
+      "hsl": {
+       "h": 40,
+       "s": 0.44,
+       "l": 0.85
+      },
+      "fg": "#0c0d0e"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 5,
+     "inHero": 3,
+     "radius": 6,
+     "height": 34,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Straits Marine Buyer",
+      "Refresh",
+      "60 days"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 26,
+     "hairlineSamples": [
+      "header.shell 768px",
+      "button.cell.lead 718px",
+      "div.chart-foot 678px",
+      "p.fc-foot 310px",
+      "a.plan 310px"
+     ],
+     "outlinedBoxes": 6,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 6,
+     "boxRadius": 8,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "svg",
+      "ratio": 0.24
+     }
+    ],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 60,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": []
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 2271,
+    "margins": {
+     "left": 24,
+     "right": 26
+    },
+    "sections": [
+     {
+      "sel": "div.title-row",
+      "tag": "div",
+      "top": 84,
+      "height": 126,
+      "words": 29,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Market overview",
+       "size": 24,
+       "tag": "h1"
+      },
+      "left": 24,
+      "right": 216,
+      "textLeft": 24,
+      "textRight": 216,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div#prices",
+      "tag": "div",
+      "top": 226,
+      "height": 285,
+      "words": 94,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "$1,351.50",
+       "size": 30,
+       "tag": "span"
+      },
+      "left": 24,
+      "right": 25,
+      "textLeft": 24,
+      "textRight": 43,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div#main-row.main-row",
+      "tag": "div",
+      "top": 527,
+      "height": 794,
+      "words": 159,
+      "media": 1,
+      "middle": 64,
+      "heading": {
+       "text": "Singapore MGO",
+       "size": 16,
+       "tag": "h2"
+      },
+      "left": 45,
+      "right": 0,
+      "textLeft": 45,
+      "textRight": -103,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.lower-row",
+      "tag": "div",
+      "top": 1337,
+      "height": 752,
+      "words": 130,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Singapore bunker sales · Sep 2026",
+       "size": 16,
+       "tag": "h2"
+      },
+      "left": 45,
+      "right": 45,
+      "textLeft": 45,
+      "textRight": 45,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Market overview",
+      "size": 24,
+      "top": 84,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 45,
+      "n": 6
+     },
+     {
+      "x": 24,
+      "n": 2
+     },
+     {
+      "x": 400,
+      "n": 1
+     },
+     {
+      "x": 413,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 10,
+    "bodySize": 12,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "dark": true,
+    "ground": "#0c0d0e",
+    "sidebar": null,
+    "topbar": {
+     "h": 60
+    },
+    "canvas": {
+     "left": 24,
+     "right": -103
+    },
+    "hero": {
+     "text": "Market overview",
+     "words": 2,
+     "chars": 15,
+     "lines": 1,
+     "size": 24,
+     "vw": 3.1,
+     "font": "Segoe UI",
+     "weight": 600,
+     "tracking": -0.01,
+     "leading": 1.33,
+     "top": 84,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 3,
+    "layout": {
+     "panels": 6,
+     "firstScreen": 2,
+     "ragged": [
+      {
+       "diff": 78,
+       "top": 990
+      }
+     ],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 7,
+     "radii": [
+      [
+       8,
+       6
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 1,
+     "hues": 1,
+     "samples": [
+      {
+       "hue": 40,
+       "size": 30,
+       "radius": "50%"
+      }
+     ]
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 16,
+     "tabularShare": 1,
+     "kpiMax": 30
+    },
+    "rows": {
+     "count": 7,
+     "median": 33
+    },
+    "chartHues": 1,
+    "placeholders": [],
+    "type": {
+     "under13": 0.33,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      22,
+      24,
+      26,
+      30
+     ]
+    },
+    "title": {
+     "text": "Market overview",
+     "size": 24,
+     "top": 84
+    },
+    "colourShare": 0.002
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 4,
+   "filled": [
+    0.85,
+    0.86,
+    0.86,
+    0.83
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 2787,
+     "screens": 3.3,
+     "words": 429,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 14,
+     "sections": 6,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Market overview",
+     "words": 2,
+     "chars": 15,
+     "lines": 1,
+     "size": 24,
+     "vw": 6.2,
+     "font": "Segoe UI",
+     "weight": 600,
+     "tracking": -0.01,
+     "leading": 1.33,
+     "top": 76,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "Market overview",
+     "words": 2,
+     "lines": 1,
+     "size": 24,
+     "font": "Segoe UI"
+    },
+    "headings": [
+     {
+      "text": "Market overview",
+      "words": 2,
+      "chars": 15,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.01,
+      "leading": 1.33,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 76,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "$1,351.50",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.01,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.33,
+      "top": 277,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "174.73",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.01,
+      "leading": 1.27,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.16,
+      "top": 390,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "$115.22",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.01,
+      "leading": 1.27,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.2,
+      "top": 390,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "111.68",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.01,
+      "leading": 1.27,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.17,
+      "top": 517,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "121.4048",
+      "words": 1,
+      "chars": 8,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.01,
+      "leading": 1.27,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.23,
+      "top": 517,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "$1,352",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 26,
+      "vw": 6.7,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.23,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.2,
+      "top": 1250,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "−1.39",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.27,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.39,
+      "top": 2377,
+      "tag": "div",
+      "kind": "heading"
+     },
+     {
+      "text": "318",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 22,
+      "vw": 5.6,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.27,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.39,
+      "top": 2397,
+      "tag": "div",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 9,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Segoe UI",
+       "share": 0.99,
+       "mono": false
+      },
+      {
+       "family": "Consolas",
+       "share": 0.01,
+       "mono": true
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      22,
+      24,
+      26,
+      30
+     ],
+     "sizeCount": 10,
+     "notLoaded": [],
+     "body": {
+      "font": "Segoe UI",
+      "size": 12,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 8.7
+     },
+     "measureChars": 60,
+     "max": {
+      "size": 30,
+      "vw": 7.7,
+      "font": "Segoe UI",
+      "text": "$1,351.50"
+     },
+     "monoShare": 0.01,
+     "monoProseShare": 0.01,
+     "monoFamilies": [
+      "Consolas"
+     ],
+     "monoSamples": [
+      "run-2026-10-26-0105",
+      "ridge-sha256-3f9a0c41d2"
+     ],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.01,
+     "centerShare": 0.02,
+     "smallText": 14
+    },
+    "eyebrows": [
+     {
+      "text": "Checked 01:13 am · re-reads every minute",
+      "above": "$1,351.50",
+      "upper": false,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 13,
+      "top": 191
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#0c0d0e",
+     "bodyBgHsl": {
+      "h": 210,
+      "s": 0.08,
+      "l": 0.05
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#1a1b1c",
+       "top": 236,
+       "hsl": {
+        "h": 210,
+        "s": 0.04,
+        "l": 0.11
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#b5ac9b",
+       "share": 0.52
+      },
+      {
+       "color": "#c5bba7",
+       "share": 0.21
+      },
+      {
+       "color": "#f0e6d2",
+       "share": 0.19
+      },
+      {
+       "color": "#eadfc9",
+       "share": 0.03
+      },
+      {
+       "color": "#f2849e",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#eadfc9",
+      "hsl": {
+       "h": 40,
+       "s": 0.44,
+       "l": 0.85
+      },
+      "fg": "#0c0d0e"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 5,
+     "inHero": 3,
+     "radius": 6,
+     "height": 34,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Buyer",
+      "Refresh",
+      "60 days"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 25,
+     "hairlineSamples": [
+      "header.shell 390px",
+      "div.chart-foot 324px",
+      "p.fc-foot 324px",
+      "a.plan 324px",
+      "div.sale 324px"
+     ],
+     "outlinedBoxes": 6,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 6,
+     "boxRadius": 8,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 4,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 349
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 60,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": []
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 2787,
+    "margins": {
+     "left": 16,
+     "right": 17
+    },
+    "sections": [
+     {
+      "sel": "div.title-row",
+      "tag": "div",
+      "top": 76,
+      "height": 146,
+      "words": 29,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Market overview",
+       "size": 24,
+       "tag": "h1"
+      },
+      "left": 16,
+      "right": 30,
+      "textLeft": 16,
+      "textRight": 43,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div#prices",
+      "tag": "div",
+      "top": 236,
+      "height": 448,
+      "words": 94,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "$1,351.50",
+       "size": 30,
+       "tag": "span"
+      },
+      "left": 16,
+      "right": 17,
+      "textLeft": 16,
+      "textRight": 22,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div#main-row.main-row",
+      "tag": "div",
+      "top": 698,
+      "height": 1017,
+      "words": 159,
+      "media": 1,
+      "middle": 64,
+      "heading": {
+       "text": "Singapore MGO",
+       "size": 16,
+       "tag": "h2"
+      },
+      "left": 33,
+      "right": 0,
+      "textLeft": 33,
+      "textRight": -115,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.lower-row",
+      "tag": "div",
+      "top": 1729,
+      "height": 876,
+      "words": 130,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Singapore bunker sales · Sep 2026",
+       "size": 16,
+       "tag": "h2"
+      },
+      "left": 33,
+      "right": 33,
+      "textLeft": 33,
+      "textRight": 33,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Market overview",
+      "size": 24,
+      "top": 76,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 33,
+      "n": 8
+     },
+     {
+      "x": 16,
+      "n": 2
+     }
+    ],
+    "leftBlocks": 10,
+    "bodySize": 12,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "dark": true,
+    "ground": "#0c0d0e",
+    "sidebar": null,
+    "topbar": {
+     "h": 60
+    },
+    "canvas": {
+     "left": 16,
+     "right": -115
+    },
+    "hero": {
+     "text": "Market overview",
+     "words": 2,
+     "chars": 15,
+     "lines": 1,
+     "size": 24,
+     "vw": 6.2,
+     "font": "Segoe UI",
+     "weight": 600,
+     "tracking": -0.01,
+     "leading": 1.33,
+     "top": 76,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 3,
+    "layout": {
+     "panels": 6,
+     "firstScreen": 2,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 11,
+     "radii": [
+      [
+       8,
+       6
+      ],
+      [
+       0,
+       5
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 1,
+     "hues": 1,
+     "samples": [
+      {
+       "hue": 40,
+       "size": 30,
+       "radius": "50%"
+      }
+     ]
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 16,
+     "tabularShare": 1,
+     "kpiMax": 30
+    },
+    "rows": {
+     "count": 7,
+     "median": 33
+    },
+    "chartHues": 1,
+    "placeholders": [],
+    "type": {
+     "under13": 0.33,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      22,
+      24,
+      26,
+      30
+     ]
+    },
+    "title": {
+     "text": "Market overview",
+     "size": 24,
+     "top": 76
+    },
+    "colourShare": 0.003
+   },
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "WARN",
+   "id": "palette-cream",
+   "width": 1440,
+   "message": "Yellow-cream background (text #f0e6d2).",
+   "fix": "Use the drawn palette. If you want warmth, take a low-chroma stone or bone, not a yellow cream.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "ragged-row",
+   "width": 1440,
+   "message": "2 pair(s) of cards in one row end at different heights (by 121px, 138px).",
+   "fix": "Cards that share a row share a bottom edge: balance them by their content (the same number of rows, a block of similar height beside it), or stack them. In testing, ragged rows were marked down every time.",
+   "alsoAt": [
+    768
+   ]
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Users\\Rae\\Downloads\\CS203 CSD\\project\\cs203-g2t5\\.claude\\worktrees\\market-proposal\\docs\\ui-revamp\\market-proposal\\taste-review\\desktop-fold.jpg",
+   "pages": [
+    "C:\\Users\\Rae\\Downloads\\CS203 CSD\\project\\cs203-g2t5\\.claude\\worktrees\\market-proposal\\docs\\ui-revamp\\market-proposal\\taste-review\\desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "C:\\Users\\Rae\\Downloads\\CS203 CSD\\project\\cs203-g2t5\\.claude\\worktrees\\market-proposal\\docs\\ui-revamp\\market-proposal\\taste-review\\tablet-fold.jpg",
+   "pages": [
+    "C:\\Users\\Rae\\Downloads\\CS203 CSD\\project\\cs203-g2t5\\.claude\\worktrees\\market-proposal\\docs\\ui-revamp\\market-proposal\\taste-review\\tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Users\\Rae\\Downloads\\CS203 CSD\\project\\cs203-g2t5\\.claude\\worktrees\\market-proposal\\docs\\ui-revamp\\market-proposal\\taste-review\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Users\\Rae\\Downloads\\CS203 CSD\\project\\cs203-g2t5\\.claude\\worktrees\\market-proposal\\docs\\ui-revamp\\market-proposal\\taste-review\\mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

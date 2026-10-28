@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { PurchasePlanSummary } from './PurchasePlanSummary';
 import { DEMO_PLAN } from '../fixtures';
-import type { PurchasePlan } from '../types';
+import type { PurchasePlan, PurchasePlanService } from '../types';
 
 function renderSummary(overrides: Partial<PurchasePlan> = {}) {
   const plan: PurchasePlan = { ...DEMO_PLAN, ...overrides };
@@ -75,7 +75,40 @@ describe('approval workflow in the redesigned cards', () => {
     render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status }} onEdit={onEdit} onDelete={onDelete} />);
     expect(screen.getByText(status === 'submitted' ? 'Submitted for approval' : status.charAt(0).toUpperCase() + status.slice(1))).toBeVisible();
     expect(screen.queryByRole('button', { name: /More actions|Edit|Delete/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /View submitted recommendation/ })).toHaveAttribute('href', `/purchase-plans/recommendation?plan_id=${DEMO_PLAN.plan_id}`);
+    expect(screen.getByRole('link', { name: status === 'submitted' ? /View submitted recommendation/ : /View decision/ })).toHaveAttribute('href', `/purchase-plans/recommendation?plan_id=${DEMO_PLAN.plan_id}`);
     expect(onEdit).not.toHaveBeenCalled(); expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it('hides the pill for drafts', () => {
+    render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status: 'draft' }} onEdit={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.queryByText('Draft')).not.toBeInTheDocument();
+  });
+
+  it('tells the buyer who rejected the plan, when, and why', async () => {
+    const readSubmission = vi.fn().mockResolvedValue({ submission: null, decision: {
+      decision_id: 'd1', decision: 'rejected', comment: 'Outside the approved budget', manager_clerk_user_id: 'user_m',
+      manager_label: 'Procurement Manager', decided_at: '2026-10-28T01:30:00Z' } });
+    const service = { readSubmission } as unknown as PurchasePlanService;
+    render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status: 'rejected' }} service={service} onEdit={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.getByRole('status')).toHaveTextContent('Loading the manager’s note…');
+    expect(await screen.findByText('Procurement Manager')).toBeVisible();
+    expect(screen.getByText(/rejected this plan/)).toBeVisible();
+    expect(screen.getByText('Reason: “Outside the approved budget”')).toBeVisible();
+    expect(screen.getByText(/create a new purchase plan/)).toBeVisible();
+    expect(readSubmission).toHaveBeenCalledWith(DEMO_PLAN.plan_id);
+  });
+
+  it('keeps the outcome visible when the manager note cannot be loaded', async () => {
+    const service = { readSubmission: vi.fn().mockRejectedValue(new Error('offline')) } as unknown as PurchasePlanService;
+    render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status: 'approved' }} service={service} onEdit={vi.fn()} onDelete={vi.fn()} />);
+    expect(await screen.findByText(/Couldn’t load the manager’s note/)).toBeVisible();
+    expect(screen.getByText('Approved')).toBeVisible();
+  });
+
+  it('does not ask for a decision while the plan is still awaiting review', () => {
+    const service = { readSubmission: vi.fn() } as unknown as PurchasePlanService;
+    render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status: 'submitted' }} service={service} onEdit={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.getByText('Awaiting manager approval.')).toBeVisible();
+    expect(service.readSubmission).not.toHaveBeenCalled();
   });
 });

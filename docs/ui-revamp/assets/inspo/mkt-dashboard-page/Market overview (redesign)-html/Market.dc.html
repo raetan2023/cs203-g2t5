@@ -1,0 +1,472 @@
+<!doctype html>
+<meta charset="utf-8"><style data-dc-design-system-vars>@layer{:root{--ground:#0c0d0e;--surface-card:#1a1b1c;--surface-border:#2d2c29;--surface-input:#2c3443;--beige:#eadfc9;--on-accent:#0c0d0e;--ink:#f0e6d2;--ink-soft:#c5bba7;--ink-muted:#b5ac9b;--hero-water:#080a0c;--hero-haze:#2a241b;--hero-light:#eadfc9;--space-1:4px;--space-2:8px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;--radius-sm:6px;--radius-md:8px;--radius-lg:12px;--font-sans:system-ui, -apple-system, "Segoe UI", sans-serif;--text-display:300 64px/70px var(--font-sans);--text-title:400 32px/40px var(--font-sans);--text-lead:400 18px/32px var(--font-sans);--text-body:400 14px/20px var(--font-sans);--text-label:600 13px/18px var(--font-sans);}}</style>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Market overview</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0c0d0e}
+</style>
+</helmet>
+<div style="width:100%;min-height:1700px;box-sizing:border-box;background:#0c0d0e;color:#f0e6d2;font-family:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+
+<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px 40px;border-bottom:1px solid #2d2c29;min-height:60px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:16px">
+<button type="button" aria-label="Open menu" style="width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:6px;color:#f0e6d2;cursor:pointer">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+</button>
+<span style="display:inline-flex;align-items:center;gap:12px">
+<span style="width:30px;height:30px;border-radius:50%;background:#eadfc9;display:inline-flex;align-items:center;justify-content:center">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0c0d0e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>
+</span>
+<span style="font-size:18px;font-weight:600;letter-spacing:-0.02em">Bunker Buddy</span>
+</span>
+</div>
+<div style="display:flex;align-items:center;gap:20px">
+<span style="font-size:13px;color:#b5ac9b">Wed 28 Oct 2026</span>
+<span style="width:1px;height:24px;background:#2d2c29"></span>
+<button type="button" style="display:inline-flex;align-items:center;gap:10px;min-height:36px;padding:0 8px;background:transparent;border:0;border-radius:6px;color:#f0e6d2;font:inherit;font-size:14px;font-weight:500;cursor:pointer">
+<span style="width:22px;height:22px;border-radius:5px;background:#eadfc9;display:inline-flex;align-items:center;justify-content:center;color:#0c0d0e;font-size:12px;font-weight:600">B</span>
+Bunker Buddy
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+<span style="display:inline-flex;align-items:center;gap:8px;min-height:28px;padding:0 12px;border:1px solid #2d2c29;border-radius:6px;font-size:12px;font-weight:500"><span style="width:6px;height:6px;border-radius:50%;background:#eadfc9"></span>Buyer</span>
+</div>
+</header>
+
+<div style="max-width:1320px;margin:0 auto;padding:28px 40px 72px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<h1 style="margin:0;font-size:26px;line-height:32px;font-weight:600;letter-spacing:-0.025em">Market overview</h1>
+<p style="margin:0;font-size:14px;color:#c5bba7">Singapore bunker market. Each price shows its own latest date.</p>
+</div>
+<div style="display:flex;align-items:center;gap:12px;font-size:13px;color:#b5ac9b">
+<span>Checked 01:13 · refreshes every minute</span>
+<button type="button" aria-label="Re-read stored market data" title="Re-reads stored data. It doesn't import new prices." style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:1px solid #3d3b36;border-radius:8px;color:#f0e6d2;cursor:pointer">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"></path></svg>
+</button>
+</div>
+</div>
+
+<section aria-label="Prices" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:grid;grid-template-columns:1.25fr repeat(4,minmax(0,1fr));border:1px solid #2d2c29;border-radius:12px;overflow:hidden;background:#1a1b1c">
+<sc-for list="{{ticker}}" as="k" hint-placeholder-count="5">
+<button type="button" onClick="{{k.pick}}" aria-pressed="{{k.selected}}" style="display:flex;flex-direction:column;gap:8px;padding:16px 18px;text-align:left;background:{{k.bg}};border:0;border-right:1px solid #2d2c29;box-shadow:{{k.bar}};color:#f0e6d2;font:inherit;cursor:pointer;min-width:0">
+<span style="display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%">
+<span style="font-size:13px;font-weight:500;color:{{k.nameColor}};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{k.name}}</span>
+<svg width="64" height="20" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true" style="flex:0 0 auto"><path d="{{k.spark}}" fill="none" stroke="{{k.sparkColor}}" stroke-width="1.5" vector-effect="non-scaling-stroke"></path></svg>
+</span>
+<span style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap">
+<span style="font-size:{{k.size}};line-height:1.1;font-weight:600;letter-spacing:-0.02em">{{k.price}}</span>
+<span style="font-size:12px;color:#b5ac9b">{{k.unit}}</span>
+</span>
+<span style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px">
+<span style="color:{{k.chgColor}};font-weight:600">{{k.arrow}} {{k.chg}}</span>
+<span style="display:inline-flex;align-items:center;gap:4px;color:{{k.ageColor}}">
+<sc-if value="{{ k.stale }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></sc-if>
+{{k.date}}</span>
+</span>
+</button>
+</sc-for>
+</div>
+<p style="margin:0;font-size:12px;line-height:18px;color:#b5ac9b"><span style="color:#8fd19e;font-weight:600">Green</span> eases costs for a fuel buyer, <span style="color:#f2a172;font-weight:600">orange</span> adds cost pressure, grey has no clear effect. <span style="color:#e2c48a">Clock</span> marks a price older than {{staleDays}} days.</p>
+</section>
+
+<div style="display:flex;align-items:stretch;gap:24px">
+
+<section aria-labelledby="chart-h" style="flex:1 1 760px;min-width:0;background:#1a1b1c;border:1px solid #2d2c29;border-radius:14px;padding:24px 28px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px">
+<div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+<div style="display:flex;align-items:center;gap:12px">
+<h2 id="chart-h" style="margin:0;font-size:16px;line-height:22px;font-weight:600">{{cur.name}}</h2>
+<sc-if value="{{ notMgo }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{backToMgo}}" style="min-height:28px;padding:0 10px;background:transparent;border:1px solid #3d3b36;border-radius:14px;color:#eadfc9;font:inherit;font-size:12px;font-weight:500;cursor:pointer">← Back to MGO</button>
+</sc-if>
+</div>
+<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+<span style="font-size:44px;line-height:48px;font-weight:600;letter-spacing:-0.03em">{{cur.price}}</span>
+<span style="font-size:15px;color:#c5bba7">{{cur.unit}}</span>
+</div>
+<span style="font-size:13px;color:#b5ac9b">Quote {{cur.date}} · <span style="color:{{cur.ageColor}}">{{cur.age}}</span> · {{cur.src}}</span>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+<div role="group" aria-label="History range" style="display:inline-flex;border:1px solid #2d2c29;border-radius:8px;overflow:hidden">
+<button type="button" onClick="{{r15}}" aria-pressed="{{is15}}" style="min-height:34px;padding:0 12px;border:0;background:{{b15}};color:{{f15}};font:inherit;font-size:13px;font-weight:500;cursor:pointer">15 days</button>
+<button type="button" onClick="{{r30}}" aria-pressed="{{is30}}" style="min-height:34px;padding:0 12px;border:0;border-left:1px solid #2d2c29;background:{{b30}};color:{{f30}};font:inherit;font-size:13px;font-weight:500;cursor:pointer">30 days</button>
+<button type="button" onClick="{{r60}}" aria-pressed="{{is60}}" style="min-height:34px;padding:0 12px;border:0;border-left:1px solid #2d2c29;background:{{b60}};color:{{f60}};font:inherit;font-size:13px;font-weight:500;cursor:pointer">60 days</button>
+</div>
+<span style="font-size:13px;color:{{dir.color}};font-weight:500">{{dir.text}}</span>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="position:relative;height:290px;margin:8px 0 0 56px">
+<sc-for list="{{yTicks}}" as="t" hint-placeholder-count="4">
+<span style="position:absolute;left:0;right:0;top:{{t.top}};border-top:1px dashed #2d2c29"><span style="position:absolute;left:-56px;top:-9px;width:48px;text-align:right;font-size:12px;color:#b5ac9b">{{t.label}}</span></span>
+</sc-for>
+<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible"><path d="{{chart.path}}" fill="none" stroke="{{chart.color}}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path></svg>
+<span style="position:absolute;left:{{chart.lastX}};top:{{chart.lastY}};width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:{{chart.color}};box-shadow:0 0 0 3px #1a1b1c"></span>
+<sc-if value="{{ hv.on }}" hint-placeholder-val="{{ false }}">
+<span style="position:absolute;left:{{hv.x}};top:0;bottom:0;border-left:1px solid #8f8878;pointer-events:none"></span>
+<span style="position:absolute;left:{{hv.x}};top:{{hv.y}};width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:{{chart.color}};box-shadow:0 0 0 3px #1a1b1c;pointer-events:none"></span>
+<span role="status" style="position:absolute;left:{{hv.x}};top:8px;transform:{{hv.shift}};padding:10px 12px;background:#262624;border:1px solid #3d3b36;border-radius:8px;display:flex;flex-direction:column;gap:3px;white-space:nowrap;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:2">
+<span style="font-size:12px;color:#b5ac9b">{{hv.date}}</span>
+<span style="font-size:18px;line-height:22px;font-weight:600;color:#f0e6d2">{{hv.price}} <span style="font-size:12px;font-weight:400;color:#b5ac9b">{{hv.unit}}</span></span>
+<span style="font-size:12px;color:{{hv.chgColor}}">{{hv.chg}}</span>
+</span>
+</sc-if>
+<span tabIndex="0" role="img" aria-label="{{hv.aria}}" onMouseMove="{{hv.move}}" onMouseLeave="{{hv.leave}}" onFocus="{{hv.focus}}" onBlur="{{hv.leave}}" onKeyDown="{{hv.key}}" style="position:absolute;left:0;top:0;right:0;bottom:0;cursor:crosshair;outline-offset:4px;z-index:1"></span>
+</div>
+<div style="position:relative;height:20px;margin:6px 0 0 56px">
+<sc-for list="{{xTicks}}" as="x" hint-placeholder-count="6">
+<span style="position:absolute;left:{{x.left}};transform:translateX({{x.shift}});font-size:12px;color:#b5ac9b;white-space:nowrap">{{x.label}}</span>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{ showFc }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding-top:16px;border-top:1px solid #2d2c29">
+<sc-for list="{{fcMarks}}" as="f" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:3px">
+<span style="font-size:12px;color:#b5ac9b">{{f.label}} · {{f.date}}</span>
+<span style="font-size:15px;font-weight:600">USD {{f.range}}</span>
+<span style="font-size:12px;color:{{f.color}}">Central {{f.mid}} · {{f.vs}}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin:-6px 0 0;font-size:12px;line-height:18px;color:#e2c48a">Experimental forecast from the 26 Oct quote. Ranges have no measured confidence coverage.</p>
+</sc-if>
+<sc-if value="{{ showFcEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;border-top:1px solid #2d2c29">
+<span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600">Forecast unavailable</span><span style="font-size:12px;color:#b5ac9b">Today's run didn't complete. The last run (05 Oct) is too old to show.</span></span>
+<button type="button" style="min-height:34px;padding:0 14px;background:transparent;border:1px solid #3d3b36;border-radius:8px;color:#f0e6d2;font:inherit;font-size:13px;cursor:pointer">Retry forecast</button>
+</div>
+</sc-if>
+</section>
+
+<aside aria-labelledby="plans-h" style="flex:0 0 330px;background:#1a1b1c;border:1px solid #2d2c29;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<h2 id="plans-h" style="margin:0;font-size:16px;line-height:22px;font-weight:600">Your plans</h2>
+<a href="#plans" style="font-size:13px;color:#eadfc9;text-decoration:none;min-height:28px;display:inline-flex;align-items:center">All plans →</a>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<a href="#rec-99" style="display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid #3d3b36;border-radius:10px;color:#f0e6d2;text-decoration:none">
+<span style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+<span style="font-size:18px;font-weight:600;letter-spacing:-0.015em">99 MT</span>
+<span style="display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:11px;background:#eadfc9;color:#0c0d0e;font-size:12px;font-weight:600">3 days left</span>
+</span>
+<span style="font-size:13px;color:#b5ac9b">Due Sat 31 Oct</span>
+<span style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:10px;border-top:1px solid #2d2c29">
+<span style="display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#eadfc9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Buy now</span>
+<span style="font-size:13px;color:#eadfc9">View →</span>
+</span>
+</a>
+<a href="#rec-47" style="display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid #3d3b36;border-radius:10px;color:#f0e6d2;text-decoration:none">
+<span style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+<span style="font-size:18px;font-weight:600;letter-spacing:-0.015em">47 MT</span>
+<span style="display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:11px;border:1px solid #4a4740;color:#c5bba7;font-size:12px;font-weight:600">8 days left</span>
+</span>
+<span style="font-size:13px;color:#b5ac9b">Due Thu 05 Nov</span>
+<span style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:10px;border-top:1px solid #2d2c29">
+<span style="display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#eadfc9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>Monitor</span>
+<span style="font-size:13px;color:#eadfc9">View →</span>
+</span>
+</a>
+</div>
+<button type="button" style="margin-top:auto;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:transparent;border:1px dashed #4a4740;border-radius:10px;color:#f0e6d2;font:inherit;font-size:14px;font-weight:500;cursor:pointer">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+Create plan
+</button>
+</aside>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:24px;align-items:stretch">
+
+<section aria-labelledby="sales-h" style="background:#1a1b1c;border:1px solid #2d2c29;border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 id="sales-h" style="margin:0;font-size:16px;line-height:22px;font-weight:600">Singapore bunker sales · September 2026</h2>
+<span style="font-size:13px;color:#b5ac9b">Thousand tonnes, as published. Categories aren't added together.</span>
+</div>
+<label style="display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border:1px solid #3d3b36;border-radius:8px;color:#b5ac9b">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Find a fuel category</span>
+<input type="search" placeholder="Find a fuel" style="width:140px;background:transparent;border:0;outline:none;color:#f0e6d2;font:inherit;font-size:13px">
+</label>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{sales}}" as="r" hint-placeholder-count="6">
+<div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 90px;align-items:center;gap:16px;min-height:44px;border-top:1px solid #2d2c29">
+<span style="display:flex;align-items:center;gap:8px;min-width:0">
+<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{r.nameColor}};font-weight:{{r.weight}}">{{r.name}}</span>
+<sc-if value="{{ r.mine }}" hint-placeholder-val="{{ false }}"><span style="flex:0 0 auto;display:inline-flex;align-items:center;min-height:20px;padding:0 7px;border-radius:10px;border:1px solid #eadfc9;color:#eadfc9;font-size:12px;font-weight:500">Your fuel</span></sc-if>
+</span>
+<span style="display:block;height:6px;border-radius:3px;background:#262626"><span style="display:block;height:6px;border-radius:3px;width:{{r.w}};background:{{r.barColor}}"></span></span>
+<span style="text-align:right;font-weight:600">{{r.value}}</span>
+</div>
+</sc-for>
+</div>
+<button type="button" style="align-self:flex-start;min-height:36px;padding:0;background:transparent;border:0;color:#eadfc9;font:inherit;font-size:13px;font-weight:500;cursor:pointer">View all 16 categories</button>
+</section>
+
+<section aria-labelledby="news-h" style="background:#1a1b1c;border:1px solid #2d2c29;border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 id="news-h" style="margin:0;font-size:16px;line-height:22px;font-weight:600">News context</h2>
+<span style="font-size:14px;color:#f0e6d2">Coverage higher than usual this week · tone slightly negative</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font-size:12px;color:#b5ac9b">Matched articles · 26 Oct</span>
+<span style="font-size:22px;line-height:26px;font-weight:600">318</span>
+<span aria-label="Daily article count over 14 days" role="img" style="display:flex;align-items:flex-end;gap:3px;height:44px">
+<sc-for list="{{newsBars}}" as="b" hint-placeholder-count="14">
+<span style="flex:1;height:{{b.h}};border-radius:2px 2px 0 0;background:{{b.c}}"></span>
+</sc-for>
+</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font-size:12px;color:#b5ac9b">Average tone · 26 Oct</span>
+<span style="font-size:22px;line-height:26px;font-weight:600">−1.39</span>
+<span role="img" aria-label="Daily average tone over 14 days, below zero throughout" style="position:relative;display:block;height:44px">
+<span style="position:absolute;left:0;right:0;top:0;border-top:1px dashed #4a4740"></span>
+<span style="position:absolute;right:0;top:-16px;font-size:12px;color:#b5ac9b">0</span>
+<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%"><path d="{{tonePath}}" fill="none" stroke="#c5bba7" stroke-width="1.5" vector-effect="non-scaling-stroke"></path></svg>
+</span>
+</div>
+</div>
+<p style="margin:auto 0 0;padding-top:14px;border-top:1px solid #2d2c29;font-size:12px;line-height:18px;color:#b5ac9b">Context, not a price signal. Tone measures news language, not oil-price direction, and today's counts may be partial. Source: GDELT.</p>
+</section>
+</div>
+
+<details style="background:#1a1b1c;border:1px solid #2d2c29;border-radius:14px;padding:0 24px">
+<summary style="display:flex;align-items:center;justify-content:space-between;min-height:56px;cursor:pointer;font-size:15px;font-weight:500;list-style:none">Forecast details
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5bba7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</summary>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;padding:4px 0 24px">
+<div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+<span style="font-size:14px;font-weight:600">Where it comes from</span>
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#b5ac9b">Model</span><span>Ridge · experimental</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#b5ac9b">Run from quote</span><span>Mon 26 Oct 2026</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#b5ac9b">Run completed</span><span>[Run time, local]</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#b5ac9b">Confidence coverage</span><span>Not yet measured</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+<span style="font-size:14px;font-weight:600">What's moving the forecast</span>
+<sc-for list="{{drivers}}" as="d" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:150px 1fr 70px;align-items:center;gap:10px">
+<span style="color:#c5bba7">{{d.name}}</span>
+<span style="position:relative;display:block;height:8px">
+<span style="position:absolute;left:50%;top:-4px;bottom:-4px;border-left:1px solid #4a4740"></span>
+<span style="position:absolute;top:0;height:8px;border-radius:4px;left:{{d.left}};width:{{d.w}};background:#c5bba7"></span>
+</span>
+<span style="text-align:right;color:#b5ac9b">{{d.label}}</span>
+</div>
+</sc-for>
+<span style="font-size:12px;color:#b5ac9b">Left of the line pushes the price down; right pushes it up.</span>
+</div>
+</div>
+</details>
+
+<p style="margin:0;font-size:12px;color:#b5ac9b">Not a real-time price feed. Refreshing re-reads stored data; it doesn't import new prices.</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"forecastAvailable":{"editor":"boolean","default":true},"staleDays":{"editor":"int","default":7,"min":1,"max":30},"$preview":{"width":1440,"height":1700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const sel = st.sel || 'mgo';
+    const range = st.range || 60;
+    const fcOn = this.props.forecastAvailable !== false;
+    const staleDays = Math.max(1, Number(this.props.staleDays) || 7);
+    const set = (p) => this.setState(Object.assign({}, this.state || {}, p));
+    const DAY = 86400000;
+    const TODAY = Date.UTC(2026, 9, 28);
+    const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const fmtD = (t) => { const d = new Date(t); return String(d.getUTCDate()).padStart(2, '0') + ' ' + MON[d.getUTCMonth()]; };
+    const fmtWD = (t) => WD[new Date(t).getUTCDay()] + ' ' + fmtD(t);
+    const nf = (v, dec) => v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    const GREEN = '#8fd19e', ORANGE = '#f2a172', GREY = '#c5bba7', AMBER = '#e2c48a';
+
+    const S = {
+      mgo: { name: 'Singapore MGO', short: 'Singapore MGO', unit: 'USD/MT', pre: 'USD ', dec: 2, price: 1351.5, chg: 0, end: Date.UTC(2026, 9, 26), src: '[MGO price source]', bad: 'up',
+        vals: [1238,1236,1241,1249,1252,1247,1255,1262,1270,1268,1274,1281,1290,1302,1298,1306,1314,1325,1318,1312,1309,1315,1322,1318,1326,1320,1317,1324,1342,1338,1335,1339,1344,1349,1352,1347,1350,1351.5,1351.5] },
+      go: { name: 'Singapore gasoil futures', short: 'Gasoil futures', unit: 'unit unverified', pre: '', dec: 2, price: 174.73, chg: 0.78, end: Date.UTC(2026, 9, 23), src: 'Investing.com, manual export', bad: 'up',
+        vals: [158,159.5,161,160.2,162.8,164,163.1,165.5,167,166.2,168.4,170.1,169.3,171.8,173,172.1,174.4,176,175.2,173.9,172.6,173.8,175.1,174.2,173.38,174.73] },
+      brn: { name: 'Brent crude', short: 'Brent crude', unit: 'USD/bbl', pre: 'USD ', dec: 2, price: 115.22, chg: -3.03, end: Date.UTC(2026, 9, 20), src: 'FRED', bad: 'up',
+        vals: [93,89,88,90,90,96,98,100,102,104,106,110,121,118,121,131,128,121,119,116,115,117,120,116,120,114,116,115,136,126,126,126,130,130,130,126,127,127,120,118.82,115.22] },
+      dxb: { name: 'Dubai crude futures', short: 'Dubai crude', unit: 'unit unverified', pre: '', dec: 2, price: 111.68, chg: 1.07, end: Date.UTC(2026, 9, 23), src: 'Investing.com, manual export', bad: 'up',
+        vals: [96,95.2,97.4,99,101.2,103,102.4,105,108.8,107.5,110.2,113.6,112.1,110.9,112.4,114,113.2,111.5,110.8,112.3,113.9,112.6,111.2,110.5,111.68] },
+      usd: { name: 'Broad USD index', short: 'USD index', unit: 'index', pre: '', dec: 4, price: 121.4048, chg: -0.14, end: Date.UTC(2026, 9, 16), src: 'FRED', bad: 'none',
+        vals: [120.10,120.32,120.55,120.41,120.78,120.96,121.12,120.88,121.05,121.31,121.47,121.22,121.38,121.6,121.52,121.575,121.4048] }
+    };
+    const order = ['mgo', 'go', 'brn', 'dxb', 'usd'];
+    const pts = (s) => s.vals.map((v, i) => ({ t: s.end - Math.round((s.vals.length - 1 - i) * 59 / (s.vals.length - 1)) * DAY, v }));
+    const meaning = (s, delta) => {
+      if (Math.abs(delta) < 1e-9 || s.bad === 'none') return GREY;
+      return (delta > 0) === (s.bad === 'up') ? ORANGE : GREEN;
+    };
+    const arrow = (d) => (Math.abs(d) < 1e-9 ? '—' : d > 0 ? '↗' : '↘');
+    const signed = (d) => (d > 0 ? '+' : d < 0 ? '−' : '') + nf(Math.abs(d), 2) + '%';
+    const ageOf = (s) => Math.round((TODAY - s.end) / DAY);
+
+    const sparkPath = (s) => {
+      const p = s.vals, mn = Math.min.apply(null, p), mx = Math.max.apply(null, p), r = (mx - mn) || 1;
+      return p.map((v, i) => (i ? 'L' : 'M') + (i / (p.length - 1) * 100).toFixed(2) + ' ' + (28 - (v - mn) / r * 26).toFixed(2)).join(' ');
+    };
+
+    const ticker = order.map((id) => {
+      const s = S[id], selected = id === sel, age = ageOf(s), stale = age > staleDays;
+      return {
+        name: s.short, selected,
+        price: s.pre + nf(s.price, s.dec), unit: s.unit,
+        size: id === 'mgo' ? '22px' : '19px',
+        chg: signed(s.chg), arrow: arrow(s.chg), chgColor: meaning(s, s.chg),
+        date: fmtD(s.end), stale, ageColor: stale ? AMBER : '#b5ac9b',
+        spark: sparkPath(s), sparkColor: id === 'mgo' ? '#eadfc9' : '#8f8878',
+        nameColor: id === 'mgo' ? '#eadfc9' : '#c5bba7',
+        bg: selected ? '#232220' : '#1a1b1c',
+        bar: selected ? 'inset 0 -2px 0 #eadfc9' : 'none',
+        pick: () => set({ sel: id })
+      };
+    });
+
+    const s = S[sel];
+    const all = pts(s);
+    const t0 = s.end - (range - 1) * DAY;
+    const hist = all.filter((p) => p.t >= t0);
+    const isMgo = sel === 'mgo';
+    const showFc = isMgo && fcOn;
+    const fc = [
+      { label: '7 days', t: Date.UTC(2026, 10, 2), low: 1200, mid: 1352, high: 1386 },
+      { label: '14 days', t: Date.UTC(2026, 10, 9), low: 1020, mid: 1352, high: 1596 },
+      { label: '30 days', t: Date.UTC(2026, 10, 25), low: 1178, mid: 1352, high: 1735 }
+    ];
+    const t1 = s.end;
+    let vmin = Math.min.apply(null, hist.map((p) => p.v)), vmax = Math.max.apply(null, hist.map((p) => p.v));
+    const pad = (vmax - vmin || 1) * 0.08; vmin -= pad; vmax += pad;
+    const X = (t) => (t - t0) / (t1 - t0) * 100;
+    const Y = (v) => (1 - (v - vmin) / (vmax - vmin)) * 100;
+    const pc = (n) => n.toFixed(2) + '%';
+
+    const raw = (vmax - vmin) / 4, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((x) => x >= raw);
+    const yTicks = [];
+    for (let v = Math.ceil(vmin / step) * step; v <= vmax; v += step) yTicks.push({ top: pc(Y(v)), label: nf(v, step < 1 ? 2 : 0) });
+
+    const xTicks = [];
+    for (let i = 0; i <= 5; i++) { const t = t0 + (t1 - t0) * i / 5; xTicks.push({ left: pc(i / 5 * 100), label: fmtD(t), shift: i === 0 ? '0' : i === 5 ? '-100%' : '-50%' }); }
+
+    const last = hist[hist.length - 1], first = hist[0];
+    const hIdx = (st.hoverSel === sel && st.hoverRange === range && st.hover != null) ? Math.min(st.hover, hist.length - 1) : -1;
+    const hp = hIdx >= 0 ? hist[hIdx] : null;
+    const prevP = hIdx > 0 ? hist[hIdx - 1] : (hIdx === 0 ? (all[all.indexOf(hist[0]) - 1] || null) : null);
+    const hChg = hp && prevP ? (hp.v - prevP.v) / prevP.v * 100 : null;
+    const nearest = (frac) => { const t = t0 + frac * (t1 - t0); let bi = 0, bd = Infinity; hist.forEach((p, i) => { const d = Math.abs(p.t - t); if (d < bd) { bd = d; bi = i; } }); return bi; };
+    const setHover = (i) => set({ hover: i, hoverSel: sel, hoverRange: range });
+    const hv = {
+      on: !!hp,
+      x: hp ? pc(X(hp.t)) : '0%',
+      y: hp ? pc(Y(hp.v)) : '0%',
+      shift: hp && X(hp.t) > 70 ? 'translateX(calc(-100% - 14px))' : 'translateX(14px)',
+      date: hp ? fmtWD(hp.t) + ' ' + new Date(hp.t).getUTCFullYear() : '',
+      price: hp ? s.pre + nf(hp.v, s.dec) : '',
+      unit: s.unit,
+      chg: hChg == null ? 'First value in this range' : arrow(hChg) + ' ' + signed(hChg) + ' vs previous value',
+      chgColor: hChg == null ? '#b5ac9b' : meaning(s, hChg),
+      aria: s.name + ' price history. Hover, or focus and use the left and right arrow keys, to read each value.',
+      move: (e) => { const r = e.currentTarget.getBoundingClientRect(); const f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)); const i = nearest(f); if (i !== hIdx) setHover(i); },
+      leave: () => set({ hover: null }),
+      focus: () => setHover(hist.length - 1),
+      key: (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          const cur = hIdx < 0 ? hist.length - 1 : hIdx;
+          setHover(Math.max(0, Math.min(hist.length - 1, cur + (e.key === 'ArrowLeft' ? -1 : 1))));
+        } else if (e.key === 'Escape') { set({ hover: null }); }
+      }
+    };
+    const deltaPct = (last.v - first.v) / first.v * 100;
+    const dirColor = meaning(s, deltaPct);
+    const dirWord = dirColor === GREEN ? ' · eases costs' : dirColor === ORANGE ? ' · adds cost pressure' : '';
+
+    const age = ageOf(s);
+    const fcMarks = fc.map((f) => {
+      const d = (f.mid - s.price) / s.price * 100;
+      return {
+        label: f.label, date: fmtWD(f.t),
+        left: pc(X(f.t)), top: pc(Y(f.high)), height: pc(Y(f.low) - Y(f.high)), midTop: pc(Y(f.mid)), labelTop: pc(Y(f.low)),
+        range: nf(f.low, 0) + '–' + nf(f.high, 0) + '/MT', mid: nf(f.mid, 0),
+        vs: Math.abs(d) < 0.05 ? 'same as last quote' : (d < 0 ? 'below' : 'above') + ' last quote',
+        color: Math.abs(d) < 0.05 ? '#b5ac9b' : d < 0 ? GREEN : ORANGE,
+        title: f.label + ': USD ' + nf(f.low, 0) + '–' + nf(f.high, 0) + '/MT'
+      };
+    });
+
+    const salesRaw = [
+      ['Low Sulphur Fuel Oil', 2218.11, false], ['Marine Fuel Oil', 1993.2, false], ['Low Sulphur Marine Gas Oil', 378.84, true],
+      ['Bio Blended Low Sulphur Fuel Oil', 76.2, false], ['LNG', 51.51, false], ['Bio Blended Marine Gas Oil', 4.33, true]
+    ];
+    const smax = salesRaw[0][1];
+    const sales = salesRaw.map((r) => ({
+      name: r[0], mine: r[2], value: nf(r[1], 2),
+      w: Math.max(1, r[1] / smax * 100).toFixed(1) + '%',
+      barColor: r[2] ? '#eadfc9' : '#6b665c', nameColor: r[2] ? '#f0e6d2' : '#c5bba7', weight: r[2] ? 600 : 400
+    }));
+
+    const counts = [210, 232, 198, 260, 281, 240, 255, 300, 276, 290, 318, 305, 296, 318];
+    const cmax = Math.max.apply(null, counts);
+    const newsBars = counts.map((c, i) => ({ h: (c / cmax * 100).toFixed(0) + '%', c: i >= counts.length - 7 ? '#c5bba7' : '#4f4b44' }));
+    const tones = [-0.8, -0.95, -1.1, -0.7, -1.2, -1.35, -1.0, -1.25, -1.5, -1.3, -1.4, -1.2, -1.45, -1.39];
+    const tonePath = tones.map((v, i) => (i ? 'L' : 'M') + (i / (tones.length - 1) * 100).toFixed(2) + ' ' + (Math.min(-v / 2, 1) * 100).toFixed(2)).join(' ');
+
+    const driversRaw = [['Brent crude', -0.42], ['Singapore gasoil futures', 0.28], ['Broad USD index', -0.12], ['News tone', -0.06]];
+    const drivers = driversRaw.map((d) => {
+      const w = Math.abs(d[1]) / 0.5 * 50;
+      return { name: d[0], w: w.toFixed(1) + '%', left: (d[1] < 0 ? 50 - w : 50).toFixed(1) + '%', label: (d[1] < 0 ? 'down' : 'up') + ' ' + Math.round(Math.abs(d[1]) * 100) + '%' };
+    });
+
+    const rb = (n) => (range === n ? '#eadfc9' : 'transparent');
+    const rf = (n) => (range === n ? '#0c0d0e' : '#c5bba7');
+
+    return {
+      ticker, staleDays,
+      notMgo: !isMgo,
+      backToMgo: () => set({ sel: 'mgo' }),
+      cur: {
+        name: s.name, price: s.pre + nf(s.price, s.dec), unit: s.unit, date: fmtWD(s.end),
+        age: age === 0 ? 'today' : age === 1 ? '1 day old' : age + ' days old',
+        ageColor: age > staleDays ? AMBER : '#b5ac9b', src: s.src
+      },
+      dir: { color: dirColor, text: arrow(deltaPct) + ' ' + signed(deltaPct) + ' over ' + range + ' days · ' + nf(first.v, s.dec === 4 ? 2 : 0) + ' → ' + nf(last.v, s.dec === 4 ? 2 : 0) + dirWord },
+      yTicks, xTicks,
+      showFc, showFcEmpty: isMgo && !fcOn,
+      band: { left: pc(X(TODAY)) },
+      chart: {
+        path: hist.map((p, i) => (i ? 'L' : 'M') + X(p.t).toFixed(2) + ' ' + Y(p.v).toFixed(2)).join(' '),
+        color: isMgo ? '#eadfc9' : '#c5bba7',
+        lastX: pc(X(last.t)), lastY: pc(Y(last.v))
+      },
+      fcMarks,
+      hv,
+      sales, newsBars, tonePath, drivers,
+      is15: range === 15, is30: range === 30, is60: range === 60,
+      b15: rb(15), b30: rb(30), b60: rb(60), f15: rf(15), f30: rf(30), f60: rf(60),
+      r15: () => set({ range: 15 }), r30: () => set({ range: 30 }), r60: () => set({ range: 60 })
+    };
+  }
+}
+</script>
+</body>
+</html>

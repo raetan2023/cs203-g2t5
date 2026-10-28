@@ -84,9 +84,9 @@ describe('real analysis adapter', () => {
     render(<RecommendationsPage planId={ANALYSIS_DEMO_PLAN.plan_id} planService={createApiPlanService(options)} service={createApiRecommendationService(options)} scenarioDate={context.scenario_as_of_date} />);
     expect(await screen.findByText('Policy not connected.')).toBeInTheDocument();
     await userEvent.click(await screen.findByRole('button', { name: 'Retry cost impact' }));
-    expect(await screen.findByText('USD 70,000')).toBeInTheDocument();
+    expect((await screen.findAllByText('USD 70,000'))[0]).toBeInTheDocument();
     expect(screen.getByText('USD 2,000 less to USD 4,000 more')).toBeInTheDocument();
-    expect(screen.getByText(/Synthetic demo data · Estimates/)).toBeInTheDocument();
+    expect(screen.getByText(/Synthetic demo data/)).toBeInTheDocument();
     expect(fetcher.mock.calls.filter(([url]) => url.includes('/recommendation?'))).toHaveLength(1);
     expect(document.querySelector('details')).not.toHaveAttribute('open');
   });
@@ -113,7 +113,8 @@ describe('real analysis adapter', () => {
     const options = { getToken: () => 'session' };
     render(<RecommendationsPage planId={ANALYSIS_DEMO_PLAN.plan_id} planService={createApiPlanService(options)} service={createApiRecommendationService(options)} scenarioDate={context.scenario_as_of_date} />);
     const guidance = await screen.findByRole('region', { name: 'Recommendation' });
-    await userEvent.click(await within(guidance).findByRole('button', { name: 'Reload saved plan' }));
+    // Guidance and cost impact both report the conflict; either reloads the saved plan.
+    await userEvent.click((await within(guidance).findAllByRole('button', { name: 'Reload saved plan' }))[0]);
     await waitFor(() => expect(screen.getByText('No saved purchase plan')).toBeInTheDocument());
   });
 });

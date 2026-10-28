@@ -9,13 +9,21 @@ import './preview.css';
 import { buildMockForecast } from '../features/forecast/mockService';
 import ForecastWidget from '../features/forecast/ForecastWidget';
 import type { ReadyForecast } from '../features/forecast/apiService';
+import { createScenarioForecastService, createScenarioRecommendationService, PREVIEW_BUYER, PREVIEW_MANAGER, previewDecisionPlans, scenarioPlan, SCENARIO_DATE, withPreviewApproval, type RecommendationScenario } from './recommendationScenarios';
+import type { PurchasePlanService } from '../features/purchase-plan/types';
+import type { OrganisationPermissions } from '../features/organisation/apiService';
+import type { MgoQuote } from '../features/home/marketQuote';
 function PreviewMarketDashboard() { return <main><ForecastWidget /></main>; }
 
 const examples = {
   market: 'Market dashboard - synthetic forecast',
-  'rec-ready': 'Recommendation - ready', 'rec-loading': 'Recommendation - loading', 'rec-error': 'Recommendation - fails once', 'rec-unavailable': 'Recommendation - unavailable', 'rec-missing': 'Recommendation - missing forecast', 'rec-unsupported': 'Recommendation - unsupported context',
+  'rec-monitor': 'Recommendation - Monitor (8-day plan)', 'rec-buy': 'Recommendation - Buy now (33-day plan)', 'rec-wait': 'Recommendation - Wait (33-day plan)',
+  'rec-awaiting': 'Approval - awaiting manager (buyer)', 'rec-review': 'Approval - manager review (manager)', 'rec-approved': 'Approval - approved (buyer)', 'rec-rejected': 'Approval - rejected (buyer)',
+  'plans-decisions': 'Purchase plans - every approval state',
+  'rec-ready': 'Recommendation - legacy fixture, no horizon fits', 'rec-loading': 'Recommendation - loading', 'rec-error': 'Recommendation - fails once', 'rec-unavailable': 'Recommendation - unavailable', 'rec-missing': 'Recommendation - missing forecast', 'rec-unsupported': 'Recommendation - unsupported context',
   'rec-empty': 'Recommendation - no saved plan',
-  login: 'Sign in', signup: 'Create account', home: 'Home', 'home-loading': 'Home loading (8 seconds)',
+  login: 'Sign in', signup: 'Create account', home: 'Home - buyer', 'home-manager': 'Home - manager', 'home-analyst': 'Home - analyst', 'home-admin': 'Home - admin',
+  'home-price-error': 'Home - price unavailable', 'home-loading': 'Home loading (8 seconds)',
   'session-error': 'Session load fails once', 'login-error': 'Sign-in fails once', 'signup-error': 'Signup fails once', 'logout-error': 'Sign-out fails once',
   multiple: 'Purchase plans - multiple', empty: 'Purchase plans - empty', saved: 'Purchase plans - saved', loading: 'Plan loading (8 seconds)',
   'load-error': 'Plan load fails once', 'save-error': 'Create / save fails once',
@@ -23,12 +31,29 @@ const examples = {
 };
 type Example = keyof typeof examples;
 const publicExamples = ['login', 'signup', 'login-error', 'signup-error'];
+const recommendationScenarios: Partial<Record<Example, RecommendationScenario>> = { 'rec-monitor': 'monitor', 'rec-buy': 'buy', 'rec-wait': 'wait',
+  'rec-awaiting': 'wait', 'rec-review': 'wait', 'rec-approved': 'wait', 'rec-rejected': 'wait' };
+const approvalStarts: Partial<Record<Example, 'submitted' | 'approved' | 'rejected'>> = { 'rec-awaiting': 'submitted', 'rec-review': 'submitted', 'rec-approved': 'approved', 'rec-rejected': 'rejected' };
+const decisionPlans = previewDecisionPlans();
+const homeAccess: Partial<Record<Example, OrganisationPermissions>> = { home: PREVIEW_BUYER, 'home-price-error': PREVIEW_BUYER, 'home-manager': PREVIEW_MANAGER,
+  'home-analyst': { ...PREVIEW_MANAGER, role: 'org:analyst' }, 'home-admin': { ...PREVIEW_BUYER, role: 'org:admin', can_read_plans: false, can_write_plans: false, plan_scope: 'none' } };
+/** Synthetic preview price; the app reads SGP_MGO_OBSERVED from /api/v1/market/stored. */
+const PREVIEW_QUOTE: MgoQuote = { value: 1351.5, unit: 'USD/MT', currency: 'USD', changeAbs: 4.5, changePct: 0.33, observedDate: '2025-10-22',
+  history: [1238, 1241, 1252, 1247, 1262, 1270, 1281, 1302, 1298, 1314, 1325, 1312, 1322, 1326, 1317, 1342, 1335, 1344, 1352, 1347, 1351.5] };
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export function PreviewApp() {
-  const [example, setExample] = useState<Example>('rec-ready');
+  const [example, setExample] = useState<Example>('rec-monitor');
   const [revision, setRevision] = useState(0);
   const [slow, setSlow] = useState(false);
-  const [scenarioDate, setScenarioDate] = useState(DEMO_SCENARIO_DATE);
+  const [scenarioDate, setScenarioDate] = useState(SCENARIO_DATE);
+  const scenario = recommendationScenarios[example];
+  const withScenarioApproval = (plans: PurchasePlanService) => scenario ? withPreviewApproval(plans, scenario, approvalStarts[example])
+    : example === 'plans-decisions' ? decisionPlans.withDecisions(plans) : plans;
+  const planAccess = homeAccess[example] ?? (example === 'rec-review' ? PREVIEW_MANAGER : scenario || example === 'plans-decisions' ? PREVIEW_BUYER : undefined);
+  const readMarketQuote = useMemo(() => example === 'home-price-error'
+    ? async () => { await delay(slow ? 3500 : 600); throw new Error('Preview: market API unavailable.'); }
+    : async () => { await delay(slow ? 3500 : 600); return PREVIEW_QUOTE; }, [example, slow]);
   const activeDate = useRef(scenarioDate);
   activeDate.current = scenarioDate;
   const auth = useMemo(() => createMockAuthService({
@@ -38,19 +63,20 @@ export function PreviewApp() {
   }), [example, revision, slow]);
 
   function select(next: Example) {
-    navigate(next === 'market' ? '/market-dashboard' : next.startsWith('rec-') ? `/purchase-plans/recommendation?plan_id=${RECOMMENDATION_DEMO_PLAN.plan_id}` : next.startsWith('signup') ? '/signup' : publicExamples.includes(next) ? '/login' : ['home', 'home-loading', 'session-error', 'logout-error'].includes(next) ? '/home' : '/purchase-plans', true);
+    navigate(next === 'market' ? '/market-dashboard' : next.startsWith('rec-') ? `/purchase-plans/recommendation?plan_id=${RECOMMENDATION_DEMO_PLAN.plan_id}` : next.startsWith('signup') ? '/signup' : publicExamples.includes(next) ? '/login' : next.startsWith('home') || ['session-error', 'logout-error'].includes(next) ? '/home' : '/purchase-plans', true);
     setExample(next); setRevision(value => value + 1);
-    setScenarioDate(DEMO_SCENARIO_DATE);
+    setScenarioDate(recommendationScenarios[next] || next === 'plans-decisions' ? SCENARIO_DATE : DEMO_SCENARIO_DATE);
   }
 
   return <>
-    <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock MarketDashboard={PreviewMarketDashboard} createForecastService={() => ({ read: async horizon => buildMockForecast(horizon) as ReadyForecast })} createRecommendationService={() => createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} createPlanService={() => createMockPlanService({
-      initialPlans: example === 'multiple' ? [DEMO_PLAN, { ...DEMO_PLAN, plan_id: 'second-demo-plan', quantity_mt: 250 }] : undefined,
-      initialPlan: example === 'rec-empty' ? null : example.startsWith('rec-') ? RECOMMENDATION_DEMO_PLAN : ['saved', 'edit-error', 'delete-error'].includes(example) ? DEMO_PLAN : null,
+    <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock MarketDashboard={PreviewMarketDashboard} readMarketQuote={readMarketQuote}
+      onManageOrganisation={() => window.alert('Preview: this opens Clerk organisation settings (members, invitations and roles).')} createForecastService={() => scenario ? createScenarioForecastService(scenario) : ({ read: async horizon => buildMockForecast(horizon) as ReadyForecast })} createRecommendationService={() => scenario ? createScenarioRecommendationService(scenario, slow ? 3500 : 600) : createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} planAccess={planAccess} createPlanService={() => withScenarioApproval(createMockPlanService({
+      initialPlans: example === 'multiple' ? [DEMO_PLAN, { ...DEMO_PLAN, plan_id: 'second-demo-plan', quantity_mt: 250 }] : example === 'plans-decisions' ? decisionPlans.plans : undefined,
+      initialPlan: scenario ? scenarioPlan(scenario) : example === 'rec-empty' ? null : example.startsWith('rec-') ? RECOMMENDATION_DEMO_PLAN : ['saved', 'edit-error', 'delete-error'].includes(example) ? DEMO_PLAN : null,
       getScenarioDate: () => activeDate.current,
       delayMs: example === 'loading' ? 8000 : slow ? 3500 : 700,
       failOnce: { read: example === 'load-error', create: example === 'save-error', update: example === 'edit-error', delete: example === 'delete-error' },
-    })} />
+    }))} />
     <details className="preview-tools">
       <summary>Demo controls</summary>
       <div className="preview-tools-body">

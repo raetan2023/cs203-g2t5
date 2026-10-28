@@ -1,4 +1,4 @@
-import { useAuth, useUser, useOrganization } from '@clerk/react';
+import { useAuth, useClerk, useUser, useOrganization } from '@clerk/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StatusPage } from '../components/StatusPage';
 import { ClerkAuthPage } from '../features/auth/ClerkAuthPage';
@@ -11,6 +11,8 @@ import { createApiRecommendationService } from '../features/recommendations/apiS
 import { OrganisationSelection, OrganisationControl } from '../features/organisation/OrganisationAccess';
 import { fetchOrganisationAccess, type OrganisationPermissions } from '../features/organisation/apiService';
 import { organisationRoleLabel } from '../features/organisation/roles';
+import { organisationAppearance } from '../features/organisation/appearance';
+import { createStoredMgoQuoteReader } from '../features/home/marketQuote';
 
 type Scenario =
   | { state: 'idle' | 'loading' }
@@ -26,6 +28,7 @@ export function msUntilSingaporeMidnight(now = new Date()) {
 
 export function ClerkApp() {
   const authState = useAuth();
+  const clerk = useClerk();
   const userState = useUser();
   const organisationState = useOrganization();
   const [scenario, setScenario] = useState<Scenario>({ state: 'idle' });
@@ -123,6 +126,11 @@ export function ClerkApp() {
   const createRecommendationService = useCallback(
     () => createApiRecommendationService({ getToken: getContextToken }), [getContextToken],
   );
+  const readMarketQuote = useMemo(() => createStoredMgoQuoteReader(), []);
+  // Members, invitations and roles are managed in Clerk; the backend has no member endpoints.
+  const manageOrganisation = useCallback(
+    () => clerk.openOrganizationProfile({ appearance: organisationAppearance }), [clerk],
+  );
 
   if (!authState.isLoaded || !userState.isLoaded) return <StatusPage message="Loading your session..." />;
   if (signedIn && (!organisationState.isLoaded || (orgId && organisationState.organization?.id !== orgId))) {
@@ -151,5 +159,7 @@ export function ClerkApp() {
     scenarioDate={scenario.state === 'ready' ? scenario.date : ''}
     renderAuthPage={mode => <ClerkAuthPage mode={mode} />}
     MarketDashboard={MarketDashboard}
+    readMarketQuote={readMarketQuote}
+    onManageOrganisation={manageOrganisation}
   />;
 }
