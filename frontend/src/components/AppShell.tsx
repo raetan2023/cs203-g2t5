@@ -10,11 +10,13 @@ export function AppShell({ children, path, scenarioDate, onSignOut, marketAvaila
 }) {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
-  return <div className="bb-app">
+  const home = path === '/home';
+  return <div className={home ? 'bb-app bb-app--home' : 'bb-app'}>
     <a className="bb-skip" href="#app-content">Skip to content</a>
     <header className="bb-header">
       <button ref={trigger} className="bb-menu" aria-label="Open navigation" aria-expanded={open} aria-controls="app-navigation" onClick={() => setOpen(true)}><Icon name="menu" /></button>
-      <Brand />{path === '/market-dashboard'
+      {/* Home shows today's date in its greeting instead of the chip. */}
+      <Brand />{home ? null : path === '/market-dashboard'
         ? <span className="bb-date">MARKET OVERVIEW</span>
         : <time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>}
       {organisationControl}
