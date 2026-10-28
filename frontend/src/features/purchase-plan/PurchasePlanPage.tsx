@@ -31,6 +31,8 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [announcement, setAnnouncement] = useState('');
+  /** Visible counterpart of the announcement; planId marks the card to highlight. Cleared by the next action. */
+  const [notice, setNotice] = useState<{ text: string; planId: string | null } | null>(null);
   const [sort, setSort] = useState<PlanSort>('deadline');
   const [writingServices, setWritingServices] = useState<Set<PurchasePlanService>>(() => new Set());
   const writing = writingServices.has(service);
@@ -63,6 +65,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setShowDelete(false);
     setSaving(false);
     setAnnouncement('');
+    setNotice(null);
     focusAfterRender.current = null;
     if (!readRequest.current || readRequest.current.context !== context || readRequest.current.attempt !== attempt) {
       readRequest.current = { context, attempt, promise: service.list() };
@@ -106,6 +109,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
       .sort((a, b) => a.purchase_deadline.localeCompare(b.purchase_deadline) || a.plan_id.localeCompare(b.plan_id)));
     setState({ mode: 'view', plan: response.plan });
     setAnnouncement('Purchase plan saved.');
+    setNotice({ text: 'Plan saved', planId: response.plan.plan_id });
   }
 
   async function remove() {
@@ -127,6 +131,12 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setPlans(previous => previous.filter(plan => plan.plan_id !== planId));
     setState({ mode: 'view', plan: null });
     setAnnouncement('Purchase plan deleted.');
+    setNotice({ text: 'Plan deleted', planId: null });
+  }
+
+  function clearFeedback() {
+    setAnnouncement('');
+    setNotice(null);
   }
 
   function finishWrite() {
@@ -152,8 +162,10 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
       <header className="pp-heading">
         <div><h1>{canEdit ? "Purchase plans" : "Organisation purchase plans"}</h1><p>{saving ? 'Saving your purchase plan...' : canEdit ? 'Manage your purchase quantity and deadline.' : 'View plans in your organisation. Only buyers can create or change their own plans.'}</p></div>
         {canEdit && <div className="pp-create">
+          {/* Fades out on its own (CSS); hovering holds it. The role="status" above announces it. */}
+          {notice && <span className="pp-notice" onAnimationEnd={() => setNotice(null)}><Icon name="check" />{notice.text}</span>}
           <PlanButton ref={createRef} disabled={writing || state.mode !== 'view'} onClick={() => {
-            setAnnouncement(''); setState({ mode: 'form', plan: null });
+            clearFeedback(); setState({ mode: 'form', plan: null });
           }}><Icon name="plus" />Create plan</PlanButton>
         </div>}
       </header>
@@ -171,16 +183,18 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
         <PlanOverview plans={plans} />
         <div className="pp-list-heading">
           <h2>{canEdit ? 'Your plans' : 'Plans'}</h2>
-          <div className="pp-sort" role="group" aria-label="Sort plans">
+          <div className="pp-sort" role="group" aria-labelledby="pp-sort-label">
+            <span className="pp-sort-label" id="pp-sort-label">Sort by</span>
             {(['deadline', 'volume'] as const).map(option => <button key={option} type="button" aria-pressed={sort === option}
-              onClick={() => setSort(option)}>{option === 'deadline' ? 'Soonest deadline' : 'Largest volume'}</button>)}
+              onClick={() => setSort(option)}>{option === 'deadline' ? 'Deadline' : 'Volume'}</button>)}
           </div>
         </div>
-        <div className="pp-plan-grid">{sortPlans(plans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} busy={writing}
+        <div className="pp-plan-grid">{sortPlans(plans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} service={service} busy={writing}
+          saved={notice?.planId === plan.plan_id}
           editRef={state.plan?.plan_id === plan.plan_id ? editRef : undefined}
           deleteRef={state.plan?.plan_id === plan.plan_id ? deleteRef : undefined} onEdit={() => {
-            setAnnouncement(''); setState({ mode: 'form', plan });
-          }} onDelete={() => { setAnnouncement(''); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}</div>
+            clearFeedback(); setState({ mode: 'form', plan });
+          }} onDelete={() => { clearFeedback(); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}</div>
       </>}
       {canEdit && state.mode === 'form' && <PurchasePlanForm plan={state.plan} scenarioDate={scenarioDate} onSave={save} onBusyChange={busy => {
         if (activeContext.current === context) setSaving(busy);

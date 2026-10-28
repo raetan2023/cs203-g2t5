@@ -1,0 +1,111 @@
+<!doctype html>
+<meta charset="utf-8"><style data-dc-design-system-vars>@layer{:root{--ground:#0c0d0e;--surface-card:#1a1b1c;--surface-border:#2d2c29;--surface-input:#2c3443;--beige:#eadfc9;--on-accent:#0c0d0e;--ink:#f0e6d2;--ink-soft:#c5bba7;--ink-muted:#b5ac9b;--hero-water:#080a0c;--hero-haze:#2a241b;--hero-light:#eadfc9;--space-1:4px;--space-2:8px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;--radius-sm:6px;--radius-md:8px;--radius-lg:12px;--font-sans:system-ui, -apple-system, "Segoe UI", sans-serif;--text-display:300 64px/70px var(--font-sans);--text-title:400 32px/40px var(--font-sans);--text-lead:400 18px/32px var(--font-sans);--text-body:400 14px/20px var(--font-sans);--text-label:600 13px/18px var(--font-sans);}}</style>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<main aria-label="Home" style="position:relative;width:100%;height:860px;overflow:hidden;box-sizing:border-box;background:#0d1b33;color:#f0e6d2;font-family:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
+<img src="./assets/2a17a4685d6382def74ec63825ef7c1d.jpg" alt="" aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%">
+<span aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:260px;background:linear-gradient(180deg,rgba(8,12,20,.65),rgba(8,12,20,0))"></span>
+<span aria-hidden="true" style="position:absolute;left:0;right:0;bottom:0;height:440px;background:linear-gradient(0deg,rgba(8,10,14,.94) 0%,rgba(8,10,14,.72) 45%,rgba(8,10,14,0) 100%)"></span>
+
+<header style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px 40px;min-height:64px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:16px">
+<button type="button" aria-label="Open menu" style="width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:6px;color:#f0e6d2;cursor:pointer">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+</button>
+<span style="display:inline-flex;align-items:center;gap:12px">
+<span style="width:30px;height:30px;border-radius:50%;background:#eadfc9;display:inline-flex;align-items:center;justify-content:center">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0c0d0e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>
+</span>
+<span style="font-size:18px;font-weight:600;letter-spacing:-0.02em">Bunker Buddy</span>
+</span>
+</div>
+<div style="display:flex;align-items:center;gap:20px">
+<button type="button" style="display:inline-flex;align-items:center;gap:10px;min-height:36px;padding:0 8px;background:transparent;border:0;border-radius:6px;color:#f0e6d2;font:inherit;font-size:14px;font-weight:500;cursor:pointer">
+<span style="width:22px;height:22px;border-radius:5px;background:#eadfc9;display:inline-flex;align-items:center;justify-content:center;color:#0c0d0e;font-size:12px;font-weight:600">B</span>
+Bunker Buddy
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+<span style="display:inline-flex;align-items:center;min-height:28px;padding:0 12px;border:1px solid rgba(240,230,210,.35);border-radius:6px;font-size:12px;font-weight:500">{{roleLabel}}</span>
+<span aria-label="Your account" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:rgba(240,230,210,.15);border:1px solid rgba(240,230,210,.35);font-size:13px;font-weight:600">{{initial}}</span>
+</div>
+</header>
+
+<div style="position:absolute;left:40px;right:40px;bottom:40px;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<h1 style="margin:0;font-size:{{h.size}};line-height:.92;font-weight:500;letter-spacing:-0.045em;color:#eadfc9;text-transform:{{h.case}};white-space:nowrap">{{h.line1}}</h1>
+<sc-if value="{{ h.split }}" hint-placeholder-val="{{ false }}">
+<span style="font-size:48px;line-height:52px;font-weight:500;letter-spacing:-0.03em;color:#eadfc9;text-transform:{{h.case}}">{{h.line2}}</span>
+</sc-if>
+<span style="font-size:18px;line-height:24px;color:#e6dcc8">{{dateLine}}</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px">
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:20px">
+<a href="#plans" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 24px;background:#eadfc9;border-radius:10px;color:#0c0d0e;font-size:16px;font-weight:600;text-decoration:none">{{cta}}
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+</a>
+</div>
+<a href="#market" aria-label="Singapore MGO USD 1,351.50 per tonne, quote 26 October, no change. Open market overview." style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;background:rgba(12,13,14,.6);border:1px solid rgba(240,230,210,.2);color:#f0e6d2;text-decoration:none">
+<span style="display:flex;flex-direction:column;gap:2px">
+<span style="font-size:12px;color:#c5bba7">Singapore MGO · quote 26 Oct</span>
+<span style="font-size:20px;line-height:24px;font-weight:600">USD 1,351.50<span style="font-size:12px;font-weight:400;color:#c5bba7"> /MT</span></span>
+</span>
+<svg width="72" height="28" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><path d="{{spark}}" fill="none" stroke="#eadfc9" stroke-width="1.5" vector-effect="non-scaling-stroke"></path></svg>
+<span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:12px;color:#c5bba7"><span>— 0%</span><span style="color:#eadfc9">Market →</span></span>
+</a>
+</div>
+</div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"role":{"editor":"enum","options":["buyer","manager"],"default":"buyer"},"firstName":{"editor":"text","default":"Jordan"},"uppercase":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const manager = this.props.role === 'manager';
+    const up = this.props.uppercase;
+    const upper = !(up === false || up === 'false');
+    const name = (this.props.firstName == null ? 'Jordan' : String(this.props.firstName)).trim();
+
+    const now = new Date();
+    const hr = now.getHours();
+    const part = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+    const full = name ? part + ', ' + name : part;
+
+    const per = upper ? 0.64 : 0.56;
+    const fitPx = 1360 / (full.length * per);
+    const split = fitPx < 56 && !!name;
+    const line1 = split ? part + ',' : full;
+    const n = line1.length * per;
+    const size = 'min(116px, calc((100vw - 80px) / ' + n.toFixed(2) + '))';
+
+    const dateLine = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    const vals = [1238,1236,1241,1249,1252,1247,1255,1262,1270,1268,1274,1281,1290,1302,1298,1306,1314,1325,1318,1312,1309,1315,1322,1318,1326,1320,1317,1324,1342,1338,1335,1339,1344,1349,1352,1347,1350,1351.5,1351.5];
+    const mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+    const spark = vals.map((v, i) => (i ? 'L' : 'M') + (i / (vals.length - 1) * 100).toFixed(2) + ' ' + (28 - (v - mn) / (mx - mn) * 26).toFixed(2)).join(' ');
+
+    return {
+      h: { line1, line2: name, split, size, case: upper ? 'uppercase' : 'none' },
+      initial: name ? name.charAt(0).toUpperCase() : '·',
+      roleLabel: manager ? 'Manager' : 'Buyer',
+      cta: manager ? 'Plans for approval' : 'Go to your plans',
+      dateLine, spark
+    };
+  }
+}
+</script>
+</body>
+</html>

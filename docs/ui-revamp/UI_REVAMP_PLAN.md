@@ -480,9 +480,13 @@ truthful. Functional tests cover the new behavior. Do not mark this complete aft
 
 #### Phase 3B — Auth styling and post-signup Home
 
-**Home design deferred by owner (2026-10-26): may run Impeccable with Claude. No direction selected; no Home redesign implemented. Auth styling below remains pending separately.**
+**Home implemented 2026-10-28 on `feature/home-page`** from the owner's Claude Design mocks (buyer, manager, analyst, admin) in
+`docs/ui-revamp/assets/inspo/home-page/`; decisions and backend check are in that folder's `HANDOFF.md`. Full-bleed photo with the
+shell header laid over it, time-of-day greeting with the full name, today's operational date, one role action, and the latest
+stored `SGP_MGO_OBSERVED` price labelled "est." with its own date. The brainstorm items below were superseded by the owner's designs.
+Auth styling below remains pending separately.
 
-- [ ] **Owner request — brainstorm before building:** the landing page after signup is too plain and
+- [x] **Owner request — brainstorm before building:** the landing page after signup is too plain and
       uninviting. Scope this to authenticated `/home`, not a new public marketing page.
       Establish what a first-time user should understand/do, and what a returning user needs.
 - [ ] Develop and show 2–3 concrete Home directions with real available content; review hierarchy,
@@ -651,8 +655,9 @@ unavailable state. Any necessary data/helper changes are documented and tested; 
 | Today's date policy | Phase 3A | Resolve timezone, rollover, old plans and unsupported analysis; keep observation dates distinct |
 | Inviting post-signup Home | Phase 3B | Brainstorm first-time and returning-user content/layout; Impeccable/Claude if available; owner selects direction |
 | Row-first plan cards | Phase 4 | Readable card width, horizontal fill then wrap, stable source/keyboard order |
-| Visible save/delete confirmation | Phase 4 follow-up (next: `/impeccable harden`) | After a successful create/edit show "Plan saved", after delete "Plan deleted", visibly near the page heading (today only a screen-reader announcement, `PurchasePlanPage.tsx` `pp-sr-only` status). Briefly highlight the new or edited card. Presentation only: no change to save/delete logic or timing; keep the existing `role="status"` announcement; respect reduced motion. From the 2026-10-27 critique (P1 #3). |
-| Plan sort switch | Phase 4 — done 2026-10-27 | "Soonest deadline / Largest volume" switch above the grid (`aria-pressed`), display order only; default soonest deadline. |
+| Visible save/delete confirmation | Phase 4 — done 2026-10-28 | "Plan saved" / "Plan deleted" beside Create plan (`.pp-notice`): fades in, holds ~4s (hover pauses), fades out and unmounts; cleared by the next create/edit/delete. The new or edited card gets a 2s beige ring (`.pp-summary--saved`). Save/delete logic and the `role="status"` announcement unchanged. Under reduced motion both stay as opacity-only fades, exempted from `base.css`'s global .01ms animation cut so the notice stays readable. From the 2026-10-27 critique (P1 #3). |
+| Purchase plans motion pass | Phase 4 — done 2026-10-28 | Tokens `--bb-motion-base` (200ms) and `--bb-ease-out`. Loading spinner rotates (reduced motion: opacity pulse). Buttons and sort options scale to .97 on press (not under reduced motion); colour changes ease over `--bb-motion-fast`. Delete dialog fades in from 96% scale; closes instantly. Deferred: sort-reorder view transition, first-load reveal. |
+| Plan sort switch | Phase 4 — done 2026-10-27; restyled 2026-10-28 | "Sort by: Deadline / Volume" text toggle above the grid (`aria-pressed`; only the selected option gets a raised surface chip), display order only; default soonest deadline. |
 | Dashboard trend comparison | Phase 6 | Define interval per indicator; truthful green-up/red-down with neutral flat/missing states |
 
 ## 7. Workflow: you, the lead session, and subagents

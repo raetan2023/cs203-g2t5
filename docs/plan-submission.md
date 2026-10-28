@@ -1,5 +1,8 @@
 # Purchase-plan submission and manager notification
 
+> **Building what comes after the decision** (record purchase, withdraw, revise a rejected plan, notify the buyer)?
+> Start at [handover.md](handover.md). It says which parts of this file to read.
+
 Implemented on `fix-forecast-role-access`. The Supabase migration was **applied
 on 2026-10-27 (Asia/Singapore)** to the shared project with Nelson’s authorisation. No email, Clerk admin API key or external notification provider
 is required. This feature uses a durable, shared **in-app** manager inbox.
@@ -39,6 +42,9 @@ locked. `approved` and `rejected` are reserved schema states: **manager approval
 Only a current manager in the same active organisation can decide a submitted
 request. The first decision is final; concurrent/later attempts return 409.
 Rejected requests stay locked; revising a proposal requires a new draft plan.
+Nothing happens after the decision yet (recording the purchase, withdrawing,
+revising a rejected plan, telling the buyer). The proposed design for those is in
+[handover.md](handover.md); it is not implemented.
 
 ## API and role matrix
 

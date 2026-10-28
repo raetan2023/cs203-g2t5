@@ -55,9 +55,15 @@ brainstorm lists freely; move an idea up into Direction once it is chosen.
 
 ### 3.1 Sign-up / sign-in (first priority: it is the first impression)
 
-**Done 2026-10-27:** the wireframe prototype (traced wireframe container ship, dark-and-beige card) is now the real
-Clerk login and sign-up (`features/auth/AuthLayout.tsx`, `WireframeVessel.tsx`, `clerkAppearance` in `styles/theme.ts`).
-Screenshots: `docs/ui-revamp/login-port/`. The options below are for a later round, if you want to go further.
+**Built 2026-10-27 (replaces the wireframe ship):** "Login — hybrid, reactive ship"
+(`assets/inspo/sign-in-page/Login — hybrid, reactive ship-html/`). Full-bleed dusk scene (moon, stars, tanker) with a
+cream card holding Clerk's real form; Geist on these pages only. The ship reacts to the form: deck lights come on one
+per typed email character, lights dim while a hidden password is focused, a password submit sets the ship off with a
+route to a waypoint, and a returned error turns it back and shakes the card. Same scene and card for sign-up.
+Code: `features/auth/ReactiveShip.tsx`, `useAuthFormSignals.ts` (reads Clerk's DOM; auth unchanged), `AuthLayout.tsx`,
+`clerkAppearance` + `--bb-auth-*` tokens. Reduced motion = lit and still; animation pauses in a hidden tab; idle CPU
+~1.4% main thread (headless Chromium). Not done: playing the "sail" after a *successful* sign-in (Clerk redirects
+immediately). Screenshots: `docs/ui-revamp/login-ship/`. Impeccable flags Geist as an overused font (owner's choice).
 
 **Direction (earlier ideas):** replace the current white ship on a grid. Candidates, pick one or two to prototype:
 
