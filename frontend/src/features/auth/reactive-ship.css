@@ -1,0 +1,46 @@
+/* Reactive ship scene (sign-in / sign-up). Values from the "Login — hybrid, reactive ship" design export.
+   Only transform and opacity animate; blurred halos change opacity in steps, never continuously. */
+/* Scaled by width only and pinned to the bottom of the page, so the ship always takes the same share of the width
+   (top of mast at ~32vw above the bottom) and never grows into the headline. Above it the page is the sky's own colour. */
+.rship { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: auto; display: block; pointer-events: none; }
+.rship .bob { animation: rship-bob 9s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.rship .sail { transition: transform 2.6s cubic-bezier(.45, 0, .2, 1); }
+.rship.go .sail { transform: translateX(70px); }
+.rship .wake { opacity: 0; transition: opacity 1.2s ease .3s; }
+.rship.go .wake { opacity: 1; }
+.rship .draw { stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset 1.8s ease .6s; }
+.rship.go .draw { stroke-dashoffset: 0; }
+.rship .wp { opacity: 0; transition: opacity .6s ease 2.2s; }
+.rship.go .wp { opacity: 1; }
+.rship .wpring { animation: rship-pulse 2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+
+/* Light levels follow the form: on (resting), hot (typing / signing in), off (password hidden). */
+.rship .lt, .rship .hl, .rship .bridge, .rship .refl, .rship .deckglow { transition: opacity .45s ease; }
+.rship .lt.on { opacity: .9; } .rship .lt.hot { opacity: 1; } .rship .lt.off { opacity: .4; }
+.rship .hl.on { opacity: .4; } .rship .hl.hot { opacity: .7; } .rship .hl.off { opacity: .12; }
+.rship .bridge.on { opacity: .9; } .rship .bridge.hot { opacity: 1; } .rship .bridge.off { opacity: .55; }
+.rship .bglow { opacity: .25; transition: opacity .6s ease; }
+.rship .bridge.hot .bglow { opacity: .42; }
+.rship .refl { opacity: .55; } .rship .deckglow { opacity: .3; }
+.rship.dim .refl { opacity: .35; } .rship.dim .deckglow { opacity: .18; }
+
+/* Ambient life, always slow. */
+/* Reflections (.rf) sway ±3px over 9s, driven at 8 updates/s from ReactiveShip.tsx: as a CSS animation the masked
+   pattern columns cost ~4.5% main-thread time at 60fps; at 8/s they are visually the same. */
+.rship .w1 { animation: rship-flick 11s ease-in-out infinite; }
+.rship .w2 { animation: rship-flick 17s ease-in-out infinite -5s; }
+.rship .twinkle { opacity: .4; animation: rship-twinkle 6s ease-in-out infinite; }
+.rship .t2 { animation-delay: -2s; } .rship .t3 { animation-delay: -3.5s; }
+
+/* Hidden tab: stop every loop (set from visibilitychange). */
+.rship.paused, .rship.paused * { animation-play-state: paused !important; }
+
+@keyframes rship-bob { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(1.6px) rotate(.12deg); } }
+@keyframes rship-flick { 0%, 100% { opacity: 1; } 46% { opacity: 1; } 50% { opacity: .25; } 54% { opacity: 1; } }
+@keyframes rship-twinkle { 0%, 100% { opacity: .25; } 50% { opacity: .7; } }
+@keyframes rship-pulse { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(2.2); opacity: 0; } }
+
+/* Reduced motion: the lit scene, still. Lights still change level, instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .rship *, .rship.go .sail { animation: none !important; transition: none !important; }
+}
