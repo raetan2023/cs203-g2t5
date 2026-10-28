@@ -17,10 +17,9 @@ Every page file has these sections:
 
 ## Where the revamp stands (2026-10-28)
 
-- **The UI revamp lives on `feature/ui-revamp-wireframe`.** It is 32 commits ahead of `main` and 0 behind.
-  - Merged into it: PR #35 and #36 (recommendations page), #37 (login), #38 (decision views), #39 (post-decision design) and #40 (Home).
+- **The UI revamp lives on `feature/ui-revamp-wireframe`.** On 2026-10-28 it was 44 commits ahead of `main` and 0 behind.
+  - Merged into it: PR #35 and #36 (recommendations page), #37 (login), #38 (decision views), #39 (post-decision design), #40 (Home) and #41 (this handover and the market dashboard spec).
   - The purchase plans polish was committed to it directly.
-  - Open: **PR #41**, this handover and the market dashboard spec.
 - **Still to do across the app:**
   - merge wireframe into `main` (the owner's call, once the teams agree)
   - everything after the manager's decision ([Recommendations](handover/recommendations.md))

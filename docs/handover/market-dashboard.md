@@ -20,11 +20,11 @@
   - What the spec still lacks is in `MISSING.md`.
 - **Decisions made:** buyer-meaning colour, MGO first, Past/Next range labels (see [Decided](#decided-2026-10-28)).
 - **Handed over to you:** the "Your plans" block, the horizon choice, the admin 403, and the build itself (see [Handed over](#handed-over-yours-to-decide-and-build)).
-- **Branch:** all of this is on `ui-revamp/market-proposal` (PR #41 into wireframe). No app code was changed.
+- **Branch:** all of this is on `feature/ui-revamp-wireframe` (merged via PR #41 on 2026-10-28). No app code was changed.
 
 ## Where your agent should continue
 
-1. After PR #41 merges, branch from `feature/ui-revamp-wireframe` (e.g. `feature/market-dashboard-revamp`).
+1. Branch from `feature/ui-revamp-wireframe` (e.g. `feature/market-dashboard-revamp`).
 2. **Fix the three bugs first** (listed under [Handed over](#handed-over-yours-to-decide-and-build), item 5), each with a test. They're small, and they change what the new UI shows.
 3. **Build the spec in React, one block per PR:**
    1. price strip
@@ -74,7 +74,7 @@ Everything is in [`docs/ui-revamp/market-proposal/`](../ui-revamp/market-proposa
 ## Decided (2026-10-28)
 
 - **Colour means what's good for a buyer.** Green = the change makes fuel cheaper. Red (`#f2849e`) = dearer. Grey = no direct effect (the USD index) or no change. Always pair the colour with an arrow and a sign.
-  - This supersedes CREATIVE_BRIEF §3.5, which said green = up and red = down. That line needs updating.
+  - This supersedes the old green = up / red = down rule. CREATIVE_BRIEF §3.5 now says the same.
 - **MGO comes first.** It's the chart's default series and the largest figure, and the title line states its price and the forecast range.
 - **Two range controls stay, labelled by direction:** **Past 15 · 30 · 60 days** for the chart's history, and **Next 7 · 14 · 30 days** for the forecast.
   - The market forecast's horizon is **not** shared with the purchase estimate, which has its own forecast provider (`/api/v1/purchase-plans/forecast`).
