@@ -1,0 +1,358 @@
+<!doctype html>
+<meta charset="utf-8"><style data-dc-design-system-vars>@layer{:root{--ground:#0c0d0e;--surface-card:#1a1b1c;--surface-border:#2d2c29;--surface-input:#2c3443;--beige:#eadfc9;--on-accent:#0c0d0e;--ink:#f0e6d2;--ink-soft:#c5bba7;--ink-muted:#b5ac9b;--hero-water:#080a0c;--hero-haze:#2a241b;--hero-light:#eadfc9;--space-1:4px;--space-2:8px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;--radius-sm:6px;--radius-md:8px;--radius-lg:12px;--font-sans:system-ui, -apple-system, "Segoe UI", sans-serif;--text-display:300 64px/70px var(--font-sans);--text-title:400 32px/40px var(--font-sans);--text-lead:400 18px/32px var(--font-sans);--text-body:400 14px/20px var(--font-sans);--text-label:600 13px/18px var(--font-sans);}}</style>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Purchase recommendation</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width:100%;min-height:1500px;box-sizing:border-box;background:#0c0d0e;color:#f0e6d2;font-family:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:20px">
+
+<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px 40px;border-bottom:1px solid #2d2c29;min-height:60px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:16px">
+<button type="button" aria-label="Open menu" style="width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:6px;color:#f0e6d2;cursor:pointer">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+</button>
+<span style="display:inline-flex;align-items:center;gap:12px">
+<span style="width:30px;height:30px;border-radius:50%;background:#eadfc9;display:inline-flex;align-items:center;justify-content:center">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0c0d0e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>
+</span>
+<span style="font-size:18px;font-weight:600;letter-spacing:-0.02em">Bunker Buddy</span>
+</span>
+</div>
+<div style="display:flex;align-items:center;gap:20px">
+<span style="font-size:13px;color:#b5ac9b">Wed 28 Oct 2026</span>
+<span style="width:1px;height:24px;background:#2d2c29"></span>
+<button type="button" style="display:inline-flex;align-items:center;gap:10px;min-height:36px;padding:0 8px;background:transparent;border:0;border-radius:6px;color:#f0e6d2;font:inherit;font-size:14px;font-weight:500;cursor:pointer">
+<span style="width:22px;height:22px;border-radius:5px;background:#eadfc9;display:inline-flex;align-items:center;justify-content:center;color:#0c0d0e;font-size:11px;font-weight:600">B</span>
+Bunker Buddy
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+<span style="display:inline-flex;align-items:center;gap:8px;min-height:28px;padding:0 12px;border:1px solid #2d2c29;border-radius:6px;font-size:12px;font-weight:500"><span style="width:6px;height:6px;border-radius:50%;background:#eadfc9"></span>Buyer</span>
+</div>
+</header>
+
+<div style="max-width:1280px;margin:0 auto;padding:32px 40px 80px;box-sizing:border-box;display:flex;flex-direction:column;gap:28px">
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<a href="#plans" style="display:inline-flex;align-items:center;gap:6px;width:max-content;min-height:32px;color:#c5bba7;font-size:13px;text-decoration:none">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+Purchase plans
+</a>
+<h1 style="margin:0;font-size:32px;line-height:38px;font-weight:600;letter-spacing:-0.025em">Purchase recommendation</h1>
+<p style="margin:0;font-size:15px;line-height:22px;color:#c5bba7">47 MT · due Thu 05 Nov 2026 · <span style="color:#f0e6d2;font-weight:500">8 days left</span></p>
+</div>
+
+<div style="display:flex;align-items:flex-start;gap:28px">
+
+<main style="flex:1 1 760px;min-width:0;display:flex;flex-direction:column;gap:28px">
+
+<section aria-label="Recommendation" style="background:#1a1b1c;border:1px solid #2d2c29;border-radius:14px;padding:32px;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;align-items:flex-start;gap:18px">
+<span style="flex:0 0 auto;width:52px;height:52px;border-radius:12px;background:#eadfc9;color:#0c0d0e;display:inline-flex;align-items:center;justify-content:center">
+<sc-if value="{{ isSplit }}" hint-placeholder-val="{{ false }}">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20v-6M12 14l-6-6M12 14l6-6M6 8V4M18 8V4M3 7l3-3 3 3M15 7l3-3 3 3"></path></svg>
+</sc-if>
+<sc-if value="{{ isMonitor }}" hint-placeholder-val="{{ true }}">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+</sc-if>
+</span>
+<div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+<span style="font-size:13px;color:#b5ac9b">Recommended action</span>
+<h2 style="margin:0;font-size:40px;line-height:44px;font-weight:600;letter-spacing:-0.03em">{{action}}</h2>
+<p style="margin:2px 0 0;font-size:17px;line-height:24px;color:#f0e6d2">{{tagline}}</p>
+<p style="margin:0;max-width:620px;font-size:14px;line-height:21px;color:#c5bba7">{{reason}}</p>
+</div>
+</div>
+
+<div style="height:1px;background:#2d2c29"></div>
+
+<sc-if value="{{ isMonitor }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<div style="display:flex;flex-direction:column;gap:6px;padding:18px 20px;border:1px solid #2d2c29;border-radius:10px">
+<span style="font-size:13px;color:#b5ac9b">Buy today</span>
+<span style="font-size:26px;line-height:32px;font-weight:600;letter-spacing:-0.02em">USD 63,544</span>
+<span style="font-size:13px;color:#b5ac9b">47 MT × USD 1,352/MT</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;padding:18px 20px;border:1px solid #2d2c29;border-radius:10px">
+<span style="font-size:13px;color:#b5ac9b">Wait until Mon 02 Nov</span>
+<span style="font-size:26px;line-height:32px;font-weight:600;letter-spacing:-0.02em">USD 56,400–65,142</span>
+<span style="font-size:13px;color:#b5ac9b">Up to USD 7,144 less or USD 1,598 more</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSplit }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+<div style="display:flex;flex-direction:column;gap:6px;padding:18px 20px;border:1px solid #eadfc9;border-radius:10px">
+<span style="font-size:13px;color:#b5ac9b">1 · 24 MT today</span>
+<span style="font-size:26px;line-height:32px;font-weight:600;letter-spacing:-0.02em">USD 32,448</span>
+<span style="font-size:13px;color:#b5ac9b">at USD 1,352/MT</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;padding:18px 20px;border:1px solid #eadfc9;border-radius:10px">
+<span style="font-size:13px;color:#b5ac9b">2 · 23 MT by Mon 02 Nov</span>
+<span style="font-size:26px;line-height:32px;font-weight:600;letter-spacing:-0.02em">USD 27,600–31,878</span>
+<span style="font-size:13px;color:#b5ac9b">at USD 1,200–1,386/MT</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;padding:18px 20px;border:1px solid #2d2c29;border-radius:10px;background:#141516">
+<span style="font-size:13px;color:#b5ac9b">Total for 47 MT</span>
+<span style="font-size:26px;line-height:32px;font-weight:600;letter-spacing:-0.02em">USD 60,048–64,326</span>
+<span style="font-size:13px;color:#b5ac9b">vs USD 63,544 all today</span>
+</div>
+</div>
+</sc-if>
+</section>
+
+<section aria-labelledby="cmp-h" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 id="cmp-h" style="margin:0;font-size:20px;line-height:26px;font-weight:600;letter-spacing:-0.015em">Compare buying dates</h2>
+<p style="margin:0;font-size:13px;color:#b5ac9b">Today's observed price and the model's three forecasts. Each is a separate estimate for that date.</p>
+</div>
+<div role="group" aria-label="Show prices as" style="display:inline-flex;border:1px solid #2d2c29;border-radius:8px;overflow:hidden">
+<button type="button" onClick="{{setTotal}}" aria-pressed="{{isTotal}}" style="min-height:36px;padding:0 14px;border:0;background:{{totalBg}};color:{{totalFg}};font:inherit;font-size:13px;font-weight:500;cursor:pointer">Total</button>
+<button type="button" onClick="{{setPerMt}}" aria-pressed="{{isPerMt}}" style="min-height:36px;padding:0 14px;border:0;border-left:1px solid #2d2c29;background:{{mtBg}};color:{{mtFg}};font:inherit;font-size:13px;font-weight:500;cursor:pointer">Per MT</button>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) 72px repeat(2,minmax(0,1fr));gap:12px">
+<sc-for list="{{before}}" as="c" hint-placeholder-count="2">
+<button type="button" onClick="{{c.pick}}" aria-pressed="{{c.selected}}" style="display:flex;flex-direction:column;gap:14px;padding:18px;text-align:left;border:1px solid {{c.border}};border-radius:12px;background:{{c.bg}};color:#f0e6d2;font:inherit;cursor:pointer;box-shadow:{{c.ring}}">
+<span style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;width:100%">
+<span style="display:flex;flex-direction:column;gap:2px">
+<span style="font-size:15px;font-weight:600">{{c.label}}</span>
+<span style="font-size:12px;color:#b5ac9b">{{c.date}}</span>
+</span>
+<span style="display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:11px;font-size:11px;font-weight:600;white-space:nowrap;background:{{c.chipBg}};color:{{c.chipFg}};border:1px {{c.chipBorderStyle}} {{c.chipBorder}}">{{c.status}}</span>
+</span>
+<span style="position:relative;display:block;width:100%;height:150px">
+<span style="position:absolute;left:0;right:0;top:{{refTop}};border-top:1px dashed #4a4740"></span>
+<sc-if value="{{ c.observed }}" hint-placeholder-val="{{ false }}">
+<span style="position:absolute;left:50%;top:{{c.midTop}};width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:{{c.barColor}}"></span>
+</sc-if>
+<sc-if value="{{ c.forecast }}" hint-placeholder-val="{{ true }}">
+<span style="position:absolute;left:50%;top:{{c.top}};height:{{c.height}};width:12px;margin-left:-6px;border-radius:6px;background:{{c.barColor}};opacity:.9"></span>
+<span style="position:absolute;left:50%;top:{{c.midTop}};width:28px;height:2px;margin:-1px 0 0 -14px;background:#f0e6d2"></span>
+</sc-if>
+</span>
+<span style="display:flex;flex-direction:column;gap:2px">
+<span style="font-size:19px;line-height:24px;font-weight:600;letter-spacing:-0.015em">{{c.big}}</span>
+<span style="font-size:12px;color:#b5ac9b">{{c.small}}</span>
+</span>
+</button>
+</sc-for>
+
+<div aria-label="Purchase deadline Thu 05 Nov" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:6px">
+<span style="font-size:11px;font-weight:600;color:#f0e6d2">Deadline</span>
+<span style="font-size:11px;color:#b5ac9b">Thu 05 Nov</span>
+<span style="flex:1;width:0;margin-top:6px;border-left:2px dashed #8f8878"></span>
+</div>
+
+<sc-for list="{{after}}" as="c" hint-placeholder-count="2">
+<button type="button" onClick="{{c.pick}}" aria-pressed="{{c.selected}}" style="display:flex;flex-direction:column;gap:14px;padding:18px;text-align:left;border:1px solid {{c.border}};border-radius:12px;background:{{c.bg}};color:#c5bba7;font:inherit;cursor:pointer;box-shadow:{{c.ring}}">
+<span style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;width:100%">
+<span style="display:flex;flex-direction:column;gap:2px">
+<span style="font-size:15px;font-weight:600">{{c.label}}</span>
+<span style="font-size:12px;color:#b5ac9b">{{c.date}}</span>
+</span>
+<span style="display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:11px;font-size:11px;font-weight:600;white-space:nowrap;background:{{c.chipBg}};color:{{c.chipFg}};border:1px {{c.chipBorderStyle}} {{c.chipBorder}}">{{c.status}}</span>
+</span>
+<span style="position:relative;display:block;width:100%;height:150px">
+<span style="position:absolute;left:0;right:0;top:{{refTop}};border-top:1px dashed #4a4740"></span>
+<span style="position:absolute;left:50%;top:{{c.top}};height:{{c.height}};width:12px;margin-left:-6px;border-radius:6px;background:{{c.barColor}}"></span>
+<span style="position:absolute;left:50%;top:{{c.midTop}};width:28px;height:2px;margin:-1px 0 0 -14px;background:#b5ac9b"></span>
+</span>
+<span style="display:flex;flex-direction:column;gap:2px">
+<span style="font-size:19px;line-height:24px;font-weight:600;letter-spacing:-0.015em">{{c.big}}</span>
+<span style="font-size:12px;color:#b5ac9b">{{c.small}}</span>
+</span>
+</button>
+</sc-for>
+</div>
+<p style="margin:0;font-size:12px;line-height:18px;color:#b5ac9b">Bars show each forecast's range on a shared price scale; the white tick is the central estimate. The dashed line is today's price. Select a column to see its detail.</p>
+</section>
+
+<section aria-labelledby="det-h" style="background:#1a1b1c;border:1px solid #2d2c29;border-radius:14px;padding:28px;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h2 id="det-h" style="margin:0;font-size:20px;line-height:26px;font-weight:600;letter-spacing:-0.015em">{{d.title}}</h2>
+<p style="margin:0;font-size:13px;color:#b5ac9b">Exploring a date shows what it could cost. It doesn't change the recommendation.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:13px;color:#b5ac9b">Estimated total · 47 MT</span>
+<span style="font-size:20px;line-height:26px;font-weight:600">{{d.total}}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:13px;color:#b5ac9b">Compared with buying today</span>
+<span style="font-size:20px;line-height:26px;font-weight:600">{{d.change}}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:13px;color:#b5ac9b">Price per MT</span>
+<span style="font-size:20px;line-height:26px;font-weight:600">{{d.perMt}}</span>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding-top:16px;border-top:1px solid #2d2c29;font-size:13px;color:#c5bba7">
+<span>{{d.source}}</span>
+<sc-if value="{{ d.experimental }}" hint-placeholder-val="{{ true }}">
+<span style="display:inline-flex;align-items:center;gap:6px;color:#e2c48a">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.5"></path></svg>
+Experimental range: no measured confidence coverage. Confirm a current supplier quote before buying.
+</span>
+</sc-if>
+<sc-if value="{{ d.late }}" hint-placeholder-val="{{ false }}">
+<span style="display:inline-flex;align-items:center;gap:6px;color:#f0e6d2">After your deadline, so it isn't used in the recommendation.</span>
+</sc-if>
+</div>
+</section>
+
+<details style="border-top:1px solid #2d2c29;padding-top:4px">
+<summary style="display:flex;align-items:center;justify-content:space-between;min-height:48px;cursor:pointer;font-size:15px;font-weight:500;list-style:none">How this recommendation was calculated
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5bba7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</summary>
+<ul style="margin:4px 0 16px;padding-left:20px;display:flex;flex-direction:column;gap:8px;color:#c5bba7;font-size:14px;line-height:21px">
+<li>Only forecasts that land on or before your deadline are used. For this plan that is the 7-day forecast.</li>
+<li>Where two eligible forecasts exist, they are blended, weighted by how close each target date is to your deadline.</li>
+<li>The blended range is compared with today's observed price. If the range overlaps it, the direction is uncertain.</li>
+<li>Prices are reviewed again before committing. The plan is never held past its deadline.</li>
+</ul>
+</details>
+<details style="border-top:1px solid #2d2c29;border-bottom:1px solid #2d2c29;padding-top:4px">
+<summary style="display:flex;align-items:center;justify-content:space-between;min-height:48px;cursor:pointer;font-size:15px;font-weight:500;list-style:none">Assumptions and data sources
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c5bba7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</summary>
+<ul style="margin:4px 0 16px;padding-left:20px;display:flex;flex-direction:column;gap:8px;color:#c5bba7;font-size:14px;line-height:21px">
+<li>Reference price: supplier quote observed Mon 26 Oct 2026.</li>
+<li>Forecasts: Ridge model, run from the 26 Oct quote. Bounds are experimental.</li>
+<li>[Policy version and any further sources]</li>
+</ul>
+</details>
+</main>
+
+<aside aria-label="Decision" style="flex:0 0 320px;position:sticky;top:24px;display:flex;flex-direction:column;gap:16px">
+<div style="background:#1a1b1c;border:1px solid #2d2c29;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<span style="font-size:13px;color:#b5ac9b">Your decision</span>
+<span style="font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.02em">{{action}}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#b5ac9b">Plan</span><span>47 MT</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#b5ac9b">Deadline</span><span>Thu 05 Nov · 8 days</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#b5ac9b">{{railCostLabel}}</span><span style="font-weight:600">{{railCost}}</span></div>
+</div>
+<button type="button" style="min-height:48px;background:#eadfc9;border:0;border-radius:8px;color:#0c0d0e;font:inherit;font-size:15px;font-weight:600;cursor:pointer">Submit for approval</button>
+<button type="button" style="min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:transparent;border:1px solid #3d3b36;border-radius:8px;color:#f0e6d2;font:inherit;font-size:14px;font-weight:500;cursor:pointer">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"></path></svg>
+Refresh prices
+</button>
+</div>
+<p style="margin:0;padding:0 4px;font-size:12px;line-height:18px;color:#b5ac9b">Prices from a supplier quote observed Mon 26 Oct, 2 days ago. Confirm a current quote before you buy.</p>
+</aside>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"outcome":{"editor":"enum","options":["monitor","split"],"default":"monitor"},"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const outcome = this.props.outcome === 'split' ? 'split' : 'monitor';
+    const isSplit = outcome === 'split';
+    const st = this.state || {};
+    const unit = st.unit || 'total';
+    const sel = st.sel || 'd7';
+    const QTY = 47, TODAY = 1352, MIN = 1000, MAX = 1760;
+    const fmt = (n) => 'USD ' + Math.round(n).toLocaleString('en-US');
+    const num = (n) => Math.round(n).toLocaleString('en-US');
+    const pct = (v) => (v - MIN) / (MAX - MIN);
+    const posTop = (v) => ((1 - pct(v)) * 100).toFixed(1) + '%';
+    const set = (p) => this.setState(Object.assign({}, this.state || {}, p));
+
+    const raw = [
+      { id: 'today', label: 'Today', date: 'Wed 28 Oct', low: 1352, mid: 1352, high: 1352, observed: true, late: false },
+      { id: 'd7', label: '7 days', date: 'Mon 02 Nov', low: 1200, mid: 1352, high: 1386, observed: false, late: false },
+      { id: 'd14', label: '14 days', date: 'Mon 09 Nov', low: 1020, mid: 1352, high: 1596, observed: false, late: true },
+      { id: 'd30', label: '30 days', date: 'Wed 25 Nov', low: 1178, mid: 1352, high: 1735, observed: false, late: true }
+    ];
+    const recIds = isSplit ? ['today', 'd7'] : [];
+
+    const cols = raw.map((c) => {
+      const selected = c.id === sel;
+      const rec = recIds.indexOf(c.id) >= 0;
+      const status = c.late ? 'After deadline' : rec ? 'Recommended' : c.observed ? 'Observed' : 'Eligible';
+      const big = unit === 'total' ? fmt(c.mid * QTY) : fmt(c.mid) + '/MT';
+      const small = c.observed
+        ? (unit === 'total' ? '47 MT × USD 1,352/MT' : 'Quote from Mon 26 Oct')
+        : (unit === 'total' ? 'Range ' + num(c.low * QTY) + '–' + num(c.high * QTY) : 'Range ' + num(c.low) + '–' + num(c.high) + '/MT');
+      return Object.assign({}, c, {
+        selected,
+        forecast: !c.observed,
+        status,
+        big,
+        small,
+        top: posTop(c.high),
+        height: ((pct(c.high) - pct(c.low)) * 100).toFixed(1) + '%',
+        midTop: posTop(c.mid),
+        border: selected ? '#eadfc9' : (c.late ? '#2d2c29' : '#3d3b36'),
+        ring: selected ? '0 0 0 1px #eadfc9' : 'none',
+        bg: c.late ? 'repeating-linear-gradient(135deg,#151617 0 7px,#1a1b1c 7px 14px)' : '#1a1b1c',
+        barColor: (rec || selected) ? '#eadfc9' : (c.late ? '#4f4b44' : '#8f8878'),
+        chipBg: rec ? '#eadfc9' : 'transparent',
+        chipFg: rec ? '#0c0d0e' : (c.late ? '#b5ac9b' : '#c5bba7'),
+        chipBorder: rec ? '#eadfc9' : '#4a4740',
+        chipBorderStyle: c.late ? 'dashed' : 'solid',
+        pick: () => set({ sel: c.id })
+      });
+    });
+
+    const s = cols.find((c) => c.id === sel) || cols[1];
+    const dLow = (s.low - TODAY) * QTY, dHigh = (s.high - TODAY) * QTY;
+    const change = s.observed ? 'Reference price'
+      : (dLow < 0 ? fmt(-dLow) + ' less' : fmt(dLow) + ' more') + ' to ' + (dHigh < 0 ? fmt(-dHigh) + ' less' : fmt(dHigh) + ' more');
+
+    return {
+      isSplit,
+      isMonitor: !isSplit,
+      action: isSplit ? 'Split' : 'Monitor',
+      tagline: isSplit ? 'Buy half today and half by Mon 02 Nov.' : 'Hold off for now and re-check prices before Mon 02 Nov.',
+      reason: isSplit
+        ? 'Forecasts before your deadline are mixed, so spreading the purchase reduces your exposure to a price move in either direction.'
+        : 'The only forecast before your deadline (7 days, USD 1,200–1,386/MT) overlaps today’s price, so waiting has no clear advantage yet.',
+      railCostLabel: isSplit ? 'Split total' : 'Buy today',
+      railCost: isSplit ? 'USD 60,048–64,326' : 'USD 63,544',
+      refTop: posTop(TODAY),
+      before: cols.filter((c) => !c.late),
+      after: cols.filter((c) => c.late),
+      isTotal: unit === 'total',
+      isPerMt: unit === 'mt',
+      totalBg: unit === 'total' ? '#eadfc9' : 'transparent',
+      totalFg: unit === 'total' ? '#0c0d0e' : '#c5bba7',
+      mtBg: unit === 'mt' ? '#eadfc9' : 'transparent',
+      mtFg: unit === 'mt' ? '#0c0d0e' : '#c5bba7',
+      setTotal: () => set({ unit: 'total' }),
+      setPerMt: () => set({ unit: 'mt' }),
+      d: {
+        title: s.observed ? 'If you buy today' : 'If you buy on ' + s.date + ' (' + s.label + ')',
+        total: s.observed ? fmt(s.mid * QTY) : fmt(s.low * QTY) + '–' + num(s.high * QTY),
+        change,
+        perMt: s.observed ? fmt(s.mid) : fmt(s.low) + '–' + num(s.high),
+        source: s.observed ? 'Supplier quote observed Mon 26 Oct · 2 days old' : 'Ridge model · run from the Mon 26 Oct quote',
+        experimental: !s.observed,
+        late: s.late
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
