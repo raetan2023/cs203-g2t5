@@ -60,29 +60,21 @@ What is really missing is everything **after** step 5 (section 3).
 | M6 | **Organisation switcher and date** | frontend | Both are static in the proposal. The real switcher is `organisationControl` (Clerk). The date chip should show the backend's Singapore date (`/api/v1/config`), not the browser's. |
 | M7 | **Navigation drawer** | design | The menu button opens nothing. The drawer exists in `AppShell` (Home, Purchase plans, Market dashboard, Sign out, and a disabled market link when not connected). Draw it in the new style. |
 | M8 | **Real data** | — | Six of 16 sales categories, sample histories, a sample forecast. Run `snapshot.mjs` with the backend up. |
-| M9 | **Taste round-1 fixes** | design | Orange "pressure" hue (palette FAIL), two ragged rows, the explanatory captions, the always-full range bar, near-sparkline news charts. See TASTE_REVIEW.md. |
+| M9 | **Taste round-1 fixes** | design | ~~Orange "pressure" hue (palette FAIL)~~ fixed 2026-10-28, two ragged rows, the explanatory captions, the always-full range bar, near-sparkline news charts. See TASTE_REVIEW.md. |
 | M10 | **States not drawn yet** | design | Refresh failing while data is shown on a phone. A series with exactly one observation. Very long fuel or series names. A forecast whose target falls beyond a plan's deadline. Overdue plans (logic exists, not reviewed visually). |
 
-## 3. Missing from the product flow (not only this page)
+## 3. Everything after the manager decides
 
-| # | Gap | Tag | Why it matters |
-|---|---|---|---|
-| F1 | **Recording the purchase after approval** | backend, frontend, decision | An approved plan stays "approved" forever. There is no step for the buyer to record what actually happened: date ordered, supplier, quantity bought, price paid (USD/MT), and optionally a delivery date. PRD FR-07 says the app never *executes* a purchase. Recording one is different, and it is what would let the team compare the estimate with the realised cost (PRD §9's end-to-end check). Needs a status after `approved` (for example `purchased` / `closed`) and a small form. |
-| F2 | **Rejected plans are a dead end** | backend, frontend | Edit and delete only work on `draft` (`PurchasePlanRepository` filters `status = 'draft'`). A rejected plan can't be revised, resubmitted or deleted, and the buyer must create a new plan by hand. Add "Revise and resubmit", or "Copy to a new draft" that keeps the rejection reason visible. |
-| F3 | **No withdrawal** | backend, frontend, decision | A buyer can't withdraw a submitted request (for example, the deadline moved), so it stays locked until a manager decides. |
-| F4 | **The buyer never hears back** | frontend | Managers get an inbox that refreshes every 30 s. The buyer only sees the decision by opening their plans. Add a buyer-side "decided" list or a badge on the plan and in navigation. |
-| F5 | **Buyer accept / reject / ignore (PRD FR-08)** | decision | Built as "submit for approval", which reads as *accept*. There is no way to record "rejected the advice" or "ignored it", and nothing records which recommendation version the buyer saw when they did not submit. Decide whether submit = accept and whether reject/ignore need recording. |
-| F6 | **Approved but past deadline** | backend, decision | No state for an approved plan whose deadline passes without a recorded purchase. It shows as overdue and approved at once. |
-| F7 | **Split purchases** | backend, frontend, decision | The policy can return `SPLIT` (with allocations), but a plan has one quantity and one deadline. There is no way to plan or record two tranches. |
-| F8 | **Notifications outside the app** | backend, decision | No email or Clerk notifications (`plan-submission.md`: none configured). Managers must be on the purchase-plans page to see requests. |
-| F9 | **Analyst and admin consoles** | later | Documented as later work in `organisation-role-access.md`. |
-| F10 | **Change detection and stale-data alerts (PRD FR-10)** | later | Not built. The market page shows staleness per price (the clock), but nothing alerts. |
-| F11 | **Bugs in the current market code** | frontend | Experimental forecast shows "Target coverage: 0%". The evidence badge and skill line never render in production (parser drops the fields). An unlisted price series sorts before MGO. Unused files remain. Details in PARITY.md. |
+Moved to [`docs/handover.md` → Recommendations](../../handover.md#recommendations), which the recommendations
+teammate owns: recording the purchase, rejected plans, withdrawal, buyer notifications, expiry, split purchases and
+the buyer's accept/reject/ignore (PRD FR-08). Analyst and admin consoles and change-detection alerts (PRD FR-10)
+remain later work.
 
-## 4. Suggested order
+## 4. Status (2026-10-28)
 
-1. **M1 + M2 + M4 + M5** in the next design round, together with the taste fixes (M9). These are presentation only.
-2. **F2 and F4.** They are small and they unblock real use: a rejected buyer currently has to start over, unaware.
-3. **F1** once the team agrees on what "done" means for a plan. It gives the demo its last step: forecast → estimate →
-   approval → purchase recorded → estimate vs actual.
-4. **F5, F3, F6, F7, F8** as decisions, before building.
+- **Decided:** colour = buyer meaning (green cheaper, red `#f2849e` dearer, grey no direct effect); MGO first;
+  two range controls labelled Past and Next (M4). The palette FAIL in M9 is fixed.
+- **Handed over** in [`docs/handover.md` → Market dashboard](../../handover.md#market-dashboard): the "Your plans"
+  block (M1, M2, M3), the horizon question, the admin forecast 403, building the spec in React, and the bugs from
+  PARITY.md.
+- **Still open in the spec:** M5–M8, M10, and the rest of M9 (uneven rows, captions, range bar, news charts).

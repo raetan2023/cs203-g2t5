@@ -10,7 +10,7 @@
 :root {
   --ground: #0c0d0e; --surface: #1a1b1c; --raised: #232220; --border: #2d2c29; --rule: #262523; --control: #3d3b36;
   --ink: #f0e6d2; --soft: #c5bba7; --muted: #b5ac9b; --accent: #eadfc9; --on-accent: #0c0d0e;
-  --ease: #8fd19e; --pressure: #f2a172; --notice: #e2c48a; --grid: #2a2926;
+  --ease: #8fd19e; --pressure: #f2849e; --notice: #e2c48a; --grid: #2a2926;
   --font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --radius-card: 8px; --radius-control: 6px; --gap: 16px; --pad: 20px;
 }
@@ -376,7 +376,7 @@ details.card[open] > summary svg { transform: rotate(180deg); }
     }).join('');
     const unverified = prices.filter((s) => s.ticker.unit === 'source-defined').map((s) => s.ticker.label.replace(/ futures$/, ''));
     const staleOnes = prices.filter((s) => ageDays(s.ticker.observedDate) > STALE_DAYS);
-    const notes = ['<b class="ease">Green</b> lowers cost for a fuel buyer, <b class="pressure">orange</b> raises it, grey has no direct effect. Each change is against that price’s previous stored value.'];
+    const notes = ['<b class="ease">Green</b> lowers cost for a fuel buyer, <b class="pressure">red</b> raises it, grey has no direct effect. Each change is against that price’s previous stored value.'];
     if (staleOnes.length) notes.push(`<span class="stale">Clock</span>: older than ${STALE_DAYS} days.`);
     if (unverified.length) notes.push(`${esc(unverified.join(' and '))}: physical unit and contract not verified, so no conversion is applied.`);
     el.innerHTML = `<section aria-label="Prices" style="display:flex;flex-direction:column;gap:8px"><div class="strip">${cells}</div><p class="strip-note">${notes.join(' ')}</p></section>`;

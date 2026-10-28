@@ -4,6 +4,10 @@ Reviewed with tasteskill 2.1.5, app-screen run (`references/app-screens.md` §2.
 `market-proposal.html` with the sample data in `market-data.js`. Screenshots are in `taste-review/` (1440, 768, 390).
 Every `?state=` preview was opened in Chromium with no script errors.
 
+**Update 2026-10-28:** the owner chose buyer meaning for colour, and the dearer colour changed from orange `#f2a172`
+to red `#f2849e`. The inspector now reports **0 FAIL**, 2 WARN: the beige brand ink (`palette-cream`, accepted) and
+the uneven card rows. The screenshots in `taste-review/` are from that run.
+
 ## Gate
 
 | Check | Current dashboard (28 Oct) | Proposal |
