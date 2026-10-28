@@ -5,11 +5,32 @@
 **Status:** UI done up to the manager's decision. Everything **after** the decision is not built.
 **Owner:** the recommendations teammate. The [open questions](#open-questions) are yours to decide with the team.
 
-## What already works
+## Where we left off
 
-On a plan's recommendation page (`/purchase-plans/recommendation`), the buyer picks a date and clicks **Submit for approval**. That locks the plan and notifies the managers. A manager approves or rejects from the **Approval inbox** on the purchase plans page; a rejection needs a reason.
+**What works today:** on a plan's recommendation page (`/purchase-plans/recommendation`), the buyer picks a date and clicks **Submit for approval**. That locks the plan and notifies the managers. A manager approves or rejects from the **Approval inbox** on the purchase plans page; a rejection needs a reason. The buyer can *see* the outcome: plan cards and the request page show who decided, when, and the comment or reason.
 
-The buyer can *see* the outcome: plan cards and the request page show who decided, when, and the comment or reason (PR #38).
+**How it got here:**
+
+| PR | Into | What it did |
+|---|---|---|
+| #33 `feature/deadline-recommendation` | `main` | One deadline-weighted recommendation per plan (BUY_NOW, WAIT or MONITOR), with uncertainty |
+| #34 `fix-forecast-role-access` | `main` | Submit for approval, the manager inbox and decisions, the Supabase migration (applied 2026-10-27) |
+| #35 `feature/rec-page-revamp` | wireframe | The page rebuilt from the Buy now / Wait / Monitor mockups: answer card, sticky side rail, fine print |
+| #36 `fix/rec-unavailable-once` | wireframe | A shared forecast failure is said once, not in every block |
+| #38 `feature/rec-decision-views` | wireframe | Approval states on the request page and decision notes on plan cards |
+| #39 `docs/post-decision-handoff` | wireframe | The design below for everything after the decision |
+
+- **Design decisions:** `docs/ui-revamp/critique-rec/TASTE_REVIEW.md` (duplicates D1–D6 and R1) and `REC_REVIEW_2.md` (element inventory and restructure). The owner's rule: keep all information unless it duplicates something else on screen, and keep three evidence blocks.
+- **Not built:** the **Split** layout. The mockup exists, but the policy never returns SPLIT. Everything after the manager's decision (below) is also not built.
+
+## Where your agent should continue
+
+1. **Agree the [open questions](#open-questions) with the team.** Questions 1–3 block gap 1; question 4 blocks gap 3.
+2. Branch from `feature/ui-revamp-wireframe`, one branch per gap, in the [suggested order](#suggested-build-order): **gap 4** (buyer notifications) first.
+3. For each gap: migration (reviewed, then applied by hand to the shared Supabase), then backend routes and HTTP tests per role and status, then the UI in the spots listed under [Where the UI is already waiting](#where-the-ui-is-already-waiting), then the preview states.
+4. Record what was built and migrated in `docs/plan-submission.md`, and tick it off in this file.
+
+> **Prompt for your agent:** Read `docs/handover.md` (Start here), `docs/handover/recommendations.md` and the sections of `docs/plan-submission.md` it names. On a branch off `feature/ui-revamp-wireframe`, build gap 4 (notify the buyer) as designed there: the `plan_decision_notifications` table, `GET /my-notifications` and `POST /my-notifications/{id}/seen`, the notification inserted in the same transaction as the decision, and an unread badge and Decisions list that mirror `ApprovalInbox.tsx`. Show me the migration before applying it. Add backend HTTP tests for every role and frontend tests. Run `./mvnw test` in `backend/` and `npm test` and `npm run build` in `frontend/`.
 
 ## What is missing (build these)
 
@@ -32,7 +53,7 @@ There are no mockups for the after-the-decision screens yet. Match the pages alr
 - **Brief:** [`CREATIVE_BRIEF.md`](../ui-revamp/CREATIVE_BRIEF.md) §3.4 "Recommendations": the content inventory (no financial detail may be dropped) and the answer-first structure.
 - **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `Purchase recommendation · *.png` (loading, couldn't load, unavailable, updating), `recommendation*.png`.
 - **Screenshots before the revamp:** `docs/ui-revamp/before/rec-*.png` (every state, desktop and mobile).
-- **What's built now:** [`docs/ui-revamp/critique-rec/decision-views/`](../ui-revamp/critique-rec/decision-views/) (approval states and plan cards) and [`critique-rec/revamp-v1/`](../ui-revamp/critique-rec/revamp-v1/) (recommendation page). `critique-rec/TASTE_REVIEW.md` lists the duplicates the owner decided on.
+- **What's built now:** [`docs/ui-revamp/critique-rec/decision-views/`](../ui-revamp/critique-rec/decision-views/) (approval states and plan cards) and [`critique-rec/revamp-v1/`](../ui-revamp/critique-rec/revamp-v1/) (recommendation page). `critique-rec/TASTE_REVIEW.md` lists the duplicates the owner decided on. `critique-rec/REC_REVIEW_2.md` has the element inventory, with `after-main-ready-1440*.png`. `revamp-v1/NOTES.md` says what v1 built and why Split isn't. The other screenshots at the top of `critique-rec/` (ready, loading, error, empty, missing, unavailable, unsupported) are the page before v1.
 - **Patterns to reuse:**
   - forms: `PurchasePlanForm.tsx`
   - confirm-before-acting buttons: `RecommendationApproval.tsx` and `ManagerDecisionForm.tsx`

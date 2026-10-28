@@ -6,6 +6,39 @@
 **Owner:** the market dashboard teammate (a different teammate from recommendations). The "handed over" items below are yours to decide and build.
 **What's left:** mostly building the spec in React, plus a few backend and data items. Little design work remains.
 
+## Where we left off
+
+- **Live page:** `/market-dashboard` is not restyled. It was built on `main` by the earlier dashboard PRs (#19 market data, #20 Supabase endpoints, #23 controls, #24 forecast widget, #26 forecast endpoint).
+- **The review (2026-10-28):** a Taste review of the live page found these problems:
+  - the news figures were the largest numbers on the page
+  - the forecast sat about 1,840 px down
+  - 75 text blocks were under 11 px
+  - gradients
+  - the sales figures were hidden on a phone
+- **The redesign:** Claude Design produced a mock (`assets/inspo/mkt-dashboard-page/`). We compared it, row by row, with every behaviour of the live page (`PARITY.md`), then wrote a working HTML spec that keeps all of them (`market-proposal.html`).
+  - Taste reviewed the spec, and we removed what it flagged. It now gets **0 FAIL**. Impeccable's detector is clean.
+  - What the spec still lacks is in `MISSING.md`.
+- **Decisions made:** buyer-meaning colour, MGO first, Past/Next range labels (see [Decided](#decided-2026-10-28)).
+- **Handed over to you:** the "Your plans" block, the horizon choice, the admin 403, and the build itself (see [Handed over](#handed-over-yours-to-decide-and-build)).
+- **Branch:** all of this is on `ui-revamp/market-proposal` (PR #41 into wireframe). No app code was changed.
+
+## Where your agent should continue
+
+1. After PR #41 merges, branch from `feature/ui-revamp-wireframe` (e.g. `feature/market-dashboard-revamp`).
+2. **Fix the three bugs first** (listed under [Handed over](#handed-over-yours-to-decide-and-build), item 5), each with a test. They're small, and they change what the new UI shows.
+3. **Build the spec in React, one block per PR:**
+   1. price strip
+   2. history chart with the forecast
+   3. forecast card and details
+   4. sales
+   5. news
+
+   Keep `useDatabaseMarket` and `ForecastProvider` as they are, and tick off `PARITY.md` rows as you go.
+4. Decide "Your plans" (item 1) with the Recommendations owner before building it; it depends on their new statuses.
+5. Check at 1440, 768 and 390 px with Taste (`inspect.mjs --app`) and confirm Home's price card still loads.
+
+> **Prompt for your agent:** Read `docs/handover.md` (Start here), `docs/handover/market-dashboard.md`, then `docs/ui-revamp/market-proposal/README.md`, `PARITY.md` and `market-proposal.html`. On a branch off `feature/ui-revamp-wireframe`, first fix the three bugs listed in the handover, with a test each. Then rebuild `/market-dashboard` to match `market-proposal.html`, one block at a time, starting with the price strip. Use `--bb-*` tokens only, keep the data hooks unchanged, and keep every row of `PARITY.md` working. Run `npm test` and `npm run build` in `frontend/`.
+
 ## What's live today
 
 - `features/market-dashboard/MarketDashboard.jsx` renders `StoredMarketPanel.jsx` (prices, history chart, bunker sales, GDELT news) and the shared `ForecastWidget` (`features/forecast/`).
