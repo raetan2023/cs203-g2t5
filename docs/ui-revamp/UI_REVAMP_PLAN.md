@@ -652,7 +652,7 @@ unavailable state. Any necessary data/helper changes are documented and tested; 
 | Inviting post-signup Home | Phase 3B | Brainstorm first-time and returning-user content/layout; Impeccable/Claude if available; owner selects direction |
 | Row-first plan cards | Phase 4 | Readable card width, horizontal fill then wrap, stable source/keyboard order |
 | Visible save/delete confirmation | Phase 4 follow-up (next: `/impeccable harden`) | After a successful create/edit show "Plan saved", after delete "Plan deleted", visibly near the page heading (today only a screen-reader announcement, `PurchasePlanPage.tsx` `pp-sr-only` status). Briefly highlight the new or edited card. Presentation only: no change to save/delete logic or timing; keep the existing `role="status"` announcement; respect reduced motion. From the 2026-10-27 critique (P1 #3). |
-| Plan sort switch | Phase 4 — done 2026-10-27 | "Soonest deadline / Largest volume" switch above the grid (`aria-pressed`), display order only; default soonest deadline. |
+| Plan sort switch | Phase 4 — done 2026-10-27; restyled 2026-10-28 | "Sort by: Deadline / Volume" text toggle above the grid (`aria-pressed`; only the selected option gets a raised surface chip), display order only; default soonest deadline. |
 | Dashboard trend comparison | Phase 6 | Define interval per indicator; truthful green-up/red-down with neutral flat/missing states |
 
 ## 7. Workflow: you, the lead session, and subagents

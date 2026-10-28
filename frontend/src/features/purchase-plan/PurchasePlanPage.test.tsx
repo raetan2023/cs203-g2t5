@@ -219,8 +219,10 @@ describe('plan overview and sorting', () => {
     expect(within(overview).getByText('Overdue plans').nextSibling).toHaveTextContent('0');
     expect(within(overview).getByText('Next deadline').nextSibling).toHaveTextContent(/4\s*days/);
     expect(titles()[0]).toMatch(/^300 MT/);
-    await user.click(screen.getByRole('button', { name: 'Largest volume' }));
-    expect(screen.getByRole('button', { name: 'Largest volume' })).toHaveAttribute('aria-pressed', 'true');
+    const sort = screen.getByRole('group', { name: 'Sort by' });
+    expect(within(sort).getByRole('button', { name: 'Deadline' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(within(sort).getByRole('button', { name: 'Volume' }));
+    expect(within(sort).getByRole('button', { name: 'Volume' })).toHaveAttribute('aria-pressed', 'true');
     expect(titles().map(title => title?.split(' MT')[0])).toEqual(['900', '300', '100']);
     for (const write of writes) expect(write).not.toHaveBeenCalled();
   });
