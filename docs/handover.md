@@ -10,6 +10,37 @@
 | [Recommendations](handover/recommendations.md) | Done up to the manager's decision | **Missing: everything after the decision** | **Recommendations teammate** | Agree the [open questions](handover/recommendations.md#open-questions), then build |
 | [Market dashboard](handover/market-dashboard.md) | **Spec done** (HTML proposal); live page unchanged | Small additions | **Market dashboard teammate** | Build the spec in React; decide "Your plans" |
 
+Every page file has these sections:
+1. **Where we left off:** what's built, with the PRs and decisions.
+2. **Where your agent should continue:** the branch, the steps, and a prompt to paste into your agent.
+3. **Design inspiration:** every mockup, brief section and screenshot folder for that page.
+
+## Where the revamp stands (2026-10-28)
+
+- **The UI revamp lives on `feature/ui-revamp-wireframe`.** It is 32 commits ahead of `main` and 0 behind.
+  - Merged into it: PR #35 and #36 (recommendations page), #37 (login), #38 (decision views), #39 (post-decision design) and #40 (Home).
+  - The purchase plans polish was committed to it directly.
+  - Open: **PR #41**, this handover and the market dashboard spec.
+- **Still to do across the app:**
+  - merge wireframe into `main` (the owner's call, once the teams agree)
+  - everything after the manager's decision ([Recommendations](handover/recommendations.md))
+  - the market dashboard build ([Market dashboard](handover/market-dashboard.md))
+- **The app looks like two design systems.** Plans, recommendations, Home and the shell use `--bb-*` tokens. The forecast and market dashboard CSS mostly don't (about 250 hard-coded colours). The market build should fix that for its own files.
+
+### Revamp-wide docs and tools
+
+Read these only when your page file points to them, or when you need the background:
+
+| File | What it is |
+|---|---|
+| [`docs/ui-revamp/CREATIVE_BRIEF.md`](ui-revamp/CREATIVE_BRIEF.md) | The direction for every page (§3), the shell (§3.6), and the loop for each screen (§4) |
+| [`docs/ui-revamp/UI_REVAMP_PLAN.md`](ui-revamp/UI_REVAMP_PLAN.md) | The original plan: guardrails (§2), token architecture (§4), phases (§5), definition of done (§8) |
+| [`docs/ui-revamp/SYNC_WITH_MAIN.md`](ui-revamp/SYNC_WITH_MAIN.md) | How to merge `main` into the UI branch: `main` owns behaviour, the UI branch owns presentation |
+| `DESIGN_SYSTEM.md` (repo root), `frontend/DESIGN.md`, `frontend/PRODUCT.md` | The visual spec, the frontend design notes, and who the product is for |
+| [`docs/ui-revamp/tools/`](ui-revamp/tools/) | Playwright screenshot suite (`screens.spec.ts`, baselines in `baselines/`), `gallery.html` to browse them, `phase2-check.mjs` for the theme checks |
+| `docs/ui-revamp/before/`, `phase2/`, `reference/` | Screenshots from before the revamp, after the beige theme pass, and of the old wireframe login |
+| [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md) | A proposal (not installed) for saving agent tokens with a graphify code map |
+
 ---
 
 ## Start here
