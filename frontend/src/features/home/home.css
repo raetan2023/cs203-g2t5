@@ -1,0 +1,42 @@
+/* Home: full-bleed harbour photo with the shell header laid over it (design: docs/ui-revamp/assets/inspo/home-page). */
+.bb-app--home { position: relative; }
+.bb-app--home .bb-header { position: absolute; inset: 0 0 auto; z-index: 2; background: transparent; border-bottom-color: transparent; }
+.bb-app--home #app-content { max-width: none; }
+
+.bb-home { position: relative; isolation: isolate; min-height: max(100dvh, 620px); display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; background: var(--bb-canvas); color: var(--bb-text); }
+.bb-home-photo { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+/* Scrims keep the header and the text legible over any part of the photo. */
+.bb-home::before, .bb-home::after { content: ''; position: absolute; left: 0; right: 0; z-index: -1; pointer-events: none; }
+.bb-home::before { top: 0; height: 260px; background: linear-gradient(180deg, color-mix(in srgb, var(--bb-canvas) 65%, transparent), transparent); }
+.bb-home::after { bottom: 0; height: max(440px, 55%); background: linear-gradient(0deg, color-mix(in srgb, var(--bb-canvas) 94%, transparent) 0%, color-mix(in srgb, var(--bb-canvas) 72%, transparent) 45%, transparent 100%); }
+
+.bb-home-content { box-sizing: border-box; width: 100%; max-width: var(--bb-page-max); margin-inline: auto; padding: 120px var(--bb-page-pad) var(--bb-space-10); display: flex; flex-direction: column; gap: var(--bb-space-7); }
+.bb-home-intro { display: flex; flex-direction: column; gap: var(--bb-space-3); min-width: 0; }
+.bb-home-greeting { margin: 0; color: var(--bb-action); font-weight: 500; line-height: .92; letter-spacing: -.045em; text-transform: uppercase; white-space: nowrap; }
+.bb-home-greeting > span { display: block; }
+.bb-home-greeting .bb-home-name { margin-top: var(--bb-space-3); line-height: 1.08; letter-spacing: -.03em; }
+.bb-home-date { margin: 0; color: var(--bb-text-label); font-size: 18px; line-height: 24px; }
+
+.bb-home-actions { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--bb-space-6); }
+.bb-home-cta.bb-button { min-height: 52px; padding: 0 var(--bb-space-6); gap: 10px; border-radius: var(--bb-radius-card); font: inherit; font-size: 16px; font-weight: 600; }
+.bb-home-cta svg { width: 16px; height: 16px; stroke-width: 2.4; }
+
+.bb-home-quote { box-sizing: border-box; min-width: 260px; min-height: 64px; display: flex; align-items: center; gap: 14px; padding: var(--bb-space-3) var(--bb-space-4); border: 1px solid var(--bb-border-subtle); border-radius: 12px; background: color-mix(in srgb, var(--bb-canvas) 60%, transparent); color: var(--bb-text); text-decoration: none; }
+a.bb-home-quote { transition: border-color var(--bb-motion-fast) var(--bb-ease-out), background-color var(--bb-motion-fast) var(--bb-ease-out); }
+a.bb-home-quote:hover { border-color: var(--bb-border-control); background: color-mix(in srgb, var(--bb-canvas) 75%, transparent); }
+.bb-home-quote:focus-visible, .bb-home-cta:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 3px; }
+.bb-home-quote-text { display: flex; flex-direction: column; gap: 2px; }
+.bb-home-quote-label, .bb-home-quote-side, .bb-home-quote-unit { color: var(--bb-text-supporting); font-size: 12px; line-height: 16px; font-weight: 400; }
+.bb-home-quote-message { font-size: 14px; line-height: 24px; color: var(--bb-text-secondary); }
+.bb-home-quote-price { font-size: 20px; line-height: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bb-home-spark { flex-shrink: 0; color: var(--bb-action); }
+.bb-home-quote-side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bb-home-quote-link { color: var(--bb-action); }
+
+@media (max-width: 640px) {
+  /* The header wraps onto two rows here. */
+  .bb-home-content { padding-top: 160px; padding-bottom: var(--bb-space-8); }
+  .bb-home-date { font-size: 16px; }
+  .bb-home-actions { flex-direction: column; align-items: stretch; }
+  .bb-home-quote { min-width: 0; }
+}
