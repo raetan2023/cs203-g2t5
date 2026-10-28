@@ -66,5 +66,7 @@
   --bb-radius-card: 10px;
   --bb-radius-control: 5px;
   --bb-shadow-card: 0 16px 60px #00000026;
-  --bb-motion-fast: 150ms;
+  --bb-motion-fast: 150ms; /* press and hover feedback */
+  --bb-motion-base: 200ms; /* routine state changes: dialogs, notices */
+  --bb-ease-out: cubic-bezier(.23, 1, .32, 1); /* one deceleration for everything that appears or responds */
 }
