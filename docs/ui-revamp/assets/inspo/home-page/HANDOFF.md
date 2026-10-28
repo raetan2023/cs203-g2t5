@@ -2,6 +2,10 @@
 
 Branch: `feature/home-page` (forked from `feature/ui-revamp-wireframe`). PRs go back into wireframe, not main.
 
+**Status (2026-10-28): implemented** in `frontend/src/features/home/` (`HomePage.tsx`, `home.css`, `marketQuote.ts`, tests in `HomePage.test.tsx`).
+Preview every role locally: `npm run dev` in `frontend/`, open `/preview.html`, Demo controls → "Home - buyer / manager / analyst / admin / price unavailable".
+Hero photo: `frontend/src/features/home/assets/harbour-dusk.jpg` = Kerensa Pickett on Unsplash (`kerensa-pickett--U9f2MwH73M-unsplash.jpg`, Unsplash License), resized to 2560px.
+
 ## What's here
 
 - `Home — buyer-html/HomeBuyer.dc.html` — the main mock. One component with a `role` prop (`buyer` | `manager`). Open it by serving the folder (`python -m http.server`), not over `file://`.

@@ -9,11 +9,11 @@ import { buildMockForecast } from '../features/forecast/mockService';
 const clerk = vi.hoisted(() => {
   const user = { id: 'user_a', fullName: 'Rae', firstName: 'Rae', primaryEmailAddress: { emailAddress: 'rae@example.test' } };
   return { auth: { isLoaded: true, isSignedIn: true, userId: 'user_a', orgId: 'org_a' as string | null, orgRole: 'org:buyer' as string | null, getToken: vi.fn(async () => 'session-a'), signOut: vi.fn() },
-    user: { isLoaded: true, isSignedIn: true, user },
+    user: { isLoaded: true, isSignedIn: true, user }, client: { openOrganizationProfile: vi.fn() },
     organisation: { isLoaded: true, organization: { id: 'org_a', name: 'Bunker Buddy' } as { id: string; name: string } | null } };
 });
 vi.mock('@clerk/react', () => ({
-  useAuth: () => clerk.auth, useUser: () => clerk.user, useOrganization: () => clerk.organisation,
+  useAuth: () => clerk.auth, useUser: () => clerk.user, useOrganization: () => clerk.organisation, useClerk: () => clerk.client,
   OrganizationList: (props: { hidePersonal?: boolean; skipInvitationScreen?: boolean }) => <div data-testid="organisation-list"
     data-hide-personal={String(props.hidePersonal)} data-skip-invitations={String(props.skipInvitationScreen)}>Your organisations</div>,
   OrganizationSwitcher: () => <button>Switch organisation</button>,
@@ -26,6 +26,7 @@ beforeEach(() => {
   clerk.organisation.organization = { id: 'org_a', name: 'Bunker Buddy' };
   clerk.auth.getToken.mockReset().mockResolvedValue('session-a');
   clerk.auth.signOut.mockReset();
+  clerk.client.openOrganizationProfile.mockReset();
 });
 vi.mock('../features/forecast/ForecastChart', () => ({ default: () => null }));
 
@@ -95,7 +96,7 @@ describe('Singapore application date refresh', () => {
     expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(1);
     await act(async () => { await vi.advanceTimersByTimeAsync(1100); });
     expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(2);
-    expect(screen.getByText('27 Oct 2026')).toBeVisible();
+    expect(screen.getByText('Tuesday 27 October')).toBeVisible(); // Home shows the date in its greeting, not the header chip
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
     await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
     expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(3);
@@ -217,11 +218,24 @@ describe('Verified organisation permissions', () => {
       if (url.endsWith('/organisation')) return accessReply();
       if (url.endsWith('/config')) return reply({ scenario_as_of_date: '2025-10-24' });
       if (url.endsWith('/purchase-plans')) return reply({ plans: [ANALYSIS_DEMO_PLAN] });
+      if (url.endsWith('/market/stored')) return reply({ storage: 'supabase', missing: [], series: [{ category: 'prices',
+        ticker: { seriesKey: 'SGP_MGO_OBSERVED', unit: 'USD/MT', currency: 'USD', value: 1351.5, changeAbs: 0, changePct: 0, observedDate: '2026-10-26' },
+        history: [{ date: '2026-10-24', value: 1351.5 }, { date: '2026-10-26', value: 1351.5 }] }] });
       throw new Error('Unexpected request');
     });
     vi.stubGlobal('fetch', fetcher);
     return fetcher;
   }
+  it('opens Clerk organisation settings from an admin Home and shows the latest stored MGO estimate', async () => {
+    const fetcher = backend('org:admin');
+    window.history.replaceState(null, '', '/home');
+    render(<ClerkApp />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Manage organisation' }));
+    expect(clerk.client.openOrganizationProfile).toHaveBeenCalledTimes(1);
+    expect(await screen.findByRole('link', { name: /^Singapore MGO estimate USD 1,351\.50 per tonne, 26 October, no change\./ }))
+      .toHaveAttribute('href', '/market-dashboard');
+    expect(fetcher.mock.calls.some(([url]) => url.endsWith('/purchase-plans'))).toBe(false);
+  });
   it.each(['org:manager', 'org:analyst'])('shows organisation plans read-only for %s', async role => {
     backend(role);
     window.history.replaceState(null, '', '/purchase-plans');
@@ -247,6 +261,6 @@ describe('Verified organisation permissions', () => {
     window.history.replaceState(null, '', '/home');
     render(<ClerkApp />);
     expect(await screen.findByText('Your organisation membership changed. Refresh your session and retry.')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Go to purchase plans/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Go to your plans/ })).not.toBeInTheDocument();
   });
 });

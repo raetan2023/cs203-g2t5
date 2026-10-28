@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppLink } from '../../../app/router';
 import { requestError, type ApprovalNotification, type PurchasePlanService } from '../types';
 import { ErrorBanner, PlanButton } from './Primitives';
@@ -23,7 +23,14 @@ export function ApprovalInbox({ service }: { service: PurchasePlanService }) {
     const timer = window.setInterval(() => { void load(); }, 30_000);
     return () => { active = false; window.clearInterval(timer); };
   }, [service, revision]);
-  return <section className="pp-card pp-approval-inbox" aria-label="Approval inbox">
+  // Home's "Plans for approval" links here; client-side navigation doesn't scroll to a hash by itself.
+  const section = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (window.location.hash !== '#approval-inbox') return;
+    section.current?.scrollIntoView?.({ block: 'start' });
+    section.current?.focus({ preventScroll: true });
+  }, []);
+  return <section ref={section} id="approval-inbox" tabIndex={-1} className="pp-card pp-approval-inbox" aria-label="Approval inbox">
     <h2>Approval inbox</h2>
     <p className="pp-card-description">Submissions shared with every manager in your organisation. Showing the latest 100; refreshes every 30 seconds.</p>
     <PlanButton variant="secondary" disabled={loading} onClick={() => setRevision(value => value + 1)}>Refresh inbox</PlanButton>
