@@ -1,5 +1,8 @@
 # Purchase-plan submission and manager notification
 
+> **Building what comes after the decision** (record purchase, withdraw, revise a rejected plan, notify the buyer)?
+> Start at [plan-after-decision.md](plan-after-decision.md). It says which parts of this file to read.
+
 Implemented on `fix-forecast-role-access`. The Supabase migration was **applied
 on 2026-10-27 (Asia/Singapore)** to the shared project with Nelson’s authorisation. No email, Clerk admin API key or external notification provider
 is required. This feature uses a durable, shared **in-app** manager inbox.
