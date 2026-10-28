@@ -1,30 +1,94 @@
-# After the manager decides: design proposal
+# After the manager decides: handoff and design
 
-**Status:** proposal, not implemented. No backend, database or API change has been made for anything below.
-**Written:** 2026-10-28, for the owner of the approval workflow to review before building.
-**Read first:** [plan-submission.md](plan-submission.md). It describes what exists today (submit, manager inbox, approve/reject, audit).
+**Status:** not built. This is the starting point for whoever builds it (person or coding agent).
+**Updated:** 2026-10-28.
 
-## Where things stand
+## Start here
 
-Implemented and migrated on 2026-10-27:
+### What already works
 
-- **Buyer:** opens a draft's recommendation page, picks a forecast cost detail, and clicks **Submit for approval**. The plan becomes `submitted` and locked, and one manager notification is stored with an immutable recommendation snapshot.
-- **Manager:** sees the request in the **Approval inbox**. Opens it, then approves (comment optional) or rejects (reason required). The first decision is final, and an audit row is written in the same transaction.
-- **Status values:** `draft`, `submitted`, `approved`, `rejected` (`purchase_plans_status_check`).
-- **One submission and one decision per plan.** `plan_approval_notifications.plan_id` and `plan_approval_decisions.plan_id` are both `UNIQUE`. Every proposal below keeps that rule.
+On a plan's recommendation page (`/purchase-plans/recommendation`), the buyer picks a date and clicks **Submit for approval**. That locks the plan and notifies the managers. A manager approves or rejects from the **Approval inbox** on the purchase plans page; a rejection needs a reason.
 
-### Added on the UI branch (presentation only, on existing data)
+The buyer can *see* the outcome: plan cards and the request page show who decided, when, and the comment or reason (PR #38).
 
-PR "Show approval decisions to buyers" on `feature/ui-revamp-wireframe`:
+### What is missing (build these)
 
-- **Plan cards:** cards show "Awaiting manager approval", or "*Manager* approved/rejected this plan · *time*" with the comment or reason. The text is read from the existing `GET /{planId}/submission`, which buyers can already call for their own plans.
-- **Submitted / approved / rejected page:** leads with the approval status, then a **Next step** line. That line currently says, in plain words, which follow-up actions are *not available yet*. When a gap below is built, replace the matching sentence with the real action:
-  - `frontend/src/features/recommendations/RecommendationApproval.tsx` → `SubmittedRecommendationView`, the `nextStep` constant
-  - `frontend/src/features/purchase-plan/components/PlanDecisionNote.tsx`, the last `pp-decision-meta` line
+1. **Record the purchase.** An approved plan stays "approved" forever. Nothing captures the date, supplier, quantity or price paid, so the estimate can't be compared with the real cost.
+2. **A rejected plan is stuck.** Only drafts can be edited or deleted, so the buyer has to start a new plan by hand.
+3. **No withdrawing** a request once it's submitted.
+4. **The buyer is never notified.** Managers get an inbox; buyers only find out if they go and look.
 
-There is still nothing after the decision. The four gaps follow.
+Each needs backend, database and UI work. The recommended design is below; check the [open questions](#open-questions) with the team first.
 
-## Proposed lifecycle
+### Branch and workflow
+
+- Branch from **`feature/ui-revamp-wireframe`**. It is up to date with `main` and is the only branch with the new UI and the hooks listed below. Open PRs back into it.
+- Before starting and before each PR, check you're not behind: `git fetch && git rev-list --count HEAD..origin/main` should print `0`. Merge (don't rebase) if it isn't.
+- One branch per gap keeps reviews small. Suggested order: **4 → 3 + 2 → 1** (see [build order](#suggested-build-order)).
+- Database changes go to the **shared** Supabase project by hand. Back up first, run once, record the result, and tell the team. Follow the rollout steps in `plan-submission.md`. Never rerun the existing migrations in `backend/migrations/`.
+
+### Read only these
+
+| Read | Why |
+|---|---|
+| This file | What to build and how |
+| `docs/plan-submission.md`, sections **Agreed behaviour**, **API and role matrix**, **Manager decisions** and **Supabase rollout** | How submit, decide, roles and migrations work today. Skip the dated logs. |
+| `frontend/AGENTS.md` | Frontend rules: use `--bb-*` tokens from `frontend/src/styles/tokens.css`, no new hex colours |
+| `docs/frontend-design-guidelines.md` | States to cover (loading, empty, error), accessibility, never colour alone |
+
+You can skip the forecast, Ridge and revamp-planning docs; they don't affect this work.
+
+### Design inspiration
+
+There are no mockups for these screens yet. Match the pages already shipped:
+
+- **Mockups for the pages these flows live on:** `docs/ui-revamp/assets/inspo/`
+  - `recommendations-page/`: the request page layout (answer card, sticky side rail, fine print). Each folder has a `README.md`. Serve the folder (`python -m http.server`) and open the `.dc.html` file. Its inline styles carry the exact spacing and sizes.
+  - `purchase-plans-page/image.png`: the plan cards and list.
+- **What's built now** (screenshots): `docs/ui-revamp/critique-rec/decision-views/` (approval states and plan cards) and `docs/ui-revamp/critique-rec/revamp-v1/` (recommendation page).
+- **Patterns to reuse:**
+  - forms: `PurchasePlanForm.tsx`
+  - confirm-before-acting buttons: `RecommendationApproval.tsx` and `ManagerDecisionForm.tsx`
+  - inbox list: `ApprovalInbox.tsx`
+  - status notes on cards: `PlanDecisionNote.tsx`
+
+### Where the UI is already waiting
+
+These spots currently tell users a feature "isn't available yet". Replace each sentence with the real action:
+
+| File | What to change |
+|---|---|
+| `frontend/src/features/recommendations/RecommendationApproval.tsx`, `SubmittedRecommendationView` | The `nextStep` text for submitted (withdraw), approved (record purchase) and rejected (copy to new draft). Put the action button under it, inside the "Approval status" card. |
+| `frontend/src/features/purchase-plan/components/PlanDecisionNote.tsx` | The last line on decided plan cards |
+| `frontend/src/features/purchase-plan/types.ts` → `PurchasePlanService` | Add `withdraw`, `recordPurchase`, `revise` and the buyer notification calls. Implement them in `apiService.ts` and `mockService.ts`. |
+| `frontend/src/preview/recommendationScenarios.ts` → `withPreviewApproval` | Add the new actions to the preview service so they can be clicked through without a backend |
+
+### Test and preview
+
+- **Frontend:** in `frontend/`, run `npm test`, `npm run build` and `npm run test:recommendation-layout`.
+  - If the machine is busy and tests time out, use `npx vitest run --maxWorkers=2`.
+- **Backend:** in `backend/`, run `./mvnw test`.
+  - Add HTTP tests for every role and status, as `plan-submission.md` describes for submit and decide.
+- **Preview without a backend:** run `npm run dev` and open `/preview.html`.
+  - Use **Demo controls**: "Approval - …" for the request states, "Purchase plans - every approval state" for the cards.
+  - Don't refresh; reopen `/preview.html` instead.
+
+### Done means
+
+| Gap | Done when |
+|---|---|
+| 1. Record purchase | The buyer records date, supplier, quantity and price on an approved plan. The plan becomes `purchased`. The request page shows actual vs estimated cost. Managers and analysts can read it. |
+| 2. Rejected plan | **Copy to new draft** creates a prefilled draft linked to the rejected plan. Both pages link to each other, and the new draft shows the earlier rejection reason. |
+| 3. Withdraw | The buyer withdraws a submitted request after confirming. It shows as withdrawn in the manager inbox. A manager deciding at the same moment gets a clear "reload" error. |
+| 4. Notify buyer | A decision creates a buyer notification in the same transaction. The buyer sees an unread badge and a Decisions list, and can mark items as seen. |
+
+All four also need: role checks, the 409/404/422 errors listed below, tests, preview states, and an entry in `plan-submission.md` saying it was built and migrated.
+
+---
+
+## Design
+
+### Lifecycle
 
 ```
             submit (buyer)            approve (manager)            record purchase (buyer)
@@ -37,87 +101,82 @@ There is still nothing after the decision. The four gaps follow.
                   new plan_id, revised_from_plan_id = old plan
 ```
 
-- **New statuses:** `withdrawn` and `purchased`. `rejected`, `withdrawn` and `purchased` are **final**, and a plan never goes back to `draft`.
-- **Why no reopening:** reopening would need a second notification and decision row for the same plan, which the `UNIQUE` constraints forbid. It would also blur the audit trail ("which decision applied to which inputs?"). A revised proposal is a new plan that points at the old one.
+- **New statuses:** `withdrawn` and `purchased`. `rejected`, `withdrawn` and `purchased` are final; a plan never goes back to `draft`.
+- **Why "copy to new draft" instead of reopening:** `plan_approval_notifications.plan_id` and `plan_approval_decisions.plan_id` are both `UNIQUE`, so a plan can be submitted and decided only once. Reopening would break that and blur the audit trail. A revision is a new plan pointing at the old one.
 
-## Gap 1: record the purchase
+### 1. Record the purchase
 
-*An approved plan stays "approved" forever; nothing captures what was actually bought, so the estimate can't be compared with the real cost.*
-
-- **Who:** the buyer who owns the plan, while it is `approved`. Managers and analysts in the organisation can read the record. Admin is denied, as for submissions today.
-- **Captured fields:**
-  - purchase date (on or after the approval date, not in the future)
-  - supplier (free text, required)
-  - quantity bought in MT (positive; may differ from the plan)
-  - price paid in USD/MT (positive)
+- **Who:** the owning buyer, while the plan is `approved`. Managers and analysts in the organisation can read it; admin can't (same as submissions).
+- **Fields:**
+  - date bought: on or after the approval, not in the future
+  - supplier: text, required
+  - quantity in MT: positive, may differ from the plan
+  - price paid in USD/MT: positive
   - optional note
-- **Total cost:** the server computes it as quantity × price. Never trust a client total.
-- **Comparison shown afterwards**, all values taken from the saved snapshot:
+- **Total:** the server computes quantity × price. Never trust a client total.
+- **Comparison** (on the request page), using the saved submission snapshot:
 
   | Line | Value |
   |---|---|
   | Buy-today reference at submission | `cost_impact.reference_total` or `evidence.buy_now_cost_usd` |
-  | Model estimate at submission | `central_total` / range |
-  | Actual cost | quantity × price paid |
-  | Difference | actual − reference, and actual − estimate |
+  | Model estimate at submission | `central_total` or range |
+  | Actual | quantity × price paid |
+  | Differences | actual − reference, and actual − estimate |
 
-  Use the same "less / more" wording as the recommendation page, since direction is not good or bad on its own.
-- **Corrections:** one record per plan. Suggest allowing the buyer to amend it within N days, with the previous values kept in an audit table. **Open question.**
-- **Bonus:** these rows are the first real outcome data for checking the model. Keep them queryable.
+  Word differences as "USD x less / more", like the recommendation page does.
+- **Data use:** these rows are the first real outcome data for checking the forecast model. Keep them easy to query.
 
-## Gap 2: a rejected plan is stuck
+### 2. Rejected plan: copy to new draft
 
-*Only drafts can be edited or deleted, so the buyer has to start again by hand.*
+- Offered on `rejected` and `withdrawn` plans (maybe `purchased`, for repeat orders; see the open questions).
+- Creates a new `draft` with the same quantity and deadline and `revised_from_plan_id` set. The old plan, its snapshot and its decision are untouched.
+- The new draft gets a fresh recommendation, so the buyer sees current prices before resubmitting.
 
-- Add **Copy to new draft** on rejected, withdrawn and (optionally) purchased plans. It creates a new `draft` prefilled with the old quantity and deadline, and sets `revised_from_plan_id`. The rejected plan, its snapshot and its decision stay untouched.
-- The new draft needs a fresh recommendation, so the buyer reviews current prices before submitting again.
-- **UI:** link both ways ("Revised as plan …" / "Revision of a rejected plan"), and show the earlier rejection reason on the new draft so the buyer can address it.
-- **Deleting rejected plans:** not proposed. The decision row uses `ON DELETE RESTRICT`. Hiding finished plans is better handled by Gap 5's list filter.
+### 3. Withdraw
 
-## Gap 3: withdraw a submitted request
+- The owning buyer, while the plan is `submitted`, after a confirm step. Optional or required short reason (see the open questions).
+- **Locking:** lock the plan row the way submit and decide already do. The first to commit wins, and the other gets 409 "reload".
+- **After withdrawing:** the manager inbox shows it as withdrawn. The decision route already refuses anything not `submitted`.
 
-*Once submitted, the buyer can't pull it back.*
+### 4. Notify the buyer
 
-- The buyer who owns the plan can withdraw it while it is `submitted`. It moves to `withdrawn` (final), and the buyer uses **Copy to new draft** to change it.
-- **Race with a manager:** lock the plan row, as submit and decide already do. Whichever action commits first wins, and the other gets **409** with a message to reload.
-- **Inbox:** shows the request as withdrawn. Managers can't decide it (the decision route already requires `submitted`).
-- **Optional:** a short required reason ("Deadline moved"), stored for the audit trail.
+- When a decision is saved, insert a buyer notification **in the same transaction**, the same pattern `plan_approval_notifications` uses for managers.
+- **UI:** an unread badge on the Purchase plans nav item, and a Decisions list for buyers that mirrors `ApprovalInbox.tsx` and polls every 30 s like it does.
+- **No email:** there's no email provider, so keep it in-app.
 
-## Gap 4: the buyer is never told
+### Small follow-ups (UI only)
 
-*Managers get an inbox; buyers don't.*
+- "Active plans" on the plans page counts submitted, approved and rejected plans. Count only drafts and submitted.
+- Decided plans still show On track / Due soon / Overdue. Hide those badges for final states.
+- Once `purchased` and `withdrawn` exist, add an open / finished filter to the plans list.
 
-- **Pull (done in the UI PR above):** the buyer sees the outcome on the plan card and the request page, but only when they look.
-- **Push (still missing):** add a buyer notification when a decision is recorded, written in the **same transaction** as the decision (the pattern `plan_approval_notifications` already uses):
-  - new table `plan_decision_notifications` (plan, organisation, buyer, decision, created_at, `seen_at`)
-  - `GET /api/v1/purchase-plans/my-notifications`: buyer only, own rows, newest first, with an unread count
-  - `POST /api/v1/purchase-plans/my-notifications/{id}/seen`
-- **UI:** an unread badge on the Purchase plans nav item, plus a "Decisions" list for buyers. It mirrors the managers' Approval inbox and polls every 30 s like that inbox does.
-- **Email:** out of scope. There is no email provider, so keep it in-app as `plan-submission.md` chose for managers.
+### API (new routes)
 
-## Gap 5: smaller follow-ups noticed while building the UI
+All routes are under `/api/v1/purchase-plans`, return `Cache-Control: no-store`, and take scope from the verified token, like the existing ones.
 
-- **"Active plans" count:** the plans page summary counts submitted, approved and rejected plans as "Active". Suggest counting only drafts and submitted requests.
-- **Deadline badges on finished plans:** decided plans still show On track / Due soon / Overdue, which means little once a plan is rejected or purchased. Suggest hiding them for final states.
-- **List filter:** add a filter for open vs finished plans once `purchased` and `withdrawn` exist.
+| Route | Buyer | Manager / Analyst / Admin | Allowed when |
+|---|---|---|---|
+| `POST /{planId}/withdraw` | Own plan | Denied | `submitted` |
+| `POST /{planId}/purchase` | Own plan | Denied | `approved` |
+| `POST /{planId}/revise` → `{ "plan": newDraft }` | Own plan | Denied | `rejected`, `withdrawn` (`purchased`?) |
+| `GET /my-notifications` | Own rows | Denied | n/a |
+| `POST /my-notifications/{id}/seen` | Own rows | Denied | n/a |
 
-## API sketch (new routes)
+**Errors:**
 
-All routes are under `/api/v1/purchase-plans`, return `Cache-Control: no-store`, and take scope from the verified token as existing routes do.
+| Case | Status |
+|---|---|
+| Wrong status | 409 |
+| Another owner or organisation | 404 |
+| Invalid fields | 422 |
+| Not signed in | 401 |
+| Wrong role | 403 |
 
-| Route | Buyer | Manager | Analyst | Admin | Allowed from |
-|---|---|---|---|---|---|
-| `POST /{planId}/withdraw` | Own plan | Denied | Denied | Denied | `submitted` |
-| `POST /{planId}/purchase` | Own plan | Denied | Denied | Denied | `approved` |
-| `POST /{planId}/revise` → `{ "plan": newDraft }` | Own plan | Denied | Denied | Denied | `rejected`, `withdrawn`, `purchased` |
-| `GET /my-notifications` | Own rows | Denied | Denied | Denied | n/a |
-| `POST /my-notifications/{id}/seen` | Own rows | Denied | Denied | Denied | n/a |
+**Existing responses also change:**
+- `GET /{planId}/submission` adds `purchase` and `withdrawal` (null when absent).
+- Plan responses add `revised_from_plan_id`.
 
-**Status codes:** same conventions as today. Wrong status is 409, another owner or organisation is 404, invalid fields are 422, no auth is 401, wrong role is 403.
-
-**`GET /{planId}/submission`** gains `purchase` (null until recorded) and `withdrawal` (null unless withdrawn). Plan responses gain `revised_from_plan_id`.
-
-## Migration sketch (not applied, do not run as-is)
+### Migration sketch (not applied; review before running)
 
 ```sql
 BEGIN;
@@ -165,22 +224,24 @@ ALTER TABLE public.plan_decision_notifications ENABLE ROW LEVEL SECURITY;
 COMMIT;
 ```
 
-Follow the rollout steps in `plan-submission.md`: back up first, run it once in a transaction, and restart the backend after the migration. Older releases lack the new status guards and must not run against `withdrawn` or `purchased` plans.
+**Before deploying:**
+- Split this into one migration per gap if you build them separately.
+- Older backend releases lack the new status guards, so they must not run against `withdrawn` or `purchased` plans.
 
-## Open questions
+### Open questions
 
-1. **Purchase corrections:** immutable, or amendable within N days with an audit trail?
-2. **Approval expiry:** should approval lapse if nothing is recorded by the plan deadline? If so, add an `expired` status, or only show a warning?
-3. **Partial purchases:** one purchase record per plan (proposed), or several deliveries per plan?
+Agree these with the team before building:
+
+1. **Purchase corrections:** immutable, or editable for N days with an audit trail?
+2. **Expiry:** should approval expire if no purchase is recorded by the deadline? That could be an `expired` status, or just a warning.
+3. **Partial purchases:** one purchase per plan, or several deliveries?
 4. **Withdrawal reason:** required or optional?
-5. **Revising purchased plans:** should "Copy to new draft" be offered for repeat orders, or only for rejected and withdrawn plans?
-6. **Analysts:** can they see purchase records and comparisons? Proposed yes, read-only, matching submissions today.
+5. **Repeat orders:** offer "Copy to new draft" on purchased plans too?
+6. **Analysts:** can they read purchase records? Proposed yes, read-only.
 
-## Suggested build order
+### Suggested build order
 
-Each step is usable on its own:
-
-1. **Gap 4 push notifications.** Smallest change; it reuses the inbox pattern and closes the feedback loop.
-2. **Gap 3 withdraw + Gap 2 copy to new draft.** These share the "final state + revision" model.
-3. **Gap 1 record purchase + comparison.** The biggest piece, and it depends on the open questions.
-4. **Gap 5 list tidy-ups.**
+1. **Gap 4, buyer notifications.** Smallest; it reuses the inbox pattern.
+2. **Gaps 3 and 2, withdraw and copy to new draft.** They share the "final state + revision" model.
+3. **Gap 1, record purchase and comparison.** The biggest, and it depends on open questions 1–3.
+4. **Small follow-ups.**
