@@ -99,6 +99,7 @@ def test_api_validation_and_shapes(monkeypatch):
     n = c.post("/nowcast", json={}).json()
     assert n["status"] == "carried_forward" and n["low"] is None
 
+
 def test_historical_inference_rejected(trained, wide):
     with pytest.raises(ValueError, match="predates"):
         predict_mod.predict(7, as_of="2025-06-30", wide=wide)
@@ -122,3 +123,146 @@ def test_missing_artifact_api_is_unavailable(monkeypatch):
         raise predict_mod.IntervalArtifactUnavailable("Retrain")
     monkeypatch.setattr(service_main, "predict", missing)
     assert TestClient(app).post("/predict", json={"horizon_days": 7}).status_code == 503
+
+
+def test_explain_contract(trained, wide):
+    import numpy as np
+    exp = predict_mod.explain(7, wide=wide, top_k=5)
+    assert exp["model_type"] == "forecast"
+    assert exp["horizon_days"] == 7
+    assert exp["efficiency_check"] is True
+    assert exp["anchor_price"] > 0
+    assert exp["forecast_price"] > 0
+    assert len(exp["top_drivers"]) == 5
+    assert len(exp["all_shap_values"]) > 5
+
+    # Test efficiency axiom: base_value + sum(shap_values) == predicted_return
+    total_shap = sum(d["shap_value"] for d in exp["all_shap_values"])
+    assert exp["base_value"] + total_shap == pytest.approx(exp["predicted_return"], abs=1e-5)
+
+    # Test ordering of top drivers by absolute SHAP value
+    abs_vals = [d["abs_shap_value"] for d in exp["top_drivers"]]
+    assert abs_vals == sorted(abs_vals, reverse=True)
+
+    # Test driver structure and values
+    for d in exp["top_drivers"]:
+        assert "feature" in d and "description" in d
+        assert "shap_value" in d and "abs_shap_value" in d
+        assert "feature_value" in d and "standardized_value" in d
+        assert "coefficient" in d and "price_impact_usd" in d
+        assert d["direction"] in {"upward", "downward", "neutral"}
+        assert d["abs_shap_value"] == abs(d["shap_value"])
+
+    for d in exp["top_positive_drivers"]:
+        assert d["shap_value"] > 0
+        assert d["direction"] == "upward"
+
+    for d in exp["top_negative_drivers"]:
+        assert d["shap_value"] < 0
+        assert d["direction"] == "downward"
+
+    # Test explanation text
+    assert "Ridge model projects" in exp["explanation"]
+    assert "FR-09" in exp["explanation"]
+
+    # Test shap library equivalence
+    import shap
+    meta, model = predict_mod._load("7d")
+    p = predict_mod.prepare(wide)
+    origin = p.mgo.index[-1]
+    X = predict_mod.origin_features(p, [origin])[meta["features"]]
+    scaler = model.named_steps["standardscaler"]
+    ridge = model.named_steps["ridgecv"]
+    X_scaled = scaler.transform(X)
+    explainer = shap.LinearExplainer(ridge, np.zeros_like(X_scaled))
+    shap_vals = explainer(X_scaled).values[0] * meta["gamma"]
+    for d in exp["all_shap_values"]:
+        idx = meta["features"].index(d["feature"])
+        assert d["shap_value"] == pytest.approx(shap_vals[idx], abs=1e-7)
+
+    # Test nowcast explain mode
+    now_exp = predict_mod.explain(wide=wide, model_type="nowcast")
+    assert now_exp["model_type"] == "nowcast"
+    assert now_exp["efficiency_check"] is True
+
+
+def test_explain_api_routes(monkeypatch):
+    fake_exp = {
+        "model_type": "forecast",
+        "horizon_days": 7,
+        "as_of_date": "2026-10-06",
+        "anchor_quote_date": "2026-10-06",
+        "anchor_price": 1278.5,
+        "quote_age_days": 0,
+        "forecast_price": 1290.0,
+        "predicted_return": 0.00896,
+        "base_value": 0.001,
+        "unit": "USD/metric tonne",
+        "model_version": "test",
+        "top_drivers": [{
+            "feature": "gasoil_ret5",
+            "description": "5-day gasoil return",
+            "feature_value": 0.02,
+            "standardized_value": 1.1,
+            "coefficient": 0.007,
+            "shap_value": 0.0077,
+            "contribution": 0.0077,
+            "abs_shap_value": 0.0077,
+            "direction": "upward",
+            "price_impact_usd": 9.85,
+        }],
+        "top_positive_drivers": [{
+            "feature": "gasoil_ret5",
+            "description": "5-day gasoil return",
+            "feature_value": 0.02,
+            "standardized_value": 1.1,
+            "coefficient": 0.007,
+            "shap_value": 0.0077,
+            "contribution": 0.0077,
+            "abs_shap_value": 0.0077,
+            "direction": "upward",
+            "price_impact_usd": 9.85,
+        }],
+        "top_negative_drivers": [],
+        "all_shap_values": [{
+            "feature": "gasoil_ret5",
+            "description": "5-day gasoil return",
+            "feature_value": 0.02,
+            "standardized_value": 1.1,
+            "coefficient": 0.007,
+            "shap_value": 0.0077,
+            "contribution": 0.0077,
+            "abs_shap_value": 0.0077,
+            "direction": "upward",
+            "price_impact_usd": 9.85,
+        }],
+        "efficiency_check": True,
+        "explanation": "Test explanation (FR-09).",
+    }
+    monkeypatch.setattr(service_main, "explain", lambda **kwargs: fake_exp)
+    c = TestClient(app)
+
+    # Valid explain request
+    res = c.post("/explain", json={"horizon_days": 7, "top_k": 3})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["horizon_days"] == 7
+    assert data["efficiency_check"] is True
+    assert len(data["top_drivers"]) == 1
+
+    # Aliases
+    res_shap = c.post("/shap", json={"horizon_days": 7})
+    assert res_shap.status_code == 200
+    assert res_shap.json()["efficiency_check"] is True
+
+    res_pred_exp = c.post("/predict/explain", json={"horizon_days": 7})
+    assert res_pred_exp.status_code == 200
+
+    res_pred_shap = c.post("/predict/shap", json={"horizon_days": 7})
+    assert res_pred_shap.status_code == 200
+
+    # Validation errors
+    bad_horizon = c.post("/explain", json={"horizon_days": 99})
+    assert bad_horizon.status_code == 422
+
+    bad_top_k = c.post("/explain", json={"horizon_days": 7, "top_k": 0})

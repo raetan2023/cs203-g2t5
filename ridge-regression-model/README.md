@@ -4,6 +4,7 @@ The normal app uses the **batch pipeline**, not an always-on Python API. Run `py
 
 `src/daily_model.py` trains chronological out-of-sample Ridge centres at actual decision dates and q10/q90 models on log-price errors conditioned on market features and historical GDELT features, with the latest complete 24-hour window used for live inference. Genuine complete older news archives are required; recent DOC retention alone cannot satisfy the evaluation gates. Insufficient/stale inputs yield explicit unavailable results, never example or market-only substitutes. Dashboard and recommendation screens read the same published run through Java; buy/wait advice remains a separate unavailable policy.
 
+
 ## Legacy quote-origin experiments
 
 The commands, artifacts and FastAPI endpoint below are retained for reproducible research. They are **not** the new GDELT daily publication path, and their existing reports must not be presented as news-informed evaluation.
@@ -20,11 +21,12 @@ pip install -r requirements-lock.txt # exact environment used by committed artif
 python -m src.train --no-nowcast   # all forecast horizons, reports and matching artifacts
 python -m pytest -q
 uvicorn service.main:app --port 8000
-# POST /predict {"horizon_days": 7}
+# POST /predict {"horizon_days": 7}, POST /nowcast, POST /explain {"horizon_days": 7, "top_k": 5}
 python -m src.evaluate_new        # score new mature quotes with frozen artifacts
 ```
 
 Place `market_observations.csv` in `data/`, or set `MGO_DATA_DIR` to its directory. Data are not fetched automatically. Only observed MGO quotes form labels; they are never interpolated. Targets are the nearest later quote within +/-3 days of origin+h. Publication lags remain assumptions (Brent three days, USD five days), because source availability timestamps are missing.
+
 
 ## Chronological calibration and evaluation
 
