@@ -5,3 +5,4 @@ dist-wireframe/
 *.local
 test-results/
 .env.local
+.vercel

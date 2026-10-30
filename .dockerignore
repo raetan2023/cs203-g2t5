@@ -1,0 +1,16 @@
+.git
+**/.DS_Store
+**/.env
+**/.env.*
+**/node_modules
+**/target
+**/.venv
+**/__pycache__
+**/.pytest_cache
+frontend
+historical-market-dashboard
+models
+analysis
+linear regression
+tests
+docs
