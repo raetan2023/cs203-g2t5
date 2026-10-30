@@ -2,7 +2,17 @@
 
 **Updated:** 2026-10-28. Read [Start here](../handover.md#start-here) first.
 
-**Status:** UI done up to the manager's decision. Everything **after** the decision is not built.
+**Lifecycle update, 2026-10-29:** all four post-decision gaps are implemented on
+`backend-plan-lifecycle`: buyer notifications, withdrawal, linked draft copies and
+purchase recording/comparison. Shared migrations were applied after user approval;
+4 plans, 1 submission and 1 decision were preserved. The UI adapters, preview states,
+notification badge and Decisions list are connected and tested. See
+[`plan-lifecycle-api.md`](../plan-lifecycle-api.md) for current contracts and rollout.
+Initial defaults: optional withdrawal reason, one immutable purchase, no automatic
+approval expiry, manager/analyst read-only access, copies only for rejected/withdrawn
+plans. Real signed-in buyer/manager verification remains.
+
+**Status:** all four lifecycle features implemented; Split and later product decisions remain.
 **Owner:** the recommendations teammate. The [open questions](#open-questions) are yours to decide with the team.
 
 ## Where we left off
@@ -21,25 +31,25 @@
 | #39 `docs/post-decision-handoff` | wireframe | The design below for everything after the decision |
 
 - **Design decisions:** `docs/ui-revamp/critique-rec/TASTE_REVIEW.md` (duplicates D1–D6 and R1) and `REC_REVIEW_2.md` (element inventory and restructure). The owner's rule: keep all information unless it duplicates something else on screen, and keep three evidence blocks.
-- **Not built:** the **Split** layout. The mockup exists, but the policy never returns SPLIT. Everything after the manager's decision (below) is also not built.
+- **Not built:** the **Split** layout. The mockup exists, but the policy never returns SPLIT. The post-decision features below are now implemented on the lifecycle branch.
 
 ## Where your agent should continue
 
-1. **Agree the [open questions](#open-questions) with the team.** Questions 1–3 block gap 1; question 4 blocks gap 3.
-2. Branch from `feature/ui-revamp-wireframe`, one branch per gap, in the [suggested order](#suggested-build-order): **gap 4** (buyer notifications) first.
-3. For each gap: migration (reviewed, then applied by hand to the shared Supabase), then backend routes and HTTP tests per role and status, then the UI in the spots listed under [Where the UI is already waiting](#where-the-ui-is-already-waiting), then the preview states.
-4. Record what was built and migrated in `docs/plan-submission.md`, and tick it off in this file.
+1. Review the implementation on `backend-plan-lifecycle` and verify with real Clerk buyer,
+   manager and analyst accounts. Do not rerun the three applied `20261029_*` migrations.
+2. Use `/preview.html` → Demo controls for awaiting, approved, rejected, withdrawn,
+   purchased and manager-review states. The data is explicitly synthetic.
+3. Agree the open product questions before expanding to editable purchase records,
+   split deliveries, expiry or repeat orders. The initial defaults are documented in the API handoff.
 
-> **Prompt for your agent:** Read `docs/handover.md` (Start here), `docs/handover/recommendations.md` and the sections of `docs/plan-submission.md` it names. On a branch off `feature/ui-revamp-wireframe`, build gap 4 (notify the buyer) as designed there: the `plan_decision_notifications` table, `GET /my-notifications` and `POST /my-notifications/{id}/seen`, the notification inserted in the same transaction as the decision, and an unread badge and Decisions list that mirror `ApprovalInbox.tsx`. Show me the migration before applying it. Add backend HTTP tests for every role and frontend tests. Run `./mvnw test` in `backend/` and `npm test` and `npm run build` in `frontend/`.
+## Implemented gaps (2026-10-29)
 
-## What is missing (build these)
-
-1. **Record the purchase.** An approved plan stays "approved" forever. Nothing captures the date, supplier, quantity or price paid, so the estimate can't be compared with the real cost.
-2. **A rejected plan is stuck.** Only drafts can be edited or deleted, so the buyer has to start a new plan by hand.
-3. **No withdrawing** a request once it's submitted.
-4. **The buyer is never notified.** Managers get an inbox; buyers only find out if they go and look.
-
-Each needs backend, database and UI work. The recommended design is below; agree the [open questions](#open-questions) with the team first. Suggested order: **4 → 3 + 2 → 1** (see [build order](#suggested-build-order)).
+1. **Record the purchase:** owning buyers record date, supplier, quantity and unit price.
+   The server computes total cost, and the UI compares against the frozen submission.
+2. **Rejected/withdrawn plan:** Copy to new draft preserves the earlier record and reason,
+   sets `previous_plan_id`, opens the draft editor, and links both plans.
+3. **Withdraw:** submitted requests can be withdrawn after confirmation; manager races return 409.
+4. **Notify buyer:** transactional buyer notification, unread count, Decisions list and mark-as-seen.
 
 ## Extra reading
 
@@ -62,7 +72,7 @@ There are no mockups for the after-the-decision screens yet. Match the pages alr
 
 ## Where the UI is already waiting
 
-These spots currently tell users a feature "isn't available yet". Replace each sentence with the real action:
+These integration points now expose the lifecycle actions:
 
 | File | What to change |
 |---|---|
@@ -94,7 +104,7 @@ All four also need: role checks, the 409/404/422 errors listed below, tests, pre
     │                          └────── withdraw (buyer) ─▶ withdrawn ──┤
     │                                                                  │
     └──────────── copy to new draft (buyer) ◀───────────────────────────┘
-                  new plan_id, revised_from_plan_id = old plan
+                  new plan_id, previous_plan_id = old plan
 ```
 
 - **New statuses:** `withdrawn` and `purchased`. `rejected`, `withdrawn` and `purchased` are final; a plan never goes back to `draft`.
@@ -125,7 +135,7 @@ All four also need: role checks, the 409/404/422 errors listed below, tests, pre
 ## 2. Rejected plan: copy to new draft
 
 - Offered on `rejected` and `withdrawn` plans (maybe `purchased`, for repeat orders; see the open questions).
-- Creates a new `draft` with the same quantity and deadline and `revised_from_plan_id` set. The old plan, its snapshot and its decision are untouched.
+- Creates a new `draft` with the same quantity and deadline and `previous_plan_id` set. The old plan, its snapshot and its decision are untouched.
 - The new draft gets a fresh recommendation, so the buyer sees current prices before resubmitting.
 
 ## 3. Withdraw
@@ -164,9 +174,9 @@ All routes are under `/api/v1/purchase-plans`, return `Cache-Control: no-store`,
 
 **Existing responses also change:**
 - `GET /{planId}/submission` adds `purchase` and `withdrawal` (null when absent).
-- Plan responses add `revised_from_plan_id`.
+- Plan responses add `previous_plan_id`.
 
-## Migration sketch (not applied; review before running)
+## Historical migration sketch (superseded; do not execute)
 
 ```sql
 BEGIN;
@@ -175,9 +185,9 @@ ALTER TABLE public.purchase_plans DROP CONSTRAINT purchase_plans_status_check,
   DROP CONSTRAINT purchase_plans_submission_time_check,
   ADD CONSTRAINT purchase_plans_submission_time_check CHECK (
     (status = 'draft' AND submitted_at IS NULL) OR (status <> 'draft' AND submitted_at IS NOT NULL)),
-  ADD COLUMN revised_from_plan_id uuid NULL REFERENCES public.purchase_plans(plan_id) ON DELETE RESTRICT;
+  ADD COLUMN previous_plan_id uuid NULL REFERENCES public.purchase_plans(plan_id) ON DELETE RESTRICT;
 
-CREATE TABLE public.plan_purchases (
+CREATE TABLE public.purchase_records (
   purchase_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   plan_id uuid NOT NULL UNIQUE REFERENCES public.purchase_plans(plan_id) ON DELETE RESTRICT,
   clerk_org_id text NOT NULL CHECK (clerk_org_id ~ '^org_[A-Za-z0-9]+$'),
@@ -208,7 +218,7 @@ CREATE TABLE public.plan_decision_notifications (
 );
 CREATE INDEX plan_decision_notifications_buyer_idx ON public.plan_decision_notifications (buyer_user_id, created_at DESC);
 
-ALTER TABLE public.plan_purchases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.purchase_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.plan_withdrawals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.plan_decision_notifications ENABLE ROW LEVEL SECURITY;
 COMMIT;

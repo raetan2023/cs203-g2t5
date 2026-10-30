@@ -203,3 +203,12 @@
 @media (prefers-reduced-motion: reduce) {
   .rec-col, .rec-fine summary::after { transition: none; }
 }
+.rec-lifecycle { margin-top: var(--bb-space-5); }
+.rec-lifecycle form { border-top: 1px solid var(--bb-border-control); padding-top: var(--bb-space-5); }
+.rec-lifecycle h3 { margin: 0 0 var(--bb-space-3); }
+.rec-purchase-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--bb-space-4); margin-block: var(--bb-space-5); }
+.rec-lifecycle .pp-field input, .rec-lifecycle .pp-field textarea { width: 100%; box-sizing: border-box; padding: var(--bb-space-3); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control, 4px); background: var(--bb-surface-input); color: var(--bb-text); font: inherit; }
+.rec-lifecycle .pp-field input:focus-visible, .rec-lifecycle .pp-field textarea:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.rec-lifecycle .pp-field [aria-invalid="true"] { border-color: var(--bb-error-border); }
+.rec-status--withdrawn, .rec-status--purchased { border-color: var(--bb-border-control); }
+@media (max-width: 640px) { .rec-purchase-fields { grid-template-columns: 1fr; } }

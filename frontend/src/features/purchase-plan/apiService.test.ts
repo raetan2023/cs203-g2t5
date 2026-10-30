@@ -224,7 +224,7 @@ describe('saved recommendation transport', () => {
   });
   it('preserves the absence of a snapshot on a legacy submission', async () => {
     mockFetch(200, { submission: null });
-    await expect(service.readSubmission!('p1')).resolves.toEqual({ submission: null, decision: null });
+    await expect(service.readSubmission!('p1')).resolves.toMatchObject({ submission: null, decision: null, purchase: null, withdrawal: null, revision_plan_ids: [] });
   });
 });
 

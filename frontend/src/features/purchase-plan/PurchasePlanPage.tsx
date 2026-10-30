@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearch } from '../../app/router';
+import { BuyerDecisions } from './components/BuyerDecisions';
+import { PreviousPlanNote } from './components/PreviousPlanNote';
 import { ApprovalInbox } from './components/ApprovalInbox';
 import { DeletePlanDialog } from './components/DeletePlanDialog';
 import { formatDate } from './dates';
@@ -33,6 +36,8 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
   const [announcement, setAnnouncement] = useState('');
   /** Visible counterpart of the announcement; planId marks the card to highlight. Cleared by the next action. */
   const [notice, setNotice] = useState<{ text: string; planId: string | null } | null>(null);
+  const editPlanId = new URLSearchParams(useSearch()).get('edit_plan_id');
+  const [filter, setFilter] = useState<'all' | 'open' | 'finished'>('all');
   const [sort, setSort] = useState<PlanSort>('deadline');
   const [writingServices, setWritingServices] = useState<Set<PurchasePlanService>>(() => new Set());
   const writing = writingServices.has(service);
@@ -74,12 +79,13 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
       if (!current) return;
       const message = plans.map(scenarioError).find(Boolean);
       setPlans(plans);
-      setState(message ? { mode: 'error', message } : { mode: 'view', plan: null });
+      const edit = canEdit && editPlanId ? plans.find(p => p.plan_id === editPlanId && (!p.status || p.status === 'draft')) : undefined;
+      setState(message ? { mode: 'error', message } : edit ? { mode: 'form', plan: edit } : { mode: 'view', plan: null });
     }).catch(error => {
       if (current) setState({ mode: 'error', message: requestError(error).detail });
     });
     return () => { current = false; };
-  }, [context, attempt]);
+  }, [context, attempt, editPlanId, canEdit]);
 
   useEffect(() => {
     if (state.mode === 'view' && focusAfterRender.current) {
@@ -156,6 +162,10 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setAttempt(value => value + 1);
   }
 
+  const filteredPlans = plans.filter(p => filter === 'all' || (filter === 'open'
+    ? !['rejected', 'withdrawn', 'purchased'].includes(p.status ?? 'draft')
+    : ['rejected', 'withdrawn', 'purchased'].includes(p.status ?? 'draft')));
+
   return <main className="purchase-plan">
     <div className="pp-sr-only" role="status">{announcement}</div>
     {state.mode === 'loading' ? <LoadingState /> : <>
@@ -169,6 +179,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
           }}><Icon name="plus" />Create plan</PlanButton>
         </div>}
       </header>
+      {canEdit && service.buyerNotifications && <BuyerDecisions service={service} />}
       {isManager && service.notifications && <ApprovalInbox service={service} />}
       {writing && state.mode === 'view' && <p role="status">Finishing your previous plan change before another edit can be made.</p>}
       {state.mode === 'error' && <section className="pp-card pp-load-error" aria-label="Unable to load purchase plan">
@@ -183,19 +194,24 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
         <PlanOverview plans={plans} />
         <div className="pp-list-heading">
           <h2>{canEdit ? 'Your plans' : 'Plans'}</h2>
+          <div className="pp-filter" role="group" aria-label="Plan filter">
+            {(['all', 'open', 'finished'] as const).map(option => <button type="button" key={option} aria-pressed={filter === option} onClick={() => setFilter(option)}>{option === 'all' ? 'All' : option === 'open' ? 'Open' : 'Finished'}</button>)}
+          </div>
           <div className="pp-sort" role="group" aria-labelledby="pp-sort-label">
             <span className="pp-sort-label" id="pp-sort-label">Sort by</span>
             {(['deadline', 'volume'] as const).map(option => <button key={option} type="button" aria-pressed={sort === option}
               onClick={() => setSort(option)}>{option === 'deadline' ? 'Deadline' : 'Volume'}</button>)}
           </div>
         </div>
-        <div className="pp-plan-grid">{sortPlans(plans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} service={service} busy={writing}
+        {filteredPlans.length === 0 && <p role="status">No {filter} plans.</p>}
+        <div className="pp-plan-grid">{sortPlans(filteredPlans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} service={service} busy={writing}
           saved={notice?.planId === plan.plan_id}
           editRef={state.plan?.plan_id === plan.plan_id ? editRef : undefined}
           deleteRef={state.plan?.plan_id === plan.plan_id ? deleteRef : undefined} onEdit={() => {
             clearFeedback(); setState({ mode: 'form', plan });
           }} onDelete={() => { clearFeedback(); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}</div>
       </>}
+      {canEdit && state.mode === 'form' && state.plan?.previous_plan_id && <PreviousPlanNote plan={state.plan} service={service} />}
       {canEdit && state.mode === 'form' && <PurchasePlanForm plan={state.plan} scenarioDate={scenarioDate} onSave={save} onBusyChange={busy => {
         if (activeContext.current === context) setSaving(busy);
       }} onCancel={() => {
@@ -218,12 +234,13 @@ function sortPlans(plans: PurchasePlan[], sort: PlanSort) {
 
 /** Page summary derived from the loaded plans. Numbers and units are separate elements so they read as one value. */
 function PlanOverview({ plans }: { plans: PurchasePlan[] }) {
-  const upcoming = plans.filter(plan => plan.days_remaining >= 0);
-  const overdue = plans.length - upcoming.length;
+  const active = plans.filter(plan => !plan.status || plan.status === 'draft' || plan.status === 'submitted');
+  const upcoming = active.filter(plan => plan.days_remaining >= 0);
+  const overdue = active.length - upcoming.length;
   const next = upcoming.reduce<PurchasePlan | undefined>((soonest, plan) => !soonest || plan.days_remaining < soonest.days_remaining ? plan : soonest, undefined);
   const deadlineDate = next && new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', timeZone: 'UTC' }).format(new Date(`${next.purchase_deadline}T00:00:00Z`));
   return <section className="pp-overview" aria-label="Plan summary">
-    <div><span className="pp-overview-label">Active plans</span><span className="pp-overview-value">{upcoming.length}</span></div>
+    <div><span className="pp-overview-label">Active plans</span><span className="pp-overview-value">{active.length}</span></div>
     <div className={overdue ? 'pp-overview--alert' : undefined}>
       <span className="pp-overview-label">Overdue plans</span>
       <span className="pp-overview-value">{overdue > 0 && <Icon name="alert" />}{overdue}</span>

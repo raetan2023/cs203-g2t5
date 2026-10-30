@@ -193,3 +193,10 @@
 .pp-approval-list li { padding: 1rem 0; border-top: 1px solid var(--bb-border-subtle); }
 .pp-approval-list p { font-size: .9rem; }
 .pp-approval-list a { color: inherit; text-decoration: underline; }
+.pp-previous-plan { margin-block: var(--bb-space-5); padding: var(--bb-space-4); border-left: 2px solid var(--bb-border-control); background: var(--bb-surface); color: var(--bb-text-secondary); }
+.pp-previous-plan a { color: var(--bb-text); }
+.pp-unread { display: inline-block; margin-inline-start: var(--bb-space-2); padding: var(--bb-space-1) var(--bb-space-2); border: 1px solid var(--bb-border-control); border-radius: 4px; font-size: 12px; font-weight: 600; }
+.pp-filter { display: flex; flex-wrap: wrap; gap: var(--bb-space-2); }
+.pp-filter button { padding: var(--bb-space-2) var(--bb-space-3); border: 1px solid var(--bb-border-control); background: var(--bb-surface); color: var(--bb-text); font: inherit; cursor: pointer; }
+.pp-filter button[aria-pressed="true"] { background: var(--bb-action); color: var(--bb-text-on-action); }
+.pp-plan-status--purchased, .pp-plan-status--withdrawn { color: var(--bb-text); border-color: var(--bb-border-control); }
