@@ -2,6 +2,11 @@
 
 **Updated:** 2026-10-28. Read [Start here](../handover.md#start-here) first.
 
+**Backend update, 2026-10-29:** `withdrawn`/`purchased` and previous-plan links are now
+implemented and migrated. See
+[`plan-lifecycle-api.md`](../plan-lifecycle-api.md). Summary counts now use only draft/submitted plans; final-state deadline badges are hidden.
+Open/Finished filters, lifecycle adapters and previews are implemented on `backend-plan-lifecycle`.
+
 **Status:** done. **Owner now:** nobody; the follow-ups wait on Recommendations.
 
 ## Where we left off

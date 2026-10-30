@@ -68,7 +68,7 @@ public class PlanApprovalService {
                 insert into plan_approval_notifications
                 (notification_id, plan_id, clerk_org_id, buyer_user_id, created_at, recommendation_snapshot)
                 values (?, ?, ?, ?, ?, CAST(? AS jsonb))""", UUID.randomUUID(), planId, orgId, owner, java.sql.Timestamp.from(submittedAt), snapshot);
-        return new PurchasePlan(planId, owner, plan.quantityMt(), plan.purchaseDeadline(), today, "submitted", submittedAt);
+        return new PurchasePlan(planId, owner, plan.quantityMt(), plan.purchaseDeadline(), today, "submitted", submittedAt, plan.previousPlanId());
     }
 
     @Transactional
@@ -98,7 +98,11 @@ public class PlanApprovalService {
                 (decision_id, plan_id, clerk_org_id, manager_user_id, manager_clerk_user_id, manager_label, decision, decision_comment, decided_at)
                 values (?, ?, ?, ?, ?, ?, ?, ?, ?)""", UUID.randomUUID(), planId, orgId, manager,
                 managerSubject, managerLabel, request.decision(), comment, java.sql.Timestamp.from(decidedAt));
-        return new PurchasePlan(planId, plan.userId(), plan.quantityMt(), plan.purchaseDeadline(), dates.today(), request.decision(), plan.submittedAt());
+        jdbc.update("""
+                insert into plan_decision_notifications
+                (notification_id, plan_id, clerk_org_id, buyer_user_id, decision, created_at)
+                values (?, ?, ?, ?, ?, ?)""", UUID.randomUUID(), planId, orgId, plan.userId(), request.decision(), java.sql.Timestamp.from(decidedAt));
+        return new PurchasePlan(planId, plan.userId(), plan.quantityMt(), plan.purchaseDeadline(), dates.today(), request.decision(), plan.submittedAt(), plan.previousPlanId());
     }
 
     public Map<String, Object> decision(UUID planId, String orgId) {

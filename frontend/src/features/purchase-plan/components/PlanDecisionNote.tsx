@@ -23,6 +23,8 @@ export function PlanDecisionNote({ plan, service }: { plan: PurchasePlan; servic
   if (plan.status === 'submitted') return <div className="pp-decision pp-decision--submitted">
     <Icon name="clock" /><p><strong>Awaiting manager approval.</strong> All managers in your organisation have been notified. This plan is locked while awaiting review.</p>
   </div>;
+  if (plan.status === 'purchased') return <div className="pp-decision"><Icon name="check-circle" /><p>Purchase recorded. Open this plan to see the actual cost and saved estimate.</p></div>;
+  if (plan.status === 'withdrawn') return <div className="pp-decision"><Icon name="cross-circle" /><p>Request withdrawn. Copy it to a new draft to request approval again.</p></div>;
   if (!decided) return null;
   const approved = plan.status === 'approved';
   const current = result?.planId === plan.plan_id && result.status === plan.status ? result : undefined;
@@ -36,8 +38,8 @@ export function PlanDecisionNote({ plan, service }: { plan: PurchasePlan; servic
       {decision?.comment && <p className="pp-decision-comment">{approved ? 'Comment' : 'Reason'}: “{decision.comment}”</p>}
       {service?.readSubmission && !current && <p className="pp-decision-meta" role="status">Loading the manager’s note…</p>}
       {current?.error && <p className="pp-decision-meta">Couldn’t load the manager’s note. Open the decision to see it.</p>}
-      <p className="pp-decision-meta">{approved ? 'Buy using a current supplier quote. Recording the purchase here isn’t available yet.'
-        : 'This plan stays locked. To try again, create a new purchase plan.'}</p>
+      <p className="pp-decision-meta">{approved ? 'Buy using a current supplier quote, then open the decision to record the purchase.'
+        : 'This plan stays locked. Open the decision to copy it to a new draft.'}</p>
     </div>
   </div>;
 }

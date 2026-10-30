@@ -48,8 +48,8 @@ describe('Clerk API wiring', () => {
     const unavailable = { status: 'unavailable', reason: 'missing_forecast', message: 'No ML provider connected.' };
     const fetcher = vi.fn(async (url: string, _init?: RequestInit) => {
       if (url.endsWith('/organisation')) return accessReply();
-      if (url.includes('/forecast?')) return reply({ ...buildMockForecast(Number(new URL(url).searchParams.get('horizon_days'))), forecast_origin_date: scenario, anchor_quote_date: scenario,
-        target_date: addDays(scenario, Number(new URL(url).searchParams.get('horizon_days'))), published_at: scenario + 'T01:00:00Z', history: [], source_dates: { mgo: scenario }, news_window_start: addDays(scenario, -1) + 'T00:00:00Z', news_window_end: scenario + 'T00:00:00Z' });
+      if (url.includes('/forecast?')) return reply({ ...buildMockForecast(Number(new URL(url, 'http://localhost').searchParams.get('horizon_days'))), forecast_origin_date: scenario, anchor_quote_date: scenario,
+        target_date: addDays(scenario, Number(new URL(url, 'http://localhost').searchParams.get('horizon_days'))), published_at: scenario + 'T01:00:00Z', history: [], source_dates: { mgo: scenario }, news_window_start: addDays(scenario, -1) + 'T00:00:00Z', news_window_end: scenario + 'T00:00:00Z' });
       if (url.endsWith('/config')) return reply({ scenario_as_of_date: scenario });
       if (url.endsWith(`/purchase-plans/${ANALYSIS_DEMO_PLAN.plan_id}`)) return reply({ plan: { ...ANALYSIS_DEMO_PLAN, scenario_as_of_date: scenario, days_remaining: scenario === '2025-10-24' ? 22 : 21 } });
       if (scenario === '2025-10-24') return reply({ detail: 'The backend scenario changed.' }, 409);
@@ -71,8 +71,8 @@ describe('Clerk API wiring', () => {
     expect(fetcher.mock.calls.some(([url]) => url.includes('/api/v1/purchase-plans/forecast?'))).toBe(true);
     expect(fetcher.mock.calls.some(([url]) => url.includes('/api/v1/forecast?'))).toBe(true);
     await userEvent.click(screen.getByRole('button', { name: '14 days' }));
-    await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes('/cost-impact?') && new URL(url).searchParams.get('horizon_days') === '14'
-      && new URL(url).searchParams.get('run_id') === 'synthetic-preview')).toBe(true));
+    await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes('/cost-impact?') && new URL(url, 'http://localhost').searchParams.get('horizon_days') === '14'
+      && new URL(url, 'http://localhost').searchParams.get('run_id') === 'synthetic-preview')).toBe(true));
   });
 });
 

@@ -23,6 +23,7 @@ class PlanApprovalHttpTests {
     @Autowired MockMvc mvc;
     @MockitoBean JwtDecoder decoder;
     @MockitoBean PlanApprovalService approvals;
+    @MockitoBean PlanLifecycleService lifecycle;
     @MockitoBean UserAccounts users;
     @MockitoBean PurchasePlanRepository plans;
     @MockitoBean OperationalDate dates;

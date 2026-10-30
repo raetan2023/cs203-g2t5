@@ -44,6 +44,11 @@ public class SecurityConfig {
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST, ADMIN))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/approval-notifications").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(MANAGER))))
+                        .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/my-notifications").access((auth, context) ->
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
+                        .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/withdraw", "/api/v1/purchase-plans/*/revise",
+                                "/api/v1/purchase-plans/*/purchase", "/api/v1/purchase-plans/my-notifications/*/seen").access((auth, context) ->
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/decision").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(MANAGER))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/submit").access((auth, context) ->

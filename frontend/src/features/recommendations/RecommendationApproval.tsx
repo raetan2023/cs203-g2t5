@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppLink } from '../../app/router';
 import { formatDate } from '../purchase-plan/dates';
-import { requestError, type PlanAnalysis, type PurchasePlan, type PurchasePlanService, type SubmittedRecommendation, type ApprovalDecision } from '../purchase-plan/types';
+import { requestError, type PlanAnalysis, type PurchasePlan, type PurchasePlanService, type SubmissionResponse } from '../purchase-plan/types';
 import type { Horizon } from '../forecast/apiService';
+import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
+import { PlanLifecycleActions, PurchaseOutcome } from './PlanLifecycleActions';
 import { ManagerDecisionForm } from './ManagerDecisionForm';
 import { EvidenceView } from './RecommendationEvidence';
 import { actionLabel, amount, dayDate, readableDates, usd } from './format';
@@ -53,21 +55,24 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
   </section>;
 }
 
-export function SubmittedRecommendationView({ plan, planService, canDecide = false }: { plan: PurchasePlan; planService: PurchasePlanService; canDecide?: boolean }) {
-  const scope = useMemo(() => ({}), [planService, plan.plan_id]);
-  const [result, setResult] = useState<{ scope: object; submission?: SubmittedRecommendation | null; decision?: ApprovalDecision | null; error?: string }>();
+export function SubmittedRecommendationView({ plan, planService, canDecide = false, canAct = false, today = plan.scenario_as_of_date, onChanged, onReload }: {
+  plan: PurchasePlan; planService: PurchasePlanService; canDecide?: boolean; canAct?: boolean; today?: string;
+  onChanged?(plan: PurchasePlan): void; onReload?(): void;
+}) {
+  const scope = useMemo(() => ({}), [planService, plan.plan_id, plan.status, today]);
+  const [result, setResult] = useState<Partial<SubmissionResponse> & { scope: object; error?: string }>();
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
     if (!planService.readSubmission) { setResult({ scope, error: 'Submitted recommendation loading is unavailable.' }); return; }
-    planService.readSubmission(plan.plan_id).then(({ submission, decision }) => { if (active) setResult({ scope, submission, decision }); })
+    planService.readSubmission(plan.plan_id).then(data => { if (active) setResult({ scope, ...data }); })
       .catch(error => { if (active) setResult({ scope, error: requestError(error).detail }); });
     return () => { active = false; };
   }, [scope, attempt]);
   const current = result?.scope === scope ? result : undefined;
   const submission = current?.submission;
   const decision = current?.decision;
-  const status = decision?.decision ?? plan.status;
+  const status = plan.status === 'purchased' || plan.status === 'withdrawn' ? plan.status : decision?.decision ?? plan.status;
   const refreshDecision = () => { setResult(undefined); setAttempt(value => value + 1); };
   const analysis = submission?.analysis;
   const rec = analysis?.recommendation.status === 'ready' ? analysis.recommendation.value : undefined;
@@ -77,17 +82,21 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
   const deadline = analysis?.context.purchase_deadline ?? plan.purchase_deadline;
   const approved = status === 'approved';
   const deciding = canDecide && status === 'submitted' && !decision && !!planService.decide && !!analysis?.approval_fingerprint;
-  // The workflow ends at the decision for now; say plainly what the reader can and cannot do next.
   const nextStep = deciding ? 'Review the saved recommendation, then approve or reject it. The first decision is final.'
-    : status === 'submitted' ? 'Nothing to do yet. The decision will appear here and on the purchase plans list. Withdrawing a request isn’t available yet.'
-    : approved ? 'Buy using a current supplier quote. Approval doesn’t place an order, and recording the purchase here isn’t available yet.'
-    : 'This plan stays locked. To try again, create a new purchase plan. Editing and resubmitting a rejected plan isn’t available yet.';
+    : status === 'submitted' ? 'Await a manager decision, or withdraw this request if your plans change.'
+    : status === 'purchased' ? 'The actual purchase is recorded below. The plan and approval history remain saved.'
+    : status === 'withdrawn' ? 'This request was withdrawn. Copy it to a new draft to request approval again.'
+    : approved ? 'Buy using a current supplier quote, then record the actual purchase. Approval does not place an order.'
+    : 'This plan stays locked. Copy it to a new draft to review the quantity and deadline before submitting again.';
+  const title = status === 'purchased' ? 'Purchase recorded' : status === 'withdrawn' ? 'Request withdrawn'
+    : status === 'approved' ? 'Recommendation approved' : status === 'rejected' ? 'Recommendation rejected' : 'Awaiting manager approval';
   return <main className="recommendations">
     <header className="rec-header">
       <AppLink href="/purchase-plans" aria-label="Back to purchase plans"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>Purchase plans</AppLink>
       <h1>Submitted recommendation</h1>
       <p>{quantity} MT · due {dayDate(deadline, true)}{plan.submitted_at && <> · submitted <time dateTime={plan.submitted_at}>{decisionTime(plan.submitted_at)}</time></>}</p>
     </header>
+    {plan.previous_plan_id && <PreviousPlanNote plan={plan} service={planService} />}
     {!current ? <section className="rec-card" role="status"><h2>Loading submitted recommendation…</h2><div className="rec-skeleton" aria-hidden="true" /></section>
       : current.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load this request</h2><p>{current.error}</p><button className="bb-button" onClick={refreshDecision}>Retry submission</button></section>
       : <div className="rec-layout">
@@ -95,14 +104,18 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
           <div className="rec-verdict">
             <span className="rec-verdict-icon" aria-hidden="true"><StatusIcon status={status} /></span>
             <div><span className="rec-kicker">Approval status</span>
-              <h2>{decision ? (approved ? 'Recommendation approved' : 'Recommendation rejected') : 'Awaiting manager approval'}</h2>
+              <h2>{title}</h2>
               <p className="rec-tagline">{decision ? <>Decided by {decision.manager_label} · <time dateTime={decision.decided_at}>{decisionTime(decision.decided_at)}</time></>
-                : 'All managers in your organisation have been notified. The plan is locked while it’s reviewed.'}</p>
+                : status === 'withdrawn' ? 'Managers can no longer approve this request.' : 'All managers in your organisation have been notified. The plan is locked while it’s reviewed.'}</p>
               {decision && decision.manager_label !== decision.manager_clerk_user_id && <p className="rec-context">Manager account: {decision.manager_clerk_user_id}</p>}
             </div>
           </div>
-          {decision?.comment && <div className="rec-status-comment"><span className="rec-kicker">{approved ? 'Manager’s comment' : 'Reason for rejection'}</span><p className="rec-decision-comment">{decision.comment}</p></div>}
+          {decision?.comment && <div className="rec-status-comment"><span className="rec-kicker">{decision.decision === 'approved' ? 'Manager’s comment' : 'Reason for rejection'}</span><p className="rec-decision-comment">{decision.comment}</p></div>}
           <p className="rec-next"><strong>Next step</strong> {nextStep}</p>
+          {current.withdrawal && <p>Withdrawn {decisionTime(current.withdrawal.withdrawn_at)}{current.withdrawal.reason && ` · ${current.withdrawal.reason}`}</p>}
+          {canAct && <PlanLifecycleActions key={`${plan.plan_id}:${status}:${today}`} plan={{ ...plan, status }} data={{ ...current, submission: submission ?? null }}
+            service={planService} today={today} onChanged={saved => onChanged?.(saved)} onReload={onReload ?? refreshDecision} />}
+          {!canAct && current.revision_plan_ids?.map(id => <p key={id}><AppLink href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(id)}`}>View copied plan</AppLink></p>)}
           {deciding && <ManagerDecisionForm key={`${plan.plan_id}:${analysis!.approval_fingerprint}`} planId={plan.plan_id}
             fingerprint={analysis!.approval_fingerprint!} service={planService} onDecided={refreshDecision} onRefresh={refreshDecision} />}
         </section>
@@ -121,6 +134,7 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
         </aside>
 
         <div className="rec-evidence">
+          <PurchaseOutcome data={{ ...current, submission: submission ?? null }} />
           {!analysis || !submission ? <section className="rec-card"><h2>Earlier plan-only submission</h2><p>This request was submitted before recommendation snapshots were introduced. No selected recommendation was saved.</p></section>
             : <section className="rec-detail" aria-label="Saved recommendation for approval">
               <div className="rec-section-head"><div>
@@ -146,8 +160,8 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
 }
 
 function StatusIcon({ status }: { status?: string }) {
-  const path = status === 'approved' ? <path d="M5 12.5l4.5 4.5L19 7.5" />
-    : status === 'rejected' ? <path d="M6 6l12 12M18 6L6 18" />
+  const path = status === 'approved' || status === 'purchased' ? <path d="M5 12.5l4.5 4.5L19 7.5" />
+    : status === 'rejected' || status === 'withdrawn' ? <path d="M6 6l12 12M18 6L6 18" />
     : <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>;
   return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{path}</svg>;
 }

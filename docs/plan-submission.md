@@ -42,9 +42,25 @@ locked. `approved` and `rejected` are reserved schema states: **manager approval
 Only a current manager in the same active organisation can decide a submitted
 request. The first decision is final; concurrent/later attempts return 409.
 Rejected requests stay locked; revising a proposal requires a new draft plan.
-Nothing happens after the decision yet (recording the purchase, withdrawing,
-revising a rejected plan, telling the buyer). The proposed design for those is in
-[handover/recommendations.md](handover/recommendations.md); it is not implemented.
+Post-decision backend code (record purchase, withdraw, copy to a new draft and
+notify the buyer) is implemented locally on `backend-plan-lifecycle` as of
+2026-10-29. **Shared migrations are applied and lifecycle UI integration is implemented.**
+See [the current lifecycle API/rollout](plan-lifecycle-api.md) and
+[the UI handover](handover/recommendations.md).
+
+Local verification on 2026-10-29: `./mvnw test` — 155 passed, 2 skipped,
+0 failures/errors. The disposable PostgreSQL migration smoke test also passed
+(backfill, unchanged existing plans, ownership constraints, RLS and rerun failure).
+The three `20261029_*` migrations were applied in one transaction on 2026-10-29
+with explicit user approval. Original values in 4 plans, 1 submission and 1 decision
+were backed up and compared unchanged. One buyer notification was backfilled;
+0 withdrawals and 0 purchase records exist. All three new tables have RLS enabled.
+Private JSONL backups/checksums are at `/tmp/bunkerbuddy-migration-backups/lifecycle-20261029/`.
+Do not rerun these migrations. The backend was restarted and checked healthy.
+Frontend verification: 268 tests and the production build passed. Chromium checked
+withdrawal, linked copying, purchase/comparison, notifications and manager role behavior
+at desktop/mobile sizes. Real-account end-to-end validation has not been performed;
+the complete browser journey uses synthetic preview data. See the linked API document for details.
 
 ## API and role matrix
 
