@@ -1,3 +1,4 @@
+import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
 import { SubmittedRecommendationView, RecommendationApproval } from './RecommendationApproval';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppLink } from '../../app/router';
@@ -52,7 +53,8 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
     if (plan && forecast && !fitsSelected && fittingHorizons.length > 0) forecastState.setHorizon(fittingHorizons[0]);
   }, [plan, forecast, fitsSelected, fittingHorizons[0], forecastState.setHorizon]);
   const afterDeadline = !!(plan && forecast && forecast.target_date > plan.purchase_deadline);
-  if (plan?.status && plan.status !== 'draft') return <SubmittedRecommendationView canDecide={canDecide} plan={plan} planService={planService} />;
+  if (plan?.status && plan.status !== 'draft') return <SubmittedRecommendationView key={`${plan.plan_id}:${plan.status}:${attempt}`} canDecide={canDecide} canAct={canSubmit} today={scenarioDate}
+    onChanged={saved => setResult({ scope, plan: saved })} onReload={reload} plan={plan} planService={planService} />;
   const refreshPrices = () => { forecastState.retry(); comparison.retry(); };
   // Exploring a fitting horizon also chooses the cost detail sent for approval; other columns are explore-only.
   const explore = (id: ColumnId) => { setExplored(id); if (id !== 'today' && fittingHorizons.includes(id)) forecastState.setHorizon(id); };
@@ -64,6 +66,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       <h1 tabIndex={-1} ref={heading}>Purchase recommendation</h1>
       {plan && <p>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT · due {dayDate(plan.purchase_deadline, true)} · <strong>{remaining(plan.days_remaining)}</strong></p>}
     </header>
+    {plan?.previous_plan_id && <PreviousPlanNote plan={plan} service={planService} />}
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current planning date.</p><button className="bb-button" onClick={reload}>Retry</button></section>
       : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Choose a saved purchase plan from your plans, or create a new one.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>

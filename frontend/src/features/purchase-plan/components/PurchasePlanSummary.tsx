@@ -25,17 +25,18 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, 
   const headingId = useId();
   const draft = !plan.status || plan.status === 'draft';
   const quantity = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt);
+  const final = !!plan.status && ['approved', 'rejected', 'withdrawn', 'purchased'].includes(plan.status);
   const overdue = plan.days_remaining < 0;
   const days = Math.abs(plan.days_remaining);
   const unit = days === 1 ? 'day' : 'days';
-  const status = overdue ? 'overdue' : days <= DUE_SOON_DAYS ? 'soon' : 'on-track';
+  const status = final ? 'finished' : overdue ? 'overdue' : days <= DUE_SOON_DAYS ? 'soon' : 'on-track';
 
   // Guide: docs/ui-revamp/assets/inspo/purchase-plans-page/image.png. Quantity leads; deadline and time left follow.
   return <section className={`pp-card pp-summary pp-summary--${status}${saved ? ' pp-summary--saved' : ''}`} aria-labelledby={headingId}>
     <div className="pp-summary-top">
-      <div className="pp-summary-badges"><span className={`pp-badge pp-badge--${status}`}>
+      <div className="pp-summary-badges">{!final && <span className={`pp-badge pp-badge--${status}`}>
         <Icon name={overdue ? 'alert' : 'clock'} />{overdue ? 'Overdue' : status === 'soon' ? 'Due soon' : 'On track'}
-      </span>
+      </span>}
       {/* No pill for drafts (the normal, editable state); submitted / approved / rejected keep theirs. */}
       {plan.status && !draft && <span className={`pp-plan-status pp-plan-status--${plan.status}`}>{plan.status === 'submitted' ? 'Submitted for approval' : plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</span>}
       </div>
@@ -49,14 +50,15 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, 
       </span>{' '}
       <span className="pp-summary-due">Due <time dateTime={plan.purchase_deadline}>{formatDate(plan.purchase_deadline)}</time></span>
     </h3>
-    <p className="pp-countdown">
+    {!final && <p className="pp-countdown">
       {overdue
         ? <span className="pp-countdown-value">Overdue by {days} {unit}</span>
         : <><span className="pp-countdown-value">{days} {unit}</span> {days === 0 ? 'left · due today' : 'left'}</>}
-    </p>
+    </p>}
+    {plan.previous_plan_id && <p><AppLink href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.previous_plan_id)}`}>View previous plan</AppLink></p>}
     <PlanDecisionNote plan={plan} service={service} />
     <div className="pp-actions">
-      {!busy && <AppLink className="pp-button pp-button--primary pp-summary-link" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>{draft ? 'View recommendation' : plan.status === 'submitted' ? 'View submitted recommendation' : 'View decision'} &rarr;</AppLink>}
+      {!busy && <AppLink className="pp-button pp-button--primary pp-summary-link" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>{draft ? 'View recommendation' : plan.status === 'submitted' ? 'View submitted recommendation' : plan.status === 'approved' && canEdit ? 'View decision / record purchase' : plan.status === 'purchased' ? 'View purchase record' : plan.status === 'withdrawn' ? 'View withdrawn request' : 'View decision'} &rarr;</AppLink>}
       {canEdit && draft && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}
     </div>
   </section>;

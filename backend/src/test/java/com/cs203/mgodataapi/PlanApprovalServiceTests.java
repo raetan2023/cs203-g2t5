@@ -37,9 +37,10 @@ class PlanApprovalServiceTests {
                 return super.update(sql.replace("CAST(? AS jsonb)", "?"), values);
             }
         };
-        jdbc.execute("CREATE TABLE purchase_plans (plan_id UUID PRIMARY KEY, user_id UUID NOT NULL, quantity_mt NUMERIC NOT NULL, purchase_deadline DATE NOT NULL, scenario_as_of_date DATE NOT NULL, clerk_org_id TEXT, status TEXT NOT NULL DEFAULT 'draft', submitted_at TIMESTAMP WITH TIME ZONE)");
+        jdbc.execute("CREATE TABLE purchase_plans (plan_id UUID PRIMARY KEY, user_id UUID NOT NULL, quantity_mt NUMERIC NOT NULL, purchase_deadline DATE NOT NULL, scenario_as_of_date DATE NOT NULL, clerk_org_id TEXT, status TEXT NOT NULL DEFAULT 'draft', submitted_at TIMESTAMP WITH TIME ZONE, previous_plan_id UUID)");
         jdbc.execute("CREATE TABLE plan_approval_notifications (notification_id UUID PRIMARY KEY, plan_id UUID NOT NULL UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, recommendation_snapshot TEXT)");
         jdbc.execute("CREATE TABLE plan_approval_decisions (decision_id UUID PRIMARY KEY, plan_id UUID NOT NULL UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, manager_user_id UUID NOT NULL, manager_clerk_user_id TEXT NOT NULL, manager_label TEXT NOT NULL, decision TEXT NOT NULL, decision_comment TEXT NOT NULL, decided_at TIMESTAMP WITH TIME ZONE NOT NULL)");
+        jdbc.execute("CREATE TABLE plan_decision_notifications (notification_id UUID PRIMARY KEY, plan_id UUID UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, decision TEXT NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, seen_at TIMESTAMP WITH TIME ZONE)");
         plans = new PurchasePlanRepository(jdbc);
         OperationalDate dates = mock(OperationalDate.class);
         when(dates.today()).thenReturn(today);
@@ -59,7 +60,7 @@ class PlanApprovalServiceTests {
                 tools.jackson.databind.json.JsonMapper.builder().build()));
         proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source), new AnnotationTransactionAttributeSource()));
         approvals = (PlanApprovalService) proxy.getProxy();
-        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, ?, ?, ?, ?, 'draft', NULL)", id, owner, BigDecimal.TEN, today.plusDays(40), today, "org_a");
+        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, ?, ?, ?, ?, 'draft', NULL, NULL)", id, owner, BigDecimal.TEN, today.plusDays(40), today, "org_a");
         choice = selection(7, "NORMAL");
     }
     PurchasePlan submit(UUID planId, UUID buyer, String org) { return approvals.submit(planId, buyer, org, choice); }

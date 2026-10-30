@@ -16,8 +16,9 @@ public class PlanApprovalController {
     private final PlanApprovalService approvals;
     private final UserAccounts users;
     private final PurchasePlanRepository plans;
-    public PlanApprovalController(PlanApprovalService approvals, UserAccounts users, PurchasePlanRepository plans) {
-        this.approvals = approvals; this.users = users; this.plans = plans;
+    private final PlanLifecycleService lifecycle;
+    public PlanApprovalController(PlanApprovalService approvals, UserAccounts users, PurchasePlanRepository plans, PlanLifecycleService lifecycle) {
+        this.approvals = approvals; this.users = users; this.plans = plans; this.lifecycle = lifecycle;
     }
 
     @PostMapping("/{planId}/submit")
@@ -38,6 +39,11 @@ public class PlanApprovalController {
         var response = new java.util.LinkedHashMap<String, Object>();
         response.put("submission", approvals.submittedRecommendation(planId, access.organisationId()));
         response.put("decision", approvals.decision(planId, access.organisationId()));
+        var purchase = lifecycle.purchase(planId, access.organisationId());
+        response.put("purchase", purchase);
+        response.put("comparison", lifecycle.comparison(plan.orElseThrow(), access.organisationId(), purchase));
+        response.put("withdrawal", lifecycle.withdrawal(planId, access.organisationId()));
+        response.put("revision_plan_ids", lifecycle.revisions(planId, access.organisationId()));
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response);
     }
 

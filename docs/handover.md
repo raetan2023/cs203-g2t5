@@ -2,12 +2,18 @@
 
 **Updated:** 2026-10-28. Each page has its own file in [`docs/handover/`](handover/). Read [Start here](#start-here) below, then only your page's file.
 
+**Backend update, 2026-10-29:** the wireframe UI has merged into `main` (PR #43).
+Post-decision backend and UI are implemented on `backend-plan-lifecycle`.
+Shared migrations were applied on 2026-10-29 and the updated local backend is running. Read
+[`plan-lifecycle-api.md`](plan-lifecycle-api.md) for routes, defaults, tests and rollout;
+it supersedes the older backend-missing/branch instructions below for this work.
+
 | Page | UI | Backend | Owner now | Next step |
 |---|---|---|---|---|
 | [Login](handover/login.md) | Done | Done (Clerk) | — | Optional follow-up only |
 | [Home](handover/home.md) | Done (PR #40) | No new endpoints needed | — | Photo / time-of-day choice |
 | [Purchase plans](handover/purchase-plans.md) | Done | Done | — | Small follow-ups after the new statuses exist |
-| [Recommendations](handover/recommendations.md) | Done up to the manager's decision | **Missing: everything after the decision** | **Recommendations teammate** | Agree the [open questions](handover/recommendations.md#open-questions), then build |
+| [Recommendations](handover/recommendations.md) | Post-decision actions implemented on `backend-plan-lifecycle` | Implemented on `backend-plan-lifecycle`; shared migrations applied | **Recommendations teammate** | Check real-account journey; agree later product decisions |
 | [Market dashboard](handover/market-dashboard.md) | **Spec done** (HTML proposal); live page unchanged | Small additions | **Market dashboard teammate** | Build the spec in React; decide "Your plans" |
 
 Every page file has these sections:

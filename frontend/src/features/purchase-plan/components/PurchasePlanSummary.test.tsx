@@ -70,6 +70,12 @@ describe('PurchasePlanSummary status and actions', () => {
 
 
 describe('approval workflow in the redesigned cards', () => {
+  it.each(['approved', 'rejected', 'withdrawn', 'purchased'] as const)('hides deadline badges for a %s plan', status => {
+    renderSummary({ status, days_remaining: -3 });
+    expect(screen.queryByText('Overdue')).not.toBeInTheDocument();
+    expect(screen.queryByText('Overdue by 3 days')).not.toBeInTheDocument();
+    expect(screen.getByText(status.charAt(0).toUpperCase() + status.slice(1))).toBeVisible();
+  });
   it.each(['submitted', 'approved', 'rejected'] as const)('keeps a %s plan locked and links to its saved recommendation', status => {
     const onEdit = vi.fn(), onDelete = vi.fn();
     render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status }} onEdit={onEdit} onDelete={onDelete} />);
@@ -94,7 +100,7 @@ describe('approval workflow in the redesigned cards', () => {
     expect(await screen.findByText('Procurement Manager')).toBeVisible();
     expect(screen.getByText(/rejected this plan/)).toBeVisible();
     expect(screen.getByText('Reason: “Outside the approved budget”')).toBeVisible();
-    expect(screen.getByText(/create a new purchase plan/)).toBeVisible();
+    expect(screen.getByText(/copy it to a new draft/)).toBeVisible();
     expect(readSubmission).toHaveBeenCalledWith(DEMO_PLAN.plan_id);
   });
 

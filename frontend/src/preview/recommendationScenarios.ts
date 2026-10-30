@@ -128,37 +128,50 @@ export const PREVIEW_REJECTION = 'Over this month’s budget. Split the quantity
  * Adds a local submit, manager decision and saved-snapshot read to the preview plan service; nothing leaves the browser.
  * `start` opens the plan already submitted, approved or rejected.
  */
-export function withPreviewApproval(plans: PurchasePlanService, scenario: RecommendationScenario, start?: 'submitted' | 'approved' | 'rejected'): PurchasePlanService {
+export function withPreviewApproval(plans: PurchasePlanService, scenario: RecommendationScenario, start?: 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased'): PurchasePlanService {
   const recommendations = createScenarioRecommendationService(scenario, 0);
-  let submitted: { plan: PurchasePlan; submission: SubmittedRecommendation; decision: ApprovalDecision | null } | undefined;
+  const snapshots = new Map<string, SubmittedRecommendation>();
   async function save(planId: string, horizon: Horizon) {
     const { plan } = await plans.read(planId);
     if (!plan) throw new Error('No saved purchase plan.');
     const analysis = await recommendations.read(plan, horizon);
-    submitted = { plan: { ...plan, status: 'submitted', submitted_at: `${SCENARIO_DATE}T00:45:00Z` }, submission: { horizon_days: horizon, analysis }, decision: null };
-    return submitted;
+    const guidance = analysis.recommendation.status === 'ready' ? analysis.recommendation.value : undefined;
+    const saved = await plans.submit!(planId, { horizon_days: horizon, run_id: `preview-${scenario}`,
+      recommendation_id: guidance!.recommendation_id, approval_fingerprint: analysis.approval_fingerprint!,
+      urgency: 'NORMAL', quantity_mt: plan.quantity_mt, purchase_deadline: plan.purchase_deadline, scenario_as_of_date: plan.scenario_as_of_date });
+    snapshots.set(planId, { horizon_days: horizon, analysis });
+    return saved;
   }
   let opening: Promise<unknown> | undefined;
-  const opened = () => opening ??= start ? save(scenarioPlan(scenario).plan_id, 7).then(saved => {
+  const opened = () => opening ??= start ? save(scenarioPlan(scenario).plan_id, 7).then(async ({ plan }) => {
     if (start === 'submitted') return;
-    saved.decision = previewDecision(start, start === 'approved' ? 'Within budget. Go ahead.' : PREVIEW_REJECTION);
-    saved.plan = { ...saved.plan, status: start };
+    if (start === 'withdrawn') { await plans.withdraw!(plan.plan_id, 'Delivery schedule changed.'); return; }
+    await plans.decide!(plan.plan_id, { decision: start === 'rejected' ? 'rejected' : 'approved', comment: start === 'rejected' ? PREVIEW_REJECTION : 'Within budget. Go ahead.', approval_fingerprint: 'a'.repeat(64) });
+    if (start === 'purchased') await plans.recordPurchase!(plan.plan_id, { purchased_on: SCENARIO_DATE, supplier: 'Synthetic supplier', quantity_mt: plan.quantity_mt, price_usd_per_mt: 1300, note: 'Illustrative purchase record only.' });
   }) : Promise.resolve();
   return {
     ...plans,
-    async read(planId) { await opened(); return submitted && submitted.plan.plan_id === planId ? { plan: submitted.plan } : plans.read(planId); },
-    async submit(planId, selection) { await opened(); return { plan: (await save(planId, selection.horizon_days)).plan }; },
-    async decide(planId, input) {
+    async list() { await opened(); return plans.list(); },
+    async read(id) { await opened(); return plans.read(id); },
+    async buyerNotifications() { await opened(); return plans.buyerNotifications!(); },
+    async submit(id, selection) { await opened(); return save(id, selection.horizon_days); },
+    async readSubmission(id) {
       await opened();
-      if (!submitted || submitted.plan.plan_id !== planId || submitted.decision) throw new Error('This request has already been decided.');
-      submitted.decision = previewDecision(input.decision, input.comment, new Date().toISOString());
-      submitted.plan = { ...submitted.plan, status: input.decision };
-      return { plan: submitted.plan };
-    },
-    async readSubmission(planId) {
-      await opened();
-      const own = submitted && submitted.plan.plan_id === planId ? submitted : undefined;
-      return { submission: own?.submission ?? null, decision: own?.decision ?? null };
+      const data = await plans.readSubmission!(id), submission = snapshots.get(id) ?? null;
+      const c = submission?.analysis.cost_impact;
+      const reference = c?.status === 'ready' ? c.value.reference_total : null;
+      const estimate = c?.status === 'ready' ? c.value.central_total ?? null : null;
+      const p = data.purchase, q = submission?.analysis.context.quantity_mt;
+      const adjustedReference = reference != null && q && p ? reference * p.quantity_mt / q : null;
+      const adjustedEstimate = estimate != null && q && p ? estimate * p.quantity_mt / q : null;
+      return { ...data, submission, comparison: p && q ? { currency: 'USD', planned_quantity_mt: q, actual_quantity_mt: p.quantity_mt,
+        same_quantity: q === p.quantity_mt, actual_total: p.total_usd, reference_total: reference, central_total: estimate,
+        forecast_total: c?.status === 'ready' ? c.value.forecast_total : null,
+        actual_minus_reference: reference == null ? null : p.total_usd - reference,
+        actual_minus_estimate: estimate == null ? null : p.total_usd - estimate,
+        reference_total_for_actual_quantity: adjustedReference, estimate_total_for_actual_quantity: adjustedEstimate,
+        actual_minus_adjusted_reference: adjustedReference == null ? null : p.total_usd - adjustedReference,
+        actual_minus_adjusted_estimate: adjustedEstimate == null ? null : p.total_usd - adjustedEstimate } : null };
     },
   };
 }
@@ -171,11 +184,11 @@ export function previewDecisionPlans(): { plans: PurchasePlan[]; withDecisions(s
     days_remaining: Math.round((Date.parse(deadline) - Date.parse(SCENARIO_DATE)) / 86_400_000),
     submitted_at: status === 'draft' ? null : `${SCENARIO_DATE}T00:45:00Z` });
   const plans = [card('preview-draft', 47, '2026-11-30', 'draft'), card('preview-submitted', 120, '2026-11-12', 'submitted'),
-    card('preview-approved', 80, '2026-11-20', 'approved'), card('preview-rejected', 300, '2026-11-05', 'rejected')];
+    card('preview-approved', 80, '2026-11-20', 'approved'), card('preview-rejected', 300, '2026-11-05', 'rejected'), card('preview-withdrawn', 50, '2026-11-10', 'withdrawn')];
   const decisions: Record<string, ApprovalDecision> = {
     'preview-approved': previewDecision('approved', 'Within budget. Go ahead.'),
     'preview-rejected': previewDecision('rejected', PREVIEW_REJECTION),
   };
   return { plans, withDecisions: service => ({ ...service,
-    async readSubmission(planId) { await new Promise(resolve => setTimeout(resolve, 400)); return { submission: null, decision: decisions[planId] ?? null }; } }) };
+    async readSubmission(planId) { await new Promise(resolve => setTimeout(resolve, 400)); return { ...await service.readSubmission!(planId), decision: decisions[planId] ?? null }; } }) };
 }

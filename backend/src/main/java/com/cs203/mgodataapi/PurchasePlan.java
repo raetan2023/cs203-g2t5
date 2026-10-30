@@ -15,7 +15,13 @@ public record PurchasePlan(
         LocalDate purchaseDeadline,
         LocalDate scenarioAsOfDate,
         String status,
-        java.time.Instant submittedAt) {
+        java.time.Instant submittedAt,
+        UUID previousPlanId) {
+
+    public PurchasePlan(UUID planId, UUID userId, BigDecimal quantityMt, LocalDate purchaseDeadline,
+            LocalDate scenarioAsOfDate, String status, java.time.Instant submittedAt) {
+        this(planId, userId, quantityMt, purchaseDeadline, scenarioAsOfDate, status, submittedAt, null);
+    }
 
     public PurchasePlan(UUID planId, UUID userId, BigDecimal quantityMt, LocalDate purchaseDeadline, LocalDate scenarioAsOfDate) {
         this(planId, userId, quantityMt, purchaseDeadline, scenarioAsOfDate, "draft", null);
@@ -37,6 +43,7 @@ public record PurchasePlan(
         body.put("plan_id", planId.toString());
         body.put("status", status);
         body.put("submitted_at", submittedAt == null ? null : submittedAt.toString());
+        body.put("previous_plan_id", previousPlanId == null ? null : previousPlanId.toString());
         body.put("quantity_mt", quantityMt);
         body.put("purchase_deadline", purchaseDeadline.toString());
         body.put("scenario_as_of_date", activeScenario.toString());
