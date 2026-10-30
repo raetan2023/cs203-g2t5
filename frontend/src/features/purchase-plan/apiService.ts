@@ -1,5 +1,6 @@
-import { PlanError, type PlanInput, type PurchasePlan, type PurchasePlanService, type ApprovalNotification, type RecommendationSelection, type PlanResultContext, type DecisionInput, type ApprovalDecision } from './types';
+import { PlanError, type PurchasePlan, type PurchasePlanService, type ApprovalNotification, type PlanResultContext, type ApprovalDecision } from './types';
 import { parseAnalysis } from '../recommendations/apiService';
+import { parseBuyerNotifications, parseOutcomes } from './lifecycleTransport';
 import { isValidDate } from './dates';
 
 export interface ApiOptions {
@@ -28,8 +29,10 @@ function parsePlan(payload: { plan?: unknown } | undefined, required = false): {
     || typeof p.days_remaining !== 'number' || !Number.isSafeInteger(p.days_remaining)) {
     throw new PlanError('The purchase-plan response was invalid. Please retry.', {}, 502);
   }
-  if (p.status !== undefined && !['draft', 'submitted', 'approved', 'rejected'].includes(p.status))
+  if (p.status !== undefined && !['draft', 'submitted', 'approved', 'rejected', 'withdrawn', 'purchased'].includes(p.status))
     throw new PlanError('The purchase-plan status was invalid. Please retry.', {}, 502);
+  if (p.previous_plan_id != null && (typeof p.previous_plan_id !== 'string' || !p.previous_plan_id.trim() || p.previous_plan_id === p.plan_id))
+    throw new PlanError('The previous plan link was invalid. Please retry.', {}, 502);
   return { plan: p as PurchasePlan };
 }
 
@@ -45,7 +48,7 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
   const baseUrl = (options.baseUrl ?? env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
   const getToken = options.getToken;
 
-  async function request(method: string, body?: PlanInput | RecommendationSelection | DecisionInput, planId?: string, action?: string) {
+  async function request(method: string, body?: object, planId?: string, action?: string) {
     // Plan routes are per-user, so the session token is the only credential they take.
     const token = getToken ? await getToken() : null;
     let response: Response;
@@ -66,7 +69,7 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
 
     if (response.status === 204) return undefined;
 
-    let payload: { plan?: unknown; plans?: unknown; notifications?: unknown; submission?: unknown; decision?: unknown; detail?: string; field_errors?: Record<string, string> } = {};
+    let payload: { plan?: unknown; plans?: unknown; notifications?: unknown; submission?: unknown; decision?: unknown; purchase?: unknown; comparison?: unknown; withdrawal?: unknown; revision_plan_ids?: unknown; unread_count?: unknown; detail?: string; field_errors?: Record<string, string> } = {};
     try {
       const data: unknown = await response.json();
       if (data && typeof data === 'object' && !Array.isArray(data)) payload = data;
@@ -81,6 +84,29 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
   }
 
   return {
+    async withdraw(planId, reason = '') {
+      const saved = parsePlan(await request('POST', { reason }, planId, 'withdraw'), true);
+      if (saved.plan.plan_id !== planId || saved.plan.status !== 'withdrawn') throw new PlanError('Could not verify withdrawal. Reload the request.', {}, 502);
+      return saved;
+    },
+    async revise(planId) {
+      const saved = parsePlan(await request('POST', undefined, planId, 'revise'), true);
+      if (saved.plan.status !== 'draft' || saved.plan.plan_id === planId || saved.plan.previous_plan_id !== planId)
+        throw new PlanError('Could not verify the copied draft. Reload your plans.', {}, 502);
+      return saved;
+    },
+    async recordPurchase(planId, input) {
+      const saved = parsePlan(await request('POST', input, planId, 'purchase'), true);
+      if (saved.plan.plan_id !== planId || saved.plan.status !== 'purchased') throw new PlanError('Could not verify the purchase. Reload the request.', {}, 502);
+      return saved;
+    },
+    async buyerNotifications() {
+      return parseBuyerNotifications(await request('GET', undefined, undefined, 'my-notifications'));
+    },
+    async markNotificationSeen(id) {
+      if (!id) throw new PlanError('Select a notification first.', {}, 400);
+      await request('POST', undefined, undefined, `my-notifications/${encodeURIComponent(id)}/seen`);
+    },
     async submit(planId, selection) {
       if (!planId) throw new PlanError('Select a purchase plan first.', {}, 400);
       const result = parsePlan(await request('POST', selection, planId, 'submit'), true);
@@ -106,12 +132,13 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
           || typeof value.decided_at !== 'string' || !Number.isFinite(Date.parse(value.decided_at))))
         throw new PlanError('The approval decision response was invalid. Please retry.', {}, 502);
       const decision = value == null ? null : value as ApprovalDecision;
-      if (payload?.submission === null) return { submission: null, decision };
+      const outcomes = parseOutcomes(payload);
+      if (payload?.submission === null) return { submission: null, decision, ...outcomes };
       const snapshot = payload?.submission as { horizon_days?: number; analysis?: { context?: PlanResultContext } } | undefined;
       if (!snapshot || ![7, 14, 30].includes(snapshot.horizon_days ?? 0) || !snapshot.analysis?.context
           || snapshot.analysis.context.plan_id !== planId) throw new PlanError('The submitted recommendation was invalid.', {}, 502);
       return { submission: { horizon_days: snapshot.horizon_days as 7 | 14 | 30,
-        analysis: parseAnalysis(snapshot.analysis, snapshot.analysis.context) }, decision };
+        analysis: parseAnalysis(snapshot.analysis, snapshot.analysis.context) }, decision, ...outcomes };
     },
     async notifications() {
       const payload = await request('GET', undefined, undefined, 'approval-notifications');
@@ -122,7 +149,7 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
           || typeof n.created_at !== 'string' || !Number.isFinite(Date.parse(n.created_at))
           || typeof n.quantity_mt !== 'number' || !Number.isFinite(n.quantity_mt) || n.quantity_mt <= 0
           || typeof n.purchase_deadline !== 'string' || !isValidDate(n.purchase_deadline)
-          || !['submitted', 'approved', 'rejected'].includes(n.status ?? '');
+          || !['submitted', 'approved', 'rejected', 'withdrawn', 'purchased'].includes(n.status ?? '');
       })) throw new PlanError('The approval inbox response was invalid. Please retry.', {}, 502);
       return { notifications: payload.notifications as ApprovalNotification[] };
     },

@@ -1,4 +1,4 @@
-export type PlanStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
+export type PlanStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased';
 export interface ApprovalNotification {
   notification_id: string;
   plan_id: string;
@@ -12,6 +12,7 @@ export interface PurchasePlan {
   /** Optional for standalone previews created before the approval workflow. */
   status?: PlanStatus;
   submitted_at?: string | null;
+  previous_plan_id?: string | null;
   plan_id: string;
   quantity_mt: number;
   purchase_deadline: string;
@@ -159,13 +160,66 @@ export type PlanAnalysisState =
   | { status: 'loaded'; analysis: PlanAnalysis }
   | { status: 'stale'; context: PlanResultContext; previous: PlanAnalysis };
 
-export type FieldErrors = Partial<Record<keyof PlanInput, string>>;
+export interface PurchaseInput {
+  purchased_on: string;
+  supplier: string;
+  quantity_mt: number;
+  price_usd_per_mt: number;
+  note?: string;
+}
+export interface PurchaseRecord extends PurchaseInput {
+  purchase_id: string;
+  total_usd: number;
+  recorded_at: string;
+}
+export interface PurchaseComparison {
+  currency: 'USD';
+  planned_quantity_mt: number;
+  actual_quantity_mt: number;
+  same_quantity: boolean;
+  actual_total: number;
+  reference_total: number | null;
+  central_total: number | null;
+  forecast_total: NumericRange | null;
+  actual_minus_reference: number | null;
+  actual_minus_estimate: number | null;
+  reference_total_for_actual_quantity: number | null;
+  estimate_total_for_actual_quantity: number | null;
+  actual_minus_adjusted_reference: number | null;
+  actual_minus_adjusted_estimate: number | null;
+}
+export interface SubmissionResponse {
+  submission: SubmittedRecommendation | null;
+  decision?: ApprovalDecision | null;
+  purchase?: PurchaseRecord | null;
+  comparison?: PurchaseComparison | null;
+  withdrawal?: { reason: string; withdrawn_at: string } | null;
+  revision_plan_ids?: string[];
+}
+export interface BuyerDecisionNotification {
+  notification_id: string;
+  plan_id: string;
+  decision: 'approved' | 'rejected';
+  created_at: string;
+  seen_at: string | null;
+  quantity_mt: number;
+  purchase_deadline: string;
+  manager_label: string;
+  comment: string;
+}
+export interface BuyerNotificationsResponse { notifications: BuyerDecisionNotification[]; unread_count: number }
+export type FieldErrors = Partial<Record<keyof PlanInput | keyof PurchaseInput | 'reason', string>>;
 
 /** Wunna's future request-helper adapter can implement this interface. */
 export interface PurchasePlanService {
   submit?(planId: string, selection: RecommendationSelection): Promise<SavedPlanResponse>;
   decide?(planId: string, input: DecisionInput): Promise<SavedPlanResponse>;
-  readSubmission?(planId: string): Promise<{ submission: SubmittedRecommendation | null; decision?: ApprovalDecision | null }>;
+  readSubmission?(planId: string): Promise<SubmissionResponse>;
+  withdraw?(planId: string, reason?: string): Promise<SavedPlanResponse>;
+  revise?(planId: string): Promise<SavedPlanResponse>;
+  recordPurchase?(planId: string, input: PurchaseInput): Promise<SavedPlanResponse>;
+  buyerNotifications?(): Promise<BuyerNotificationsResponse>;
+  markNotificationSeen?(notificationId: string): Promise<void>;
   notifications?(): Promise<{ notifications: ApprovalNotification[] }>;
   list(): Promise<PlansResponse>;
   read(planId: string): Promise<PlanResponse>;

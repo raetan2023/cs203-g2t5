@@ -1,5 +1,12 @@
 # Backend (Spring Boot)
 
+Post-decision lifecycle additions (2026-10-29): see
+[`docs/plan-lifecycle-api.md`](../docs/plan-lifecycle-api.md) for withdrawal,
+revision, purchase recording and buyer notifications. **Apply all three new
+manual migrations in the documented order before starting this backend version.**
+These migrations were applied to shared Supabase on 2026-10-29; do not rerun them there.
+The lifecycle UI is connected on `backend-plan-lifecycle`.
+
 The team's shared Spring Boot application. It exposes the historical market data
 the dashboard needs, and is the project other backend features are built in.
 

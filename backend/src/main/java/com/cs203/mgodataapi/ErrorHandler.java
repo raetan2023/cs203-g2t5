@@ -22,13 +22,21 @@ public class ErrorHandler {
         if (e.fieldErrors() != null) {
             body.put("field_errors", e.fieldErrors());
         }
-        return ResponseEntity.status(e.status()).body(body);
+        return ResponseEntity.status(e.status()).cacheControl(org.springframework.http.CacheControl.noStore()).body(body);
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> invalidBody() {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(Map.of("detail", "Invalid request body. Check the dates, numbers and required fields."));
     }
 
     @ExceptionHandler({HandlerMethodValidationException.class, ConstraintViolationException.class,
             MethodArgumentTypeMismatchException.class})
     public ResponseEntity<Map<String, String>> invalid() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .cacheControl(org.springframework.http.CacheControl.noStore())
                 .body(Map.of("detail", "Invalid query parameter. See /docs for allowed values."));
     }
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { AppLink, navigate, usePath, useSearch } from './router';
+import { BuyerDecisionsProvider } from '../features/purchase-plan/components/BuyerDecisions';
 import { AppShell } from '../components/AppShell';
 import { StatusPage } from '../components/StatusPage';
 import { AuthPage } from '../features/auth/AuthPage';
@@ -102,9 +103,9 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, da
   const purchaseRecommendation = planStore.current.purchaseForecasts
     ? <ForecastProvider service={planStore.current.purchaseForecasts} scenarioDate={scenarioDate} revision={dataRevision}>{recommendationPage}</ForecastProvider>
     : recommendationPage;
-  return <ForecastProvider service={planStore.current.forecasts} scenarioDate={scenarioDate} revision={dataRevision}><AppShell canReadPlans={planAccess?.can_read_plans ?? true} organisationControl={organisationControl} path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
+  return <BuyerDecisionsProvider key={user.id} service={planStore.current.service} enabled={planAccess?.can_write_plans ?? true}><ForecastProvider service={planStore.current.forecasts} scenarioDate={scenarioDate} revision={dataRevision}><AppShell canReadPlans={planAccess?.can_read_plans ?? true} organisationControl={organisationControl} path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
     await auth.signOut(); acceptUser(null); returnPath.current = '/home'; setNotice(''); navigate('/login', true);
   }}>
     {path.startsWith('/purchase-plans') && planAccess && !planAccess.can_read_plans ? <main className="bb-status"><h1>Purchase-plan access is restricted</h1><p>Your admin role manages the organisation. Buyer, manager or analyst membership is required to view purchase plans.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : path === '/home' ? <HomePage displayName={user.displayName} role={planAccess?.role} canReadPlans={planAccess?.can_read_plans ?? true} marketAvailable={!!MarketDashboard} today={scenarioDate} readQuote={readMarketQuote} onManageOrganisation={onManageOrganisation} /> : path === '/purchase-plans' ? <PurchasePlanPage isManager={planAccess?.role === 'org:manager'} canEdit={planAccess?.can_write_plans ?? true} key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? purchaseRecommendation : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
-  </AppShell></ForecastProvider>;
+  </AppShell></ForecastProvider></BuyerDecisionsProvider>;
 }

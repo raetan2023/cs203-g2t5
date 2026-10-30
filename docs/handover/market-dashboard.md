@@ -2,6 +2,14 @@
 
 **Updated:** 2026-10-28. Read [Start here](../handover.md#start-here) first.
 
+**Backend update, 2026-10-29:** see [`plan-lifecycle-api.md`](../plan-lifecycle-api.md).
+New lifecycle statuses and previous-plan links are implemented, with shared
+migrations applied and lifecycle UI connected on `backend-plan-lifecycle`. For "Your plans", use the existing list's status and
+deadline; managers can count submitted organisation plans from that list. No
+per-plan analysis summary is required. Forecast role restrictions and
+`/api/v1/market/stored` remain unchanged. The three bugs in item 5 below are in
+frontend rendering/parsing/sorting and still need fixing during the UI work.
+
 **Status:** the redesign is specified as a working HTML proposal. The live page (`/market-dashboard`) hasn't changed.
 **Owner:** the market dashboard teammate (a different teammate from recommendations). The "handed over" items below are yours to decide and build.
 **What's left:** mostly building the spec in React, plus a few backend and data items. Little design work remains.
