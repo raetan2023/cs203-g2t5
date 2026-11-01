@@ -66,7 +66,9 @@ export default function ForecastCard({ data }) {
 
       {interval && (
         <div className="forecast-interval">
-          <p>Target coverage: {Math.round(interval.nominal_coverage * 100)}% prediction interval.</p>
+          <p>{interval.nominal_coverage != null
+            ? `Target coverage: ${Math.round(interval.nominal_coverage * 100)}% prediction interval.`
+            : 'Experimental range: coverage not stated.'}</p>
           <p>{interval.empirical_coverage != null && interval.evaluation_rows > 0
             ? `Observed coverage: ${(interval.empirical_coverage * 100).toFixed(1)}% across ${interval.evaluation_rows} chronological forecasts.`
             : 'Observed coverage: unavailable. No measured coverage is provided.'}</p>

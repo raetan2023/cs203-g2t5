@@ -13,7 +13,8 @@ export interface ReadyForecast {
   unit: 'USD/metric tonne'; horizon_days: Horizon; interval: Interval;
   news_window_start: string; news_window_end: string; source_dates: Record<string, string | null>;
   model_version: string; published_at: string; top_drivers: { feature: string; contribution: number }[];
-  history: { date: string; price: number }[]; synthetic?: boolean;
+  history: { date: string; price: number }[];
+  evidence: 'weak' | 'no_edge' | 'supported' | 'unevaluated'; mae_skill_vs_persistence: number | null; synthetic?: boolean;
 }
 export interface LastSuccessfulRun { run_id: string; origin_date: string; published_at: string; model_version: string }
 export interface UnavailableForecast { status: 'unavailable'; reason: string; message: string; last_successful_run?: LastSuccessfulRun }
@@ -31,6 +32,7 @@ function date(value: unknown) { const d = text(value); if (!isValidDate(d)) thro
 function timestamp(value: unknown) { const d = text(value); if (!Number.isFinite(Date.parse(d))) throw invalid(); return d; }
 function fraction(value: unknown) { const n = number(value, 0); if (n > 1) throw invalid(); return n; }
 function nullable(value: unknown, parse: (v: unknown) => number) { return value == null ? null : parse(value); }
+function evidenceText(value: unknown) { const e = text(value); if (!['weak', 'no_edge', 'supported', 'unevaluated'].includes(e)) throw invalid(); return e as 'weak' | 'no_edge' | 'supported' | 'unevaluated'; }
 
 export function parseForecast(payload: unknown, horizon: Horizon): Forecast {
   const v = object(payload);
@@ -71,6 +73,8 @@ export function parseForecast(payload: unknown, horizon: Horizon): Forecast {
     source_dates, model_version: text(v.model_version), published_at: timestamp(v.published_at),
     top_drivers: v.top_drivers.map(d => { const x = object(d); return { feature: text(x.feature), contribution: number(x.contribution) }; }),
     history: v.history.map(d => { const x = object(d); const observed = date(x.date); if (observed > availableDate) throw invalid(); return { date: observed, price: number(x.price, Number.MIN_VALUE) }; }),
+    evidence: evidenceText(v.evidence), mae_skill_vs_persistence: nullable(v.mae_skill_vs_persistence, value => number(value)),
+    ...(v.synthetic === true ? { synthetic: true as const } : {}),
   };
 }
 
