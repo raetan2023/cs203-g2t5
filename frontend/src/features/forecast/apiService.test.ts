@@ -23,6 +23,15 @@ describe('live forecast adapter', () => {
     expect(parsed).not.toHaveProperty('synthetic');
   });
 
+  it('keeps the evidence, skill and synthetic flag the card needs', () => {
+    const fixture = buildMockForecast(7);
+    const parsed = parseForecast({ ...fixture, synthetic: true }, 7);
+    expect(parsed).toMatchObject({
+      status: 'ready', evidence: fixture.evidence,
+      mae_skill_vs_persistence: fixture.mae_skill_vs_persistence, synthetic: true,
+    });
+  });
+
   it.each([
     (v: any) => { v.low = v.high + 1; },
     (v: any) => { v.forecast = Infinity; },
