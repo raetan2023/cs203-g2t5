@@ -1,5 +1,6 @@
 import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
 import { SubmittedRecommendationView, RecommendationApproval } from './RecommendationApproval';
+import BuyerDecisionLog from './BuyerDecisionLog';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppLink } from '../../app/router';
 import { calendarDays, formatDate } from '../purchase-plan/dates';
@@ -70,7 +71,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current planning date.</p><button className="bb-button" onClick={reload}>Retry</button></section>
       : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Choose a saved purchase plan from your plans, or create a new one.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>
-      : <PlanDecision plan={plan} service={service} reload={reload} published={forecast} connected={forecastState.connected} onRefresh={refreshPrices}
+      : <PlanDecision plan={plan} planService={planService} service={service} reload={reload} published={forecast} connected={forecastState.connected} onRefresh={refreshPrices}
         horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={fitsSelected ? forecast?.run_id : undefined}
         requireEvidence={forecastState.connected && !forecast}
         showGuidance={!forecastState.connected || !!forecast || (forecastState.status !== 'error' && forecastState.status !== 'loading')}
@@ -118,8 +119,8 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
 type Approval = { planService: PurchasePlanService; horizon: Horizon; onSubmitted(plan: PurchasePlan): void };
 
 /** Answer, decision rail and fine print; guidance and cost impact load and retry independently. */
-function PlanDecision({ plan, service, reload, horizonDays, runId, requireEvidence, approval, showGuidance, guidanceWaiting, showImpact, impactNote, published, connected, onRefresh, children }: {
-  plan: PurchasePlan & { urgency?: Urgency }; service?: RecommendationService; reload(): void; horizonDays?: number; runId?: string;
+function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, showGuidance, guidanceWaiting, showImpact, impactNote, published, connected, onRefresh, children }: {
+  plan: PurchasePlan & { urgency?: Urgency }; planService: PurchasePlanService; service?: RecommendationService; reload(): void; horizonDays?: number; runId?: string;
   requireEvidence: boolean; approval?: Approval; showGuidance: boolean; guidanceWaiting: 'loading' | 'error'; showImpact: boolean; impactNote?: string;
   published?: ReadyForecast; connected: boolean; onRefresh(): void; children(guidance?: CurrentRecommendation): ReactNode;
 }) {
@@ -188,6 +189,7 @@ function PlanDecision({ plan, service, reload, horizonDays, runId, requireEviden
             : buyNow != null && <div><dt>Buy today</dt><dd>{usd(buyNow)}</dd></div>}
         </dl>
         {approval && guidance && g.analysis && <RecommendationApproval key={`${g.analysis.approval_fingerprint}:${approval.horizon}`} analysis={g.analysis} plan={plan} horizon={approval.horizon} planService={approval.planService} onSubmitted={approval.onSubmitted} />}
+        {guidance && <BuyerDecisionLog planId={plan.plan_id} recommendationId={guidance.recommendation_id} runId={runId ?? published?.run_id} action={guidance.action} planService={planService} />}
         {connected && <button type="button" className="bb-button bb-button--secondary rec-refresh" onClick={onRefresh}><RefreshIcon />Refresh prices</button>}
       </div>
       {quote && <p className="rec-rail-note">Prices use the MGO quote observed {dayDate(quote)}, {quoteAgeText(calendarDays(quote, plan.scenario_as_of_date))}. Confirm a current supplier quote before you buy.</p>}
