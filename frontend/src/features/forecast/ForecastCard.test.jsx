@@ -25,6 +25,15 @@ describe('forecast interval presentation', () => {
     expect(screen.getByText('Illustrative point forecast. Accuracy has not been measured.')).toBeVisible();
   });
 
+  it('labels an experimental null-coverage range instead of showing 0%', () => {
+    const data = buildMockForecast(7);
+    data.interval = { ...data.interval, method: 'experimental_gdelt_scaled_quantiles',
+      nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0 };
+    render(<ForecastCard data={data} />);
+    expect(screen.getByText('Experimental range: coverage not stated.')).toBeVisible();
+    expect(screen.queryByText(/Target coverage: 0%/)).toBeNull();
+  });
+
   it('shows measured coverage and counts independently of point skill', () => {
     const data = buildMockForecast(7);
     data.interval = { ...data.interval, empirical_coverage: 0.75, evaluation_rows: 40,
