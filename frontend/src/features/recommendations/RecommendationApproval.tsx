@@ -9,6 +9,7 @@ import { ManagerDecisionForm } from './ManagerDecisionForm';
 import { EvidenceView } from './RecommendationEvidence';
 import { actionLabel, amount, dayDate, readableDates, usd } from './format';
 import { decisionTime } from '../purchase-plan/components/PlanDecisionNote';
+import BuyerDecisionLog from './BuyerDecisionLog';
 
 export function RecommendationApproval({ analysis, plan, horizon, planService, onSubmitted }: {
   analysis: PlanAnalysis; plan: PurchasePlan; horizon: Horizon; planService: PurchasePlanService; onSubmitted(plan: PurchasePlan): void;
@@ -52,6 +53,7 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
     {referenceOnly ? <p className="rec-approval-note">Uses the observed reference price for buying now. No supported forecast cost is available within the deadline.</p>
       : <p className="rec-approval-note">Cost detail included: <strong>{horizon}-day forecast</strong>{forecast ? ` · target ${formatDate(forecast.target_date)}` : ''}. Select an eligible date to change it.</p>}
     <p className="rec-approval-note">Every manager in your organisation receives the recommendation, its reasons and this cost detail.</p>
+    <BuyerDecisionLog planId={plan.plan_id} recommendationId={guidance?.recommendation_id} runId={forecast?.run_id} action={guidance?.action} />
   </section>;
 }
 
