@@ -211,7 +211,29 @@ export interface BuyerNotificationsResponse { notifications: BuyerDecisionNotifi
 export type FieldErrors = Partial<Record<keyof PlanInput | keyof PurchaseInput | 'reason', string>>;
 
 /** Wunna's future request-helper adapter can implement this interface. */
+export interface BuyerDecisionInput {
+  recommendationId: string;
+  runId?: string | null;
+  action?: string | null;
+  decision: 'accept' | 'reject' | 'ignore';
+  reason?: string;
+}
+
+export interface BuyerDecisionRecord {
+  id: string;
+  plan_id: string | null;
+  recommendation_id: string;
+  run_id: string | null;
+  action: string | null;
+  decision: 'accept' | 'reject' | 'ignore';
+  reason: string;
+  decided_at: string;
+}
+
 export interface PurchasePlanService {
+  /** MPP-97: record and read the buyer's own accept/reject/ignore answers. Optional so preview/mocks can omit them. */
+  recordRecommendationDecision?(planId: string, input: BuyerDecisionInput): Promise<BuyerDecisionRecord>;
+  readRecommendationDecisions?(planId?: string): Promise<BuyerDecisionRecord[]>;
   submit?(planId: string, selection: RecommendationSelection): Promise<SavedPlanResponse>;
   decide?(planId: string, input: DecisionInput): Promise<SavedPlanResponse>;
   readSubmission?(planId: string): Promise<SubmissionResponse>;

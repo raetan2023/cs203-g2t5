@@ -2,6 +2,7 @@ import { PlanError, type PurchasePlan, type PurchasePlanService, type ApprovalNo
 import { parseAnalysis } from '../recommendations/apiService';
 import { parseBuyerNotifications, parseOutcomes } from './lifecycleTransport';
 import { isValidDate } from './dates';
+import { createRecommendationDecisionsService } from '../recommendations/recommendationDecisionsApi';
 
 export interface ApiOptions {
   /** Backend base URL. Defaults to VITE_API_URL, then the local backend. */
@@ -47,6 +48,7 @@ const messages: Record<string, string> = {
 export function createApiPlanService(options: ApiOptions = {}): PurchasePlanService {
   const baseUrl = (options.baseUrl ?? env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
   const getToken = options.getToken;
+  const decisions = createRecommendationDecisionsService(options);
 
   async function request(method: string, body?: object, planId?: string, action?: string) {
     // Plan routes are per-user, so the session token is the only credential they take.
@@ -84,6 +86,8 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
   }
 
   return {
+    recordRecommendationDecision(planId, input) { return decisions.record(planId, input); },
+    readRecommendationDecisions(planId) { return decisions.history(planId); },
     async withdraw(planId, reason = '') {
       const saved = parsePlan(await request('POST', { reason }, planId, 'withdraw'), true);
       if (saved.plan.plan_id !== planId || saved.plan.status !== 'withdrawn') throw new PlanError('Could not verify withdrawal. Reload the request.', {}, 502);
