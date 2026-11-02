@@ -6,3 +6,4 @@ dist-wireframe/
 test-results/
 .env.local
 .vercel
+*.tsbuildinfo

@@ -7,7 +7,8 @@ import { calendarDays, formatDate } from '../purchase-plan/dates';
 import type { CurrentRecommendation, PurchasePlan, PurchasePlanService, Urgency } from '../purchase-plan/types';
 import type { RecommendationService } from './service';
 import { useAnalysis } from './useAnalysis';
-import { CompareBuyingDates, ExploredDetail, WarningIcon, buildColumns, useHorizonComparison, type ColumnId } from './TimingComparison';
+import { RecommendationLoading } from './RecommendationLoading';
+import { CompareBuyingDates, ExploredDetail, WarningIcon, buildColumns, useHorizonComparison, type ColumnId, type Entry } from './TimingComparison';
 import { DataSources, forecastSource } from './PurchaseImpact';
 import { actionLabel, amount, change, changeRange, compact, dayDate, price, readableDates, usd } from './format';
 import './recommendations.css';
@@ -85,7 +86,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current planning date.</p><button className="bb-button" onClick={reload}>Retry</button></section>
       : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Choose a saved purchase plan from your plans, or create a new one.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>
-      : <PlanDecision plan={plan} planService={planService} service={service} reload={reload} published={forecast} connected={forecastState.connected} onRefresh={refreshPrices}
+      : <PlanDecision plan={plan} planService={planService} service={service} reload={reload} published={forecast} entries={comparison.entries} connected={forecastState.connected} onRefresh={refreshPrices}
         horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={fitsSelected ? forecast?.run_id : undefined}
         requireEvidence={forecastState.connected && !forecast}
         showGuidance={!forecastState.connected || !!forecast}
@@ -93,7 +94,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
         showImpact={!!service?.readImpact && (!forecastState.connected || (!!forecast && fitsSelected))}
         impactNote={!forecastState.connected ? undefined : noHorizonFits ? 'No forecast lands before your deadline, so buying today is the only priced option.' : 'Cost impact is unavailable until a current forecast is ready for the selected horizon.'}
         approval={canSubmit && plan.status === 'draft' && !!forecast ? { planService, horizon: forecastState.horizon, onSubmitted: (saved: PurchasePlan) => setResult({ scope, plan: saved }) } : undefined}>
-        {guidance => {
+        {(guidance, preparing) => {
           const target = guidance?.evidence?.supported_target_date;
           const recommended: ColumnId[] = guidance?.action === 'BUY_NOW' ? ['today']
             : guidance?.action === 'WAIT' ? columns.filter(c => c.date === target && c.id !== 'today').map(c => c.id) : [];
@@ -107,16 +108,17 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
               <p>{plan.days_remaining < 0 ? 'Update your purchase plan and obtain a current supplier quote.' : 'Obtain a current supplier quote for your purchase window. You can edit the deadline in your saved plan if your requirements change.'}</p>
               <AppLink className="bb-button bb-button--secondary" href="/purchase-plans">Review purchase plan</AppLink>
             </section>}
-            {forecastState.connected && !forecast && <section className="rec-card" role={forecastState.status === 'error' ? 'alert' : 'status'}>
-              <h2>{forecastState.status === 'loading' ? 'Updating estimate…' : 'Price estimate unavailable'}</h2>
-              <p>{forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : 'Loading the selected price horizon.'}</p>
-              {forecastState.status !== 'loading' && <button className="bb-button" onClick={forecastState.retry}>Retry price estimate</button>}
+            {/* While the estimate loads, the recommendation's progress view covers it. */}
+            {forecastState.connected && !forecast && forecastState.status !== 'loading' && <section className="rec-card" role={forecastState.status === 'error' ? 'alert' : 'status'}>
+              <h2>Price estimate unavailable</h2>
+              <p>{forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : 'The selected price horizon could not be loaded.'}</p>
+              <button className="bb-button" onClick={forecastState.retry}>Retry price estimate</button>
             </section>}
-            {forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
+            {preparing ? <CompareSkeleton /> : forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
               explored={shown?.id} recommended={recommended} onExplore={explore}
               knownMessage={!forecast ? (forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : undefined) : undefined}
               badge={!experimental && forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
-            {shown && <ExploredDetail column={shown} quantity={plan.quantity_mt} today={scenarioDate} experimental={experimental}
+            {!preparing && shown && <ExploredDetail column={shown} quantity={plan.quantity_mt} today={scenarioDate} experimental={experimental}
               source={shown.forecast ? `${executedRidge ? 'Ridge model' : experimental ? 'Last quote carried forward' : forecast?.interval.method === 'gdelt_error_quantiles' ? 'Ridge model, published' : 'Model forecast'} · from the ${formatDate(shown.forecast.anchor_quote_date)} quote` : ''} />}
             {experimental && !noHorizonFits && fitsSelected && <aside className="rec-notice" aria-label="Estimate limitations">
               <WarningIcon /><div>
@@ -133,10 +135,10 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
 type Approval = { planService: PurchasePlanService; horizon: Horizon; onSubmitted(plan: PurchasePlan): void };
 
 /** Answer, decision rail and fine print; guidance and cost impact load and retry independently. */
-function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, showGuidance, guidanceWaiting, showImpact, impactNote, published, connected, onRefresh, children }: {
+function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, connected, onRefresh, children }: {
   plan: PurchasePlan & { urgency?: Urgency }; planService: PurchasePlanService; service?: RecommendationService; reload(): void; horizonDays?: number; runId?: string;
   requireEvidence: boolean; approval?: Approval; showGuidance: boolean; guidanceWaiting: 'loading' | 'error'; showImpact: boolean; impactNote?: string;
-  published?: ReadyForecast; connected: boolean; onRefresh(): void; children(guidance?: CurrentRecommendation): ReactNode;
+  published?: ReadyForecast; entries?: Entry[]; connected: boolean; onRefresh(): void; children(guidance: CurrentRecommendation | undefined, preparing: boolean): ReactNode;
 }) {
   const g = useAnalysis(showGuidance ? service : undefined, plan, 'read', horizonDays, runId);
   const i = useAnalysis(showImpact ? service : undefined, plan, 'readImpact', horizonDays, runId);
@@ -150,6 +152,8 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
   const waitTarget = guidance?.action === 'WAIT' && evidence?.supported_target_date && evidence.alternative_cost_usd != null ? evidence.supported_target_date : undefined;
   const reference = (g.analysis ?? i.analysis)?.reference;
   const quote = published?.anchor_quote_date ?? (reference?.status === 'ready' ? reference.value.observation_date : undefined);
+  // With live forecasts, show step-by-step progress until the answer (or an error) replaces it.
+  const preparing = connected && (showGuidance ? g.loading : guidanceWaiting === 'loading');
   const demo = !!published?.synthetic || [g.analysis, i.analysis].some(a => a && (a.source === 'mock' || a.provenance === 'fixture'));
 
   const impactTile = showImpact ? <div className="rec-tile" aria-busy={i.loading}>
@@ -164,8 +168,9 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
   </div> : impactNote && <div className="rec-tile rec-tile--note"><p className="rec-tile-note">{impactNote}</p></div>;
 
   return <div className="rec-layout">
-    <section className="rec-answer" aria-label="Recommendation" aria-busy={g.loading}>
-      {!showGuidance ? <div role="status"><span className="rec-kicker">Recommended action</span>
+    <section className="rec-answer" aria-label="Recommendation" aria-busy={preparing || g.loading}>
+      {preparing ? <RecommendationLoading entries={entries} published={published} today={plan.scenario_as_of_date} deadline={plan.purchase_deadline} onRetry={showGuidance ? g.retry : onRefresh} />
+      : !showGuidance ? <div role="status"><span className="rec-kicker">Recommended action</span>
         <h2>{guidanceWaiting === 'loading' ? 'Loading recommendation…' : 'Recommendation unavailable'}</h2>
         <p>{guidanceWaiting === 'loading' ? 'Waiting for the latest price estimate.' : 'A current price estimate is needed before a recommendation can be shown.'}</p></div>
       : g.loading ? <div role="status"><span className="rec-kicker">Recommended action</span><h2>Loading recommendation…</h2><p>The recommendation is loading for your selected saved purchase plan and current planning date.</p><div className="rec-skeleton" aria-hidden="true" /></div>
@@ -178,7 +183,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
           <p className="rec-reason">{readableDates(guidance.explanation)}</p></div>
       </div>
       : g.analysis && <div><span className="rec-kicker">Recommended action</span><h2>No recommendation available</h2><p>{g.analysis.recommendation.status === 'unavailable' ? g.analysis.recommendation.message : 'Current forecast evidence is unavailable. Refresh evidence before making a timing decision.'}</p><p>Your purchase plan remains saved.</p></div>}
-      {(buyNow != null || waitTarget || impactTile) && <div className="rec-tiles">
+      {!preparing && (buyNow != null || waitTarget || impactTile) && <div className="rec-tiles">
         {buyNow != null && <div className={`rec-tile${guidance?.action === 'BUY_NOW' ? ' rec-tile--recommended' : ''}`}>
           <span className="rec-tile-label">{waitTarget ? 'If you buy today' : 'Buy today'}</span>
           <strong className="rec-tile-value">{usd(buyNow)}</strong>
@@ -195,13 +200,15 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
 
     <aside className="rec-rail" aria-label="Decision">
       <div className="rec-rail-card">
-        <div><span className="rec-kicker">Your decision</span><strong className="rec-rail-action">{guidance ? actionLabel(guidance.action) : 'No recommendation yet'}</strong></div>
+        <div><span className="rec-kicker">Your decision</span>{preparing ? <span className="rec-shimmer rec-rail-pending" aria-hidden="true" />
+          : <strong className="rec-rail-action">{guidance ? actionLabel(guidance.action) : 'No recommendation yet'}</strong>}</div>
         <dl className="rec-rail-facts">
           <div><dt>Plan</dt><dd>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT</dd></div>
           <div><dt>Deadline</dt><dd>{dayDate(plan.purchase_deadline)} · {remaining(plan.days_remaining)}</dd></div>
           {waitTarget ? <div><dt>Buy on {dayDate(waitTarget)}</dt><dd>{usd(evidence!.alternative_cost_usd!)}</dd></div>
             : buyNow != null && <div><dt>Buy today</dt><dd>{usd(buyNow)}</dd></div>}
         </dl>
+        {preparing && approval && <div className="rec-approval-pending"><button type="button" className="bb-button rec-submit" disabled>Submit for approval</button><p>Available when the recommendation is ready</p></div>}
         {approval && guidance && g.analysis && <RecommendationApproval key={`${g.analysis.approval_fingerprint}:${approval.horizon}`} analysis={g.analysis} plan={plan} horizon={approval.horizon} planService={approval.planService} onSubmitted={approval.onSubmitted} />}
         {guidance && <BuyerDecisionLog planId={plan.plan_id} recommendationId={guidance.recommendation_id} runId={runId ?? published?.run_id} action={guidance.action} planService={planService} />}
         {connected && <button type="button" className="bb-button bb-button--secondary rec-refresh" onClick={onRefresh}><RefreshIcon />Refresh prices</button>}
@@ -210,7 +217,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
     </aside>
 
     <div className="rec-evidence">
-      {children(guidance)}
+      {children(guidance, preparing)}
       {evidence && <details className="rec-fine">
         <summary>How this recommendation was calculated</summary>
         <div className="rec-fine-body">
@@ -250,6 +257,14 @@ function ActionIcon({ action }: { action: string }) {
     : action === 'MONITOR' ? <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>
     : <><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.5" /></>;
   return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{path}</svg>;
+}
+/** Holds the comparison's place while the recommendation is prepared; the real cards return with the answer. */
+function CompareSkeleton() {
+  return <section className="rec-compare-skeleton" aria-hidden="true">
+    <h2>Compare buying dates</h2>
+    <div className="rec-compare-skeleton-cols"><span className="rec-shimmer" /><span className="rec-shimmer" /><span /><span className="rec-shimmer" /><span className="rec-shimmer" /></div>
+    <span className="rec-shimmer rec-compare-skeleton-detail" />
+  </section>;
 }
 function ChevronLeft() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>;
