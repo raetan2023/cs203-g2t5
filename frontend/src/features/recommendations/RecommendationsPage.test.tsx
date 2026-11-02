@@ -147,6 +147,22 @@ it('pins guidance and impact to the selected publication and clears both when it
   expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
   expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();
   expect(screen.queryByText('USD 67,000–70,000')).not.toBeInTheDocument();
+  expect(within(screen.getByRole('region', { name: 'Recommendation' })).getByText('Recommendation unavailable')).toBeVisible();
+  expect(screen.queryByText('Loading recommendation…')).not.toBeInTheDocument();
+});
+
+it('uses an available horizon when the default has expired and labels estimated news', async () => {
+  const forecasts = { read: vi.fn(async (h: 7 | 14 | 30) => h === 7
+    ? { status: 'unavailable' as const, reason: 'ridge_unavailable', message: 'The 7-day target has expired.' }
+    : { ...buildMockForecast(h), run_id: 'estimated-run', source_dates: { ...buildMockForecast(h).source_dates, gdelt_estimated: '2025-10-25' } } as ReadyForecast) };
+  const service = ready();
+  const guidance = vi.spyOn(service, 'read');
+  render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
+    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />
+  </ForecastProvider>);
+  expect(await screen.findByRole('note', { name: 'Estimated news inputs' })).toHaveTextContent('Using estimated news data');
+  await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 14, undefined));
+  expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
 });
 
 it('labels experimental plan ranges without displaying confidence coverage claims', async () => {

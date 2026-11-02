@@ -51,6 +51,16 @@ class MarketImportTests(unittest.TestCase):
         groups = market.normalize(payload("gdelt", "gdelt_article_count"), "gdelt")
         self.assertEqual(len(groups), 1)
 
+    def test_api_estimates_remain_labelled_in_existing_series(self):
+        data = payload("gdelt", "gdelt_article_count", metadata={"average_tone": -1.189})
+        data["data"].append({**data["data"][0], "date": "2026-08-02", "source": "Derived from GDELT",
+                             "metadata": {"average_tone": -1.189, "imputed": True, "data_status": "estimated"}})
+        for group in market.normalize(data, "gdelt"):
+            self.assertEqual(group["metadata"]["source_name"], "GDELT")
+            self.assertEqual([r["value_type"] for r in group["rows"]], ["OBSERVED", "ESTIMATED"])
+        data["data"][1]["metadata"].pop("imputed")
+        with self.assertRaises(ValueError): market.normalize(data, "gdelt")
+
     def test_invalid_source_blocks_every_write(self):
         with tempfile.TemporaryDirectory() as tmp:
             Path(tmp, "brent.json").write_text(json.dumps(payload("brent")))
