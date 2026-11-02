@@ -18,8 +18,13 @@ public class PublishedForecastAnalysisProvider implements PlanAnalysisProvider {
         if (!(response instanceof ForecastService.Ready ready)) return unavailable(date,
                 ((ForecastService.Unavailable) response).message());
         ForecastService.Value value = ready.data();
-        java.time.Instant expectedEnd = PurchaseForecastService.METHOD.equals(value.interval().method()) && experimental != null
-                ? experimental.newsDay().plusDays(1).atStartOfDay(java.time.ZoneOffset.UTC).toInstant()
+        boolean purchaseNews = PurchaseForecastService.METHOD.equals(value.interval().method()) && experimental != null;
+        LocalDate selectedNewsDay = purchaseNews && value.source_dates() != null ? value.source_dates().get("gdelt") : null;
+        if (purchaseNews && (selectedNewsDay == null || selectedNewsDay.isAfter(experimental.newsDay())
+                || java.time.temporal.ChronoUnit.DAYS.between(selectedNewsDay, experimental.newsDay().plusDays(1)) > 7))
+            return unavailable(date, "A completed paired GDELT day within the last seven days is required.");
+        java.time.Instant expectedEnd = purchaseNews
+                ? selectedNewsDay.plusDays(1).atStartOfDay(java.time.ZoneOffset.UTC).toInstant()
                 : date.atStartOfDay(java.time.ZoneOffset.UTC).toInstant();
         if (!expectedEnd.equals(value.news_window_end())
                 || !expectedEnd.minusSeconds(86400).equals(value.news_window_start()))
