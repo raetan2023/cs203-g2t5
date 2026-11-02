@@ -68,8 +68,9 @@ it('keeps one plan recommendation while selecting the forecast cost detail for a
   render(<ForecastProvider service={{ read: async h => forecast(h) }} scenarioDate={DEMO_SCENARIO_DATE}>
     <RecommendationsPage canSubmit planId={draft.plan_id} planService={api} service={recommendations} scenarioDate={DEMO_SCENARIO_DATE} />
   </ForecastProvider>);
-  await screen.findByRole('button', { name: 'Submit for approval' });
-  expect(screen.getByText('One recommendation for this plan.')).toBeVisible();
+  // A disabled placeholder holds the button's place while the recommendation loads.
+  expect(await screen.findByText('One recommendation for this plan.')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: /^14 days$/ }));
   await screen.findByText(/Cost detail included:/);
   await waitFor(() => expect(screen.getByText('14-day forecast')).toBeVisible());
