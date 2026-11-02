@@ -16,7 +16,10 @@ function useReducedMotion() {
   return reduce;
 }
 
-/** Looping aerial shot of a ship and its wake; the still poster when reduced motion is on or the video fails. */
+/**
+ * Looping aerial shot of a container ship (Pexels 15795926, full 49s, centre-cropped to 900x900, 30fps, 1s fades at both ends);
+ * a still frame when reduced motion is on or the video fails.
+ */
 function HeroVideo() {
   const reduce = useReducedMotion();
   const [failed, setFailed] = useState(false);
@@ -36,7 +39,8 @@ function HeroVideo() {
   }, [reduce, failed]);
 
   if (reduce || failed) return <img className="auth-hero-media" src={poster} alt="" data-auth-hero="poster" />;
-  return <video ref={video} className="auth-hero-media" src={shipVideo} poster={poster} autoPlay muted loop playsInline preload="auto"
+  // No poster: the clip fades in from (and out to) black, so it rises out of the dark panel and loops without a jump cut.
+  return <video ref={video} className="auth-hero-media" src={shipVideo} autoPlay muted loop playsInline preload="auto"
     onError={() => setFailed(true)} data-auth-hero="video" />;
 }
 

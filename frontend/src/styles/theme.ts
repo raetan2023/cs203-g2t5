@@ -38,7 +38,7 @@ export const colors = {
   authError: '#efb9af',
   authHeroText: '#f4ecdc',
   authHeroSub: '#e0d6c3',
-  authHeroFallback: '#0f2224',
+  authHeroFallback: '#050607',
 } as const;
 
 /** Anchor mark for the Clerk form header (replaces the dashboard logo): dark anchor in a beige circle. */

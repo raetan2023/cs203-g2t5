@@ -21,7 +21,7 @@ describe('AuthLayout ship video', () => {
     expect(video.tagName).toBe('VIDEO');
     expect(video.muted).toBe(true);
     expect(video).toHaveAttribute('loop');
-    expect(video).toHaveAttribute('poster', expect.stringContaining('signin-ship-poster'));
+    expect(video).toHaveAttribute('src', expect.stringContaining('signin-ship'));
     expect(video.closest('[aria-hidden="true"]')).not.toBeNull();
   });
 
