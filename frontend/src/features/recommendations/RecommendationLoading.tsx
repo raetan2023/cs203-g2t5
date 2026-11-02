@@ -4,7 +4,7 @@ import { buildColumns, type Entry } from './TimingComparison';
 import { dayDate, price } from './format';
 
 /** Each finished step stays on screen at least this long, so instant steps can still be read. */
-export const STEP_DWELL_MS = 600;
+export const STEP_DWELL_MS = 1000;
 /** After this long the slow notice offers a retry; the request keeps running. */
 export const SLOW_AFTER_MS = 20_000;
 
@@ -102,8 +102,9 @@ function LoadingChart({ anchor, columns, today, deadline, done }: {
 }) {
   const t0 = Date.parse(today), dl = Date.parse(deadline);
   const t1 = Math.max(dl, ...columns.map(c => Date.parse(c.date!)), t0 + 86_400_000);
-  // Stop at 84% so the right-aligned "Today's price" label clears the last bar.
-  const x = (t: number) => `${(6 + (t - t0) / (t1 - t0) * 78).toFixed(1)}%`;
+  // The span is a CSS variable so narrow screens can leave room for the right-aligned "Today's price" label.
+  const frac = (t: number) => (t - t0) / (t1 - t0);
+  const x = (t: number) => `calc(6% + ${frac(t).toFixed(3)} * var(--rec-lc-span))`;
   const values = [anchor.anchor_price, ...columns.flatMap(c => [c.low, c.high])];
   const lo = Math.min(...values), hi = Math.max(...values), pad = (hi - lo) * 0.08 || anchor.anchor_price * 0.02;
   const y = (v: number) => 150 - (v - (lo - pad)) / (hi - lo + 2 * pad) * 130;
@@ -115,7 +116,7 @@ function LoadingChart({ anchor, columns, today, deadline, done }: {
     <span className="rec-lc-price-label" data-on={done >= 4} style={{ top: todayY - 20 }}>Today’s price</span>
     {showDeadline && <>
       <span className="rec-lc-deadline" data-on={done >= 3} style={{ left: x(dl) }} />
-      <span className="rec-lc-deadline-label" data-on={done >= 3} style={{ left: x(dl) }}>Deadline · {dayDate(deadline)}</span>
+      <span className={`rec-lc-deadline-label${frac(dl) > .6 ? ' rec-lc-deadline-label--left' : ''}`} data-on={done >= 3} style={{ left: x(dl) }}>Deadline · {dayDate(deadline)}</span>
     </>}
     <span className="rec-lc-today" data-on={done >= 1} style={{ top: todayY }} />
     <span className="rec-lc-label" data-on={done >= 1} style={{ left: '6%' }}>Today</span>

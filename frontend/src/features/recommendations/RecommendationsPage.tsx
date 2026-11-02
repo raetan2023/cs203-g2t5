@@ -94,7 +94,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
         showImpact={!!service?.readImpact && (!forecastState.connected || (!!forecast && fitsSelected))}
         impactNote={!forecastState.connected ? undefined : noHorizonFits ? 'No forecast lands before your deadline, so buying today is the only priced option.' : 'Cost impact is unavailable until a current forecast is ready for the selected horizon.'}
         approval={canSubmit && plan.status === 'draft' && !!forecast ? { planService, horizon: forecastState.horizon, onSubmitted: (saved: PurchasePlan) => setResult({ scope, plan: saved }) } : undefined}>
-        {guidance => {
+        {(guidance, preparing) => {
           const target = guidance?.evidence?.supported_target_date;
           const recommended: ColumnId[] = guidance?.action === 'BUY_NOW' ? ['today']
             : guidance?.action === 'WAIT' ? columns.filter(c => c.date === target && c.id !== 'today').map(c => c.id) : [];
@@ -114,11 +114,11 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
               <p>{forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : 'The selected price horizon could not be loaded.'}</p>
               <button className="bb-button" onClick={forecastState.retry}>Retry price estimate</button>
             </section>}
-            {forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
+            {preparing ? <CompareSkeleton /> : forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
               explored={shown?.id} recommended={recommended} onExplore={explore}
               knownMessage={!forecast ? (forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : undefined) : undefined}
               badge={!experimental && forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
-            {shown && <ExploredDetail column={shown} quantity={plan.quantity_mt} today={scenarioDate} experimental={experimental}
+            {!preparing && shown && <ExploredDetail column={shown} quantity={plan.quantity_mt} today={scenarioDate} experimental={experimental}
               source={shown.forecast ? `${executedRidge ? 'Ridge model' : experimental ? 'Last quote carried forward' : forecast?.interval.method === 'gdelt_error_quantiles' ? 'Ridge model, published' : 'Model forecast'} · from the ${formatDate(shown.forecast.anchor_quote_date)} quote` : ''} />}
             {experimental && !noHorizonFits && fitsSelected && <aside className="rec-notice" aria-label="Estimate limitations">
               <WarningIcon /><div>
@@ -138,7 +138,7 @@ type Approval = { planService: PurchasePlanService; horizon: Horizon; onSubmitte
 function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, connected, onRefresh, children }: {
   plan: PurchasePlan & { urgency?: Urgency }; planService: PurchasePlanService; service?: RecommendationService; reload(): void; horizonDays?: number; runId?: string;
   requireEvidence: boolean; approval?: Approval; showGuidance: boolean; guidanceWaiting: 'loading' | 'error'; showImpact: boolean; impactNote?: string;
-  published?: ReadyForecast; entries?: Entry[]; connected: boolean; onRefresh(): void; children(guidance?: CurrentRecommendation): ReactNode;
+  published?: ReadyForecast; entries?: Entry[]; connected: boolean; onRefresh(): void; children(guidance: CurrentRecommendation | undefined, preparing: boolean): ReactNode;
 }) {
   const g = useAnalysis(showGuidance ? service : undefined, plan, 'read', horizonDays, runId);
   const i = useAnalysis(showImpact ? service : undefined, plan, 'readImpact', horizonDays, runId);
@@ -217,7 +217,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
     </aside>
 
     <div className="rec-evidence">
-      {children(guidance)}
+      {children(guidance, preparing)}
       {evidence && <details className="rec-fine">
         <summary>How this recommendation was calculated</summary>
         <div className="rec-fine-body">
@@ -257,6 +257,14 @@ function ActionIcon({ action }: { action: string }) {
     : action === 'MONITOR' ? <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>
     : <><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.5" /></>;
   return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{path}</svg>;
+}
+/** Holds the comparison's place while the recommendation is prepared; the real cards return with the answer. */
+function CompareSkeleton() {
+  return <section className="rec-compare-skeleton" aria-hidden="true">
+    <h2>Compare buying dates</h2>
+    <div className="rec-compare-skeleton-cols"><span className="rec-shimmer" /><span className="rec-shimmer" /><span /><span className="rec-shimmer" /><span className="rec-shimmer" /></div>
+    <span className="rec-shimmer rec-compare-skeleton-detail" />
+  </section>;
 }
 function ChevronLeft() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>;
