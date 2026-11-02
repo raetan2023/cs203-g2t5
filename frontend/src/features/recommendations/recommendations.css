@@ -274,3 +274,19 @@
   .rec-step-spin, .rec-lc-bar--fits, .rec-shimmer { animation: none; }
   .rec-loading-chart [data-on], .rec-lc-bar, .rec-step { transition: none; }
 }
+
+/* Loading follow-ups: chart span per width, deadline label flips left near the end, design's dark disabled submit. */
+.rec-loading-chart { --rec-lc-span: 78%; }
+.rec-lc-deadline-label--left { transform: translateX(calc(-100% - 8px)); }
+.recommendations .rec-approval-pending .bb-button:disabled { opacity: 1; background: color-mix(in srgb, var(--bb-text) 9%, var(--bb-surface)); border-color: transparent; color: var(--rec-muted); }
+.rec-compare-skeleton { display: flex; flex-direction: column; gap: 14px; }
+.recommendations .rec-compare-skeleton h2 { font-size: 20px; line-height: 26px; font-weight: 600; color: var(--rec-muted); }
+.rec-compare-skeleton-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 72px repeat(2, minmax(0, 1fr)); gap: var(--bb-space-3); }
+.rec-compare-skeleton-cols .rec-shimmer { height: 250px; border-radius: 12px; }
+.rec-compare-skeleton-detail { height: 150px; margin-top: 14px; border-radius: 14px; }
+@media (max-width: 760px) {
+  .rec-loading-chart { --rec-lc-span: 60%; }
+  .rec-compare-skeleton-cols { grid-template-columns: minmax(0, 1fr); }
+  .rec-compare-skeleton-cols .rec-shimmer { height: 96px; }
+  .rec-compare-skeleton-cols > span:not(.rec-shimmer) { display: none; }
+}
