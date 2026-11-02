@@ -53,6 +53,7 @@ export function AuthLayout({ label, children }: { label: string; children: React
           <HeroVideo />
           <span className="auth-hero-shade-top" />
           <span className="auth-hero-shade-bottom" />
+          <span className="auth-hero-shade-corner" />
         </div>
         <div className="auth-header"><Brand /></div>
         <div className="auth-copy">
