@@ -58,7 +58,7 @@ export function AuthLayout({ label, children }: { label: string; children: React
         <div className="auth-header"><Brand /></div>
         <div className="auth-copy">
           <h1 id="auth-intro-title">A clearer course.<br />A smarter purchase.</h1>
-          <p>Forecasts and a purchase plan for Singapore MGO, built around your deadlines.</p>
+          <p>Forecasts for Singapore MGO, with purchase plans built around your deadlines.</p>
         </div>
       </div>
       <section className="auth-form-area" aria-label={label}>{children}</section>
