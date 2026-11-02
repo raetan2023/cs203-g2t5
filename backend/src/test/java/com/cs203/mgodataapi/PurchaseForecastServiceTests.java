@@ -75,6 +75,25 @@ class PurchaseForecastServiceTests {
         rows.add(row("GDELT_AVERAGE_TONE", origin, -2));
         assertEquals("invalid_inputs", assertInstanceOf(Unavailable.class, service.read(7)).reason());
     }
+    @Test void estimatedNewsIsExplicitAndChangesTheEvidenceIdentity() {
+        Ready observed = assertInstanceOf(Ready.class, service.read(14));
+        rows.replaceAll(r -> r.date().equals(origin.minusDays(1)) && r.series().equals("GDELT_AVERAGE_TONE")
+                ? new PurchaseForecastRepository.Observation(r.series(), r.source(), r.unit(), r.currency(), r.date(), r.value(), "ESTIMATED") : r);
+        Ready estimated = assertInstanceOf(Ready.class, service.read(14));
+        assertEquals(origin.minusDays(1), estimated.data().source_dates().get("gdelt_estimated"));
+        assertTrue(estimated.data().interval().limitations().contains("Estimated GDELT inputs"));
+        assertEquals(observed.data().forecast(), estimated.data().forecast());
+        assertNotEquals(observed.run_id(), estimated.run_id());
+        assertEquals(estimated.run_id(), assertInstanceOf(Ready.class, service.read(30)).run_id());
+        rows.replaceAll(r -> r.series().equals("SGP_MGO_OBSERVED")
+                ? new PurchaseForecastRepository.Observation(r.series(), r.source(), r.unit(), r.currency(), r.date(), r.value(), "ESTIMATED") : r);
+        assertEquals("invalid_inputs", assertInstanceOf(Unavailable.class, service.read(14)).reason());
+    }
+    @Test void estimatedHistoryCannotReplaceRequiredObservedHistory() {
+        rows.replaceAll(r -> !r.series().equals("SGP_MGO_OBSERVED")
+                ? new PurchaseForecastRepository.Observation(r.series(), r.source(), r.unit(), r.currency(), r.date(), r.value(), "ESTIMATED") : r);
+        assertEquals("insufficient_news_history", assertInstanceOf(Unavailable.class, service.read(14)).reason());
+    }
     @Test void datedReferenceIsExplicitAndVeryOldReferenceRemainsUnavailable() {
         rows.removeIf(r -> r.series().equals("SGP_MGO_OBSERVED") && r.date().isAfter(origin.minusDays(8)));
         assertEquals("invalid_ridge_response", assertInstanceOf(Unavailable.class, service.read(7)).reason());

@@ -25,7 +25,7 @@ import static com.cs203.mgodataapi.ForecastService.*;
 @Service
 public class PurchaseForecastService {
     public static final String METHOD = "experimental_gdelt_scaled_quantiles";
-    private static final String VERSION = "purchase-ridge-news-db-v3";
+    private static final String VERSION = "purchase-ridge-news-db-v4";
     private final PurchaseForecastRepository repository;
     private final Clock clock;
     private final RidgeInference ridge;
@@ -46,9 +46,14 @@ public class PurchaseForecastService {
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Stored purchase-range inputs are unavailable. Please retry.");
         }
         TreeMap<LocalDate, BigDecimal> prices = new TreeMap<>(), counts = new TreeMap<>(), tones = new TreeMap<>();
+        var estimatedNewsDates = new java.util.TreeSet<LocalDate>();
         for (var row : observations) {
             if (row.date() == null || row.date().isBefore(origin.minusDays(400)) || (row.date().isAfter(origin) || (row.date().equals(origin) && !row.series().equals("SGP_MGO_OBSERVED")))
                     || row.value() == null) return unavailable("invalid_inputs", "Stored observations contain invalid dates or values.");
+            boolean estimated = "ESTIMATED".equals(row.valueType());
+            if (!"OBSERVED".equals(row.valueType()) && (!estimated || !Set.of("GDELT_ARTICLE_COUNT", "GDELT_AVERAGE_TONE").contains(row.series())))
+                return unavailable("invalid_inputs", "Only news inputs may use labelled estimates; market prices must be observed.");
+            if (estimated) estimatedNewsDates.add(row.date());
             TreeMap<LocalDate, BigDecimal> series;
             switch (row.series()) {
                 case "SGP_MGO_OBSERVED" -> {
@@ -79,7 +84,7 @@ public class PurchaseForecastService {
         if (age > 30) return unavailable("stale_reference", "The latest observed MGO quote is older than 30 days.");
         List<Double> activity = new ArrayList<>(), toneStress = new ArrayList<>();
         for (var entry : counts.subMap(yesterday.minusDays(90), true, yesterday, false).entrySet()) {
-            if (!tones.containsKey(entry.getKey())) continue;
+            if (!tones.containsKey(entry.getKey()) || estimatedNewsDates.contains(entry.getKey())) continue;
             activity.add(Math.log1p(entry.getValue().doubleValue()));
             toneStress.add(Math.abs(tones.get(entry.getKey()).doubleValue()));
         }
@@ -132,12 +137,15 @@ public class PurchaseForecastService {
                 + "Model horizon is " + horizon + " calendar days from its observed anchor " + modelAnchor
                 + ", not from today. Target: " + target + ". Stored GDELT UTC day: " + yesterday
                 + "; articles " + counts.get(yesterday) + "; tone " + tones.get(yesterday) + ".";
+        if (estimatedNewsDates.contains(yesterday)) limits += " Estimated GDELT inputs: article count and/or average tone for "
+                + yesterday + " include API-supplied estimates, not observed news. Historical news ranks use observed days only.";
         Interval interval = new Interval(METHOD, null, null, 0,
                 "Experimental adjustment of original quantile artifacts; conditional news coverage not evaluated.", null, null, null, limits);
         List<History> history = prices.entrySet().stream().skip(Math.max(0, prices.size() - 20))
                 .map(e -> new History(e.getKey(), e.getValue())).toList();
         Map<String, LocalDate> sourceDates = new TreeMap<>();
         sourceDates.put("gdelt", yesterday);
+        if (estimatedNewsDates.contains(yesterday)) sourceDates.put("gdelt_estimated", yesterday);
         model.path("source_dates").properties().forEach(entry -> sourceDates.put(entry.getKey(), LocalDate.parse(entry.getValue().asText())));
         sourceDates.put("mgo", modelAnchor);
         List<Driver> drivers = new ArrayList<>();

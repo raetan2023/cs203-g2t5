@@ -44,7 +44,7 @@ def normalize(payload, source_id):
         raise ValueError(f"No observations for {source_id}")
     grouped = {}
 
-    def append(series_key, label, observed_date, value, unit, row_source, row_currency):
+    def append(series_key, label, observed_date, value, unit, row_source, row_currency, value_type):
         meta = {"series_key": series_key, "source_name": row_source,
                 "source_url": source.get("source_url"), "currency_code": row_currency,
                 "unit": unit, "price_definition": label,
@@ -57,7 +57,7 @@ def normalize(payload, source_id):
         if observed_date in group["rows"]:
             raise ValueError(f"Duplicate series/date in {series_key}")
         group["rows"][observed_date] = {"observation_date": observed_date,
-            "value": format(value, "f"), "value_type": "OBSERVED"}
+            "value": format(value, "f"), "value_type": value_type}
 
     for row in raw:
         observed = row.get("date")
@@ -67,6 +67,15 @@ def normalize(payload, source_id):
         if unit not in allowed_units:
             raise ValueError(f"Unexpected unit for {source_id}: {unit}")
         row_source = row.get("source")
+        metadata = row.get("metadata", {})
+        estimated = metadata.get("imputed") is True or metadata.get("data_status") == "estimated"
+        if estimated and not (source_id == "gdelt" and row_source == "Derived from GDELT"
+                              and metadata.get("imputed") is True and metadata.get("data_status") == "estimated"):
+            raise ValueError("Estimated inputs require explicitly labelled GDELT provenance")
+        value_type = "ESTIMATED" if estimated else "OBSERVED"
+        if estimated:
+            # Preserve the existing series identity; distinguish provenance per observation.
+            row_source = provider
         allowed_providers = {provider}
         if provider == "Investing.com":
             allowed_providers.add("Investing.com manual export")
@@ -94,12 +103,12 @@ def normalize(payload, source_id):
         row_currency = currency
         if unit == "USD/barrel":
             row_currency = "USD"
-        append(series_key, label, observed, value, unit, row_source, row_currency)
+        append(series_key, label, observed, value, unit, row_source, row_currency, value_type)
         if source_id == "gdelt":
             tone = row.get("metadata", {}).get("average_tone")
             if tone is not None:
                 append("GDELT_AVERAGE_TONE", "GDELT daily average tone; not price direction",
-                       observed, numeric(tone), "tone", row_source, None)
+                       observed, numeric(tone), "tone", row_source, None, value_type)
     return [{"metadata": group["metadata"], "rows": [group["rows"][d] for d in sorted(group["rows"])]}
             for _, group in sorted(grouped.items())]
 
