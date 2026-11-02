@@ -18,22 +18,32 @@
 .auth-hero-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; filter: saturate(.88) sepia(.08); }
 /* Shades keep the white text readable over the wake (bottom) and the bright sky late in the clip (top). The corner
    scrims darken only behind the text blocks, so the ship stays bright. */
-.auth-hero-shade-top { position: absolute; inset: 0 0 auto; height: 160px; background: linear-gradient(180deg, rgb(6 8 10 / .65), rgb(6 8 10 / 0)); }
+.auth-hero-shade-top { position: absolute; inset: 0 0 auto; height: 120px; background: linear-gradient(180deg, rgb(6 8 10 / .4), rgb(6 8 10 / 0)); }
 .auth-hero-shade-bottom { position: absolute; inset: auto 0 0; height: 46%;
   background: linear-gradient(0deg, rgb(6 8 10 / .88) 0%, rgb(6 8 10 / .55) 45%, rgb(6 8 10 / 0) 100%); }
 .auth-hero-shade-corner { position: absolute; inset: 0;
-  background: radial-gradient(55% 22% at 0% 0%, rgb(6 8 10 / .6), rgb(6 8 10 / 0) 100%),
+  background: radial-gradient(45% 18% at 0% 0%, rgb(6 8 10 / .35), rgb(6 8 10 / 0) 100%),
     radial-gradient(150% 75% at 0% 100%, rgb(12 13 14 / .75), rgb(12 13 14 / 0) 72%); }
+/* Extra shade behind the brand for the pale-sky half of the clip only; --sky is driven by the video time (AuthLayout.tsx). */
+.auth-hero-shade-sky { position: absolute; inset: 0; opacity: var(--sky, 0); transition: opacity 1.2s linear;
+  background: linear-gradient(180deg, rgb(6 8 10 / .45), rgb(6 8 10 / 0) 170px),
+    radial-gradient(55% 22% at 0% 0%, rgb(6 8 10 / .5), rgb(6 8 10 / 0) 100%); }
 .auth-header .bb-brand, .auth-copy h1, .auth-copy p { text-shadow: 0 1px 2px rgb(0 0 0 / .45), 0 2px 24px rgb(0 0 0 / .35); }
 .auth-header { position: absolute; left: 32px; top: 28px; }
+/* A faint outline (tight halo) keeps the brand's edges crisp over the video without a heavy shade. */
+.auth-header .bb-brand { text-shadow: 0 0 1px rgb(0 0 0 / .6), 0 0 2px rgb(0 0 0 / .4), 0 2px 24px rgb(0 0 0 / .35); }
+.auth-header .bb-brand-mark { box-shadow: 0 0 0 1px rgb(6 8 10 / .3), 0 1px 4px rgb(0 0 0 / .3); }
 .auth-header .bb-brand { gap: 10px; font-size: 18px; font-weight: 600; letter-spacing: -.02em; color: var(--bb-auth-hero-text); }
-.auth-header .bb-brand-mark { width: 30px; height: 30px; background: var(--bb-auth-accent); color: var(--bb-auth-on-accent); }
 .auth-copy { position: absolute; left: 32px; right: 32px; bottom: 36px; display: flex; flex-direction: column; gap: 16px; }
 .auth-copy h1 { margin: 0; font-size: clamp(34px, 3.6vw, 52px); line-height: 1.06; font-weight: 600; letter-spacing: -.035em; color: var(--bb-auth-hero-text); }
 .auth-copy p { margin: 0; max-width: 440px; font-size: 16px; line-height: 24px; color: var(--bb-auth-hero-sub); }
 
 .auth-form-area { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 24px 0; }
 .auth-form-area > * { width: 100%; max-width: 400px; }
+/* The app's BrandMark above the Clerk form (Clerk's own logo is hidden), scaled up as the form's header mark. */
+.auth-form-mark { display: flex; justify-content: center; margin-bottom: 28px; }
+.auth-form-mark .bb-brand-mark { width: 44px; height: 44px; }
+.auth-form-mark .bb-brand-mark svg { width: 26px; height: 26px; }
 
 /* Clerk's card sits at -1px margins inside an overflow:hidden box (to overlap its own card border), which clipped the
    right/left edge of every field and button and the focus glow. No card here, so no overlap and no clipping. */
@@ -108,7 +118,7 @@
   .auth-hero { position: relative; top: auto; flex: 0 0 auto; width: 100%; height: clamp(320px, 52svh, 480px); min-height: 0; }
   .auth-form-area { flex: 0 0 auto; }
   /* The text covers more of the short banner, so the corner scrims reach further and go darker. */
-  .auth-hero-shade-corner { background: radial-gradient(95% 34% at 0% 0%, rgb(6 8 10 / .72), rgb(6 8 10 / 0) 100%),
+  .auth-hero-shade-corner { background: radial-gradient(70% 26% at 0% 0%, rgb(6 8 10 / .45), rgb(6 8 10 / 0) 100%),
     radial-gradient(170% 90% at 0% 100%, rgb(12 13 14 / .82), rgb(12 13 14 / 0) 75%); }
   .auth-header { left: 20px; top: 18px; }
   .auth-copy { left: 20px; right: 20px; bottom: 22px; gap: 10px; }
