@@ -11,11 +11,11 @@ vi.mock('@clerk/react', () => ({
 }));
 
 describe('ClerkAuthPage', () => {
-  it('renders the reactive-ship layout around the Clerk sign-in form', () => {
+  it('renders the ship-video layout around the Clerk sign-in form', () => {
     received.props = [];
     const { container } = render(<ClerkAuthPage mode="login" />);
     expect(screen.getByRole('heading', { level: 1, name: /A clearer course/ })).toBeInTheDocument();
-    expect(container.querySelector('[data-reactive-ship]')).toBeInTheDocument();
+    expect(container.querySelector('[data-auth-hero]')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Sign in' })).toHaveTextContent('Clerk sign-in form');
     expect(received.props[0]).toMatchObject({ routing: 'hash', signUpUrl: '/signup', fallbackRedirectUrl: '/home', appearance: clerkAppearance });
   });
@@ -25,7 +25,7 @@ describe('ClerkAuthPage', () => {
     render(<ClerkAuthPage mode="signup" />);
     expect(screen.getByRole('region', { name: 'Create account' })).toHaveTextContent('Clerk sign-up form');
     expect(received.props[0]).toMatchObject({ routing: 'hash', signInUrl: '/login', fallbackRedirectUrl: '/home' });
-    expect(clerkAppearance.variables).toMatchObject({ colorPrimary: colors.authInk, colorBackground: colors.authCard, colorForeground: colors.authInk });
+    expect(clerkAppearance.variables).toMatchObject({ colorPrimary: colors.authAccent, colorBackground: colors.authCard, colorForeground: colors.authInk });
   });
 
   it("keeps Clerk's first-step password field visible and reachable", async () => {
