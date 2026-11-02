@@ -46,16 +46,21 @@
   --bb-warning-surface: #211e19;
   --bb-warning-border: #6a542f;
 
-  /* sign-in card (light surface, auth pages only; 2026-10-27 reactive-ship design) */
-  --bb-auth-card: #f5efe3;
-  --bb-auth-ink: #17140f;
-  --bb-auth-ink-hover: #2b261f;
-  --bb-auth-label: #5f574b;
-  --bb-auth-line: #8c826f; /* underline; darker than the mock's #b9ae99 for 3:1 control contrast */
-  --bb-auth-placeholder: #6f6556; /* darker than the mock's #857b6a for 4.5:1 */
-  --bb-auth-soft: #ebe3d3;
-  --bb-auth-soft-hover: #e1d7c4;
-  --bb-auth-error: #9b2c1a;
+  /* sign-in / sign-up (auth pages only; 2026-11-02 ship-video design: card-less dark form, beige button) */
+  --bb-auth-card: #0c0d0e;
+  --bb-auth-ink: #f0e6d2;
+  --bb-auth-label: #e6dcc8;
+  --bb-auth-muted: #b5ac9b;
+  --bb-auth-field: #151617;
+  --bb-auth-line: #6b665c; /* field border; lighter than the mock's #33322f for 3:1 control contrast */
+  --bb-auth-placeholder: #9a9282;
+  --bb-auth-accent: #eadfc9;
+  --bb-auth-accent-hover: #f4ecdc;
+  --bb-auth-on-accent: #0c0d0e;
+  --bb-auth-error: #efb9af;
+  --bb-auth-hero-text: #f4ecdc;
+  --bb-auth-hero-sub: #e0d6c3;
+  --bb-auth-hero-fallback: #0f2224; /* panel colour until the video's poster loads */
 
   /* type */
   --bb-font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
