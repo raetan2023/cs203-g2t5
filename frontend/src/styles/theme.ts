@@ -38,15 +38,14 @@ export const colors = {
   authError: '#efb9af',
   authHeroText: '#f4ecdc',
   authHeroSub: '#e0d6c3',
-  authHeroFallback: '#0f2224',
+  authHeroFallback: '#050607',
 } as const;
 
-/** Anchor mark for the Clerk form header (replaces the dashboard logo): dark anchor in a beige circle. */
-const anchorMark = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="${colors.authAccent}"/><g transform="translate(11 11)" fill="none" stroke="${colors.authOnAccent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="5" r="2.75"/><path d="M11 20V7.75M4.6 11H1.8a9.2 9.2 0 0 0 18.4 0h-2.8"/></g></svg>`)}`;
-
-/** Clerk sign-in/sign-up theme: the card-less dark form of the ship-video design (bordered dark fields, beige button). */
+/**
+ * Clerk sign-in/sign-up theme: the card-less dark form of the ship-video design (bordered dark fields, beige button).
+ * Clerk's own logo is hidden; ClerkAuthPage renders the app's BrandMark above the form instead.
+ */
 export const clerkAppearance = {
-  options: { logoImageUrl: anchorMark, logoPlacement: 'inside' as const },
   variables: {
     colorPrimary: colors.authAccent,
     colorPrimaryForeground: colors.authOnAccent,
@@ -68,8 +67,7 @@ export const clerkAppearance = {
     // No card: the form sits straight on the page.
     cardBox: { width: '100%', border: 'none', borderRadius: 0, boxShadow: 'none', background: 'transparent' },
     card: { padding: '0', boxShadow: 'none', border: 'none', background: 'transparent', gap: '28px' },
-    logoBox: { justifyContent: 'center', height: '44px' },
-    logoImage: { width: '44px', height: '44px' },
+    logoBox: { display: 'none' },
     headerTitle: { fontSize: '28px', fontWeight: 600, lineHeight: '34px', letterSpacing: '-.02em', color: colors.authInk },
     headerSubtitle: { fontSize: '14px', color: colors.authMuted },
     socialButtonsBlockButton: { minHeight: '46px', borderRadius: '8px', border: `1px solid ${colors.authLine}`, boxShadow: 'none', background: 'transparent',
