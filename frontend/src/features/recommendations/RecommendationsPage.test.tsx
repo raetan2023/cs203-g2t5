@@ -277,3 +277,12 @@ it('renders one final recommendation with positive savings and no urgency overri
   expect(screen.getAllByText(/About USD 2,500 less than buying today/)[0]).toBeVisible();
   expect(screen.queryByLabelText('Urgency for this analysis')).not.toBeInTheDocument();
 });
+
+it('shows the actual date when older news is used', async () => {
+  const forecasts = { read: async (h: 7 | 14 | 30) => ({ ...buildMockForecast(h),
+    source_dates: { ...buildMockForecast(h).source_dates, gdelt: '2025-10-23', gdelt_fallback: '2025-10-23' } }) as ReadyForecast };
+  render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
+    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
+  </ForecastProvider>);
+  expect(await screen.findByRole('note', { name: 'Older news inputs' })).toHaveTextContent('23 Oct 2025');
+});

@@ -69,11 +69,31 @@ class PurchaseForecastServiceTests {
         assertNotEquals(quiet.run_id(), active.run_id());
         verify(ridge, times(4)).predict(anyInt(), eq(origin)); // Only reads; no dashboard publication mutation.
     }
-    @Test void missingYesterdayCannotUseOlderNewsAndFutureRowsCannotLeak() {
+    @Test void missingYesterdayUsesLatestPairedDayAndFutureRowsCannotLeak() {
         rows.removeIf(r -> r.series().equals("GDELT_AVERAGE_TONE") && r.date().equals(origin.minusDays(1)));
-        assertEquals("missing_previous_day_news", assertInstanceOf(Unavailable.class, service.read(7)).reason());
+        Ready fallback = assertInstanceOf(Ready.class, service.read(7));
+        assertEquals(origin.minusDays(2), fallback.data().source_dates().get("gdelt"));
+        assertEquals(origin.minusDays(2), fallback.data().source_dates().get("gdelt_fallback"));
+        assertEquals(origin.minusDays(2).atStartOfDay(ZoneOffset.UTC).toInstant(), fallback.data().news_window_start());
+        var forecastService = mock(ForecastService.class);
+        when(forecastService.today()).thenReturn(origin);
+        assertEquals("ready", new PublishedForecastAnalysisProvider(forecastService, service).prices(origin, 7).forecast().status());
         rows.add(row("GDELT_AVERAGE_TONE", origin, -2));
         assertEquals("invalid_inputs", assertInstanceOf(Unavailable.class, service.read(7)).reason());
+    }
+    @Test void fallbackStopsAfterSevenDaysAndNewDataReplacesIt() {
+        var original = new ArrayList<>(rows);
+        rows.removeIf(r -> !r.series().equals("SGP_MGO_OBSERVED") && r.date().isAfter(origin.minusDays(7)));
+        Ready old = assertInstanceOf(Ready.class, service.read(14));
+        assertEquals(origin.minusDays(7), old.data().source_dates().get("gdelt"));
+        rows.removeIf(r -> !r.series().equals("SGP_MGO_OBSERVED") && r.date().equals(origin.minusDays(7)));
+        assertEquals("stale_news", assertInstanceOf(Unavailable.class, service.read(14)).reason());
+        rows.clear();
+        assertEquals("missing_previous_day_news", assertInstanceOf(Unavailable.class, service.read(14)).reason());
+        rows.addAll(original);
+        Ready fresh = assertInstanceOf(Ready.class, service.read(14));
+        assertFalse(fresh.data().source_dates().containsKey("gdelt_fallback"));
+        assertNotEquals(old.run_id(), fresh.run_id());
     }
     @Test void estimatedNewsIsExplicitAndChangesTheEvidenceIdentity() {
         Ready observed = assertInstanceOf(Ready.class, service.read(14));

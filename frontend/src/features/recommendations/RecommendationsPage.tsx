@@ -75,6 +75,9 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       <h1 tabIndex={-1} ref={heading}>Purchase recommendation</h1>
       {plan && <p>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT · due {dayDate(plan.purchase_deadline, true)} · <strong>{remaining(plan.days_remaining)}</strong></p>}
     </header>
+    {forecast?.source_dates.gdelt_fallback && <section className="rec-notice" role="note" aria-label="Older news inputs">
+      <WarningIcon /><div><h2>Using the last available news data</h2><p>The latest completed GDELT day is missing. This recommendation uses article count and tone from {formatDate(forecast.source_dates.gdelt_fallback)}. Missing days have not been filled with invented values. News older than seven days cannot be used.</p></div>
+    </section>}
     {forecast?.source_dates.gdelt_estimated && <section className="rec-notice" role="note" aria-label="Estimated news inputs">
       <WarningIcon /><div><h2>Using estimated news data</h2><p>GDELT article count and average tone for {formatDate(forecast.source_dates.gdelt_estimated)} include API-supplied estimates. They affect the experimental price range, not the Ridge central estimate. Confirm a current supplier quote before buying.</p></div>
     </section>}
