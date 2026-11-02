@@ -19,13 +19,13 @@ import org.springframework.stereotype.Service;
 import static com.cs203.mgodataapi.ForecastService.*;
 
 /** Explicitly experimental alternative for purchase plans only.
- * Original Ridge quantile-artifact bounds expand with yesterday's news activity/tone ranks.
+ * Original Ridge quantile-artifact bounds expand with the latest usable completed news day's activity/tone ranks.
  * This heuristic has no measured conditional coverage. It never modifies dashboard forecasts.
  */
 @Service
 public class PurchaseForecastService {
     public static final String METHOD = "experimental_gdelt_scaled_quantiles";
-    private static final String VERSION = "purchase-ridge-news-db-v3";
+    private static final String VERSION = "purchase-ridge-news-db-v5";
     private final PurchaseForecastRepository repository;
     private final Clock clock;
     private final RidgeInference ridge;
@@ -46,9 +46,14 @@ public class PurchaseForecastService {
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Stored purchase-range inputs are unavailable. Please retry.");
         }
         TreeMap<LocalDate, BigDecimal> prices = new TreeMap<>(), counts = new TreeMap<>(), tones = new TreeMap<>();
+        var estimatedNewsDates = new java.util.TreeSet<LocalDate>();
         for (var row : observations) {
             if (row.date() == null || row.date().isBefore(origin.minusDays(400)) || (row.date().isAfter(origin) || (row.date().equals(origin) && !row.series().equals("SGP_MGO_OBSERVED")))
                     || row.value() == null) return unavailable("invalid_inputs", "Stored observations contain invalid dates or values.");
+            boolean estimated = "ESTIMATED".equals(row.valueType());
+            if (!"OBSERVED".equals(row.valueType()) && (!estimated || !Set.of("GDELT_ARTICLE_COUNT", "GDELT_AVERAGE_TONE").contains(row.series())))
+                return unavailable("invalid_inputs", "Only news inputs may use labelled estimates; market prices must be observed.");
+            if (estimated) estimatedNewsDates.add(row.date());
             TreeMap<LocalDate, BigDecimal> series;
             switch (row.series()) {
                 case "SGP_MGO_OBSERVED" -> {
@@ -71,21 +76,25 @@ public class PurchaseForecastService {
             if (!Double.isFinite(row.value().doubleValue()) || series.putIfAbsent(row.date(), row.value()) != null)
                 return unavailable("invalid_inputs", "Stored observations are duplicated or nonfinite.");
         }
-        if (!counts.containsKey(yesterday) || !tones.containsKey(yesterday))
-            return unavailable("missing_previous_day_news", "Both stored GDELT article count and average tone are required for " + yesterday + ".");
+        LocalDate selectedNewsDay = counts.headMap(yesterday, true).descendingKeySet().stream()
+                .filter(tones::containsKey).findFirst().orElse(null);
+        if (selectedNewsDay == null)
+            return unavailable("missing_previous_day_news", "No completed GDELT day has both article count and average tone.");
+        if (ChronoUnit.DAYS.between(selectedNewsDay, yesterday.plusDays(1)) > 7)
+            return unavailable("stale_news", "The latest paired GDELT inputs are older than seven days (" + selectedNewsDay + "). Refresh news data.");
         if (prices.isEmpty()) return unavailable("missing_reference", "No observed MGO quote is available.");
         LocalDate quoteDate = prices.lastKey();
         long age = ChronoUnit.DAYS.between(quoteDate, origin);
         if (age > 30) return unavailable("stale_reference", "The latest observed MGO quote is older than 30 days.");
         List<Double> activity = new ArrayList<>(), toneStress = new ArrayList<>();
-        for (var entry : counts.subMap(yesterday.minusDays(90), true, yesterday, false).entrySet()) {
-            if (!tones.containsKey(entry.getKey())) continue;
+        for (var entry : counts.subMap(selectedNewsDay.minusDays(90), true, selectedNewsDay, false).entrySet()) {
+            if (!tones.containsKey(entry.getKey()) || estimatedNewsDates.contains(entry.getKey())) continue;
             activity.add(Math.log1p(entry.getValue().doubleValue()));
             toneStress.add(Math.abs(tones.get(entry.getKey()).doubleValue()));
         }
-        if (activity.size() < 14) return unavailable("insufficient_news_history", "At least 14 prior paired GDELT days are needed to compare yesterday's news.");
-        double volumeRank = rank(activity, Math.log1p(counts.get(yesterday).doubleValue()));
-        double toneRank = rank(toneStress, Math.abs(tones.get(yesterday).doubleValue()));
+        if (activity.size() < 14) return unavailable("insufficient_news_history", "At least 14 prior paired GDELT days are needed to compare the selected news day.");
+        double volumeRank = rank(activity, Math.log1p(counts.get(selectedNewsDay).doubleValue()));
+        double toneRank = rank(toneStress, Math.abs(tones.get(selectedNewsDay).doubleValue()));
         double multiplier = 1 + (volumeRank + toneRank) / 2; // Explicit policy: 1x to 2x historical deviations.
         tools.jackson.databind.JsonNode model;
         try { model = ridge.predict(horizon, origin); }
@@ -130,14 +139,20 @@ public class PurchaseForecastService {
                 + ". Central prediction is unchanged by news. Baseline calibrated quantile endpoints expand away from the Ridge centre by "
                 + String.format(java.util.Locale.ROOT, "%.2f", multiplier) + "x. No additional quote-age scaling is applied. "
                 + "Model horizon is " + horizon + " calendar days from its observed anchor " + modelAnchor
-                + ", not from today. Target: " + target + ". Stored GDELT UTC day: " + yesterday
-                + "; articles " + counts.get(yesterday) + "; tone " + tones.get(yesterday) + ".";
+                + ", not from today. Target: " + target + ". Stored GDELT UTC day: " + selectedNewsDay
+                + "; articles " + counts.get(selectedNewsDay) + "; tone " + tones.get(selectedNewsDay) + ".";
+        if (estimatedNewsDates.contains(selectedNewsDay)) limits += " Estimated GDELT inputs: article count and/or average tone for "
+                + selectedNewsDay + " include API-supplied estimates, not observed news. Historical news ranks use observed days only.";
+        if (selectedNewsDay.isBefore(yesterday)) limits += " Latest completed news is missing; using last available paired GDELT day "
+                + selectedNewsDay + ". Missing days have not been filled with invented values.";
         Interval interval = new Interval(METHOD, null, null, 0,
                 "Experimental adjustment of original quantile artifacts; conditional news coverage not evaluated.", null, null, null, limits);
         List<History> history = prices.entrySet().stream().skip(Math.max(0, prices.size() - 20))
                 .map(e -> new History(e.getKey(), e.getValue())).toList();
         Map<String, LocalDate> sourceDates = new TreeMap<>();
-        sourceDates.put("gdelt", yesterday);
+        sourceDates.put("gdelt", selectedNewsDay);
+        if (selectedNewsDay.isBefore(yesterday)) sourceDates.put("gdelt_fallback", selectedNewsDay);
+        if (estimatedNewsDates.contains(selectedNewsDay)) sourceDates.put("gdelt_estimated", selectedNewsDay);
         model.path("source_dates").properties().forEach(entry -> sourceDates.put(entry.getKey(), LocalDate.parse(entry.getValue().asText())));
         sourceDates.put("mgo", modelAnchor);
         List<Driver> drivers = new ArrayList<>();
@@ -145,8 +160,8 @@ public class PurchaseForecastService {
             drivers.add(new Driver(driver.path("feature").asText(), new BigDecimal(driver.path("contribution").asText())));
         Value value = new Value(horizon, target, origin, modelAnchor, modelAnchor, anchor, (int) ChronoUnit.DAYS.between(modelAnchor, origin),
                 central, low, high, rawLow, rawHigh, "USD/metric tonne", "unevaluated", null, 0,
-                drivers, interval, yesterday.atStartOfDay(ZoneOffset.UTC).toInstant(),
-                yesterday.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant(), sourceDates, history);
+                drivers, interval, selectedNewsDay.atStartOfDay(ZoneOffset.UTC).toInstant(),
+                selectedNewsDay.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant(), sourceDates, history);
         // Stable across horizons/requests, changes when the underlying database evidence changes.
         String identity = VERSION + ":" + origin + ":" + observations + ":" + model.path("input_snapshot").asText() + ":" + model.path("inference_snapshot").asText();
         UUID run = UUID.nameUUIDFromBytes(identity.getBytes(StandardCharsets.UTF_8));
