@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bunker Buddy sign in — video</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0c0d0e}
+</style>
+</helmet>
+<div style="width:100%;height:900px;box-sizing:border-box;padding:20px;background:{{ground}};color:#f0e6d2;font-family:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:20px;display:flex;gap:20px">
+
+<section aria-label="Bunker Buddy" style="position:relative;flex:0 0 auto;height:100%;aspect-ratio:4 / 5;border-radius:20px;overflow:hidden;isolation:isolate;background:{{panelBg}};box-shadow:inset 0 0 0 1px rgba(240,230,210,.10)">
+<sc-if value="{{ hasVideo }}" hint-placeholder-val="{{ false }}">
+<video src="{{videoSrc}}" poster="{{posterSrc}}" autoPlay="{{yes}}" muted="{{yes}}" loop="{{yes}}" playsInline="{{yes}}" preload="auto" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:{{focus}};filter:{{videoFilter}}"></video>
+</sc-if>
+<sc-if value="{{ hasPosterOnly }}" hint-placeholder-val="{{ false }}">
+<img src="{{posterSrc}}" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:{{focus}};filter:{{videoFilter}}">
+</sc-if>
+<sc-if value="{{ empty }}" hint-placeholder-val="{{ true }}">
+<span style="position:absolute;left:28px;top:84px;right:28px;font-size:13px;line-height:19px;color:#8f8878">{{placeholderNote}}</span>
+</sc-if>
+<span aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:140px;background:linear-gradient(180deg,rgba(6,8,10,.55),rgba(6,8,10,0))"></span>
+<sc-if value="{{ graded }}" hint-placeholder-val="{{ false }}">
+<span aria-hidden="true" style="position:absolute;inset:0;background:#eadfc9;mix-blend-mode:color;opacity:.22"></span>
+<span aria-hidden="true" style="position:absolute;inset:0;background:#0c0d0e;mix-blend-mode:multiply;opacity:.30"></span>
+<span aria-hidden="true" style="position:absolute;inset:0;background:radial-gradient(120% 60% at 0% 100%,rgba(12,13,14,.70) 0%,rgba(12,13,14,0) 60%)"></span>
+</sc-if>
+<sc-if value="{{ notGraded }}" hint-placeholder-val="{{ true }}">
+<span aria-hidden="true" style="position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(0deg,rgba(6,8,10,.88) 0%,rgba(6,8,10,.55) 45%,rgba(6,8,10,0) 100%)"></span>
+</sc-if>
+
+<div style="position:absolute;left:32px;top:28px;display:flex;align-items:center;gap:10px">
+<span style="width:30px;height:30px;border-radius:50%;background:#eadfc9;display:inline-flex;align-items:center;justify-content:center">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0c0d0e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+</span>
+<span style="font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#f4ecdc">Bunker Buddy</span>
+</div>
+
+<div style="position:absolute;left:32px;right:32px;bottom:36px;max-width:{{copyMax}};display:flex;flex-direction:column;gap:16px">
+<h1 style="margin:0;font-size:{{headSize}};line-height:{{headLine}};font-weight:600;letter-spacing:-0.035em;color:#f4ecdc">{{head1}}<br>{{head2}}</h1>
+<p style="margin:0;max-width:440px;font-size:16px;line-height:24px;color:#e0d6c3">{{sub}}</p>
+</div>
+</section>
+
+<main style="flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center">
+<div style="width:100%;max-width:400px;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">
+<span style="width:44px;height:44px;border-radius:50%;background:#eadfc9;display:inline-flex;align-items:center;justify-content:center">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0c0d0e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+</span>
+<h2 style="margin:0;font-size:28px;line-height:34px;font-weight:600;letter-spacing:-0.02em">Sign in</h2>
+</div>
+
+<form onSubmit="{{noop}}" style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<label for="lv-email" style="font-size:13px;font-weight:500;color:#e6dcc8">Email</label>
+<input id="lv-email" type="email" autocomplete="email" placeholder="you@company.com" style="box-sizing:border-box;width:100%;height:46px;padding:0 14px;background:{{field}};border:1px solid {{line}};border-radius:8px;color:#f0e6d2;font:inherit;font-size:15px">
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<label for="lv-pw" style="font-size:13px;font-weight:500;color:#e6dcc8">Password</label>
+<div style="position:relative;display:flex">
+<input id="lv-pw" type="{{pwType}}" autocomplete="current-password" placeholder="Your password" style="box-sizing:border-box;width:100%;height:46px;padding:0 48px 0 14px;background:{{field}};border:1px solid {{line}};border-radius:8px;color:#f0e6d2;font:inherit;font-size:15px">
+<button type="button" onClick="{{togglePw}}" aria-label="{{eyeLabel}}" aria-pressed="{{showPw}}" style="position:absolute;right:1px;top:1px;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;color:#b5ac9b;cursor:pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+</button>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+<label style="display:inline-flex;align-items:center;gap:8px;min-height:32px;font-size:13px;color:#c5bba7;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;margin:0;accent-color:#eadfc9">Remember for 30 days</label>
+<a href="#forgot" style="font-size:13px;font-weight:500;color:#eadfc9;text-decoration:none">Forgot password?</a>
+</div>
+<button type="submit" style="height:48px;margin-top:4px;background:#eadfc9;border:0;border-radius:8px;color:#0c0d0e;font:inherit;font-size:15px;font-weight:600;cursor:pointer">Sign in</button>
+</form>
+
+<div style="display:flex;gap:10px;margin-top:-12px">
+<button type="button" style="flex:1 1 0;height:46px;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:transparent;border:1px solid {{line}};border-radius:8px;color:#f0e6d2;font:inherit;font-size:14px;font-weight:500;cursor:pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.55-5.17 3.55-8.87z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.27v3.09A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.29A7.2 7.2 0 0 1 4.9 12c0-.8.14-1.57.37-2.29V6.62H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l4 3.09C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
+Google
+</button>
+<button type="button" style="flex:1 1 0;height:46px;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:transparent;border:1px solid {{line}};border-radius:8px;color:#f0e6d2;font:inherit;font-size:14px;font-weight:500;cursor:pointer">
+<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"/><rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"/><rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"/><rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"/></svg>
+Microsoft
+</button>
+</div>
+
+<p style="margin:0;text-align:center;font-size:14px;color:#b5ac9b">Don't have an account? <a href="#signup" style="color:#eadfc9;font-weight:500;text-decoration:none">Sign up</a></p>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"videoSrc":{"editor":"text","default":"./assets/0e9d388279d05c26196a19ab4f3cd118.mp4"},"posterSrc":{"editor":"text","default":"./assets/f16626d3e88ba6cf2978fab4b85a895d.jpg"},"focus":{"editor":"text","default":"50% 50%"},"placeholderNote":{"editor":"text","default":"Source 1 · Pexels 37339158, container ship at dawn. Waiting for the video file."},"grade":{"editor":"select","options":["none","light","beige"],"default":"none"},"ground":{"editor":"color","default":"#0c0d0e"},"field":{"editor":"color","default":"#151617"},"line":{"editor":"color","default":"#33322f"},"head1":{"editor":"text","default":"A clearer course."},"head2":{"editor":"text","default":"A smarter purchase."},"sub":{"editor":"text","default":"Forecasts and a purchase plan for Singapore MGO, built around your deadlines."},"headSize":{"editor":"number","default":52},"copyMax":{"editor":"text","default":"none"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  componentDidMount() { this.kick(); }
+  componentDidUpdate() { this.kick(); }
+  kick() {
+    // React doesn't always write the muted attribute, which blocks autoplay; set it directly.
+    try {
+      document.querySelectorAll('video').forEach((el) => {
+        el.muted = true; el.defaultMuted = true;
+        if (el.paused) { const p = el.play(); if (p && p.catch) p.catch(() => {}); }
+      });
+    } catch (e) {}
+  }
+  renderVals() {
+    const st = this.state || {};
+    const show = !!st.showPw;
+    const v = this.props.videoSrc || '';
+    const p = this.props.posterSrc || '';
+    let reduce = false;
+    try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    const hasVideo = !!v && !reduce;
+    const graded = this.props.grade === 'beige';
+    const hs = Number(this.props.headSize) || 52;
+    return {
+      graded, notGraded: !graded,
+      videoFilter: graded ? 'grayscale(.8) contrast(1.06) brightness(.85)' : (this.props.grade === 'light' ? 'saturate(.72) sepia(.18)' : 'none'),
+      ground: this.props.ground || '#0c0d0e',
+      field: this.props.field || '#151617',
+      line: this.props.line || '#33322f',
+      head1: this.props.head1 || 'A clearer course.',
+      head2: this.props.head2 || 'A smarter purchase.',
+      sub: this.props.sub || 'Forecasts and a purchase plan for Singapore MGO, built around your deadlines.',
+      headSize: hs + 'px', headLine: Math.round(hs * 1.06) + 'px',
+      copyMax: this.props.copyMax || 'none',
+      yes: true,
+      videoSrc: v, posterSrc: p,
+      focus: this.props.focus || '50% 50%',
+      hasVideo, hasPosterOnly: !hasVideo && !!p, empty: !v && !p,
+      placeholderNote: this.props.placeholderNote || 'Source 1 · Pexels 37339158, container ship at dawn. Waiting for the video file.',
+      panelBg: 'linear-gradient(160deg,#16302e 0%,#0f2224 55%,#0b1416 100%)',
+      showPw: show, pwType: show ? 'text' : 'password', eyeLabel: show ? 'Hide password' : 'Show password',
+      togglePw: () => this.setState({ showPw: !show }),
+      noop: (e) => { if (e && e.preventDefault) e.preventDefault(); }
+    };
+  }
+}
+</script>
+</body>
+</html>
