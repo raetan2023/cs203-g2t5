@@ -28,6 +28,10 @@
 .auth-form-area { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 24px 0; }
 .auth-form-area > * { width: 100%; max-width: 400px; }
 
+/* Clerk's card sits at -1px margins inside an overflow:hidden box (to overlap its own card border), which clipped the
+   right/left edge of every field and button and the focus glow. No card here, so no overlap and no clipping. */
+.clerk-auth-host .cl-cardBox { overflow: visible !important; }
+.clerk-auth-host .cl-card { margin: 0 !important; width: 100% !important; }
 /* Clerk draws its outlines as layered box-shadows (uneven at fractional scaling) and re-applies them on hover/focus,
    so fields and buttons get a real border here and Clerk's shadows are cleared. */
 .clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]) { border: 1px solid var(--bb-auth-line) !important; box-shadow: none !important; }
