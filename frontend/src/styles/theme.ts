@@ -25,62 +25,70 @@ export const colors = {
   errorSurface: '#382b29',
   errorBorder: '#e3b3a9',
   errorAlertText: '#f2d9d2',
-  authCard: '#f5efe3',
-  authInk: '#17140f',
-  authInkHover: '#2b261f',
-  authLabel: '#5f574b',
-  authLine: '#8c826f',
-  authPlaceholder: '#6f6556',
-  authSoft: '#ebe3d3',
-  authSoftHover: '#e1d7c4',
-  authError: '#9b2c1a',
+  authCard: '#0c0d0e',
+  authInk: '#f0e6d2',
+  authLabel: '#e6dcc8',
+  authMuted: '#b5ac9b',
+  authField: '#151617',
+  authLine: '#6b665c',
+  authPlaceholder: '#9a9282',
+  authAccent: '#eadfc9',
+  authAccentHover: '#f4ecdc',
+  authOnAccent: '#0c0d0e',
+  authError: '#efb9af',
+  authHeroText: '#f4ecdc',
+  authHeroSub: '#e0d6c3',
+  authHeroFallback: '#0f2224',
 } as const;
 
-/** Anchor mark for the Clerk card header (replaces the dashboard logo): cream anchor in an ink circle. */
-const anchorMark = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="${colors.authInk}"/><g transform="translate(11 11)" fill="none" stroke="${colors.authCard}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="5" r="2.75"/><path d="M11 20V7.75M4.6 11H1.8a9.2 9.2 0 0 0 18.4 0h-2.8"/></g></svg>`)}`;
+/** Anchor mark for the Clerk form header (replaces the dashboard logo): dark anchor in a beige circle. */
+const anchorMark = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="${colors.authAccent}"/><g transform="translate(11 11)" fill="none" stroke="${colors.authOnAccent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="5" r="2.75"/><path d="M11 20V7.75M4.6 11H1.8a9.2 9.2 0 0 0 18.4 0h-2.8"/></g></svg>`)}`;
 
-/** Clerk sign-in/sign-up theme: the cream card of the reactive-ship design (underline fields, pill buttons). */
+/** Clerk sign-in/sign-up theme: the card-less dark form of the ship-video design (bordered dark fields, beige button). */
 export const clerkAppearance = {
   options: { logoImageUrl: anchorMark, logoPlacement: 'inside' as const },
   variables: {
-    colorPrimary: colors.authInk,
-    colorPrimaryForeground: colors.authCard,
+    colorPrimary: colors.authAccent,
+    colorPrimaryForeground: colors.authOnAccent,
     colorBackground: colors.authCard,
     colorForeground: colors.authInk,
-    colorMutedForeground: colors.authLabel,
-    colorMuted: colors.authSoft,
-    colorInput: 'transparent',
+    colorMutedForeground: colors.authMuted,
+    colorMuted: colors.authField,
+    colorInput: colors.authField,
     colorInputForeground: colors.authInk,
     colorBorder: colors.authLine,
     colorNeutral: colors.authInk,
     colorDanger: colors.authError,
-    colorRing: colors.authInk,
+    colorRing: colors.authAccent,
     fontFamily: "'Geist', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-    borderRadius: '12px',
+    borderRadius: '8px',
   },
   elements: {
     rootBox: { width: '100%' },
-    cardBox: { width: '100%', border: 'none', borderRadius: '20px', boxShadow: '0 30px 80px rgb(0 0 0 / .55)' },
-    card: { padding: '40px 36px 28px', boxShadow: 'none', border: 'none', background: colors.authCard },
+    // No card: the form sits straight on the page.
+    cardBox: { width: '100%', border: 'none', borderRadius: 0, boxShadow: 'none', background: 'transparent' },
+    card: { padding: '0', boxShadow: 'none', border: 'none', background: 'transparent', gap: '28px' },
     logoBox: { justifyContent: 'center', height: '44px' },
     logoImage: { width: '44px', height: '44px' },
-    headerTitle: { fontSize: '28px', fontWeight: 600, lineHeight: 1.2, letterSpacing: '-.01em' },
-    headerSubtitle: { fontSize: '14px', color: colors.authLabel },
-    socialButtonsBlockButton: { minHeight: '48px', borderRadius: '24px', border: 'none', boxShadow: 'none', background: colors.authSoft, color: colors.authInk,
-      fontWeight: 600, '&:hover': { background: colors.authSoftHover } },
-    dividerLine: { background: colors.authLine, opacity: .45 },
-    formFieldLabel: { fontSize: '12px', fontWeight: 600, color: colors.authLabel },
-    // Underline fields, as in the design.
-    formFieldInput: { minHeight: '44px', fontSize: '17px', padding: '8px 0', background: 'transparent', border: 'none', borderRadius: 0,
-      boxShadow: `inset 0 -1.5px 0 0 ${colors.authLine}`, outline: 'none',
-      // Focus = a heavier ink underline (the design's focus state), replacing Clerk's ring.
-      '&:focus, &:focus-visible, &:hover:focus': { boxShadow: `inset 0 -2px 0 0 ${colors.authInk}`, outline: 'none', borderColor: 'transparent' } },
-    // Flat pill: Clerk's default gradient sheen and shadow removed.
-    formButtonPrimary: { minHeight: '52px', borderRadius: '26px', fontSize: '15px', fontWeight: 600, boxShadow: 'none', backgroundImage: 'none',
-      '&::after': { display: 'none' }, '&:hover': { backgroundColor: colors.authInkHover, boxShadow: 'none' } },
-    footer: { background: colors.authCard },
-    footerActionText: { color: colors.authLabel },
-    footerActionLink: { color: colors.authInk, fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: '3px' },
+    headerTitle: { fontSize: '28px', fontWeight: 600, lineHeight: '34px', letterSpacing: '-.02em', color: colors.authInk },
+    headerSubtitle: { fontSize: '14px', color: colors.authMuted },
+    socialButtonsBlockButton: { minHeight: '46px', borderRadius: '8px', border: `1px solid ${colors.authLine}`, boxShadow: 'none', background: 'transparent',
+      color: colors.authInk, fontWeight: 500, '&:hover': { background: colors.authField } },
+    socialButtonsIconButton: { minHeight: '46px', borderRadius: '8px', border: `1px solid ${colors.authLine}`, boxShadow: 'none', background: 'transparent',
+      '&:hover': { background: colors.authField } },
+    dividerLine: { background: colors.authLine, opacity: .6 },
+    dividerText: { color: colors.authMuted },
+    formFieldLabel: { fontSize: '13px', fontWeight: 500, color: colors.authLabel },
+    // Bordered dark field; the border and focus ring are forced in auth.css because Clerk re-applies its own shadow.
+    formFieldInput: { height: '46px', fontSize: '15px', padding: '0 14px', background: colors.authField, borderRadius: '8px', outline: 'none' },
+    // Flat beige button: Clerk's default gradient sheen and shadow removed.
+    formButtonPrimary: { minHeight: '48px', borderRadius: '8px', fontSize: '15px', fontWeight: 600, boxShadow: 'none', backgroundImage: 'none',
+      color: colors.authOnAccent, '&::after': { display: 'none' }, '&:hover': { backgroundColor: colors.authAccentHover, boxShadow: 'none' } },
+    footer: { background: 'transparent' },
+    footerActionText: { color: colors.authMuted },
+    footerActionLink: { color: colors.authAccent, fontWeight: 500, textUnderlineOffset: '3px' },
+    formFieldAction: { color: colors.authAccent },
+    identityPreviewEditButton: { color: colors.authAccent },
   },
 };
 
