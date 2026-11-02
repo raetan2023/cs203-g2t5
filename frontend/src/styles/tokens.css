@@ -60,7 +60,7 @@
   --bb-auth-error: #efb9af;
   --bb-auth-hero-text: #f4ecdc;
   --bb-auth-hero-sub: #e0d6c3;
-  --bb-auth-hero-fallback: #0f2224; /* panel colour until the video's poster loads */
+  --bb-auth-hero-fallback: #050607; /* panel colour before the video loads; matches the clip's fade-from-black */
 
   /* type */
   --bb-font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
