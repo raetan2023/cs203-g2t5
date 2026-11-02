@@ -17,7 +17,7 @@ function useReducedMotion() {
 }
 
 /**
- * Looping aerial shot of a container ship (Pexels 15795926, full 49s, centre-cropped to 900x900, 30fps, 1s fades at both ends);
+ * Looping aerial shot of a container ship (Pexels 15795926, full 49s, centre-cropped to 900x900, native 59.94fps, 1s fades at both ends);
  * a still frame when reduced motion is on or the video fails.
  */
 function HeroVideo() {
