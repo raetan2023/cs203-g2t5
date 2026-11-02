@@ -1,5 +1,6 @@
 import { SignIn, SignUp } from '@clerk/react';
 import { useEffect, useRef, type RefObject } from 'react';
+import { BrandMark } from '../../components/Brand';
 import { clerkAppearance } from '../../styles/theme';
 import { AuthLayout } from './AuthLayout';
 
@@ -31,6 +32,7 @@ export function ClerkAuthPage({ mode }: { mode: 'login' | 'signup' }) {
 
   return <AuthLayout label={signup ? 'Create account' : 'Sign in'}>
     <div ref={host} className="clerk-auth-host">
+      <div className="auth-form-mark"><BrandMark /></div>
       {signup
         ? <SignUp routing="hash" signInUrl="/login" fallbackRedirectUrl="/home" appearance={clerkAppearance} />
         : <SignIn routing="hash" signUpUrl="/signup" fallbackRedirectUrl="/home" appearance={clerkAppearance} />}

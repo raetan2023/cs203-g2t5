@@ -41,7 +41,16 @@ function HeroVideo() {
   if (reduce || failed) return <img className="auth-hero-media" src={poster} alt="" data-auth-hero="poster" />;
   // No poster: the clip fades in from (and out to) black, so it rises out of the dark panel and loops without a jump cut.
   return <video ref={video} className="auth-hero-media" src={shipVideo} autoPlay muted loop playsInline preload="auto"
-    onError={() => setFailed(true)} data-auth-hero="video" />;
+    onError={() => setFailed(true)} onTimeUpdate={event => skyShade(event.currentTarget)} data-auth-hero="video" />;
+}
+
+/**
+ * The camera tilts up to a pale sky over the second half of the clip. Only then does the brand need a darker shade
+ * behind it, so --sky goes 0 -> 1 from 18s to 38s (CSS fades .auth-hero-shade-sky in on it); the dark-water half stays light.
+ */
+function skyShade(video: HTMLVideoElement) {
+  const sky = Math.min(1, Math.max(0, (video.currentTime - 18) / 20));
+  video.closest<HTMLElement>('.auth-hero')?.style.setProperty('--sky', sky.toFixed(2));
 }
 
 /** Sign-in / sign-up layout shared by the Clerk page and the mock preview page: ship video panel left, form right. */
@@ -54,6 +63,7 @@ export function AuthLayout({ label, children }: { label: string; children: React
           <span className="auth-hero-shade-top" />
           <span className="auth-hero-shade-bottom" />
           <span className="auth-hero-shade-corner" />
+          <span className="auth-hero-shade-sky" />
         </div>
         <div className="auth-header"><Brand /></div>
         <div className="auth-copy">
