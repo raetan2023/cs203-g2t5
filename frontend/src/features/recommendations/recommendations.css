@@ -6,12 +6,15 @@
 .recommendations h1:focus { outline: none; }
 .recommendations .rec-eyebrow, .rec-kicker { display: block; color: var(--bb-text-secondary); font-size: 13px; line-height: 18px; }
 
-.rec-header { display: flex; flex-direction: column; gap: 10px; margin-bottom: var(--bb-space-7); }
+.rec-header { display: flex; flex-direction: column; gap: var(--bb-space-3); margin-bottom: var(--bb-space-6); }
 .recommendations .rec-header h1 { font-size: 32px; line-height: 38px; font-weight: 600; letter-spacing: -.025em; }
 .recommendations .rec-header p { font-size: 15px; line-height: 22px; }
 .rec-header strong { color: var(--bb-text); font-weight: 500; }
-.rec-header > a { display: inline-flex; align-items: center; gap: 6px; width: max-content; min-height: 32px; color: var(--bb-text-supporting); font-size: 13px; text-decoration: none; border-radius: var(--bb-radius-control); }
-.rec-header > a:hover { color: var(--bb-text); }
+.rec-header > a { display: inline-flex; align-items: center; gap: var(--bb-space-2); width: max-content; min-height: 44px; padding: var(--bb-space-2) var(--bb-space-3); border: 1px solid var(--bb-border-subtle); background: var(--bb-surface); color: var(--bb-text-supporting); font-size: 15px; font-weight: 500; text-decoration: none; border-radius: var(--bb-radius-control); }
+.rec-header > a:hover { color: var(--bb-text); background: var(--bb-surface-hover); border-color: var(--bb-border-control); }
+.rec-header > a svg { width: 18px; height: 18px; }
+/* Separate page-level notices from the answer; evidence notices use their parent gap. */
+.recommendations > .rec-notice, .recommendations > .pp-previous-plan { margin-bottom: var(--bb-space-6); }
 
 /* Desktop: answer and evidence on the left, decision rail on the right. Mobile: answer, rail, evidence. */
 .rec-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; grid-template-areas: 'answer rail' 'evidence rail'; grid-template-rows: auto 1fr; gap: var(--bb-space-7); align-items: start; }
@@ -28,7 +31,7 @@
 .rec-verdict { display: flex; align-items: flex-start; gap: 18px; }
 .rec-verdict-icon { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 12px; background: var(--bb-action); color: var(--bb-text-on-action); }
 .recommendations .rec-tagline { margin-top: var(--bb-space-2); font-size: 17px; line-height: 24px; color: var(--bb-text); }
-.recommendations .rec-reason { margin-top: 2px; max-width: 64ch; font-size: 14px; line-height: 21px; }
+.recommendations .rec-reason { margin-top: var(--bb-space-3); max-width: 64ch; font-size: 14px; line-height: 21px; }
 
 .rec-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--bb-space-4); padding-top: var(--bb-space-6); border-top: 1px solid var(--bb-border-subtle); }
 .rec-tile { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 18px 20px; border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); }
@@ -112,10 +115,10 @@
 .rec-detail-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2) var(--bb-space-4); padding-top: var(--bb-space-4); border-top: 1px solid var(--bb-border-subtle); font-size: 13px; color: var(--bb-text-supporting); }
 .rec-warning-text { display: inline-flex; align-items: center; gap: 6px; color: var(--bb-warning-text); }
 
-.rec-notice { display: flex; gap: var(--bb-space-3); padding: 14px 18px; border: 1px solid var(--bb-warning-border); border-radius: 12px; background: var(--bb-warning-surface); color: var(--bb-warning-text); }
+.rec-notice { display: flex; gap: var(--bb-space-3); padding: var(--bb-space-4) var(--bb-space-5); border: 1px solid var(--bb-warning-border); border-radius: 12px; background: var(--bb-warning-surface); color: var(--bb-warning-text); }
 .rec-notice > svg { flex-shrink: 0; margin-top: 3px; }
 .recommendations .rec-notice h2 { font-size: 15px; line-height: 20px; color: var(--bb-warning-text); }
-.recommendations .rec-notice p { margin-top: 4px; max-width: 100ch; font-size: 13px; color: var(--bb-text-supporting); }
+.recommendations .rec-notice p { margin-top: 4px; max-width: 90ch; font-size: 14px; color: var(--bb-text-supporting); }
 .rec-source-label { display: inline-block; margin-top: var(--bb-space-2); font-size: 12px; color: var(--bb-warning-text); }
 
 .rec-card { padding: var(--bb-space-6); display: flex; flex-direction: column; align-items: flex-start; gap: var(--bb-space-3); }
