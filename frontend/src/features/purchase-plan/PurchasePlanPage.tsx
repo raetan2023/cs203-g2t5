@@ -3,6 +3,7 @@ import { useSearch } from '../../app/router';
 import { BuyerDecisions } from './components/BuyerDecisions';
 import { PreviousPlanNote } from './components/PreviousPlanNote';
 import { ApprovalInbox } from './components/ApprovalInbox';
+import { ManagerTeamOverview } from './components/ManagerTeamOverview';
 import { DeletePlanDialog } from './components/DeletePlanDialog';
 import { formatDate } from './dates';
 import { ErrorBanner, Icon, LoadingState, PlanButton } from './components/Primitives';
@@ -181,6 +182,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
       </header>
       {canEdit && service.buyerNotifications && <BuyerDecisions service={service} />}
       {isManager && service.notifications && <ApprovalInbox service={service} />}
+      {isManager && service.managerOverview && <ManagerTeamOverview service={service} />}
       {writing && state.mode === 'view' && <p role="status">Finishing your previous plan change before another edit can be made.</p>}
       {state.mode === 'error' && <section className="pp-card pp-load-error" aria-label="Unable to load purchase plan">
         <h2>Unable to load your purchase plan</h2>
