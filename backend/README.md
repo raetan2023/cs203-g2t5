@@ -246,7 +246,8 @@ Supabase credentials or writes are needed.
 | `SUPABASE_DB_URL` | none — required |
 | `SUPABASE_DB_USER` | none — required |
 | `SUPABASE_DB_PASSWORD` | none — required |
-| `SUPABASE_DB_POOL_SIZE` | `5` (the free tier allows 60 connections in total) |
+| `SUPABASE_DB_POOL_SIZE` | `5` — the session pooler allows 50 client connections for the whole project, shared by every running backend (laptops, CI, deployment) |
+| `SUPABASE_DB_MIN_IDLE` | `1` — idle connections kept open; the rest close after a minute so an idle backend holds one pooler slot, not five |
 
 
 ### Sprint 4 analysis integration
