@@ -55,6 +55,10 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
       setUncertain(e.status !== 422);
     } finally { lock.current = false; if (active.current) setBusy(false); }
   }
+  const offered = (plan.status === 'submitted' && !!service.withdraw) || (plan.status === 'approved' && !!service.recordPurchase)
+    || ((plan.status === 'rejected' || plan.status === 'withdrawn') && !!service.revise);
+  // A purchased plan has no next action: render nothing rather than an empty section (a blank band in the status card).
+  if (!action && !offered && !error && !data.revision_plan_ids?.length && !(plan.status === 'approved' && plan.days_remaining < 0)) return null;
   return <section className="rec-lifecycle" aria-label="Next plan action">
     {plan.status === 'approved' && plan.days_remaining < 0 && <p role="status">This plan is overdue. You can still record a purchase made on or after approval.</p>}
     {!action ? <div className="rec-approval-actions">
