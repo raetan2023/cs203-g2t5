@@ -53,6 +53,7 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
 
   return <main className="bb-home" aria-labelledby="home-greeting">
     <img className="bb-home-photo" src={harbour} alt="" />
+    {canReadPlans && role !== 'org:admin' && <AppLink className="bb-home-plan-link" href="/purchase-plans" aria-label="Open purchase plans" />}
     <div className="bb-home-content" ref={content}>
       <div className="bb-home-intro">
         <h1 id="home-greeting" className="bb-home-greeting">

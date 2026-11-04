@@ -38,3 +38,14 @@
 @media (max-width: 640px) { .bb-date { display: none; } }
 .bb-decisions-alert { color: var(--bb-text); font-size: 13px; padding: var(--bb-space-2); border: 1px solid var(--bb-border-control); border-radius: 4px; text-decoration: none; }
 @media (max-width: 640px) { .bb-decisions-alert { max-width: 100px; font-size: 12px; } }
+
+/* A short arrival transition gives navigation continuity without delaying the route change. */
+@media (prefers-reduced-motion: no-preference) {
+  #app-content > .purchase-plan, #app-content > .recommendations {
+    animation: bb-page-enter 180ms var(--bb-ease-out);
+  }
+  @keyframes bb-page-enter {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}

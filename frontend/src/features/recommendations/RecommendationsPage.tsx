@@ -8,6 +8,7 @@ import type { CurrentRecommendation, PurchasePlan, PurchasePlanService, Urgency 
 import type { RecommendationService } from './service';
 import { useAnalysis } from './useAnalysis';
 import { RecommendationLoading } from './RecommendationLoading';
+import { NewsDataNotice } from './NewsDataNotice';
 import { CompareBuyingDates, ExploredDetail, WarningIcon, buildColumns, useHorizonComparison, type ColumnId, type Entry } from './TimingComparison';
 import { DataSources, forecastSource } from './PurchaseImpact';
 import { actionLabel, amount, change, changeRange, compact, dayDate, price, readableDates, usd } from './format';
@@ -76,12 +77,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       <h1 tabIndex={-1} ref={heading}>Purchase recommendation</h1>
       {plan && <p>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT · due {dayDate(plan.purchase_deadline, true)} · <strong>{remaining(plan.days_remaining)}</strong></p>}
     </header>
-    {forecast?.source_dates.gdelt_fallback && <section className="rec-notice" role="note" aria-label="Older news inputs">
-      <WarningIcon /><div><h2>Using the last available news data</h2><p>The latest completed GDELT day is missing. This recommendation uses article count and tone from {formatDate(forecast.source_dates.gdelt_fallback)}. Missing days have not been filled with invented values. News older than seven days cannot be used.</p></div>
-    </section>}
-    {forecast?.source_dates.gdelt_estimated && <section className="rec-notice" role="note" aria-label="Estimated news inputs">
-      <WarningIcon /><div><h2>Using estimated news data</h2><p>GDELT article count and average tone for {formatDate(forecast.source_dates.gdelt_estimated)} include API-supplied estimates. They affect the experimental price range, not the Ridge central estimate. Confirm a current supplier quote before buying.</p></div>
-    </section>}
+    <NewsDataNotice sourceDates={forecast?.source_dates} />
     {plan?.previous_plan_id && <PreviousPlanNote plan={plan} service={planService} />}
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current planning date.</p><button className="bb-button" onClick={reload}>Retry</button></section>

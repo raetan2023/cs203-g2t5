@@ -23,6 +23,16 @@ describe('Home greeting', () => {
 });
 
 describe('Home primary action', () => {
+  it('provides a keyboard-accessible purchase-plan link for the whole homepage', async () => {
+    window.history.replaceState(null, '', '/home');
+    render(<HomePage displayName="Jordan" role="org:buyer" now={afternoon} />);
+    const background = screen.getByRole('link', { name: 'Open purchase plans' });
+    background.focus();
+    expect(background).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    expect(window.location.pathname).toBe('/purchase-plans');
+  });
+
   it.each([
     ['org:buyer', 'Go to your plans', '/purchase-plans'],
     ['org:manager', 'Plans for approval', '/purchase-plans#approval-inbox'],
@@ -37,6 +47,7 @@ describe('Home primary action', () => {
     render(<HomePage displayName="Jordan" role="org:admin" canReadPlans={false} onManageOrganisation={manage} now={afternoon} />);
     await userEvent.click(screen.getByRole('button', { name: 'Manage organisation' }));
     expect(manage).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('link', { name: 'Open purchase plans' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /plans/i })).not.toBeInTheDocument();
   });
 

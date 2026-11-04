@@ -9,7 +9,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:layout": "node scripts/test-plan-layout.mjs",
-    "test:recommendation-layout": "node scripts/test-recommendation-layout.mjs"
+    "test:recommendation-layout": "node scripts/test-recommendation-layout.mjs",
+    "test:home-navigation": "node scripts/test-home-navigation.mjs"
   },
   "dependencies": {
     "@clerk/react": "^6.17.2",
