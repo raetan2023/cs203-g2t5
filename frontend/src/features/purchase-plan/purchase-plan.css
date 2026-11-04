@@ -24,7 +24,7 @@
 .purchase-plan p { text-wrap: pretty; }
 .pp-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 22px; }
 .pp-heading p { color: var(--pp-muted); margin-top: 4px; }
-.pp-create { display: flex; align-items: center; gap: 16px; }
+.pp-create { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 /* Save/delete confirmation beside Create plan: rises in, holds ~4s, fades out, then unmounts (onAnimationEnd). */
 .pp-notice { display: inline-flex; align-items: center; gap: var(--bb-space-2); color: var(--pp-text); font-size: 13px; animation: pp-notice 4s var(--bb-ease-out) both; }
 .pp-notice svg { width: 16px; height: 16px; color: var(--bb-action); }
