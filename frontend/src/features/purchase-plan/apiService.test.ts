@@ -23,6 +23,22 @@ function mockFetch(status: number, body?: unknown) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('createApiPlanService', () => {
+  it('loads manager exposure using the session without accepting a requested team', async () => {
+    const value = { plan_count: 2, total_quantity_mt: 20, open_quantity_mt: 10, pending_approval_count: 1,
+      reference_price_usd_per_mt: 600, reference_date: '2026-11-02', exposure_usd: 6000 };
+    const fetchMock = mockFetch(200, value);
+    await expect(service.managerOverview!()).resolves.toEqual(value);
+    expect(fetchMock.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/manager-overview');
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({ Authorization: 'Bearer session-token' });
+    for (const invalid of [{ ...value, exposure_usd: -1 }, { ...value, reference_date: null },
+      { ...value, open_quantity_mt: 21 }, { ...value, plan_count: 0.5 }]) {
+      mockFetch(200, invalid);
+      await expect(service.managerOverview!()).rejects.toMatchObject({ status: 502 });
+    }
+    const missing = { ...value, reference_price_usd_per_mt: null, reference_date: null, exposure_usd: null };
+    mockFetch(200, missing);
+    await expect(service.managerOverview!()).resolves.toEqual(missing);
+  });
   it('sends the session token and returns the saved plan', async () => {
     const plan = { plan_id: 'p1', quantity_mt: 500, purchase_deadline: '2025-11-15', scenario_as_of_date: '2025-10-24', days_remaining: 22 };
     const fetchMock = mockFetch(200, { plan });
