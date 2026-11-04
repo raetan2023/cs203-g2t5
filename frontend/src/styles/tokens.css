@@ -4,9 +4,9 @@
  * Custom properties only; no selectors other than :root. Dark theme only.
  * Colour values are mirrored in theme.ts for Clerk and Recharts; theme.test.ts keeps them in sync.
  *
+ * Type scale, radius-pill, price direction and chart aliases were added on 2026-11-04 (Day 2 token set).
  * Pending (values not decided, add here only when the owning phase decides them):
- *   price-up / price-down / price-flat (+ -surface)  Phase 5
- *   success-*  Phase 4    chart-*  Phase 6
+ *   success-*  Phase 4    price-*-surface  Phase 5
  */
 :root {
   color-scheme: dark;
@@ -64,6 +64,18 @@
 
   /* type */
   --bb-font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  /* Type scale (2026-11-04). 12px is the floor: nothing on screen is smaller. Body is md (base.css). */
+  --bb-text-xs: 12px;   /* chips, meta, table footnotes */
+  --bb-text-sm: 13px;   /* labels, secondary copy, dense tables */
+  --bb-text-md: 14px;   /* body */
+  --bb-text-lg: 15px;   /* inputs, emphasised body */
+  --bb-text-xl: 16px;   /* list headings, primary call to action */
+  --bb-text-2xl: 18px;  /* section lead, large meta, card figures' units */
+  --bb-text-3xl: 20px;  /* h2, brand */
+  --bb-text-4xl: 24px;  /* panel figures */
+  --bb-text-5xl: 28px;  /* page h1 (mobile), status headings */
+  --bb-text-6xl: 32px;  /* page h1, key figures */
+  --bb-text-7xl: 40px;  /* hero figures */
 
   /* spacing scale */
   --bb-space-1: 4px;
@@ -81,8 +93,21 @@
   /* shape and motion */
   --bb-radius-card: 10px;
   --bb-radius-control: 5px;
+  --bb-radius-pill: 999px;
   --bb-shadow-card: 0 16px 60px #00000026;
   --bb-motion-fast: 150ms; /* press and hover feedback */
   --bb-motion-base: 200ms; /* routine state changes: dialogs, notices */
   --bb-ease-out: cubic-bezier(.23, 1, .32, 1); /* one deceleration for everything that appears or responds */
+
+  /* price direction (provisional, 2026-11-04; Day 4 dataviz may revise). Direction for a fuel buyer: a rise is dearer.
+     Both exceed 7:1 on canvas, surface and input. Never the only carrier: pair with a sign, arrow or word. */
+  --bb-price-up: #f2849e;   /* dearer */
+  --bb-price-down: #8fd3a4; /* cheaper */
+  --bb-price-flat: #b5ac9b; /* = text-secondary */
+
+  /* chart presentation (provisional aliases of approved tokens, 2026-11-04; theme.ts `chart` mirrors them for Recharts) */
+  --bb-chart-grid: var(--bb-border-subtle);
+  --bb-chart-axis: var(--bb-text-secondary);
+  --bb-chart-series-1: var(--bb-action);
+  --bb-chart-cursor: var(--bb-border-control);
 }
