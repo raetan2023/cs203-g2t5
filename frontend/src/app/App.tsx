@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { AppLink, navigate, usePath, useSearch } from './router';
-import { BuyerDecisionsProvider } from '../features/purchase-plan/components/BuyerDecisions';
+import { BuyerDecisions, BuyerDecisionsProvider } from '../features/purchase-plan/components/BuyerDecisions';
 import { AppShell } from '../components/AppShell';
 import { StatusPage } from '../components/StatusPage';
 import { AuthPage } from '../features/auth/AuthPage';
@@ -17,7 +17,7 @@ import type { ForecastService } from '../features/forecast/apiService';
 import type { ReadMgoQuote } from '../features/home/marketQuote';
 
 type Session = { state: 'loading' } | { state: 'error'; message: string } | { state: 'ready'; user: SessionUser | null };
-const privateRoutes = ['/home', '/purchase-plans', '/purchase-plans/recommendation', '/purchase-plans/decisions', '/market-dashboard'];
+const privateRoutes = ['/home', '/purchase-plans', '/purchase-plans/recommendation', '/purchase-plans/decisions', '/purchase-plans/notifications', '/market-dashboard'];
 export interface AppProps {
   auth: AuthService;
   createPlanService(user: SessionUser): PurchasePlanService;
@@ -83,7 +83,7 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, da
   }, [path, session, user]);
 
   useEffect(() => {
-    document.title = `${({ '/login': 'Sign in', '/signup': 'Create account', '/home': 'Home', '/purchase-plans': 'Purchase plans', '/purchase-plans/recommendation': 'Purchase estimate', '/purchase-plans/decisions': 'Decision history', '/market-dashboard': 'Market dashboard' } as Record<string, string>)[path] ?? 'Bunker Buddy'} · Bunker Buddy`;
+    document.title = `${({ '/login': 'Sign in', '/signup': 'Create account', '/home': 'Home', '/purchase-plans': 'Purchase plans', '/purchase-plans/recommendation': 'Purchase estimate', '/purchase-plans/decisions': 'Decision history', '/purchase-plans/notifications': 'Manager decisions', '/market-dashboard': 'Market dashboard' } as Record<string, string>)[path] ?? 'Bunker Buddy'} · Bunker Buddy`;
   }, [path]);
 
   if (session.state === 'loading') return <StatusPage message={privateRoutes.includes(path) ? 'Loading your home...' : 'Loading your session...'} />;
@@ -107,6 +107,6 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, da
   return <BuyerDecisionsProvider key={user.id} service={planStore.current.service} enabled={planAccess?.can_write_plans ?? true}><ForecastProvider service={planStore.current.forecasts} scenarioDate={scenarioDate} revision={dataRevision}><AppShell canReadPlans={planAccess?.can_read_plans ?? true} organisationControl={organisationControl} path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
     await auth.signOut(); acceptUser(null); returnPath.current = '/home'; setNotice(''); navigate('/login', true);
   }}>
-    {path.startsWith('/purchase-plans') && planAccess && !planAccess.can_read_plans ? <main className="bb-status"><h1>Purchase-plan access is restricted</h1><p>Your admin role manages the organisation. Buyer, manager or analyst membership is required to view purchase plans.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : path === '/home' ? <HomePage displayName={user.displayName} role={planAccess?.role} canReadPlans={planAccess?.can_read_plans ?? true} marketAvailable={!!MarketDashboard} today={scenarioDate} readQuote={readMarketQuote} onManageOrganisation={onManageOrganisation} /> : path === '/purchase-plans' ? <PurchasePlanPage isManager={planAccess?.role === 'org:manager'} canEdit={planAccess?.can_write_plans ?? true} key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? purchaseRecommendation : path === '/purchase-plans/decisions' ? <BuyerDecisionHistory planService={planStore.current.service} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
+    {path.startsWith('/purchase-plans') && planAccess && !planAccess.can_read_plans ? <main className="bb-status"><h1>Purchase-plan access is restricted</h1><p>Your admin role manages the organisation. Buyer, manager or analyst membership is required to view purchase plans.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : path === '/home' ? <HomePage displayName={user.displayName} role={planAccess?.role} canReadPlans={planAccess?.can_read_plans ?? true} marketAvailable={!!MarketDashboard} today={scenarioDate} readQuote={readMarketQuote} onManageOrganisation={onManageOrganisation} /> : path === '/purchase-plans' ? <PurchasePlanPage isManager={planAccess?.role === 'org:manager'} canEdit={planAccess?.can_write_plans ?? true} key={user.id} service={planStore.current.service} scenarioDate={scenarioDate} /> : path === '/purchase-plans/recommendation' ? purchaseRecommendation : path === '/purchase-plans/notifications' ? <main className="purchase-plan"><header className="pp-heading"><h1>Manager decisions</h1><AppLink href="/purchase-plans">Back to purchase plans</AppLink></header>{(planAccess?.can_write_plans ?? true) && <BuyerDecisions service={planStore.current.service} />}</main> : path === '/purchase-plans/decisions' ? <BuyerDecisionHistory planService={planStore.current.service} /> : path === '/market-dashboard' ? MarketDashboard ? <MarketDashboard scenarioDate={scenarioDate} /> : <main className="bb-status"><h1>Market dashboard is not connected yet</h1><p>This page will be supplied by the market dashboard feature.</p><AppLink className="bb-button" href="/home">Back to Home</AppLink></main> : <main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/home">Back to Home</AppLink></main>}
   </AppShell></ForecastProvider></BuyerDecisionsProvider>;
 }
