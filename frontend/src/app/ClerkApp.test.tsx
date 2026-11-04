@@ -59,6 +59,14 @@ describe('Clerk API wiring', () => {
     vi.stubGlobal('fetch', fetcher);
     render(<ClerkApp />);
     const buttons = await screen.findAllByRole('button', { name: 'Reload saved plan' });
+    // Checking access/date on tab return must not restart the purchase prediction pipeline.
+    const purchaseCalls = () => fetcher.mock.calls.filter(([url]) => url.includes('/purchase-plans/forecast?') || /\/(cost-impact|recommendation)\?/.test(url)).length;
+    const beforeTabReturn = purchaseCalls();
+    const configCalls = fetcher.mock.calls.filter(([url]) => url.endsWith('/config')).length;
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
+    await waitFor(() => expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(configCalls + 1));
+    expect(purchaseCalls()).toBe(beforeTabReturn);
     scenario = '2025-10-25';
     await userEvent.click(buttons[0]);
     expect((await screen.findAllByText(/21 days left/))[0]).toBeInTheDocument();
@@ -66,7 +74,7 @@ describe('Clerk API wiring', () => {
     const analysisCalls = fetcher.mock.calls.filter(([url]) => /\/(cost-impact|recommendation)\?/.test(url));
     expect(analysisCalls.length).toBeGreaterThanOrEqual(4);
     for (const call of analysisCalls) expect(call[1]?.headers).toEqual({ Authorization: 'Bearer session-a' });
-    expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(2);
+    expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(3);
     expect(screen.queryByText('Synthetic preview')).toBeNull();
     expect(fetcher.mock.calls.some(([url]) => url.includes('/api/v1/purchase-plans/forecast?'))).toBe(true);
     expect(fetcher.mock.calls.some(([url]) => url.includes('/api/v1/forecast?'))).toBe(true);

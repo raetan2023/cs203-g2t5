@@ -136,7 +136,7 @@ it('pins guidance and impact to the selected publication and clears both when it
     : { status: 'unavailable' as const, reason: 'missing_news', message: 'Previous day news unavailable' }) };
   const service = ready();
   const guidance = vi.spyOn(service, 'read'), impact = vi.spyOn(service, 'readImpact');
-  render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
+  render(<ForecastProvider autoRefresh service={forecasts} scenarioDate={plan.scenario_as_of_date}>
     <RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
