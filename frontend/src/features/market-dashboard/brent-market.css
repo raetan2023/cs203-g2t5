@@ -1,25 +1,27 @@
+/* Latest stored Brent panel. Migrated onto the shared --bb-* tokens on 2026-11-04 (Day 2 token set). */
 .brent-panel {
-  margin: 24px auto;
-  padding: 24px;
+  margin: var(--bb-space-6) auto;
+  padding: var(--bb-space-6);
   max-width: 1200px;
   width: calc(100% - 48px);
   box-sizing: border-box;
-  border: 1px solid #334155;
-  border-radius: 16px;
-  background: #101a28;
-  color: #e2e8f0;
+  border: 1px solid var(--bb-border-subtle);
+  border-radius: var(--bb-radius-card);
+  background: var(--bb-surface);
+  color: var(--bb-text);
 }
-.brent-panel-heading { display: flex; justify-content: space-between; align-items: start; gap: 20px; }
-.brent-panel h2 { margin: 0 0 8px; font-size: 22px; }
+.brent-panel-heading { display: flex; justify-content: space-between; align-items: start; gap: var(--bb-space-5); }
+.brent-panel h2 { margin: 0 0 var(--bb-space-2); font-size: var(--bb-text-3xl); }
 .brent-panel p { line-height: 1.5; }
-.brent-panel-heading p, .brent-panel-note { color: #a8b8cc; font-size: 13px; }
-.brent-panel-price { font-size: 36px; font-weight: 700; margin-top: 16px; }
-.brent-panel-price span { font-size: 15px; font-weight: 400; }
-.brent-panel [role=alert] { color: #fbbf24; }
-.brent-panel summary { cursor: pointer; padding: 8px 0; }
-.brent-panel table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.brent-panel th, .brent-panel td { text-align: left; border-bottom: 1px solid #334155; padding: 10px 6px; }
+.brent-panel-heading p, .brent-panel-note { color: var(--bb-text-secondary); font-size: var(--bb-text-sm); }
+.brent-panel-price { font-size: var(--bb-text-6xl); font-weight: 600; margin-top: var(--bb-space-4); font-variant-numeric: tabular-nums; }
+.brent-panel-price span { font-size: var(--bb-text-lg); font-weight: 400; color: var(--bb-text-secondary); }
+/* A failed or stale read is a warning (data may be old), not a validation error. */
+.brent-panel [role=alert] { color: var(--bb-warning-text); }
+.brent-panel summary { cursor: pointer; padding: var(--bb-space-2) 0; }
+.brent-panel table { width: 100%; border-collapse: collapse; font-size: var(--bb-text-md); font-variant-numeric: tabular-nums; }
+.brent-panel th, .brent-panel td { text-align: left; border-bottom: 1px solid var(--bb-border-subtle); padding: var(--bb-space-2) 6px; }
 @media (max-width: 600px) {
-  .brent-panel { width: calc(100% - 24px); padding: 16px; }
+  .brent-panel { width: calc(100% - 24px); padding: var(--bb-space-4); }
   .brent-panel-heading { flex-direction: column; }
 }

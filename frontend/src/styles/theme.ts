@@ -39,6 +39,18 @@ export const colors = {
   authHeroText: '#f4ecdc',
   authHeroSub: '#e0d6c3',
   authHeroFallback: '#050607',
+  priceUp: '#f2849e',
+  priceDown: '#8fd3a4',
+  priceFlat: '#b5ac9b',
+} as const;
+
+/** Chart presentation values for Recharts props (SVG attributes cannot read CSS variables reliably). Mirrors the --bb-chart-* aliases. */
+export const chart = {
+  grid: colors.borderSubtle,
+  axis: colors.textSecondary,
+  series1: colors.action,
+  cursor: colors.borderControl,
+  dotRing: colors.surface,
 } as const;
 
 /**
