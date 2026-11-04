@@ -21,7 +21,7 @@ export function AppShell({ children, path, scenarioDate, onSignOut, marketAvaila
       <Brand />{home ? null : path === '/market-dashboard'
         ? <span className="bb-date">MARKET OVERVIEW</span>
         : <time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>}
-      {count > 0 && <AppLink className="bb-decisions-alert" href="/purchase-plans#decisions">{count} unread {count === 1 ? 'decision' : 'decisions'}</AppLink>}
+      {count > 0 && <AppLink className="bb-decisions-alert" href="/purchase-plans/notifications">{count} unread {count === 1 ? 'decision' : 'decisions'}</AppLink>}
       {organisationControl}
     </header>
     <div id="app-content" tabIndex={-1}>{children}</div>
