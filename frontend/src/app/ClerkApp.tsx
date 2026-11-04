@@ -33,6 +33,8 @@ export function ClerkApp() {
   const organisationState = useOrganization();
   const [scenario, setScenario] = useState<Scenario>({ state: 'idle' });
   const [scenarioAttempt, setScenarioAttempt] = useState(0);
+  // Returning to the tab checks date/access without restarting purchase-plan predictions.
+  const [dataRevision, setDataRevision] = useState(0);
 
   const signedIn = authState.isLoaded && authState.isSignedIn && userState.isLoaded && userState.isSignedIn;
   const orgId = authState.orgId;
@@ -155,7 +157,8 @@ export function ClerkApp() {
     createForecastService={createForecastService}
     createPurchaseForecastService={createPurchaseForecastService}
     dataRevision={scenarioAttempt}
-    refreshScenario={() => setScenarioAttempt(value => value + 1)}
+    purchaseDataRevision={dataRevision}
+    refreshScenario={() => { setDataRevision(value => value + 1); setScenarioAttempt(value => value + 1); }}
     scenarioDate={scenario.state === 'ready' ? scenario.date : ''}
     renderAuthPage={mode => <ClerkAuthPage mode={mode} />}
     MarketDashboard={MarketDashboard}

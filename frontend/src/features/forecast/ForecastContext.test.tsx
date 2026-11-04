@@ -66,7 +66,7 @@ it('revalidates in the foreground every minute and suppresses a previously ready
   vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
   let published = true;
   const service: ForecastService = { read: vi.fn(async h => published ? buildMockForecast(h) as ReadyForecast : unavailable('latest-run-failed')) };
-  await act(async () => { render(<ForecastProvider service={service} scenarioDate="2026-10-26"><Consumer /></ForecastProvider>); });
+  await act(async () => { render(<ForecastProvider autoRefresh service={service} scenarioDate="2026-10-26"><Consumer /></ForecastProvider>); });
   expect(screen.getByText('success:7:')).toBeVisible();
   published = false;
   await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
@@ -110,4 +110,31 @@ it('does not reuse an in-flight old horizon after another horizon reports an una
   expect(screen.queryByText('success:7:')).toBeNull();
   await act(async () => resolves[2](unavailable('failed-publication')));
   expect(screen.getByText('success:7:failed-publication')).toBeVisible();
+});
+
+
+it('keeps purchase forecasts stable through timers and tab returns until an explicit refresh', async () => {
+  vi.useFakeTimers();
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+  const service: ForecastService = { read: vi.fn(async h => buildMockForecast(h) as ReadyForecast) };
+  await act(async () => { render(<ForecastProvider service={service} scenarioDate="2026-10-26"><Consumer /></ForecastProvider>); });
+  expect(screen.getByText('success:7:')).toBeVisible();
+  await act(async () => { await vi.advanceTimersByTimeAsync(180_000); document.dispatchEvent(new Event('visibilitychange')); });
+  expect(service.read).toHaveBeenCalledTimes(1);
+  expect(screen.getByText('success:7:')).toBeVisible();
+  await act(async () => { fireEvent.click(screen.getByText('Retry')); });
+  expect(service.read).toHaveBeenCalledTimes(2);
+  expect(screen.getByText('success:7:')).toBeVisible();
+});
+
+it('lets a slow purchase forecast finish without replacing it on each minute', async () => {
+  vi.useFakeTimers();
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+  let finish!: (value: Forecast) => void;
+  const service: ForecastService = { read: vi.fn(() => new Promise<Forecast>(resolve => { finish = resolve; })) };
+  render(<ForecastProvider service={service} scenarioDate="2026-10-26"><Consumer /></ForecastProvider>);
+  await act(async () => { await vi.advanceTimersByTimeAsync(180_000); document.dispatchEvent(new Event('visibilitychange')); });
+  expect(service.read).toHaveBeenCalledTimes(1);
+  await act(async () => { finish(buildMockForecast(7) as ReadyForecast); });
+  expect(screen.getByText('success:7:')).toBeVisible();
 });
