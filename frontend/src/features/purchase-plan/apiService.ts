@@ -72,7 +72,7 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
 
     if (response.status === 204) return undefined;
 
-    let payload: { plan?: unknown; plans?: unknown; notifications?: unknown; submission?: unknown; decision?: unknown; purchase?: unknown; comparison?: unknown; withdrawal?: unknown; revision_plan_ids?: unknown; unread_count?: unknown; detail?: string; field_errors?: Record<string, string> } = {};
+    let payload: { buyer_label?: unknown; plan?: unknown; plans?: unknown; notifications?: unknown; submission?: unknown; decision?: unknown; purchase?: unknown; comparison?: unknown; withdrawal?: unknown; revision_plan_ids?: unknown; unread_count?: unknown; detail?: string; field_errors?: Record<string, string> } = {};
     try {
       const data: unknown = await response.json();
       if (data && typeof data === 'object' && !Array.isArray(data)) payload = data;
@@ -152,7 +152,9 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
           || typeof value.decided_at !== 'string' || !Number.isFinite(Date.parse(value.decided_at))))
         throw new PlanError('The approval decision response was invalid. Please retry.', {}, 502);
       const decision = value == null ? null : value as ApprovalDecision;
-      const outcomes = parseOutcomes(payload);
+      if (payload?.buyer_label != null && (typeof payload.buyer_label !== 'string' || !payload.buyer_label.trim()))
+        throw new PlanError('The buyer label was invalid. Please retry.', {}, 502);
+      const outcomes = { ...parseOutcomes(payload), buyer_label: payload?.buyer_label as string | null | undefined };
       if (payload?.submission === null) return { submission: null, decision, ...outcomes };
       const snapshot = payload?.submission as { horizon_days?: number; analysis?: { context?: PlanResultContext } } | undefined;
       if (!snapshot || ![7, 14, 30].includes(snapshot.horizon_days ?? 0) || !snapshot.analysis?.context

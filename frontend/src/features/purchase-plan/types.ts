@@ -198,6 +198,7 @@ export interface PurchaseComparison {
   actual_minus_adjusted_estimate: number | null;
 }
 export interface SubmissionResponse {
+  buyer_label?: string | null;
   submission: SubmittedRecommendation | null;
   decision?: ApprovalDecision | null;
   purchase?: PurchaseRecord | null;
