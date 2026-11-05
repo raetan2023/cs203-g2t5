@@ -1,13 +1,15 @@
-/* Home: full-bleed harbour photo with the shell header laid over it (design: docs/ui-revamp/assets/inspo/home-page). */
+/* Home: full-bleed harbour photo with the shell header laid over it, then the latest GDELT headlines
+   (design: docs/ui-revamp/assets/inspo/home-page/news/image.png). */
 .bb-app--home { position: relative; }
 .bb-app--home #app-content { max-width: none; }
 
-.bb-home { position: relative; isolation: isolate; min-height: max(100dvh, 620px); display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; background: var(--bb-canvas); color: var(--bb-text); }
+.bb-home { background: var(--bb-canvas); color: var(--bb-text); }
+.bb-home-hero { position: relative; isolation: isolate; min-height: max(100dvh, 620px); display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
 .bb-home-photo { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
-/* Scrims keep the header and the text legible over any part of the photo. */
-.bb-home::before, .bb-home::after { content: ''; position: absolute; left: 0; right: 0; z-index: -1; pointer-events: none; }
-.bb-home::before { top: 0; height: 260px; background: linear-gradient(180deg, color-mix(in srgb, var(--bb-canvas) 65%, transparent), transparent); }
-.bb-home::after { bottom: 0; height: max(440px, 55%); background: linear-gradient(0deg, color-mix(in srgb, var(--bb-canvas) 94%, transparent) 0%, color-mix(in srgb, var(--bb-canvas) 72%, transparent) 45%, transparent 100%); }
+/* Scrims keep the header and the text legible over any part of the photo, and fade the photo into the news below. */
+.bb-home-hero::before, .bb-home-hero::after { content: ''; position: absolute; left: 0; right: 0; z-index: -1; pointer-events: none; }
+.bb-home-hero::before { top: 0; height: 260px; background: linear-gradient(180deg, color-mix(in srgb, var(--bb-canvas) 65%, transparent), transparent); }
+.bb-home-hero::after { bottom: 0; height: max(440px, 55%); background: linear-gradient(0deg, var(--bb-canvas) 0%, color-mix(in srgb, var(--bb-canvas) 72%, transparent) 45%, transparent 100%); }
 
 .bb-home-content { box-sizing: border-box; width: 100%; max-width: var(--bb-page-max); margin-inline: auto; padding: 120px var(--bb-page-pad) 40px; display: flex; flex-direction: column; gap: 28px; }
 .bb-home-intro { display: flex; flex-direction: column; gap: var(--bb-space-3); min-width: 0; }
@@ -16,14 +18,22 @@
 .bb-home-greeting .bb-home-name { margin-top: var(--bb-space-3); line-height: 1.08; letter-spacing: -.03em; }
 .bb-home-date { margin: 0; color: var(--bb-text); font-size: 18px; line-height: 24px; } /* Home keeps its own sizes for now */
 
-.bb-home-actions { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--bb-space-6); }
+/* Action left, news cue centred, price card right. */
+.bb-home-actions { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--bb-space-6); }
+.bb-home-actions-start { justify-self: start; display: flex; flex-wrap: wrap; gap: var(--bb-space-3); }
+.bb-home-actions-end { grid-column: 3; justify-self: end; }
 .bb-home-cta.bb-button { min-height: 52px; padding: 0 var(--bb-space-6); gap: 10px; border-radius: var(--bb-radius-card); font: inherit; font-size: var(--bb-text-xl); font-weight: 600; }
 .bb-home-cta svg { width: 16px; height: 16px; stroke-width: 2.4; }
+
+.bb-home-jump { display: inline-flex; align-items: center; gap: var(--bb-space-2); min-height: 44px; padding: 0 var(--bb-space-3); border-radius: var(--bb-radius-control); color: var(--bb-text-secondary); font-size: var(--bb-text-md); text-decoration: none; transition: color var(--bb-motion-fast) var(--bb-ease-out); }
+.bb-home-jump span { transition: transform var(--bb-motion-base) var(--bb-ease-out); }
+.bb-home-jump:hover { color: var(--bb-text); }
+.bb-home-jump:hover span { transform: translateY(2px); }
 
 .bb-home-quote { box-sizing: border-box; min-width: 260px; min-height: 64px; display: flex; align-items: center; gap: 14px; padding: var(--bb-space-3) var(--bb-space-4); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: color-mix(in srgb, var(--bb-canvas) 60%, transparent); color: var(--bb-text); text-decoration: none; }
 a.bb-home-quote { transition: border-color var(--bb-motion-fast) var(--bb-ease-out), background-color var(--bb-motion-fast) var(--bb-ease-out); }
 a.bb-home-quote:hover { border-color: var(--bb-border-control); background: color-mix(in srgb, var(--bb-canvas) 75%, transparent); }
-.bb-home-quote:focus-visible, .bb-home-cta:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 3px; }
+.bb-home-quote:focus-visible, .bb-home-cta:focus-visible, .bb-home-jump:focus-visible, .bb-home-news-more:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 3px; }
 .bb-home-quote-text { display: flex; flex-direction: column; gap: 2px; }
 .bb-home-quote-label, .bb-home-quote-side, .bb-home-quote-unit { color: var(--bb-text-secondary); font-size: var(--bb-text-xs); line-height: 16px; font-weight: 400; }
 .bb-home-quote-message { font-size: var(--bb-text-md); line-height: 24px; color: var(--bb-text-secondary); }
@@ -32,11 +42,76 @@ a.bb-home-quote:hover { border-color: var(--bb-border-control); background: colo
 .bb-home-quote-side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .bb-home-quote-link { color: var(--bb-action); }
 
+/* Market alerts: news spike and MGO price move, side by side above the headlines. */
+.bb-home-alerts { box-sizing: border-box; width: 100%; max-width: var(--bb-page-max); margin-inline: auto; padding: var(--bb-space-8) calc(var(--bb-page-pad) + clamp(0px, 2.5vw, 28px)) 0; }
+.bb-home-alerts-title { margin: 0 0 var(--bb-space-4); font: var(--bb-type-title); }
+.bb-home-alerts-message { margin: 0; padding: var(--bb-space-6) 0; border-block: 1px solid var(--bb-border-subtle); color: var(--bb-text-secondary); font-size: 14px; }
+.bb-home-alerts-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--bb-space-4); margin: 0; padding: 0; list-style: none; }
+.bb-home-alert { display: flex; flex-direction: column; gap: var(--bb-space-2); padding: var(--bb-space-4) var(--bb-space-5); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); }
+.bb-home-alert--raised { border-color: var(--bb-warning-border); background: var(--bb-warning-surface); }
+.bb-home-alert-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--bb-space-2) var(--bb-space-4); }
+.bb-home-alert-head h3 { margin: 0; color: var(--bb-text-secondary); font: var(--bb-type-label); }
+.bb-home-alert-badge { color: var(--bb-text-secondary); font-size: 12px; line-height: 16px; font-weight: 600; white-space: nowrap; }
+.bb-home-alert--raised .bb-home-alert-badge { color: var(--bb-warning-text); }
+.bb-home-alert-summary { margin: 0; font: var(--bb-type-body-strong); }
+.bb-home-alert-detail { margin: 0; color: var(--bb-text-secondary); font: var(--bb-type-body); }
+
+/* Latest news */
+.bb-home-news { scroll-margin-top: var(--bb-space-4); outline: none; }
+.bb-home-news-inner { box-sizing: border-box; width: 100%; max-width: var(--bb-page-max); margin-inline: auto; padding: var(--bb-space-12) calc(var(--bb-page-pad) + clamp(0px, 2.5vw, 28px)) 72px; }
+.bb-home-news-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--bb-space-2) var(--bb-space-6); margin-bottom: var(--bb-space-6); }
+.bb-home-news-head h2 { margin: 0; font: var(--bb-type-title); }
+.bb-home-news-head p { margin: 0; color: var(--bb-text-secondary); font-size: 12px; line-height: 16px; }
+.bb-home-news-message { margin: 0; padding: var(--bb-space-8) 0; border-block: 1px solid var(--bb-border-subtle); color: var(--bb-text-secondary); font-size: 14px; }
+
+.bb-home-news-table { width: 100%; border-collapse: collapse; }
+.bb-home-news-table th { padding: 0 var(--bb-space-4) var(--bb-space-3) 0; border-bottom: 1px solid var(--bb-border-subtle); color: var(--bb-text-secondary); font-size: 12px; line-height: 16px; font-weight: 400; text-align: left; white-space: nowrap; }
+.bb-home-news-table th:nth-child(1) { width: 104px; }
+.bb-home-news-table th:nth-child(2) { width: 15%; }
+.bb-home-news-table thead td { width: 32px; border-bottom: 1px solid var(--bb-border-subtle); }
+.bb-home-news-table tbody tr { position: relative; transition: background-color var(--bb-motion-fast) var(--bb-ease-out); }
+.bb-home-news-table tbody tr:hover { background: var(--bb-surface-hover); }
+.bb-home-news-table td { padding: var(--bb-space-4) var(--bb-space-4) var(--bb-space-4) 0; border-bottom: 1px solid var(--bb-border-subtle); vertical-align: middle; }
+.bb-home-news-date, .bb-home-news-source { color: var(--bb-text-tertiary); font-size: 12px; line-height: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bb-home-news-source { overflow: hidden; text-overflow: ellipsis; max-width: 0; }
+.bb-home-news-table .bb-home-news-topic { color: var(--bb-text-secondary); font-size: 12px; line-height: 16px; text-align: right; white-space: nowrap; }
+.bb-home-news-headline { font: var(--bb-type-body-strong); }
+.bb-home-news-headline a { color: var(--bb-text); text-decoration: none; outline: none; }
+/* The headline link covers the whole row, so any part of it opens the article. */
+.bb-home-news-headline a::after { content: ''; position: absolute; inset: 0; border-radius: 2px; }
+.bb-home-news-headline a:focus-visible::after { outline: 2px solid var(--bb-focus); outline-offset: -2px; }
+.bb-home-news-table td.bb-home-news-out { padding-right: var(--bb-space-1); color: var(--bb-text-secondary); font-size: var(--bb-text-md); text-align: right; transition: color var(--bb-motion-fast) var(--bb-ease-out); }
+.bb-home-news-table tbody tr:hover .bb-home-news-out { color: var(--bb-text); }
+
+.bb-home-news-foot { padding-top: var(--bb-space-5); }
+.bb-home-news-more { display: inline-flex; align-items: center; gap: var(--bb-space-2); min-height: 44px; margin-left: calc(-1 * var(--bb-space-2)); padding: 0 var(--bb-space-2); border: 0; border-radius: var(--bb-radius-control); background: none; color: var(--bb-text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.bb-home-news-more:hover { background: var(--bb-surface-hover); }
+
+.bb-home-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .bb-home-actions { grid-template-columns: 1fr; justify-items: stretch; }
+  .bb-home-actions-start, .bb-home-actions-end { grid-column: auto; justify-self: stretch; display: grid; }
+  .bb-home-actions-start:empty, .bb-home-actions-end:empty { display: none; }
+  .bb-home-jump { justify-self: center; order: 3; }
+  .bb-home-alerts-list { grid-template-columns: 1fr; }
+
+  /* Rows become two-line entries: date, source and topic above, headline below. */
+  .bb-home-news-table, .bb-home-news-table tbody { display: block; }
+  .bb-home-news-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .bb-home-news-table tbody tr { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'date source topic' 'headline headline headline'; gap: 6px var(--bb-space-3); padding: var(--bb-space-4) 0; border-bottom: 1px solid var(--bb-border-subtle); }
+  .bb-home-news-table td { padding: 0; border: 0; }
+  .bb-home-news-date { grid-area: date; }
+  .bb-home-news-source { grid-area: source; max-width: none; }
+  .bb-home-news-table .bb-home-news-topic { grid-area: topic; }
+  .bb-home-news-headline { grid-area: headline; }
+  .bb-home-news-table td.bb-home-news-out { display: none; }
+}
+
 @media (max-width: 640px) {
   /* The header wraps onto two rows here. */
   .bb-home-content { padding-top: 160px; padding-bottom: var(--bb-space-8); }
   .bb-home-date { font-size: var(--bb-text-xl); }
-  .bb-home-actions { flex-direction: column; align-items: stretch; }
   .bb-home-quote { min-width: 0; }
 }
 

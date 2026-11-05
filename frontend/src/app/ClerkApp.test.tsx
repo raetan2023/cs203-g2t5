@@ -231,6 +231,10 @@ describe('Verified organisation permissions', () => {
       if (url.endsWith('/market/stored')) return reply({ storage: 'supabase', missing: [], series: [{ category: 'prices',
         ticker: { seriesKey: 'SGP_MGO_OBSERVED', unit: 'USD/MT', currency: 'USD', value: 1351.5, changeAbs: 0, changePct: 0, observedDate: '2026-10-26' },
         history: [{ date: '2026-10-24', value: 1351.5 }, { date: '2026-10-26', value: 1351.5 }] }] });
+      if (url.endsWith('/news/latest?limit=40')) return reply({ storage: 'supabase', updatedAt: '2026-11-02T00:00:00Z', items: [
+        { title: 'OPEC+ producers hold December oil output steady', url: 'https://example.com/opec', source: 'reuters.com',
+          seenAt: '2026-11-01T22:00:00Z', topic: 'production_decision', marketBias: 'neutral' }] });
+      if (url.endsWith('/news/alerts')) return reply({ storage: 'supabase', news: null, price: null });
       throw new Error('Unexpected request');
     });
     vi.stubGlobal('fetch', fetcher);
@@ -248,14 +252,16 @@ describe('Verified organisation permissions', () => {
     expect(await screen.findByRole('heading', { name: 'Admin access required' })).toBeVisible();
     expect(screen.queryByText('Embedded organisation profile')).not.toBeInTheDocument();
   });
-  it('opens Clerk organisation settings from an admin Home and shows the latest stored MGO estimate', async () => {
+  it('opens Clerk organisation settings from an admin Home and shows the latest stored MGO quote', async () => {
     const fetcher = backend('org:admin');
     window.history.replaceState(null, '', '/home');
     render(<ClerkApp />);
     await userEvent.click(await screen.findByRole('button', { name: 'Manage organisation' }));
     expect(clerk.client.openOrganizationProfile).toHaveBeenCalledTimes(1);
-    expect(await screen.findByRole('link', { name: /^Singapore MGO estimate USD 1,351\.50 per tonne, 26 October, no change\./ }))
+    expect(await screen.findByRole('link', { name: /^Singapore MGO price USD 1,351\.50 per tonne, 26 October, no change\./ }))
       .toHaveAttribute('href', '/market-dashboard');
+    expect(await screen.findByRole('link', { name: 'OPEC+ producers hold December oil output steady, opens in a new tab' }))
+      .toHaveAttribute('href', 'https://example.com/opec');
     expect(fetcher.mock.calls.some(([url]) => url.endsWith('/purchase-plans'))).toBe(false);
   });
   it.each(['org:manager', 'org:admin'])('shows organisation plans read-only for %s', async role => {
