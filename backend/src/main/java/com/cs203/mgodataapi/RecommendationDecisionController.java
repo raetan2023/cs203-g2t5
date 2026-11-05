@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,14 +45,19 @@ public class RecommendationDecisionController {
         this.users = users;
     }
 
+    @Transactional
     @PostMapping("/{planId}/recommendation-decision")
     public ResponseEntity<Map<String, Object>> record(@AuthenticationPrincipal Jwt token,
             @PathVariable UUID planId, @RequestBody RecommendationDecisionRequest request) {
         var access = OrganisationAccess.requireBuyer(token);
         UUID userId = ownerOf(token);
-        // The decision only means something against a plan the buyer actually owns.
-        plans.findByIdAndUser(planId, userId, access.organisationId())
+        // Use the same plan lock as submission so a response cannot change mid-submit.
+        var plan = plans.lockOwned(planId, userId, access.organisationId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
+
+        if (!"draft".equals(plan.status())) {
+            throw new ApiException(HttpStatus.CONFLICT, "Only a draft plan can change its recommendation response.");
+        }
 
         Map<String, String> errors = new LinkedHashMap<>();
         String recommendationId = request == null ? null : request.recommendationId();

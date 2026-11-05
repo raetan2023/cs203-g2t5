@@ -27,6 +27,8 @@ class PlanApprovalHttpTests {
     @MockitoBean UserAccounts users;
     @MockitoBean PurchasePlanRepository plans;
     @MockitoBean OperationalDate dates;
+    @MockitoBean org.springframework.jdbc.core.JdbcTemplate jdbc;
+    @MockitoBean org.springframework.transaction.PlatformTransactionManager transactionManager;
     final UUID id = UUID.randomUUID(), owner = UUID.randomUUID();
     final String path = "/api/v1/purchase-plans/" + id + "/submit";
     final String inbox = "/api/v1/purchase-plans/approval-notifications";
@@ -40,7 +42,7 @@ class PlanApprovalHttpTests {
         verifyNoInteractions(approvals, users);
         when(approvals.submit(eq(id), eq(owner), eq("org_a"), any(PlanApprovalRequest.class))).thenReturn(new PurchasePlan(id, owner, BigDecimal.TEN,
                 LocalDate.parse("2026-11-01"), LocalDate.parse("2026-10-27"), "submitted", Instant.parse("2026-10-27T08:00:00Z")));
-        mvc.perform(post(path).contentType("application/json").content("{\"clerk_org_id\":\"org_attacker\",\"user_id\":\"attacker\"}").with(member("org_a", "buyer")))
+        mvc.perform(post(path).contentType("application/json").content("{\"clerk_org_id\":\"org_attacker\",\"user_id\":\"attacker\"}").with(member("org_a", "officer")))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.plan.status").value("submitted"));
         verify(approvals).submit(eq(id), eq(owner), eq("org_a"), any(PlanApprovalRequest.class));
@@ -48,26 +50,28 @@ class PlanApprovalHttpTests {
     @Test void submittedRecommendationHasTheSameOwnerAndOrganisationIsolationAsPlans() throws Exception {
         String endpoint = "/api/v1/purchase-plans/" + id + "/submission";
         mvc.perform(get(endpoint)).andExpect(status().isUnauthorized());
-        mvc.perform(get(endpoint).with(member("org_a", "admin"))).andExpect(status().isForbidden());
-        mvc.perform(get(endpoint).with(member("org_b", "buyer"))).andExpect(status().isNotFound());
+        mvc.perform(get(endpoint).with(member("org_b", "officer"))).andExpect(status().isNotFound());
         verifyNoInteractions(approvals);
         var saved = new PurchasePlan(id, owner, BigDecimal.TEN, LocalDate.parse("2026-11-01"), LocalDate.parse("2026-10-27"));
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(saved));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(saved));
         when(approvals.submittedRecommendation(id, "org_a")).thenReturn(Map.of("horizon_days", 14));
+        when(approvals.buyerLabel(id, "org_a")).thenReturn("buyer@example.test");
         when(approvals.decision(id, "org_a")).thenReturn(Map.of("decision", "rejected", "comment", "Budget"));
-        for (String role : List.of("buyer", "manager", "analyst"))
+        for (String role : List.of("officer", "manager", "admin"))
             mvc.perform(get(endpoint).with(member("org_a", role))).andExpect(status().isOk())
                     .andExpect(header().string("Cache-Control", "no-store"))
                     .andExpect(jsonPath("$.submission.horizon_days").value(14))
+                    .andExpect(jsonPath("$.buyer_label").value("buyer@example.test"))
                     .andExpect(jsonPath("$.decision.comment").value("Budget"));
-        mvc.perform(get(endpoint).with(member("org_b", "manager"))).andExpect(status().isNotFound());
+        for (String role : List.of("manager", "admin"))
+            mvc.perform(get(endpoint).with(member("org_b", role))).andExpect(status().isNotFound());
     }
 
     @Test void inboxIsManagerOnlyAndUsesVerifiedOrganisation() throws Exception {
         mvc.perform(get(inbox)).andExpect(status().isUnauthorized());
         mvc.perform(get(inbox).with(jwt())).andExpect(status().isForbidden());
-        for (String role : List.of("buyer", "analyst", "admin"))
+        for (String role : List.of("officer", "analyst", "admin"))
             mvc.perform(get(inbox).with(member("org_a", role))).andExpect(status().isForbidden());
         verifyNoInteractions(approvals);
         when(approvals.notifications("org_a")).thenReturn(List.of(Map.of("plan_id", id.toString())));
@@ -78,20 +82,36 @@ class PlanApprovalHttpTests {
                 .andExpect(jsonPath("$.notifications").isEmpty());
         verify(approvals).notifications("org_a"); verify(approvals).notifications("org_b");
     }
+    @Test void teamOverviewIsManagerOnlyAndCannotOverrideVerifiedTeam() throws Exception {
+        String endpoint = "/api/v1/purchase-plans/manager-overview";
+        mvc.perform(get(endpoint)).andExpect(status().isUnauthorized());
+        for (String role : List.of("officer", "analyst", "admin", "unknown"))
+            mvc.perform(get(endpoint).with(member("org_a", role))).andExpect(status().isForbidden());
+        verifyNoInteractions(plans, jdbc);
+        when(plans.findByOrganisation("org_a")).thenReturn(List.of(new PurchasePlan(id, owner,
+                BigDecimal.TEN, LocalDate.parse("2026-11-01"), LocalDate.parse("2026-10-27"), "submitted", Instant.now())));
+        mvc.perform(get(endpoint).param("clerk_org_id", "org_attacker").with(member("org_a", "manager")))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.plan_count").value(1))
+                .andExpect(jsonPath("$.open_quantity_mt").value(10))
+                .andExpect(jsonPath("$.exposure_usd").isEmpty());
+        verify(plans).findByOrganisation("org_a");
+        verify(plans, never()).findByOrganisation("org_attacker");
+    }
     @Test void submittedPlanCannotBeEditedOrDeletedByItsBuyer() throws Exception {
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(new PurchasePlan(id, owner, BigDecimal.TEN,
                 LocalDate.parse("2026-11-01"), LocalDate.parse("2026-10-27"), "submitted", Instant.now())));
-        mvc.perform(put("/api/v1/purchase-plans/" + id).with(member("org_a", "buyer"))
+        mvc.perform(put("/api/v1/purchase-plans/" + id).with(member("org_a", "officer"))
                 .contentType("application/json").content("{\"quantity_mt\":20,\"purchase_deadline\":\"2026-11-01\"}"))
                 .andExpect(status().isConflict());
-        mvc.perform(delete("/api/v1/purchase-plans/" + id).with(member("org_a", "buyer"))).andExpect(status().isConflict());
+        mvc.perform(delete("/api/v1/purchase-plans/" + id).with(member("org_a", "officer"))).andExpect(status().isConflict());
     }
     @Test void decisionsAreManagerOnlyAndUseVerifiedActorAndOrganisation() throws Exception {
         String endpoint = "/api/v1/purchase-plans/" + id + "/decision";
         String input = "{\"decision\":\"approved\",\"comment\":\"Within budget\",\"approval_fingerprint\":\"" + "a".repeat(64) + "\",\"clerk_org_id\":\"org_attacker\",\"manager_clerk_user_id\":\"user_attacker\"}";
         mvc.perform(post(endpoint).contentType("application/json").content(input)).andExpect(status().isUnauthorized());
         mvc.perform(post(endpoint).with(jwt()).contentType("application/json").content(input)).andExpect(status().isForbidden());
-        for (String role : List.of("buyer", "analyst", "admin", "unknown"))
+        for (String role : List.of("officer", "analyst", "admin", "unknown"))
             mvc.perform(post(endpoint).with(member("org_a", role)).contentType("application/json").content(input)).andExpect(status().isForbidden());
         verifyNoInteractions(approvals, users);
         when(approvals.decide(eq(id), eq("org_a"), eq(owner), eq("user_buyer"), eq("user_buyer"), any(PlanDecisionRequest.class)))

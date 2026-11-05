@@ -1,0 +1,8 @@
+.mr-preview { min-height: 100dvh; padding: 40px; }
+.mr-preview-controls { max-width: 500px; padding-right: 24px; }
+.mr-preview-controls > p:first-child { font-size: 11px; letter-spacing: .12em; color: var(--bb-text-secondary); }
+.mr-preview-controls p { color: var(--bb-text-secondary); line-height: 1.6; }
+.mr-preview-controls label { display: block; margin: 24px 0 8px; }
+.mr-preview-controls select { display: block; width: 100%; padding: 12px; margin-bottom: 16px; background: var(--bb-surface); border: 1px solid var(--bb-border-control); color: var(--bb-text); border-radius: var(--bb-radius-control); font: inherit; }
+.mr-preview > .rec-manager-decision { max-width: 500px; }
+@media(max-width:640px){.mr-preview{padding:24px 16px}}

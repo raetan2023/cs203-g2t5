@@ -20,13 +20,11 @@ export function greetingFor(hour: number) {
 type Action = { label: string; href: string } | { label: string; onClick(): void };
 
 /** One primary action per organisation role, matching what that role can do elsewhere in the app. */
-export function homeAction({ role, canReadPlans, marketAvailable, onManageOrganisation }: {
-  role?: string; canReadPlans: boolean; marketAvailable: boolean; onManageOrganisation?: () => void;
+export function homeAction({ role, canReadPlans, onManageOrganisation }: {
+  role?: string; canReadPlans: boolean; onManageOrganisation?: () => void;
 }): Action | null {
   if (role === 'org:admin') return onManageOrganisation ? { label: 'Manage organisation', onClick: onManageOrganisation } : null;
   if (role === 'org:manager') return { label: 'Plans for approval', href: '/purchase-plans#approval-inbox' };
-  if (role === 'org:analyst') return marketAvailable ? { label: 'Market dashboard', href: '/market-dashboard' }
-    : { label: 'View purchase plans', href: '/purchase-plans' };
   return canReadPlans ? { label: 'Go to your plans', href: '/purchase-plans' } : null;
 }
 
@@ -52,11 +50,12 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
   const oneLine = width / (full.length * CHAR_EM);
   const split = !!name && oneLine < MIN_ONE_LINE_PX;
   const firstLine = split ? `${part},` : full;
-  const action = homeAction({ role, canReadPlans, marketAvailable, onManageOrganisation });
+  const action = homeAction({ role, canReadPlans, onManageOrganisation });
 
   return <main className="bb-home" aria-labelledby="home-greeting">
     <section className="bb-home-hero">
       <img className="bb-home-photo" src={harbour} alt="" />
+      {(canReadPlans || marketAvailable || role === 'org:admin') && <AppLink className="bb-home-plan-link" href={role === 'org:admin' ? '/admin' : canReadPlans ? '/purchase-plans' : '/market-dashboard'} aria-label={role === 'org:admin' ? 'Open organisation administration' : canReadPlans ? 'Open purchase plans' : 'Open market dashboard'} />}
       <div className="bb-home-content" ref={content}>
         <div className="bb-home-intro">
           <h1 id="home-greeting" className="bb-home-greeting">
@@ -67,9 +66,11 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
         </div>
         <div className="bb-home-actions">
           <div className="bb-home-actions-start">
+            {role === 'org:admin' && <AppLink className="bb-button bb-home-cta" href="/admin">Enter administration<AppIcon name="arrow" /></AppLink>}
             {action && ('href' in action
               ? <AppLink className="bb-button bb-home-cta" href={action.href}>{action.label}<AppIcon name="arrow" /></AppLink>
               : <button type="button" className="bb-button bb-home-cta" onClick={action.onClick}>{action.label}<AppIcon name="arrow" /></button>)}
+            {marketAvailable && <AppLink className="bb-button bb-button--secondary bb-home-cta" href="/market-dashboard">Market dashboard<AppIcon name="arrow" /></AppLink>}
           </div>
           {readNews && <a className="bb-home-jump" href="#latest-news" onClick={jumpToNews}>Latest news <span aria-hidden="true">↓</span></a>}
           <div className="bb-home-actions-end">
