@@ -51,12 +51,12 @@ class PlanLifecycleHttpTests {
         verifyNoInteractions(lifecycle, users);
         when(lifecycle.buyerNotifications(buyer, "org_a")).thenReturn(List.of(Map.of("notification_id", notification.toString(), "decision", "rejected")));
         when(lifecycle.unreadCount(buyer, "org_a")).thenReturn(1L);
-        mvc.perform(get(root + "/my-notifications").with(member("buyer", "org_a")).param("user_id", "attacker").param("clerk_org_id", "org_attacker"))
+        mvc.perform(get(root + "/my-notifications").with(member("officer", "org_a")).param("user_id", "attacker").param("clerk_org_id", "org_attacker"))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.unread_count").value(1)).andExpect(jsonPath("$.notifications[0].decision").value("rejected"));
-        mvc.perform(get(root + "/my-notifications").with(member("buyer", "org_b")))
+        mvc.perform(get(root + "/my-notifications").with(member("officer", "org_b")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.notifications").isEmpty());
-        mvc.perform(post(root + "/my-notifications/" + notification + "/seen").with(member("buyer", "org_a")))
+        mvc.perform(post(root + "/my-notifications/" + notification + "/seen").with(member("officer", "org_a")))
                 .andExpect(status().isNoContent()).andExpect(header().string("Cache-Control", "no-store"));
         verify(lifecycle).markSeen(notification, buyer, "org_a");
     }
@@ -65,16 +65,16 @@ class PlanLifecycleHttpTests {
         when(lifecycle.withdraw(eq(id), eq(buyer), eq("org_a"), any())).thenReturn(plan("withdrawn"));
         when(lifecycle.revise(id, buyer, "org_a")).thenReturn(new PurchasePlan(UUID.randomUUID(), buyer, BigDecimal.TEN, today.plusDays(10), today, "draft", null, id));
         when(lifecycle.recordPurchase(eq(id), eq(buyer), eq("org_a"), any())).thenReturn(plan("purchased"));
-        mvc.perform(post(root + "/" + id + "/withdraw").with(member("buyer", "org_a")).contentType("application/json")
+        mvc.perform(post(root + "/" + id + "/withdraw").with(member("officer", "org_a")).contentType("application/json")
                 .content("{\"reason\":\"Changed schedule\",\"clerk_org_id\":\"org_attacker\",\"user_id\":\"attacker\"}"))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.plan.status").value("withdrawn"))
                 .andExpect(jsonPath("$.plan.scenario_as_of_date").value(today.toString()));
         verify(lifecycle).withdraw(eq(id), eq(buyer), eq("org_a"), argThat(body -> "Changed schedule".equals(body.reason())));
-        mvc.perform(post(root + "/" + id + "/revise").with(member("buyer", "org_a")))
+        mvc.perform(post(root + "/" + id + "/revise").with(member("officer", "org_a")))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.plan.previous_plan_id").value(id.toString()))
                 .andExpect(header().string("Cache-Control", "no-store"));
-        mvc.perform(post(root + "/" + id + "/purchase").with(member("buyer", "org_a")).contentType("application/json")
+        mvc.perform(post(root + "/" + id + "/purchase").with(member("officer", "org_a")).contentType("application/json")
                 .content("{\"purchased_on\":\"2026-10-29\",\"supplier\":\"A\",\"quantity_mt\":5.25,\"price_usd_per_mt\":900.12,\"total_usd\":1,\"clerk_org_id\":\"org_attacker\"}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.plan.status").value("purchased"))
                 .andExpect(header().string("Cache-Control", "no-store"));
@@ -85,19 +85,19 @@ class PlanLifecycleHttpTests {
     @Test void domainErrorsHaveExpectedStatusAndFieldErrors() throws Exception {
         for (var status : List.of(org.springframework.http.HttpStatus.NOT_FOUND, org.springframework.http.HttpStatus.CONFLICT, org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT)) {
             when(lifecycle.withdraw(eq(id), eq(buyer), eq("org_a"), any())).thenThrow(new ApiException(status, "Reload or correct inputs", Map.of("reason", "Invalid reason")));
-            mvc.perform(post(root + "/" + id + "/withdraw").with(member("buyer", "org_a")))
+            mvc.perform(post(root + "/" + id + "/withdraw").with(member("officer", "org_a")))
                     .andExpect(status().is(status.value())).andExpect(jsonPath("$.detail").value("Reload or correct inputs"))
                     .andExpect(header().string("Cache-Control", "no-store"))
                     .andExpect(jsonPath("$.field_errors.reason").value("Invalid reason"));
         }
         doThrow(new ApiException(org.springframework.http.HttpStatus.NOT_FOUND, "Not found"))
                 .when(lifecycle).markSeen(notification, buyer, "org_b");
-        mvc.perform(post(root + "/my-notifications/" + notification + "/seen").with(member("buyer", "org_b"))).andExpect(status().isNotFound());
+        mvc.perform(post(root + "/my-notifications/" + notification + "/seen").with(member("officer", "org_b"))).andExpect(status().isNotFound());
     }
 
     @Test void malformedPurchaseFieldsReturn422WithoutCallingTheService() throws Exception {
         for (String body : List.of("{", "{\"purchased_on\":\"2026-02-31\"}", "{\"quantity_mt\":\"not-a-number\"}"))
-            mvc.perform(post(root + "/" + id + "/purchase").with(member("buyer", "org_a")).contentType("application/json").content(body))
+            mvc.perform(post(root + "/" + id + "/purchase").with(member("officer", "org_a")).contentType("application/json").content(body))
                     .andExpect(status().isUnprocessableContent()).andExpect(header().string("Cache-Control", "no-store"));
         verifyNoInteractions(lifecycle);
     }
@@ -107,16 +107,15 @@ class PlanLifecycleHttpTests {
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan("purchased")));
         when(lifecycle.purchase(id, "org_a")).thenReturn(Map.of("supplier", "A", "total_usd", new BigDecimal("9000")));
         when(lifecycle.revisions(id, "org_a")).thenReturn(List.of(UUID.randomUUID().toString()));
-        for (String role : List.of("buyer", "manager", "analyst"))
+        for (String role : List.of("officer", "manager", "admin"))
             mvc.perform(get(root + "/" + id + "/submission").with(member(role, "org_a")))
                     .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                     .andExpect(jsonPath("$.purchase.supplier").value("A"))
                     .andExpect(jsonPath("$.revision_plan_ids.length()").value(1));
-        mvc.perform(get(root + "/" + id + "/submission").with(member("admin", "org_a"))).andExpect(status().isForbidden());
-        for (String role : List.of("buyer", "manager", "analyst"))
+        for (String role : List.of("officer", "manager", "admin"))
             mvc.perform(get(root + "/" + id + "/submission").with(member(role, "org_b"))).andExpect(status().isNotFound());
         when(users.resolve("user_buyer", null)).thenReturn(UUID.randomUUID());
-        mvc.perform(get(root + "/" + id + "/submission").with(member("buyer", "org_a"))).andExpect(status().isNotFound());
+        mvc.perform(get(root + "/" + id + "/submission").with(member("officer", "org_a"))).andExpect(status().isNotFound());
         verify(lifecycle, never()).purchase(id, "org_b");
     }
 }

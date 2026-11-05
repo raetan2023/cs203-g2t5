@@ -58,6 +58,18 @@ public class PlanApprovalService {
         if (!selection.recommendation_id().equals(recommendation.recommendation_id())
                 || !selection.approval_fingerprint().equals(verified.get("approval_fingerprint")) || !today.equals(dates.today()))
             throw new ApiException(HttpStatus.CONFLICT, "The recommendation or forecast changed. Reload it and confirm your selection again.");
+        var decisions = jdbc.queryForList("""
+                select decision, action, run_id from plan_recommendation_decisions
+                where plan_id = ? and buyer_user_id = ? and clerk_org_id = ?
+                  and recommendation_id = ?
+                order by decided_at desc, decision_id desc limit 1""",
+                planId, owner, orgId, selection.recommendation_id());
+        if (decisions.isEmpty() || !"accept".equals(decisions.getFirst().get("decision"))
+                || !selection.run_id().equals(decisions.getFirst().get("run_id"))
+                || !recommendation.action().equals(decisions.getFirst().get("action"))) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Accept the current recommendation before submitting it for manager approval.");
+        }
         String snapshot;
         try { snapshot = mapper.writeValueAsString(Map.of("horizon_days", selection.horizon_days(), "analysis", verified)); }
         catch (Exception failure) { throw new IllegalStateException("The recommendation could not be saved.", failure); }
@@ -113,6 +125,16 @@ public class PlanApprovalService {
                     "decision", rs.getString("decision"), "comment", rs.getString("decision_comment"),
                     "manager_clerk_user_id", rs.getString("manager_clerk_user_id"), "manager_label", rs.getString("manager_label"),
                     "decided_at", rs.getTimestamp("decided_at").toInstant().toString()), planId, orgId);
+        return rows.isEmpty() ? null : rows.getFirst();
+    }
+
+    /** Called only after the controller authorizes the plan in the active organisation. */
+    public String buyerLabel(UUID planId, String orgId) {
+        var rows = jdbc.query("""
+                SELECT COALESCE(NULLIF(TRIM(u.email), ''), u.clerk_user_id) AS buyer_label
+                FROM purchase_plans p JOIN users u ON u.user_id = p.user_id
+                WHERE p.plan_id = ? AND p.clerk_org_id = ?
+                """, (rs, n) -> rs.getString("buyer_label"), planId, orgId);
         return rows.isEmpty() ? null : rows.getFirst();
     }
 

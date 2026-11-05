@@ -34,9 +34,8 @@ describe('Home primary action', () => {
   });
 
   it.each([
-    ['org:buyer', 'Go to your plans', '/purchase-plans'],
+    ['org:officer', 'Go to your plans', '/purchase-plans'],
     ['org:manager', 'Plans for approval', '/purchase-plans#approval-inbox'],
-    ['org:analyst', 'Market dashboard', '/market-dashboard'],
   ])('links %s to the matching page', (role, name, href) => {
     render(<HomePage displayName="Jordan" role={role} marketAvailable now={afternoon} />);
     expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
@@ -52,9 +51,8 @@ describe('Home primary action', () => {
   });
 
   it('falls back when the target is not available', () => {
-    expect(homeAction({ role: 'org:analyst', canReadPlans: true, marketAvailable: false })).toEqual({ label: 'View purchase plans', href: '/purchase-plans' });
-    expect(homeAction({ role: 'org:admin', canReadPlans: false, marketAvailable: true })).toBeNull();
-    expect(homeAction({ canReadPlans: false, marketAvailable: true })).toBeNull();
+    expect(homeAction({ role: 'org:admin', canReadPlans: false })).toBeNull();
+    expect(homeAction({ canReadPlans: false })).toBeNull();
   });
 });
 
