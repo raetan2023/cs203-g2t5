@@ -9,12 +9,12 @@
 .bb-home::before { top: 0; height: 260px; background: linear-gradient(180deg, color-mix(in srgb, var(--bb-canvas) 65%, transparent), transparent); }
 .bb-home::after { bottom: 0; height: max(440px, 55%); background: linear-gradient(0deg, color-mix(in srgb, var(--bb-canvas) 94%, transparent) 0%, color-mix(in srgb, var(--bb-canvas) 72%, transparent) 45%, transparent 100%); }
 
-.bb-home-content { box-sizing: border-box; width: 100%; max-width: var(--bb-page-max); margin-inline: auto; padding: 120px var(--bb-page-pad) var(--bb-space-10); display: flex; flex-direction: column; gap: var(--bb-space-7); }
+.bb-home-content { box-sizing: border-box; width: 100%; max-width: var(--bb-page-max); margin-inline: auto; padding: 120px var(--bb-page-pad) 40px; display: flex; flex-direction: column; gap: 28px; }
 .bb-home-intro { display: flex; flex-direction: column; gap: var(--bb-space-3); min-width: 0; }
 .bb-home-greeting { margin: 0; color: var(--bb-action); font-weight: 500; line-height: .92; letter-spacing: -.045em; text-transform: uppercase; white-space: nowrap; }
 .bb-home-greeting > span { display: block; }
 .bb-home-greeting .bb-home-name { margin-top: var(--bb-space-3); line-height: 1.08; letter-spacing: -.03em; }
-.bb-home-date { margin: 0; color: var(--bb-text-label); font-size: var(--bb-text-2xl); line-height: 24px; }
+.bb-home-date { margin: 0; color: var(--bb-text); font-size: 18px; line-height: 24px; } /* Home keeps its own sizes for now */
 
 .bb-home-actions { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--bb-space-6); }
 .bb-home-cta.bb-button { min-height: 52px; padding: 0 var(--bb-space-6); gap: 10px; border-radius: var(--bb-radius-card); font: inherit; font-size: var(--bb-text-xl); font-weight: 600; }
@@ -25,9 +25,9 @@ a.bb-home-quote { transition: border-color var(--bb-motion-fast) var(--bb-ease-o
 a.bb-home-quote:hover { border-color: var(--bb-border-control); background: color-mix(in srgb, var(--bb-canvas) 75%, transparent); }
 .bb-home-quote:focus-visible, .bb-home-cta:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 3px; }
 .bb-home-quote-text { display: flex; flex-direction: column; gap: 2px; }
-.bb-home-quote-label, .bb-home-quote-side, .bb-home-quote-unit { color: var(--bb-text-supporting); font-size: var(--bb-text-xs); line-height: 16px; font-weight: 400; }
+.bb-home-quote-label, .bb-home-quote-side, .bb-home-quote-unit { color: var(--bb-text-secondary); font-size: var(--bb-text-xs); line-height: 16px; font-weight: 400; }
 .bb-home-quote-message { font-size: var(--bb-text-md); line-height: 24px; color: var(--bb-text-secondary); }
-.bb-home-quote-price { font-size: var(--bb-text-3xl); line-height: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bb-home-quote-price { font-size: 20px; line-height: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .bb-home-spark { flex-shrink: 0; color: var(--bb-action); }
 .bb-home-quote-side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .bb-home-quote-link { color: var(--bb-action); }

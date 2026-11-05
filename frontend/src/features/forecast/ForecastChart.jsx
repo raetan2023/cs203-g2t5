@@ -11,6 +11,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { formatShortDate, formatDate, addDays } from './utils';
+import { colors } from '../../styles/theme';
 
 // Builds the chart series: observed history up to the anchor, then a forecast
 // point at the horizon, with an uncertainty cone (band) fanning out from the
@@ -51,15 +52,15 @@ function ForecastTooltip({ active, payload, label }) {
   const value = row.forecast != null && row.observed == null ? row.forecast : row.observed;
   const kind = row.observed != null ? 'Observed' : 'Forecast';
   return (
-    <div style={{ background: '#0c1524', border: '1px solid #1c2d46', borderRadius: 8, color: '#fff', fontSize: 12, padding: '8px 10px' }}>
-      <div style={{ color: '#7e8f9f', marginBottom: 4 }}>{formatDate(label)}</div>
+    <div style={{ background: colors.surface, border: `1px solid ${colors.borderSubtle}`, borderRadius: 8, color: colors.text, fontSize: 12, padding: '8px 10px' }}>
+      <div style={{ color: colors.textTertiary, marginBottom: 4 }}>{formatDate(label)}</div>
       {value != null && (
         <div style={{ fontWeight: 600 }}>
           {kind}: ${Math.round(value).toLocaleString()} USD/MT
         </div>
       )}
       {band && band[0] !== band[1] && (
-        <div style={{ color: '#9cb1c9', marginTop: 2 }}>
+        <div style={{ color: colors.textSecondary, marginTop: 2 }}>
           Range: ${Math.round(band[0]).toLocaleString()} to ${Math.round(band[1]).toLocaleString()}
         </div>
       )}
@@ -73,8 +74,8 @@ function AsOfLabel({ viewBox }) {
   const h = 18;
   return (
     <g transform={`translate(${x - w / 2}, ${y - 2})`}>
-      <rect width={w} height={h} rx={4} fill="#071926" stroke="#00d4c8" strokeWidth={1} />
-      <text x={w / 2} y={h / 2 + 4} textAnchor="middle" fill="#00d4c8" fontSize="10" fontWeight="600" fontFamily="sans-serif">
+      <rect width={w} height={h} rx={4} fill={colors.surface} stroke={colors.action} strokeWidth={1} />
+      <text x={w / 2} y={h / 2 + 4} textAnchor="middle" fill={colors.action} fontSize="12" fontWeight="500" fontFamily="inherit">
         As of
       </text>
     </g>
@@ -88,17 +89,17 @@ export default function ForecastChart({ data }) {
     <div style={{ width: '100%', height: 280, marginTop: 14 }}>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={series} margin={{ top: 22, right: 28, left: 10, bottom: 5 }}>
-          <CartesianGrid stroke="#152234" strokeDasharray="3 3" vertical={false} />
+          <CartesianGrid stroke={colors.borderSubtle} strokeDasharray="3 3" vertical={false} />
           <XAxis
             dataKey="date"
             tickFormatter={formatShortDate}
-            tick={{ fontSize: 11, fill: '#7e8f9f' }}
-            stroke="#1c2d44"
+            tick={{ fontSize: 12, fill: colors.textTertiary }}
+            stroke={colors.borderSubtle}
           />
           <YAxis
             tickFormatter={(v) => `$${v}`}
-            tick={{ fontSize: 11, fill: '#7e8f9f' }}
-            stroke="#1c2d44"
+            tick={{ fontSize: 12, fill: colors.textTertiary }}
+            stroke={colors.borderSubtle}
             domain={['dataMin - 20', 'dataMax + 20']}
             allowDecimals={false}
           />
@@ -109,7 +110,7 @@ export default function ForecastChart({ data }) {
             type="linear"
             dataKey="band"
             stroke="none"
-            fill="#00d4c8"
+            fill={colors.action}
             fillOpacity={0.16}
             connectNulls
             isAnimationActive={false}
@@ -118,7 +119,7 @@ export default function ForecastChart({ data }) {
           <Line
             type="monotone"
             dataKey="observed"
-            stroke="#ffffff"
+            stroke={colors.text}
             strokeWidth={2.5}
             dot={false}
             connectNulls={false}
@@ -128,7 +129,7 @@ export default function ForecastChart({ data }) {
           <Line
             type="linear"
             dataKey="forecast"
-            stroke="#00d4c8"
+            stroke={colors.action}
             strokeWidth={2.5}
             strokeDasharray="5 4"
             dot={false}
@@ -136,7 +137,7 @@ export default function ForecastChart({ data }) {
             isAnimationActive={false}
           />
 
-          <ReferenceLine x={data.as_of_date} stroke="#00d4c8" strokeDasharray="4 4" strokeWidth={1.2} strokeOpacity={0.7} label={<AsOfLabel />} />
+          <ReferenceLine x={data.as_of_date} stroke={colors.action} strokeDasharray="4 4" strokeWidth={1.2} strokeOpacity={0.7} label={<AsOfLabel />} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

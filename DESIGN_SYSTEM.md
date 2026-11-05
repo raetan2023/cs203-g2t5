@@ -5,6 +5,27 @@ and its inherited `../oris/oris.css`. This is a source-based specification, not 
 completed browser audit. Application code was not changed for this extraction.
 Read alongside `frontend/AGENTS.md` and `docs/frontend-design-guidelines.md`.
 
+## Current system (approved 2026-11-05)
+
+This section overrides anything older below, which is kept as history.
+
+| Group | Decision |
+| --- | --- |
+| Typeface | IBM Plex Sans across the whole app, self-hosted. No mono. Replaces Segoe UI, Geist and Inter |
+| Type | Roles `--bb-type-*`; sizes 12, 14, 16, 24, 32, 40; weights 400, 500, 600. Page title 24 |
+| Surfaces | canvas `#0d0c0b`, surface `#1a1918`, input `#242220`, overlay `#2d2a27` |
+| Borders | subtle `#3a3631`, control `#756e65` (at least 3:1 on surface and input) |
+| Text | `#f0e6d2`, secondary `#b5ac9b`, tertiary `#958e7e`, disabled `#6b665c`. Only `#171818` goes on cream |
+| Action and focus | cream `#e8dcc4`, hover and focus `#f4e8d1`. No separate accent colour: a teal accent was tried and dropped |
+| Status | success `#9ec48a` on `#2c3128`, warning `#e2b35c` on `#362f22`, danger `#ee8c7c` on `#382926`, info `#94aed0` on `#2b2e32`, neutral secondary text on `#302e2a` |
+| Price | up shares danger, down shares success, so colour means good or bad for the buyer. Always with an arrow, sign or word |
+| Cards | Only the answer, the panel holding the main action, and list items you open. Radius 12 |
+| Controls | Radius 6, 44px tall |
+| Spacing | 4, 8, 12, 16, 20, 24, 32, 48, 64 |
+| Navigation | Top bar on every page |
+
+`frontend/DESIGN.md` has the detail for each group.
+
 ## Semantic colours
 
 Names below describe the current shared palette, revised to light beige as requested.
