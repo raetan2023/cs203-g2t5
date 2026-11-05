@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearch } from '../../app/router';
-import { BuyerDecisions } from './components/BuyerDecisions';
+import { useBuyerDecisions } from './components/BuyerDecisions';
 import { PreviousPlanNote } from './components/PreviousPlanNote';
 import { ApprovalInbox } from './components/ApprovalInbox';
 import { ManagerTeamOverview } from './components/ManagerTeamOverview';
@@ -29,6 +29,7 @@ export interface PurchasePlanPageProps {
 }
 
 export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, canEdit = true, isManager = false }: PurchasePlanPageProps) {
+  const decisions = useBuyerDecisions();
   const [state, setState] = useState<PageState>({ mode: 'loading' });
   const [plans, setPlans] = useState<PurchasePlan[]>([]);
   const [attempt, setAttempt] = useState(0);
@@ -175,12 +176,17 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
         {canEdit && <div className="pp-create">
           {/* Fades out on its own (CSS); hovering holds it. The role="status" above announces it. */}
           {notice && <span className="pp-notice" onAnimationEnd={() => setNotice(null)}><Icon name="check" />{notice.text}</span>}
+          <PlanButton variant="secondary" disabled={writing || state.mode === 'form' || showDelete} onClick={() => {
+            clearFeedback();
+            invalidate.current?.();
+            if (decisions?.service === service) decisions.refresh();
+            setAttempt(value => value + 1);
+          }}>Refresh</PlanButton>
           <PlanButton ref={createRef} disabled={writing || state.mode !== 'view'} onClick={() => {
             clearFeedback(); setState({ mode: 'form', plan: null });
           }}><Icon name="plus" />Create plan</PlanButton>
         </div>}
       </header>
-      {canEdit && service.buyerNotifications && <BuyerDecisions service={service} />}
       {isManager && service.notifications && <ApprovalInbox service={service} />}
       {isManager && service.managerOverview && <ManagerTeamOverview service={service} />}
       {writing && state.mode === 'view' && <p role="status">Finishing your previous plan change before another edit can be made.</p>}

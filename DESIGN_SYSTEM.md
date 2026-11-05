@@ -40,10 +40,21 @@ owning phase decides them (see `docs/UI_REVAMP_PLAN.md` §4.1 and §6).
 
 | Token | Decided in | Notes |
 | --- | --- | --- |
-| `price-up` / `price-up-surface`, `price-down` / `price-down-surface`, `price-flat` | Phase 5 (recommendations) | Direction, not good/bad: a rise is unfavourable for a fuel buyer. Always paired with a sign, arrow or word |
+| `price-up-surface`, `price-down-surface` | Phase 5 (recommendations) | Text values were set provisionally on 2026-11-04 (see below); surfaces remain undecided |
 | `success-text` / `success-surface` | Phase 4 (purchase plans) | May stay neutral text plus a check icon |
-| `warning-text` / `warning-surface` | Phase 5 | Stale/unavailable data; must differ from error by more than hue |
-| `chart-grid`, `chart-axis`, `chart-series-1..n`, `chart-forecast`, `chart-band` | Phase 6 (dashboard) | Solid actual vs dashed forecast; confidence bands subdued and labelled |
+| `chart-series-2..n`, `chart-forecast`, `chart-band` | Day 4 dataviz | Solid actual vs dashed forecast; confidence bands subdued and labelled |
+
+### Added 2026-11-04 (Day 2 token set)
+
+Implemented in `frontend/src/styles/tokens.css`; `frontend/DESIGN.md` is the maintained reference.
+
+| Token | Value | Notes |
+| --- | --- | --- |
+| `--bb-text-xs` … `--bb-text-7xl` | 12, 13, 14, 15, 16, 18, 20, 24, 28, 32, 40px | One type scale for every stylesheet; 12px is the floor (the market page previously went down to 8px) |
+| `--bb-radius-pill` | 999px | Status badges and progress bars |
+| `--bb-warning-text` / `-surface` / `-border` | `#e2c48a` / `#211e19` / `#6a542f` | Already in use since Phase 5; stale, unavailable or unverified data |
+| `--bb-price-up` / `--bb-price-down` / `--bb-price-flat` | `#f2849e` / `#8fd3a4` / `#b5ac9b` | Provisional. Up is dearer for a fuel buyer. Each ≥ 7:1 on canvas, surface and input. Always paired with an arrow, sign or word. Day 4 dataviz may revise the values |
+| `--bb-chart-grid` / `-axis` / `-series-1` / `-cursor` | aliases of border-subtle, text-secondary, action, border-control | Provisional. Recharts reads them from `theme.ts` `chart` |
 
 ### Contrast check — final beige revision (2026-10-26)
 
