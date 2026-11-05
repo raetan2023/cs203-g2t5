@@ -65,7 +65,7 @@ public record OrganisationAccess(String organisationId, Role role) {
     }
 
     public boolean ownPlansOnly() { return role == Role.BUYER; }
-    public boolean canReadPlans() { return role != Role.ADMIN; }
+    public boolean canReadPlans() { return true; }
     public boolean canWritePlans() { return role == Role.BUYER; }
     public String roleKey() { return "org:" + role.name().toLowerCase(java.util.Locale.ROOT); }
 }

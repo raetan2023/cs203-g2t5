@@ -16,7 +16,7 @@ class OrganisationAccessTests {
             assertEquals("org_a", access.organisationId());
             assertEquals("org:" + role, access.roleKey());
             assertEquals(role.equals("buyer"), access.canWritePlans());
-            assertEquals(!role.equals("admin"), access.canReadPlans());
+            assertTrue(access.canReadPlans());
         }
     }
     @Test void supportsExplicitLegacyOrganisationClaims() {

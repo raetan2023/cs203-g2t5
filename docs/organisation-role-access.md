@@ -42,10 +42,10 @@ organisation and membership role exposed by Clerk's `useAuth` and `useOrganizati
 | `org:buyer` | Own plans in the active organisation | Own drafts in the active organisation |
 | `org:manager` | All assigned plans in the active organisation | Denied |
 | `org:analyst` | All assigned plans in the active organisation | Denied |
-| `org:admin` | Denied by default; membership administration does not imply business-data access | Denied |
+| `org:admin` | All assigned plans in the active organisation, read-only | Denied |
 
-The admin policy deliberately grants no automatic purchase-plan privileges. Admins
-can still manage organisation members through Clerk's organisation UI. Buyers can
+Admins have explicit read-only plan oversight and manage members through Clerk.
+Admin membership does not grant buyer or manager write privileges. Buyers can
 submit drafts, and managers can read their organisation approval inbox. Managers can approve/reject a submitted saved recommendation, with a required
 rejection reason and a final audit record. Roles do not inherit privileges from each other.
 
@@ -68,21 +68,20 @@ roles. It returns `organisation_id`, `role`, `can_read_plans`, `can_write_plans`
 `plan_scope` (`own`, `organisation` or `none`) with `Cache-Control: no-store`.
 The frontend verifies this response against Clerk's selected organisation/role
 before loading private pages, then hides write actions for read-only roles and
-blocks admin plan URLs. UI gating complements, not replaces, backend enforcement.
+allows read-only admin plan URLs. UI gating complements, not replaces, backend enforcement.
 Organisation/role changes reset page state and invalidate old adapters.
 
 ## Shared forecast access
 
 `GET /api/v1/forecast?horizon_days=7` requires a verified Clerk session with an
-active organisation and one of `org:buyer`, `org:manager` or `org:analyst`. Admin
-membership is denied, consistent with the plan business-data policy. Missing or
+active organisation and one of `org:buyer`, `org:manager`, `org:analyst` or `org:admin`. Missing or
 invalid sessions return 401; missing, unsupported, malformed or conflicting
 organisation/role claims return 403. A shared API key alone does not grant access.
 
 Forecast publications remain shared market information: this rule verifies active
 membership and role, not ownership of a separate organisation-specific forecast.
-No database migration is required. Role permissions still need team agreement if
-the intended admin policy differs. Forecast data, horizon validation and response
+No database migration is required. Admin read access follows the organisation
+oversight policy. Forecast data, horizon validation and response
 format are unchanged.
 
 ## Database rollout and legacy plans
@@ -118,8 +117,7 @@ npm run build
 ```
 
 The Clerk integration tests mock the SDK and cover sign-in, selection, all four
-roles, server-confirmed permissions, read-only manager/analyst views, admin URL
-restrictions, unknown roles, stale responses and delayed token requests. Backend
+roles, server-confirmed permissions, read-only manager/analyst/admin views and admin status filters, unknown roles, stale responses and delayed token requests. Backend
 HTTP tests exercise role denials, scoped reads/writes, tampered request fields and
 multiple plans. H2 PostgreSQL-mode tests execute organisation/owner read and delete
 queries with two organisations and NULL legacy rows; PostgreSQL INSERT/UPDATE

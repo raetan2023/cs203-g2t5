@@ -115,7 +115,8 @@ it('leads a decided request with its status, who decided, the comment and the ne
   expect(within(status).getByRole('heading', { name: 'Recommendation approved' })).toBeVisible();
   expect(within(status).getByText(/Decided by Procurement Manager/)).toBeVisible();
   expect(within(status).getByText('Within budget')).toBeVisible();
-  expect(within(status).getByText(/record the actual purchase/)).toBeVisible();
+  expect(within(status).getByText(/Read-only access/)).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Record purchase' })).not.toBeInTheDocument();
   expect(within(screen.getByRole('complementary', { name: 'Saved recommendation summary' })).getByText('Wait')).toBeVisible();
   expect(screen.getByRole('heading', { name: 'Plan recommendation · WAIT' })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Approve recommendation' })).not.toBeInTheDocument();
