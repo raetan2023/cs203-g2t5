@@ -28,10 +28,10 @@ class AdminAccessHttpTests {
         for (String path : List.of("/api/v1/admin/status", "/api/v1/admin/retraining")) {
             mvc.perform(get(path)).andExpect(status().isUnauthorized());
             mvc.perform(get(path).header("X-API-Key", "mgo_public_demo_2026")).andExpect(status().isUnauthorized());
-            for (String role : List.of("buyer", "manager", "analyst", "unknown"))
+            for (String role : List.of("officer", "manager", "analyst", "unknown"))
                 mvc.perform(get(path).with(member("org_a", role))).andExpect(status().isForbidden());
         }
-        for (String role : List.of("buyer", "manager", "analyst", "unknown"))
+        for (String role : List.of("officer", "manager", "analyst", "unknown"))
             mvc.perform(post("/api/v1/admin/retraining").with(member("org_a", role)).contentType("application/json")
                     .content("{\"request_id\":\"" + UUID.randomUUID() + "\"}")).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/admin/retraining")).andExpect(status().isUnauthorized());

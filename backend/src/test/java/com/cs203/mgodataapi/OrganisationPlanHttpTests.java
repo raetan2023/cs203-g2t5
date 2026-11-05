@@ -49,19 +49,19 @@ class OrganisationPlanHttpTests {
         mvc.perform(get("/api/v1/purchase-plans")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/v1/organisation").with(jwt().jwt(t -> t.subject("user").claim("app_role", "admin"))))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.detail").exists());
-        for (String role : List.of("member", "unknown")) {
+        for (String role : List.of("member", "buyer", "analyst", "unknown")) {
             mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", role))).andExpect(status().isForbidden());
         }
         verifyNoInteractions(plans, users);
     }
-    @Test void capabilitiesReflectAllFourRolesWithReadOnlyAdminAccess() throws Exception {
-        for (String role : List.of("buyer", "manager", "analyst", "admin")) {
+    @Test void capabilitiesReflectSupportedRolesWithReadOnlyAdminAccess() throws Exception {
+        for (String role : List.of("officer", "manager", "admin")) {
             mvc.perform(get("/api/v1/organisation").with(membership("org_a", role)))
                     .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                     .andExpect(jsonPath("$.organisation_id").value("org_a"))
                     .andExpect(jsonPath("$.role").value("org:" + role))
                     .andExpect(jsonPath("$.can_read_plans").value(true))
-                    .andExpect(jsonPath("$.can_write_plans").value(role.equals("buyer")));
+                    .andExpect(jsonPath("$.can_write_plans").value(role.equals("officer")));
         }
         verifyNoInteractions(plans, users);
     }
@@ -69,10 +69,10 @@ class OrganisationPlanHttpTests {
         var first = plan(id, owner);var second = plan(UUID.randomUUID(), owner);
         when(plans.findByUser(owner, "org_a")).thenReturn(List.of(first, second));
         when(plans.insert(owner, new BigDecimal("100"), deadline, today, "org_a")).thenReturn(first, second);
-        mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", "buyer")))
+        mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", "officer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.plans.length()").value(2));
         for (int i = 0; i < 2; i++) {
-            mvc.perform(post("/api/v1/purchase-plans").with(membership("org_a", "buyer"))
+            mvc.perform(post("/api/v1/purchase-plans").with(membership("org_a", "officer"))
                     .contentType(MediaType.APPLICATION_JSON).content(input)).andExpect(status().isCreated());
         }
         verify(plans, times(2)).insert(owner, new BigDecimal("100"), deadline, today, "org_a");
@@ -81,12 +81,12 @@ class OrganisationPlanHttpTests {
     @Test void buyerCannotReadUpdateDeleteOrAnalyzeTheSameOwnersPlanInAnotherOrganisation() throws Exception {
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(plan(id, owner)));
         String path = "/api/v1/purchase-plans/" + id;
-        mvc.perform(get(path).with(membership("org_a", "buyer"))).andExpect(status().isOk());
-        mvc.perform(get(path).with(membership("org_b", "buyer"))).andExpect(status().isNotFound());
-        mvc.perform(put(path).with(membership("org_b", "buyer")).contentType(MediaType.APPLICATION_JSON).content(input))
+        mvc.perform(get(path).with(membership("org_a", "officer"))).andExpect(status().isOk());
+        mvc.perform(get(path).with(membership("org_b", "officer"))).andExpect(status().isNotFound());
+        mvc.perform(put(path).with(membership("org_b", "officer")).contentType(MediaType.APPLICATION_JSON).content(input))
                 .andExpect(status().isNotFound());
-        mvc.perform(delete(path).with(membership("org_b", "buyer"))).andExpect(status().isNotFound());
-        mvc.perform(get("/api/v1/purchase-plans/cost-impact").with(membership("org_b", "buyer"))
+        mvc.perform(delete(path).with(membership("org_b", "officer"))).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/purchase-plans/cost-impact").with(membership("org_b", "officer"))
                 .param("plan_id", id.toString()).param("quantity_mt", "100")
                 .param("purchase_deadline", deadline.toString()).param("scenario_as_of_date", today.toString()))
                 .andExpect(status().isNotFound());
@@ -94,10 +94,10 @@ class OrganisationPlanHttpTests {
         verify(plans).update(id, owner, new BigDecimal("100"), deadline, today, "org_b");
         verify(plans).delete(id, owner, "org_b");
     }
-    @Test void managersAndAnalystsReadOrganisationPlansButCannotMutateThem() throws Exception {
+    @Test void managersAndAdminsReadOrganisationPlansButCannotMutateThem() throws Exception {
         when(plans.findByOrganisation("org_a")).thenReturn(List.of(plan(id, colleague)));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan(id, colleague)));
-        for (String role : List.of("manager", "analyst", "admin")) {
+        for (String role : List.of("manager", "admin")) {
             mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", role)))
                     .andExpect(status().isOk()).andExpect(jsonPath("$.plans[0].plan_id").value(id.toString()));
             mvc.perform(get("/api/v1/purchase-plans/" + id).with(membership("org_a", role))).andExpect(status().isOk());
@@ -120,7 +120,7 @@ class OrganisationPlanHttpTests {
                 PlanAnalysisProvider.Result.unavailable("missing_forecast", "No current forecast")));
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(plan(id, owner)));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan(id, colleague)));
-        for (String role : List.of("buyer", "manager", "analyst", "admin")) {
+        for (String role : List.of("officer", "manager", "admin")) {
             mvc.perform(get("/api/v1/purchase-plans/recommendation").with(membership("org_a", role))
                     .param("plan_id", id.toString()).param("quantity_mt", "100")
                     .param("purchase_deadline", deadline.toString()).param("scenario_as_of_date", today.toString())

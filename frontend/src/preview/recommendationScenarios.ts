@@ -115,7 +115,7 @@ export function createScenarioRecommendationService(scenario: RecommendationScen
 }
 
 /** Preview buyer: can write plans, so the decision rail offers "Submit for approval". */
-export const PREVIEW_BUYER: OrganisationPermissions = { organisation_id: 'preview-organisation', role: 'org:buyer', can_read_plans: true, can_write_plans: true, plan_scope: 'own' };
+export const PREVIEW_BUYER: OrganisationPermissions = { organisation_id: 'preview-organisation', role: 'org:officer', can_read_plans: true, can_write_plans: true, plan_scope: 'own' };
 
 /** Preview manager: reviews submitted requests and cannot edit plans. */
 export const PREVIEW_MANAGER: OrganisationPermissions = { ...PREVIEW_BUYER, role: 'org:manager', can_write_plans: false, plan_scope: 'organisation' };

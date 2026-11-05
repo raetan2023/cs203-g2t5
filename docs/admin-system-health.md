@@ -17,7 +17,7 @@ Clerk's modal. Preview environments without an embedded profile use that action
 as a fallback.
 No duplicate membership database or server-side Clerk secret is introduced.
 
-An expandable role reference explains Admin, Buyer, Procurement Manager and Analyst.
+An expandable role reference explains Admin, Procurement Officer and Procurement Manager.
 Other roles cannot access the admin page or navigation. Signed-out visitors go
 to sign-in. Switching organisations uses the new active organisation context.
 Admins have read-only organisation-wide plan access, including saved recommendations,

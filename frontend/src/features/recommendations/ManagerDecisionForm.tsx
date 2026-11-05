@@ -80,7 +80,7 @@ export function ManagerDecisionForm({ planId, fingerprint, service, onDecided, o
   const title = success ? `Plan ${success}` : otherDecision ? 'Plan already decided' : 'Approve plan';
   return <section className="rec-manager-decision" aria-label="Manager review">
     <h3>Manager review</h3>
-    <p>Review the saved recommendation. The buyer sees your decision and comment.</p>
+    <p>Review the saved recommendation. The plan owner sees your decision and comment.</p>
     <div className="rec-approval-actions" hidden={open}>
       <button className="bb-button" onClick={() => show('approved')}>Approve recommendation</button>
       <button className="bb-button bb-button--secondary" onClick={() => show('rejected')}>Reject recommendation</button>
@@ -101,7 +101,7 @@ export function ManagerDecisionForm({ planId, fingerprint, service, onDecided, o
         <button className="md-close" aria-label="Close review" disabled={busy} onClick={close}>×</button></header>
       {busy && <div className="md-progress" role="status">Saving decision…</div>}
       {success ? <div className="md-success" role="status"><span><Icon name={success === 'approved' ? 'check' : 'cross-circle'} /></span><h3>Plan {success}</h3>
-        <p>The decision and comment have been saved.</p><p>The buyer can see the decision on their plan.</p></div>
+        <p>The decision and comment have been saved.</p><p>The plan owner can see the decision on their plan.</p></div>
       : <div className="md-body">
         {conflict && <div className="md-notice" role="alert"><strong>{otherDecision ? 'Already decided by another manager' : 'This request has changed'}</strong>
           <p>{otherDecision ? `${otherDecision.decision === 'approved' ? 'Approved' : 'Rejected'} by ${otherDecision.manager_label} · ${decisionTime(otherDecision.decided_at)}. This decision is final.` : error}</p>
@@ -114,17 +114,17 @@ export function ManagerDecisionForm({ planId, fingerprint, service, onDecided, o
             <div className="md-range-labels"><span>− {usd(Math.max(0, -cost.difference_total.lower))} possible saving</span><span>+ {usd(Math.max(0, cost.difference_total.upper))} possible increase</span></div>
             <p className="md-cost-note">Forecast impact versus the saved reference; not realised savings.</p></>}
         </div>
-        <dl className="md-facts"><div><dt>Buyer</dt><dd>{buyerLabel ?? 'Buyer account unavailable'}</dd></div>
+        <dl className="md-facts"><div><dt>Procurement Officer</dt><dd>{buyerLabel ?? 'Plan owner unavailable'}</dd></div>
           <div><dt>Buy by</dt><dd className={remaining !== undefined && remaining <= 2 ? 'md-deadline' : undefined}>{deadline ? dayDate(deadline) : 'Unavailable'}{remaining !== undefined && <span>{remaining < 0 ? `overdue by ${Math.abs(remaining)} days` : remaining === 0 ? 'today' : `in ${remaining} ${remaining === 1 ? 'day' : 'days'}`}</span>}</dd></div>
           <div><dt>Reference</dt><dd>{reference ? <>USD {reference.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/MT<span>Singapore MGO · {dayDate(reference.observation_date)}</span></> : 'Unavailable'}</dd></div>
         </dl>
         <button className="md-detail-link" disabled={busy} onClick={close}>View full recommendation →</button>
         <div className="md-comment"><label htmlFor={`${id}-comment`}>{choice === 'rejected' ? 'Rejection reason (required)' : 'Approval comment (optional)'}</label>
-          <textarea ref={field} id={`${id}-comment`} placeholder="Add context for the buyer" rows={4} maxLength={2000} value={comment} disabled={footerDisabled} aria-invalid={invalid || undefined} aria-describedby={invalid ? `${id}-validation` : undefined}
+          <textarea ref={field} id={`${id}-comment`} placeholder="Add context for the plan owner" rows={4} maxLength={2000} value={comment} disabled={footerDisabled} aria-invalid={invalid || undefined} aria-describedby={invalid ? `${id}-validation` : undefined}
             required={choice === 'rejected'} onChange={event => { setComment(event.target.value); setInvalid(false); }} />
-          {invalid && <p id={`${id}-validation`} className="md-validation" role="alert">{comment.trim().length > 2000 ? 'Use at most 2000 characters.' : 'Add a reason — the buyer needs why the plan was rejected.'}</p>}
+          {invalid && <p id={`${id}-validation`} className="md-validation" role="alert">{comment.trim().length > 2000 ? 'Use at most 2000 characters.' : 'Add a reason — explain why the plan was rejected.'}</p>}
         </div>
-        <p className="md-buyer-note">The buyer sees this with your decision.</p>
+        <p className="md-buyer-note">The plan owner sees this with your decision.</p>
       </div>}
       <footer className="md-footer">{success ? <button className="md-button md-button--primary" onClick={close}>Back to plan</button>
         : conflict ? <button className="md-button md-button--primary" disabled={busy} onClick={() => { setOpen(false); onRefresh(); }}>Reload request</button>

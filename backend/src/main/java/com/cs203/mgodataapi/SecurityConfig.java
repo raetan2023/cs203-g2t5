@@ -43,30 +43,30 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(ADMIN))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/organisation").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST, ADMIN))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER, MANAGER, ADMIN))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/approval-notifications", "/api/v1/purchase-plans/manager-overview").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(MANAGER))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/my-notifications").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/withdraw", "/api/v1/purchase-plans/*/revise",
                                 "/api/v1/purchase-plans/*/purchase", "/api/v1/purchase-plans/my-notifications/*/seen").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/decision").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(MANAGER))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/submit").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans", "/api/v1/purchase-plans/**").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST, ADMIN))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER, MANAGER, ADMIN))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER))))
                         .requestMatchers(HttpMethod.PUT, "/api/v1/purchase-plans", "/api/v1/purchase-plans/*").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER))))
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/purchase-plans", "/api/v1/purchase-plans/*").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/forecast").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST, ADMIN))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER, MANAGER, ADMIN))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/recommendation-decision").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER))))
                         .anyRequest().denyAll())
                 // Set on both: the resource server answers a rejected token, while the
                 // outer handler answers a request that carries no token at all.

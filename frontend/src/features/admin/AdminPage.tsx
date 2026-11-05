@@ -33,10 +33,9 @@ export function AdminPage({ organisationName, management, onManageOrganisation }
         <caption>Access within your organisation</caption>
         <thead><tr><th scope="col">Role</th><th scope="col">Responsibilities</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Buyer</th><td>Create plans, submit approval requests, withdraw requests and record purchases.</td></tr>
+          <tr><th scope="row">Procurement Officer</th><td>Create plans, submit approval requests, withdraw requests and record purchases.</td></tr>
           <tr><th scope="row">Procurement Manager</th><td>Oversee team plans and exposure, and approve or reject submitted requests with comments.</td></tr>
           <tr><th scope="row">Admin</th><td>Manage members, invitations, roles and settings. View organisation purchase plans without changing them.</td></tr>
-          <tr><th scope="row">Analyst</th><td>View organisation plans and market information with read-only access.</td></tr>
         </tbody>
       </table></div>
     </details>

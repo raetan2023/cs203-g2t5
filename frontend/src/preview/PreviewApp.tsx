@@ -23,7 +23,7 @@ const examples = {
   'plans-decisions': 'Purchase plans - every approval state',
   'rec-ready': 'Recommendation - legacy fixture, no horizon fits', 'rec-loading': 'Recommendation - loading', 'rec-error': 'Recommendation - fails once', 'rec-unavailable': 'Recommendation - unavailable', 'rec-missing': 'Recommendation - missing forecast', 'rec-unsupported': 'Recommendation - unsupported context',
   'rec-empty': 'Recommendation - no saved plan',
-  login: 'Sign in', signup: 'Create account', home: 'Home - buyer', 'home-manager': 'Home - manager', 'home-analyst': 'Home - analyst', 'home-admin': 'Home - admin',
+  login: 'Sign in', signup: 'Create account', home: 'Home - procurement officer', 'home-manager': 'Home - manager', 'home-admin': 'Home - admin',
   'home-price-error': 'Home - price unavailable', 'home-loading': 'Home loading (8 seconds)',
   'session-error': 'Session load fails once', 'login-error': 'Sign-in fails once', 'signup-error': 'Signup fails once', 'logout-error': 'Sign-out fails once',
   multiple: 'Purchase plans - multiple', empty: 'Purchase plans - empty', saved: 'Purchase plans - saved', loading: 'Plan loading (8 seconds)',
@@ -37,7 +37,7 @@ const recommendationScenarios: Partial<Record<Example, RecommendationScenario>> 
 const approvalStarts: Partial<Record<Example, 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased'>> = { 'rec-awaiting': 'submitted', 'rec-review': 'submitted', 'rec-approved': 'approved', 'rec-rejected': 'rejected', 'rec-withdrawn': 'withdrawn', 'rec-purchased': 'purchased' };
 const decisionPlans = previewDecisionPlans();
 const homeAccess: Partial<Record<Example, OrganisationPermissions>> = { home: PREVIEW_BUYER, 'home-price-error': PREVIEW_BUYER, 'home-manager': PREVIEW_MANAGER,
-  'home-analyst': { ...PREVIEW_MANAGER, role: 'org:analyst' }, 'home-admin': { ...PREVIEW_BUYER, role: 'org:admin', can_read_plans: false, can_write_plans: false, plan_scope: 'none' } };
+  'home-admin': { ...PREVIEW_BUYER, role: 'org:admin', can_read_plans: false, can_write_plans: false, plan_scope: 'none' } };
 /** Synthetic preview price; the app reads SGP_MGO_OBSERVED from /api/v1/market/stored. */
 const PREVIEW_QUOTE: MgoQuote = { value: 1351.5, unit: 'USD/MT', currency: 'USD', changeAbs: 4.5, changePct: 0.33, observedDate: '2025-10-22',
   history: [1238, 1241, 1252, 1247, 1262, 1270, 1281, 1302, 1298, 1314, 1325, 1312, 1322, 1326, 1317, 1342, 1335, 1344, 1352, 1347, 1351.5] };

@@ -10,11 +10,11 @@ function setup(role: string, signedIn = true) {
   const manage = vi.fn();
   render(<App auth={createMockAuthService({ user: signedIn ? DEMO_USER : null, delayMs: 0 })}
     scenarioDate="2026-11-04" createPlanService={() => createMockPlanService({ delayMs: 0 })}
-    planAccess={{ organisation_id: 'org_a', role, can_read_plans: true, can_write_plans: role === 'org:buyer', plan_scope: role === 'org:buyer' ? 'own' : 'organisation' }}
+    planAccess={{ organisation_id: 'org_a', role, can_read_plans: true, can_write_plans: role === 'org:officer', plan_scope: role === 'org:officer' ? 'own' : 'organisation' }}
     onManageOrganisation={manage} />);
   return { manage };
 }
-it.each(['org:buyer', 'org:manager', 'org:analyst'])('blocks direct admin URLs and navigation for %s', async role => {
+it.each(['org:officer', 'org:manager'])('blocks direct admin URLs and navigation for %s', async role => {
   setup(role);
   expect(await screen.findByRole('heading', { name: 'Admin access required' })).toBeVisible();
   await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
@@ -33,17 +33,17 @@ it('redirects a signed-out admin URL to sign-in without making admin requests', 
   expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeVisible();
 });
 
-it.each(['org:admin', 'org:manager', 'org:analyst'])('hides buyer history and explains direct history links for %s', async role => {
+it.each(['org:admin', 'org:manager'])('hides buyer history and explains direct history links for %s', async role => {
   window.history.replaceState(null, '', '/purchase-plans/decisions');
   setup(role);
-  expect(await screen.findByRole('heading', { name: 'Buyer decision history' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: 'Procurement officer decision history' })).toBeVisible();
   expect(screen.getByRole('link', { name: 'View purchase plans' })).toHaveAttribute('href', '/purchase-plans');
   await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
   expect(screen.queryByRole('link', { name: 'Decision history' })).not.toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Purchase plans' })).toBeVisible();
 });
 it('keeps decision history navigation available to buyers', async () => {
-  setup('org:buyer');
+  setup('org:officer');
   await screen.findByRole('heading', { name: 'Admin access required' });
   await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
   expect(screen.getByRole('link', { name: 'Decision history' })).toHaveAttribute('href', '/purchase-plans/decisions');
