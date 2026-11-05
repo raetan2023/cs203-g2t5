@@ -240,8 +240,8 @@ describe('Verified organisation permissions', () => {
     backend(role);
     window.history.replaceState(null, '', '/purchase-plans');
     render(<ClerkApp />);
-    expect(await screen.findByRole('heading', { name: 'Organisation purchase plans' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /View recommendation/ })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: /View recommendation/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Organisation purchase plans' })).toBeInTheDocument();
     for (const name of ['Create plan', 'Edit', 'Delete']) {
       expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
     }

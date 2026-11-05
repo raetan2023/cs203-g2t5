@@ -1,0 +1,61 @@
+import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+import { chromium } from 'playwright';
+import { createServer } from 'vite';
+
+const server = await createServer({ server: { port: 0 } });
+const output = '/tmp/manager-animations';
+let browser;
+try {
+  await server.listen(); await mkdir(output, { recursive: true });
+  browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
+  const errors = []; page.on('pageerror', error => errors.push(error.message));
+  await page.goto(new URL('/manager-loading-preview.html', server.resolvedUrls.local[0]).href);
+  await page.getByRole('region', { name: 'Loading organisation plans' }).waitFor();
+  assert.equal(await page.locator('.pp-shimmer').first().evaluate(el => getComputedStyle(el, '::after').animationName), 'pp-manager-shimmer');
+  await page.screenshot({ path: `${output}/initial-desktop.png`, fullPage: true });
+  const inbox = page.getByRole('region', { name: 'Approval inbox', exact: true });
+  await inbox.getByText('99 MT', { exact: true }).waitFor();
+  const row = inbox.locator('.pp-approval-list li').first();
+  const before = await row.boundingBox();
+  await inbox.getByRole('button', { name: 'Refresh inbox' }).click();
+  assert.equal(await inbox.getByText('99 MT', { exact: true }).isVisible(), true);
+  assert.equal(await inbox.locator('.pp-manager-skeleton').count(), 0);
+  assert.equal(await inbox.getAttribute('aria-busy'), 'true');
+  assert.equal(await inbox.locator('.pp-refresh-bar > span').evaluate(el => getComputedStyle(el).animationName), 'pp-manager-refresh');
+  assert.ok(Math.abs((await row.boundingBox()).y - before.y) < 1, 'rows do not jump during refresh');
+  await page.screenshot({ path: `${output}/refresh-desktop.png`, fullPage: true });
+  await page.waitForFunction(() => document.querySelector('#approval-inbox').getAttribute('aria-busy') === 'false');
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Replay initial loading' }).click();
+  await page.getByRole('region', { name: 'Loading organisation plans' }).waitFor();
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'mobile skeleton fits viewport');
+  await page.screenshot({ path: `${output}/initial-mobile.png`, fullPage: true });
+  await inbox.getByText('99 MT', { exact: true }).waitFor();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await inbox.getByRole('button', { name: 'Refresh inbox' }).click();
+  assert.equal(await inbox.locator('.pp-refresh-bar > span').evaluate(el => getComputedStyle(el).animationName), 'none');
+  assert.equal(await inbox.getByText('99 MT', { exact: true }).isVisible(), true);
+  await page.waitForFunction(() => document.querySelector('#approval-inbox').getAttribute('aria-busy') === 'false');
+  await page.getByRole('button', { name: 'Replay initial loading' }).click();
+  await page.getByRole('region', { name: 'Loading organisation plans' }).waitFor();
+  assert.equal(await page.locator('.pp-shimmer').first().evaluate(el => getComputedStyle(el, '::after').animationName), 'none');
+
+  await page.goto(new URL('/manager-review-preview.html', server.resolvedUrls.local[0]).href);
+  await page.getByRole('button', { name: 'Close review' }).click();
+  await page.getByLabel('Example state').selectOption('slow');
+  await page.getByRole('textbox', { name: 'Approval comment (optional)' }).fill('Synthetic animation check.');
+  await page.getByRole('button', { name: 'Confirm rejection' }).click();
+  const reject = page.getByRole('button', { name: 'Confirm rejection' });
+  const approve = page.getByRole('button', { name: 'Confirm approval' });
+  assert.equal(await reject.locator('.md-spinner').count(), 1, 'spinner is inside the pressed reject button');
+  assert.equal(await approve.locator('.md-spinner').count(), 0);
+  assert.equal(await reject.locator('.md-spinner').evaluate(el => getComputedStyle(el).animationName), 'none');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  assert.equal(await reject.locator('.md-spinner').evaluate(el => getComputedStyle(el).animationName), 'md-spin');
+  await page.screenshot({ path: `${output}/reject-spinner-mobile.png`, fullPage: true });
+  assert.deepEqual(errors, []);
+  console.log(`PASS shimmer, retained refresh rows, no layout jump, mobile, reduced motion and pressed-button spinner. Screenshots: ${output}`);
+} finally { await browser?.close(); await server.close(); }

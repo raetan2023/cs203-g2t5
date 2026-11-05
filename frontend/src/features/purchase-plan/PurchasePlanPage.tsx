@@ -4,6 +4,7 @@ import { BuyerDecisions } from './components/BuyerDecisions';
 import { PreviousPlanNote } from './components/PreviousPlanNote';
 import { ApprovalInbox } from './components/ApprovalInbox';
 import { ManagerTeamOverview } from './components/ManagerTeamOverview';
+import { ManagerPlansLoading } from './components/ManagerLoading';
 import { DeletePlanDialog } from './components/DeletePlanDialog';
 import { formatDate } from './dates';
 import { ErrorBanner, Icon, LoadingState, PlanButton } from './components/Primitives';
@@ -169,7 +170,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
 
   return <main className="purchase-plan">
     <div className="pp-sr-only" role="status">{announcement}</div>
-    {state.mode === 'loading' ? <LoadingState /> : <>
+    {state.mode === 'loading' ? isManager ? <ManagerPlansLoading /> : <LoadingState /> : <>
       <header className="pp-heading">
         <div><h1>{canEdit ? "Purchase plans" : "Organisation purchase plans"}</h1><p>{saving ? 'Saving your purchase plan...' : canEdit ? 'Manage your purchase quantity and deadline.' : 'View plans in your organisation. Only buyers can create or change their own plans.'}</p></div>
         {canEdit && <div className="pp-create">

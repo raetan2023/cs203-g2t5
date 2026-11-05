@@ -52,3 +52,20 @@ manager review scenario also uses the real panel.
 
 Screenshots and mock services are synthetic; they do not establish a live decision
 on a team plan. A live approve/reject check still needs submitted test requests.
+
+## Loading animations
+
+Options 1, 4 and 5 are integrated into the manager flow: shimmer placeholders
+for initial plan, inbox and team-total loading; a thin progress bar while inbox
+or totals refresh; and a spinner inside the pressed Approve or Reject button.
+Refresh retains the current organisation's rows and totals without shifting them.
+An organisation change or failed read clears the previous data. Inbox polling
+does not overlap an outstanding read. Reduced-motion settings stop the animations
+and retain static loading indicators and text.
+
+Open `/manager-loading-preview.html` to replay initial loading or refresh synthetic
+rows and totals. Its decision-preview link demonstrates the button spinner using
+the slow submission example. It performs no team-data writes.
+Run `node scripts/test-manager-animations.mjs` for desktop/mobile, stable refresh
+layout, reduced-motion and pressed-button spinner checks. Screenshots are saved
+under `/tmp/manager-animations/`.

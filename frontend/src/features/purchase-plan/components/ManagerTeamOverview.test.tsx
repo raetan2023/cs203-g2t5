@@ -30,6 +30,21 @@ it('preserves volume totals when a reference price is missing', async () => {
   expect(screen.getByText('30.75 MT')).toBeVisible();
 });
 
+it('retains totals during refresh and replaces them after the response', async () => {
+  const api = service();
+  render(<ManagerTeamOverview service={api} />);
+  await screen.findByText('$18,450.00');
+  let finish!: (result: unknown) => void;
+  api.managerOverview.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
+  await userEvent.click(screen.getByRole('button', { name: 'Refresh team overview' }));
+  expect(screen.getByText('$18,450.00')).toBeVisible();
+  expect(screen.getByRole('region', { name: 'Team oversight' })).toHaveAttribute('aria-busy', 'true');
+  expect(screen.getByText('Updating team exposure…')).toBeInTheDocument();
+  await act(async () => finish({ ...overview, exposure_usd: 19000 }));
+  expect(await screen.findByText('$19,000.00')).toBeVisible();
+  expect(screen.queryByText('$18,450.00')).not.toBeInTheDocument();
+});
+
 it('discards a delayed response after switching teams', async () => {
   const previous = service(), next = service();
   let resolve!: (value: typeof overview) => void;
