@@ -84,7 +84,8 @@ export default function BuyerDecisionLog({ planId, recommendationId, runId, acti
       )}
 
       <div className="bdl-actions">
-        <button type="button" className="bb-button bb-button--secondary" disabled={disabled} onClick={() => save('accept')}>Accept</button>
+        {/* Accept is the next step until the buyer has answered, so it carries the beige fill. */}
+        <button type="button" className={current ? 'bb-button bb-button--secondary' : 'bb-button'} disabled={disabled} onClick={() => save('accept')}>Accept</button>
         <button type="button" className="bb-button bb-button--secondary" disabled={disabled} onClick={() => { setError(''); setRejecting(true); }}>Reject</button>
         <button type="button" className="bb-button bb-button--secondary" disabled={disabled} onClick={() => save('ignore')}>Ignore</button>
       </div>
