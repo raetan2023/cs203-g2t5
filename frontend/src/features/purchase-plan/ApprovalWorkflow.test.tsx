@@ -23,6 +23,19 @@ it('routes buyers to recommendation review without allowing direct plan-only sub
 });
 
 describe('manager approval inbox', () => {
+  it('shows team exposure only to managers', async () => {
+    const api = { ...service(), managerOverview: vi.fn().mockResolvedValue({ plan_count: 1,
+      total_quantity_mt: 10, open_quantity_mt: 10, pending_approval_count: 0,
+      reference_price_usd_per_mt: 600, reference_date: '2026-11-02', exposure_usd: 6000 }) };
+    const view = render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
+    expect(await screen.findByText('$6,000.00')).toBeVisible();
+    view.unmount();
+    api.managerOverview.mockClear();
+    render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} />);
+    await screen.findByRole('link', { name: /View recommendation/ });
+    expect(screen.queryByRole('region', { name: 'Team oversight' })).not.toBeInTheDocument();
+    expect(api.managerOverview).not.toHaveBeenCalled();
+  });
   const notification = { notification_id: 'n1', plan_id: 'p1', created_at: '2026-10-27T08:00:00Z', quantity_mt: 987, purchase_deadline: '2026-11-01', status: 'submitted' };
   it('shows submissions and lets a manager refresh the inbox', async () => {
     const api = service(); const user = userEvent.setup();
