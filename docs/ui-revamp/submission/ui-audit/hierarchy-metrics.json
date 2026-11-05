@@ -1,0 +1,1634 @@
+[
+  {
+    "name": "rec-monitor",
+    "role": "buyer",
+    "h1": "Purchase recommendation",
+    "overflow": 0,
+    "typeStyles": 25,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      24,
+      32,
+      40
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 5,
+    "body": 14,
+    "largest": 40,
+    "ratio": 2.86,
+    "headings": [
+      "h1 32px/600 \"Purchase recommendation\"",
+      "h2 40px/600 \"Monitor\"",
+      "h3 13px/500 \"Your decision on this recommenda\"",
+      "h2 20px/600 \"Compare buying dates\"",
+      "h2 20px/600 \"If you buy on Mon 02 Nov (7 days\"",
+      "h3 14px/600 \"For this plan\"",
+      "h3 14px/600 \"Assumptions and limitations\""
+    ],
+    "boxesAboveFold": 14,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 12,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 1655,
+    "words": 361,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×1610 \"47\"",
+      "12px/400/rgb(181,172,155) ×998 \"28 Oct 2026\"",
+      "13px/400/rgb(181,172,155) ×432 \"Recommended action\"",
+      "13px/500/rgb(240,230,210) ×158 \"Ridge regression (executed repository ar\"",
+      "20px/600/rgb(240,230,210) ×144 \"Monitor\"",
+      "13px/400/rgb(197,187,167) ×133 \"Purchase plans\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 6,
+    "targetsUnder24": 0,
+    "targets": 16
+  },
+  {
+    "name": "rec-buy",
+    "role": "buyer",
+    "h1": "Purchase recommendation",
+    "overflow": 0,
+    "typeStyles": 23,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      24,
+      32,
+      40
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 40,
+    "ratio": 2.86,
+    "headings": [
+      "h1 32px/600 \"Purchase recommendation\"",
+      "h2 40px/600 \"Buy now\"",
+      "h3 13px/500 \"Your decision on this recommenda\"",
+      "h2 20px/600 \"Compare buying dates\"",
+      "h2 20px/600 \"If you buy today\"",
+      "h3 14px/600 \"For this plan\"",
+      "h3 14px/600 \"Assumptions and limitations\""
+    ],
+    "boxesAboveFold": 14,
+    "accentFillsAboveFold": 3,
+    "buttonsAboveFold": 12,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 1629,
+    "words": 337,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×1582 \"47\"",
+      "12px/400/rgb(181,172,155) ×998 \"28 Oct 2026\"",
+      "13px/400/rgb(181,172,155) ×430 \"Recommended action\"",
+      "13px/500/rgb(240,230,210) ×158 \"Ridge regression (executed repository ar\"",
+      "13px/400/rgb(197,187,167) ×114 \"Purchase plans\"",
+      "20px/600/rgb(240,230,210) ×102 \"Buy now\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 6,
+    "targetsUnder24": 0,
+    "targets": 16
+  },
+  {
+    "name": "rec-wait",
+    "role": "buyer",
+    "h1": "Purchase recommendation",
+    "overflow": 0,
+    "typeStyles": 23,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      24,
+      32,
+      40
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 5,
+    "body": 14,
+    "largest": 40,
+    "ratio": 2.86,
+    "headings": [
+      "h1 32px/600 \"Purchase recommendation\"",
+      "h2 40px/600 \"Wait\"",
+      "h3 13px/500 \"Your decision on this recommenda\"",
+      "h2 20px/600 \"Compare buying dates\"",
+      "h2 20px/600 \"If you buy on Wed 25 Nov (30 day\"",
+      "h3 14px/600 \"For this plan\"",
+      "h3 14px/600 \"Assumptions and limitations\""
+    ],
+    "boxesAboveFold": 14,
+    "accentFillsAboveFold": 3,
+    "buttonsAboveFold": 12,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 1684,
+    "words": 376,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×1640 \"47\"",
+      "12px/400/rgb(181,172,155) ×998 \"28 Oct 2026\"",
+      "13px/400/rgb(181,172,155) ×426 \"Recommended action\"",
+      "13px/400/rgb(197,187,167) ×197 \"Purchase plans\"",
+      "20px/600/rgb(240,230,210) ×162 \"Wait\"",
+      "13px/500/rgb(240,230,210) ×158 \"Ridge regression (executed repository ar\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 6,
+    "targetsUnder24": 0,
+    "targets": 16
+  },
+  {
+    "name": "rec-loading",
+    "role": "buyer",
+    "h1": "Purchase recommendation",
+    "overflow": 0,
+    "typeStyles": 15,
+    "sizes": [
+      12,
+      13,
+      14,
+      20,
+      24,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 5,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Purchase recommendation\"",
+      "h2 24px/600 \"Working out your recommendation\"",
+      "h2 20px/600 \"Your deadline is before the avai\"",
+      "h2 20px/600 \"Compare buying dates\""
+    ],
+    "boxesAboveFold": 10,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 1668,
+    "words": 237,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×493 \"100\"",
+      "12px/400/rgb(181,172,155) ×232 \"24 Oct 2025\"",
+      "13px/500/color(srgb0.5396080.5152940.468392) ×95 \"Matching forecasts to your deadline\"",
+      "13px/400/rgb(181,172,155) ×53 \"Recommended action\"",
+      "13px/600/rgb(240,230,210) ×49 \"Loading the 7, 14 and 30-day forecasts\"",
+      "20px/600/rgb(240,230,210) ×47 \"Your deadline is before the available fo\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 1,
+    "targetsUnder24": 0,
+    "targets": 5
+  },
+  {
+    "name": "rec-ready",
+    "role": "buyer",
+    "h1": "Purchase recommendation",
+    "overflow": 0,
+    "typeStyles": 21,
+    "sizes": [
+      12,
+      13,
+      14,
+      20,
+      24,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Purchase recommendation\"",
+      "h2 32px/600 \"Consider purchasing on 29 Octobe\"",
+      "h2 20px/600 \"Your deadline is before the avai\"",
+      "h2 20px/600 \"Compare buying dates\"",
+      "h2 20px/600 \"If you buy today\""
+    ],
+    "boxesAboveFold": 7,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 3,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 1822,
+    "words": 357,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×576 \"100\"",
+      "12px/400/rgb(181,172,155) ×526 \"24 Oct 2025\"",
+      "13px/400/rgb(181,172,155) ×335 \"Recommended action\"",
+      "20px/600/rgb(240,230,210) ×147 \"Consider purchasing on 29 October\"",
+      "13px/400/rgb(197,187,167) ×60 \"Purchase plans\"",
+      "32px/600/rgb(240,230,210) ×56 \"Purchase recommendation\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 3,
+    "targetsUnder24": 0,
+    "targets": 11
+  },
+  {
+    "name": "rec-unavailable",
+    "role": "buyer",
+    "h1": "Purchase recommendation",
+    "overflow": 0,
+    "typeStyles": 21,
+    "sizes": [
+      12,
+      13,
+      14,
+      20,
+      24,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Purchase recommendation\"",
+      "h2 24px/600 \"No recommendation available\"",
+      "h2 20px/600 \"Your deadline is before the avai\"",
+      "h2 20px/600 \"Compare buying dates\"",
+      "h2 20px/600 \"If you buy today\""
+    ],
+    "boxesAboveFold": 7,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 3,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 1829,
+    "words": 352,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×560 \"100\"",
+      "12px/400/rgb(181,172,155) ×526 \"24 Oct 2025\"",
+      "13px/400/rgb(181,172,155) ×335 \"Recommended action\"",
+      "20px/600/rgb(240,230,210) ×135 \"No recommendation yet\"",
+      "13px/400/rgb(197,187,167) ×60 \"Purchase plans\"",
+      "12px/600/rgb(181,172,155) ×42 \"After deadline\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 3,
+    "targetsUnder24": 0,
+    "targets": 11
+  },
+  {
+    "name": "rec-error",
+    "role": "buyer",
+    "h1": "Purchase recommendation",
+    "overflow": 0,
+    "typeStyles": 21,
+    "sizes": [
+      12,
+      13,
+      14,
+      20,
+      24,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Purchase recommendation\"",
+      "h2 24px/600 \"Couldn’t load analysis\"",
+      "h2 20px/600 \"Your deadline is before the avai\"",
+      "h2 20px/600 \"Compare buying dates\"",
+      "h2 20px/600 \"If you buy today\""
+    ],
+    "boxesAboveFold": 7,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 3,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 1887,
+    "words": 354,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×552 \"100\"",
+      "12px/400/rgb(181,172,155) ×526 \"24 Oct 2025\"",
+      "13px/400/rgb(181,172,155) ×335 \"Recommended action\"",
+      "20px/600/rgb(240,230,210) ×135 \"No recommendation yet\"",
+      "13px/400/rgb(197,187,167) ×60 \"Purchase plans\"",
+      "12px/600/rgb(181,172,155) ×42 \"After deadline\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 3,
+    "targetsUnder24": 0,
+    "targets": 12
+  },
+  {
+    "name": "rec-empty",
+    "role": "buyer",
+    "h1": "Purchase recommendation",
+    "overflow": 0,
+    "typeStyles": 8,
+    "sizes": [
+      12,
+      13,
+      14,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Purchase recommendation\"",
+      "h2 20px/600 \"No saved purchase plan\""
+    ],
+    "boxesAboveFold": 1,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 32,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×66 \"Choose a saved purchase plan from your p\"",
+      "32px/600/rgb(240,230,210) ×23 \"Purchase recommendation\"",
+      "20px/600/rgb(240,230,210) ×22 \"No saved purchase plan\"",
+      "14px/600/rgb(23,24,24) ×20 \"Create purchase plan\"",
+      "14px/400/rgb(23,24,24) ×15 \"Skip to content\"",
+      "13px/400/rgb(197,187,167) ×14 \"Purchase plans\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 1,
+    "targetsUnder24": 0,
+    "targets": 4
+  },
+  {
+    "name": "rec-awaiting",
+    "role": "buyer",
+    "h1": "Submitted recommendation",
+    "overflow": 0,
+    "typeStyles": 14,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Submitted recommendation\"",
+      "h2 32px/600 \"Awaiting manager approval\"",
+      "h2 20px/600 \"Plan recommendation · Wait\""
+    ],
+    "boxesAboveFold": 6,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 1046,
+    "words": 164,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×915 \"47\"",
+      "13px/400/rgb(197,187,167) ×637 \"Purchase plans\"",
+      "13px/400/rgb(181,172,155) ×288 \"Approval status\"",
+      "12px/400/rgb(181,172,155) ×242 \"28 Oct 2026\"",
+      "16px/400/rgb(240,230,210) ×93 \"All managers in your organisation have b\"",
+      "14px/600/rgb(240,230,210) ×68 \"Next step\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 2,
+    "targetsUnder24": 0,
+    "targets": 6
+  },
+  {
+    "name": "rec-approved",
+    "role": "buyer",
+    "h1": "Submitted recommendation",
+    "overflow": 0,
+    "typeStyles": 14,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Submitted recommendation\"",
+      "h2 32px/600 \"Recommendation approved\"",
+      "h2 20px/600 \"Plan recommendation · Wait\""
+    ],
+    "boxesAboveFold": 6,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 1166,
+    "words": 174,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×945 \"47\"",
+      "13px/400/rgb(197,187,167) ×637 \"Purchase plans\"",
+      "13px/400/rgb(181,172,155) ×305 \"Approval status\"",
+      "12px/400/rgb(181,172,155) ×278 \"28 Oct 2026\"",
+      "14px/600/rgb(240,230,210) ×68 \"Next step\"",
+      "20px/600/rgb(240,230,210) ×66 \"Wait\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 2,
+    "targetsUnder24": 0,
+    "targets": 7
+  },
+  {
+    "name": "rec-rejected",
+    "role": "buyer",
+    "h1": "Submitted recommendation",
+    "overflow": 0,
+    "typeStyles": 14,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Submitted recommendation\"",
+      "h2 32px/600 \"Recommendation rejected\"",
+      "h2 20px/600 \"Plan recommendation · Wait\""
+    ],
+    "boxesAboveFold": 6,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 1166,
+    "words": 187,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×950 \"47\"",
+      "13px/400/rgb(197,187,167) ×637 \"Purchase plans\"",
+      "13px/400/rgb(181,172,155) ×308 \"Approval status\"",
+      "12px/400/rgb(181,172,155) ×278 \"28 Oct 2026\"",
+      "14px/400/rgb(240,230,210) ×75 \"Over this month’s budget. Split the quan\"",
+      "14px/600/rgb(240,230,210) ×68 \"Next step\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 2,
+    "targetsUnder24": 0,
+    "targets": 7
+  },
+  {
+    "name": "rec-withdrawn",
+    "role": "buyer",
+    "h1": "Submitted recommendation",
+    "overflow": 0,
+    "typeStyles": 13,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Submitted recommendation\"",
+      "h2 32px/600 \"Request withdrawn\"",
+      "h2 20px/600 \"Plan recommendation · Wait\""
+    ],
+    "boxesAboveFold": 5,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 1092,
+    "words": 167,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×970 \"47\"",
+      "13px/400/rgb(197,187,167) ×637 \"Purchase plans\"",
+      "13px/400/rgb(181,172,155) ×288 \"Approval status\"",
+      "12px/400/rgb(181,172,155) ×242 \"28 Oct 2026\"",
+      "14px/600/rgb(240,230,210) ×68 \"Next step\"",
+      "20px/600/rgb(240,230,210) ×66 \"Wait\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 2,
+    "targetsUnder24": 0,
+    "targets": 6
+  },
+  {
+    "name": "rec-purchased",
+    "role": "buyer",
+    "h1": "Submitted recommendation",
+    "overflow": 0,
+    "typeStyles": 15,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      21,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600",
+      "700"
+    ],
+    "textColours": 4,
+    "body": 13,
+    "largest": 32,
+    "ratio": 2.46,
+    "headings": [
+      "h1 32px/600 \"Submitted recommendation\"",
+      "h2 32px/600 \"Purchase recorded\"",
+      "h2 21px/700 \"Recorded purchase\"",
+      "h2 20px/600 \"Plan recommendation · Wait\""
+    ],
+    "boxesAboveFold": 6,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 1,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 1560,
+    "words": 233,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×964 \"47\"",
+      "13px/400/rgb(197,187,167) ×637 \"Purchase plans\"",
+      "13px/400/rgb(181,172,155) ×498 \"Approval status\"",
+      "12px/400/rgb(181,172,155) ×278 \"28 Oct 2026\"",
+      "20px/600/rgb(240,230,210) ×214 \"Wait\"",
+      "14px/600/rgb(240,230,210) ×68 \"Next step\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 2,
+    "targetsUnder24": 0,
+    "targets": 6
+  },
+  {
+    "name": "rec-review",
+    "role": "manager",
+    "h1": "Submitted recommendation",
+    "overflow": 0,
+    "typeStyles": 15,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      16.4,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600",
+      "700"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Submitted recommendation\"",
+      "h2 32px/600 \"Awaiting manager approval\"",
+      "h3 16.38px/700 \"Manager review\"",
+      "h2 20px/600 \"Plan recommendation · Wait\""
+    ],
+    "boxesAboveFold": 6,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 3,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 1167,
+    "words": 191,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×1071 \"47\"",
+      "13px/400/rgb(197,187,167) ×637 \"Purchase plans\"",
+      "13px/400/rgb(181,172,155) ×288 \"Approval status\"",
+      "12px/400/rgb(181,172,155) ×242 \"28 Oct 2026\"",
+      "16px/400/rgb(240,230,210) ×93 \"All managers in your organisation have b\"",
+      "14px/600/rgb(240,230,210) ×68 \"Next step\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 2,
+    "targetsUnder24": 0,
+    "targets": 7
+  },
+  {
+    "name": "rec-analyst",
+    "role": "analyst",
+    "h1": "Purchase recommendation",
+    "overflow": 0,
+    "typeStyles": 21,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      24,
+      32,
+      40
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 5,
+    "body": 14,
+    "largest": 40,
+    "ratio": 2.86,
+    "headings": [
+      "h1 32px/600 \"Purchase recommendation\"",
+      "h2 40px/600 \"Wait\"",
+      "h2 20px/600 \"Compare buying dates\"",
+      "h2 20px/600 \"If you buy on Wed 25 Nov (30 day\"",
+      "h3 14px/600 \"For this plan\"",
+      "h3 14px/600 \"Assumptions and limitations\""
+    ],
+    "boxesAboveFold": 11,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 8,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 1684,
+    "words": 333,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×1640 \"47\"",
+      "12px/400/rgb(181,172,155) ×821 \"28 Oct 2026\"",
+      "13px/400/rgb(181,172,155) ×427 \"Recommended action\"",
+      "13px/400/rgb(197,187,167) ×197 \"Purchase plans\"",
+      "20px/600/rgb(240,230,210) ×162 \"Wait\"",
+      "13px/500/rgb(240,230,210) ×158 \"Ridge regression (executed repository ar\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 3,
+    "targetsUnder24": 0,
+    "targets": 12
+  },
+  {
+    "name": "rec-analyst-awaiting",
+    "role": "analyst",
+    "h1": "Submitted recommendation",
+    "overflow": 0,
+    "typeStyles": 13,
+    "sizes": [
+      12,
+      13,
+      14,
+      16,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Submitted recommendation\"",
+      "h2 32px/600 \"Awaiting manager approval\"",
+      "h2 20px/600 \"Plan recommendation · Wait\""
+    ],
+    "boxesAboveFold": 6,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 1,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 956,
+    "words": 162,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×915 \"47\"",
+      "13px/400/rgb(197,187,167) ×637 \"Purchase plans\"",
+      "13px/400/rgb(181,172,155) ×288 \"Approval status\"",
+      "12px/400/rgb(181,172,155) ×242 \"28 Oct 2026\"",
+      "16px/400/rgb(240,230,210) ×93 \"All managers in your organisation have b\"",
+      "14px/600/rgb(240,230,210) ×68 \"Next step\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 2,
+    "targetsUnder24": 0,
+    "targets": 5
+  },
+  {
+    "name": "rec-admin",
+    "role": "admin",
+    "h1": "Purchase-plan access is restricted",
+    "overflow": 0,
+    "typeStyles": 6,
+    "sizes": [
+      12,
+      14,
+      18,
+      20,
+      28
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600",
+      "700"
+    ],
+    "textColours": 3,
+    "body": 18,
+    "largest": 28,
+    "ratio": 1.56,
+    "headings": [
+      "h1 28px/700 \"Purchase-plan access is restrict\""
+    ],
+    "boxesAboveFold": 0,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 32,
+    "topStyles": [
+      "18px/400/rgb(181,172,155) ×114 \"Your admin role manages the organisation\"",
+      "28px/700/rgb(240,230,210) ×34 \"Purchase-plan access is restricted\"",
+      "14px/400/rgb(23,24,24) ×15 \"Skip to content\"",
+      "20px/500/rgb(240,230,210) ×12 \"Bunker Buddy\"",
+      "18px/600/rgb(23,24,24) ×12 \"Back to Home\"",
+      "12px/400/rgb(181,172,155) ×11 \"24 Oct 2025\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 3
+  },
+  {
+    "name": "login",
+    "role": "public",
+    "h1": "A clearer course.A smarter purchase.",
+    "overflow": 0,
+    "typeStyles": 12,
+    "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      28,
+      51.8
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 8,
+    "body": 12,
+    "largest": 51.8,
+    "ratio": 4.32,
+    "headings": [
+      "h1 51.84px/600 \"A clearer course.A smarter purch\"",
+      "h2 28px/600 \"Sign in\""
+    ],
+    "boxesAboveFold": 5,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 4,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 900,
+    "words": 72,
+    "topStyles": [
+      "12px/400/rgb(181,172,155) ×133 \"Social sign-in is not available yet.\"",
+      "16px/400/rgb(224,214,195) ×77 \"Forecasts for Singapore MGO, with purcha\"",
+      "14px/400/rgb(181,172,155) ×43 \"Enter your credentials to continue\"",
+      "14px/400/rgb(240,230,210) ×43 \"Continue with Microsoft\"",
+      "51.8px/600/rgb(244,236,220) ×36 \"A clearer course.\"",
+      "12px/400/rgb(197,187,167) ×29 \"(available after integration)\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 2,
+    "targetsUnder24": 2,
+    "targets": 8
+  },
+  {
+    "name": "signup",
+    "role": "public",
+    "h1": "A clearer course.A smarter purchase.",
+    "overflow": 0,
+    "typeStyles": 9,
+    "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      28,
+      51.8
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 7,
+    "body": 12,
+    "largest": 51.8,
+    "ratio": 4.32,
+    "headings": [
+      "h1 51.84px/600 \"A clearer course.A smarter purch\"",
+      "h2 28px/600 \"Create account\""
+    ],
+    "boxesAboveFold": 4,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 900,
+    "words": 57,
+    "topStyles": [
+      "12px/400/rgb(181,172,155) ×89 \"Demo only — no real account is\"",
+      "16px/400/rgb(224,214,195) ×77 \"Forecasts for Singapore MGO, with purcha\"",
+      "14px/400/rgb(181,172,155) ×59 \"Get started with your purchase plan\"",
+      "51.8px/600/rgb(244,236,220) ×36 \"A clearer course.\"",
+      "13px/500/rgb(230,220,200) ×30 \"Full name\"",
+      "28px/600/rgb(240,230,210) ×14 \"Create account\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 1,
+    "targetsUnder24": 1,
+    "targets": 6
+  },
+  {
+    "name": "home",
+    "role": "buyer",
+    "h1": "Good morning, John",
+    "overflow": 0,
+    "typeStyles": 8,
+    "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      116
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 5,
+    "body": 12,
+    "largest": 116,
+    "ratio": 9.67,
+    "headings": [
+      "h1 28px/500 \"Good morning, John\""
+    ],
+    "boxesAboveFold": 1,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 28,
+    "topStyles": [
+      "12px/400/rgb(197,187,167) ×35 \"Singapore MGO est. ·\"",
+      "116px/500/rgb(232,220,196) ×18 \"Good morning, John\"",
+      "18px/400/rgb(228,216,192) ×17 \"Friday 24 October\"",
+      "16px/600/rgb(23,24,24) ×16 \"Go to your plans\"",
+      "14px/400/rgb(23,24,24) ×15 \"Skip to content\"",
+      "20px/500/rgb(240,230,210) ×12 \"Bunker Buddy\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 4
+  },
+  {
+    "name": "home-manager",
+    "role": "manager",
+    "h1": "Good morning, John",
+    "overflow": 0,
+    "typeStyles": 8,
+    "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      116
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 5,
+    "body": 12,
+    "largest": 116,
+    "ratio": 9.67,
+    "headings": [
+      "h1 28px/500 \"Good morning, John\""
+    ],
+    "boxesAboveFold": 1,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 27,
+    "topStyles": [
+      "12px/400/rgb(197,187,167) ×35 \"Singapore MGO est. ·\"",
+      "116px/500/rgb(232,220,196) ×18 \"Good morning, John\"",
+      "16px/600/rgb(23,24,24) ×18 \"Plans for approval\"",
+      "18px/400/rgb(228,216,192) ×17 \"Friday 24 October\"",
+      "14px/400/rgb(23,24,24) ×15 \"Skip to content\"",
+      "20px/500/rgb(240,230,210) ×12 \"Bunker Buddy\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 4
+  },
+  {
+    "name": "home-analyst",
+    "role": "analyst",
+    "h1": "Good morning, John",
+    "overflow": 0,
+    "typeStyles": 8,
+    "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      116
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 5,
+    "body": 12,
+    "largest": 116,
+    "ratio": 9.67,
+    "headings": [
+      "h1 28px/500 \"Good morning, John\""
+    ],
+    "boxesAboveFold": 1,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 26,
+    "topStyles": [
+      "12px/400/rgb(197,187,167) ×35 \"Singapore MGO est. ·\"",
+      "116px/500/rgb(232,220,196) ×18 \"Good morning, John\"",
+      "18px/400/rgb(228,216,192) ×17 \"Friday 24 October\"",
+      "16px/600/rgb(23,24,24) ×16 \"Market dashboard\"",
+      "14px/400/rgb(23,24,24) ×15 \"Skip to content\"",
+      "20px/500/rgb(240,230,210) ×12 \"Bunker Buddy\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 4
+  },
+  {
+    "name": "home-admin",
+    "role": "admin",
+    "h1": "Good morning, John",
+    "overflow": 0,
+    "typeStyles": 8,
+    "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      116
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 5,
+    "body": 12,
+    "largest": 116,
+    "ratio": 9.67,
+    "headings": [
+      "h1 28px/500 \"Good morning, John\""
+    ],
+    "boxesAboveFold": 1,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 26,
+    "topStyles": [
+      "12px/400/rgb(197,187,167) ×35 \"Singapore MGO est. ·\"",
+      "16px/600/rgb(23,24,24) ×19 \"Manage organisation\"",
+      "116px/500/rgb(232,220,196) ×18 \"Good morning, John\"",
+      "18px/400/rgb(228,216,192) ×17 \"Friday 24 October\"",
+      "14px/400/rgb(23,24,24) ×15 \"Skip to content\"",
+      "20px/500/rgb(240,230,210) ×12 \"Bunker Buddy\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 4
+  },
+  {
+    "name": "home-price-error",
+    "role": "buyer",
+    "h1": "Good morning, John",
+    "overflow": 0,
+    "typeStyles": 7,
+    "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      116
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 6,
+    "body": 14,
+    "largest": 116,
+    "ratio": 8.29,
+    "headings": [
+      "h1 28px/500 \"Good morning, John\""
+    ],
+    "boxesAboveFold": 1,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 22,
+    "topStyles": [
+      "14px/400/rgb(181,172,155) ×27 \"Price unavailable right now\"",
+      "116px/500/rgb(232,220,196) ×18 \"Good morning, John\"",
+      "12px/400/rgb(197,187,167) ×18 \"Singapore MGO est.\"",
+      "18px/400/rgb(228,216,192) ×17 \"Friday 24 October\"",
+      "16px/600/rgb(23,24,24) ×16 \"Go to your plans\"",
+      "14px/400/rgb(23,24,24) ×15 \"Skip to content\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 3
+  },
+  {
+    "name": "multiple",
+    "role": "buyer",
+    "h1": "Purchase plans",
+    "overflow": 0,
+    "typeStyles": 18,
+    "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      20,
+      32,
+      40
+    ],
+    "weights": [
+      "300",
+      "400",
+      "500",
+      "600",
+      "650"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 40,
+    "ratio": 2.86,
+    "headings": [
+      "h1 32px/650 \"Purchase plans\"",
+      "h2 16px/600 \"Your plans\"",
+      "h3 14px/400 \"500 MT500MT Due 15 Nov 2025\"",
+      "h3 14px/400 \"250 MT250MT Due 15 Nov 2025\""
+    ],
+    "boxesAboveFold": 7,
+    "accentFillsAboveFold": 5,
+    "buttonsAboveFold": 12,
+    "primaryButtonsAboveFold": 2,
+    "pageHeight": 900,
+    "words": 73,
+    "topStyles": [
+      "13px/400/rgb(181,172,155) ×51 \"Active plans\"",
+      "14px/400/rgb(181,172,155) ×43 \"Manage your purchase quantity and deadli\"",
+      "14px/600/rgb(23,24,24) ×40 \"View recommendation\"",
+      "14px/400/rgb(23,24,24) ×29 \"Skip to content\"",
+      "14px/400/rgb(197,187,167) ×28 \"Due\"",
+      "14px/400/rgb(240,230,210) ×27 \"Refresh\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 7,
+    "targetsUnder24": 0,
+    "targets": 15
+  },
+  {
+    "name": "empty",
+    "role": "buyer",
+    "h1": "Purchase plans",
+    "overflow": 0,
+    "typeStyles": 7,
+    "sizes": [
+      12,
+      14,
+      15,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "650"
+    ],
+    "textColours": 3,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/650 \"Purchase plans\""
+    ],
+    "boxesAboveFold": 2,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 3,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 26,
+    "topStyles": [
+      "14px/400/rgb(181,172,155) ×43 \"Manage your purchase quantity and deadli\"",
+      "15px/500/rgb(181,172,155) ×40 \"You haven't created a purchase plan yet.\"",
+      "14px/400/rgb(23,24,24) ×26 \"Skip to content\"",
+      "32px/650/rgb(240,230,210) ×14 \"Purchase plans\"",
+      "20px/500/rgb(240,230,210) ×12 \"Bunker Buddy\"",
+      "12px/400/rgb(181,172,155) ×11 \"24 Oct 2025\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 4
+  },
+  {
+    "name": "saved",
+    "role": "buyer",
+    "h1": "Purchase plans",
+    "overflow": 0,
+    "typeStyles": 18,
+    "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      20,
+      32,
+      40
+    ],
+    "weights": [
+      "300",
+      "400",
+      "500",
+      "600",
+      "650"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 40,
+    "ratio": 2.86,
+    "headings": [
+      "h1 32px/650 \"Purchase plans\"",
+      "h2 16px/600 \"Your plans\"",
+      "h3 14px/400 \"500 MT500MT Due 15 Nov 2025\""
+    ],
+    "boxesAboveFold": 6,
+    "accentFillsAboveFold": 4,
+    "buttonsAboveFold": 10,
+    "primaryButtonsAboveFold": 2,
+    "pageHeight": 900,
+    "words": 57,
+    "topStyles": [
+      "13px/400/rgb(181,172,155) ×51 \"Active plans\"",
+      "14px/400/rgb(181,172,155) ×43 \"Manage your purchase quantity and deadli\"",
+      "14px/400/rgb(23,24,24) ×29 \"Skip to content\"",
+      "14px/400/rgb(240,230,210) ×23 \"Refresh\"",
+      "14px/600/rgb(23,24,24) ×20 \"View recommendation\"",
+      "32px/650/rgb(240,230,210) ×14 \"Purchase plans\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 6,
+    "targetsUnder24": 0,
+    "targets": 12
+  },
+  {
+    "name": "load-error",
+    "role": "buyer",
+    "h1": "Purchase plans",
+    "overflow": 0,
+    "typeStyles": 8,
+    "sizes": [
+      12,
+      13,
+      14,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "650"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/650 \"Purchase plans\"",
+      "h2 20px/650 \"Unable to load your purchase pla\""
+    ],
+    "boxesAboveFold": 3,
+    "accentFillsAboveFold": 3,
+    "buttonsAboveFold": 4,
+    "primaryButtonsAboveFold": 2,
+    "pageHeight": 900,
+    "words": 35,
+    "topStyles": [
+      "13px/400/rgb(242,217,210) ×54 \"We couldn't load your purchase plan. Ple\"",
+      "14px/400/rgb(181,172,155) ×43 \"Manage your purchase quantity and deadli\"",
+      "20px/650/rgb(240,230,210) ×33 \"Unable to load your purchase plan\"",
+      "14px/400/rgb(23,24,24) ×31 \"Skip to content\"",
+      "32px/650/rgb(240,230,210) ×14 \"Purchase plans\"",
+      "20px/500/rgb(240,230,210) ×12 \"Bunker Buddy\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 5
+  },
+  {
+    "name": "plans-decisions",
+    "role": "buyer",
+    "h1": "Purchase plans",
+    "overflow": 0,
+    "typeStyles": 21,
+    "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      20,
+      32,
+      40
+    ],
+    "weights": [
+      "300",
+      "400",
+      "500",
+      "600",
+      "650"
+    ],
+    "textColours": 4,
+    "body": 13,
+    "largest": 40,
+    "ratio": 3.08,
+    "headings": [
+      "h1 32px/650 \"Purchase plans\"",
+      "h2 16px/600 \"Your plans\"",
+      "h3 14px/400 \"300 MT300MT Due 05 Nov 2026\"",
+      "h3 14px/400 \"50 MT50MT Due 10 Nov 2026\"",
+      "h3 14px/400 \"120 MT120MT Due 12 Nov 2026\"",
+      "h3 14px/400 \"80 MT80MT Due 20 Nov 2026\"",
+      "h3 14px/400 \"47 MT47MT Due 30 Nov 2026\""
+    ],
+    "boxesAboveFold": 14,
+    "accentFillsAboveFold": 6,
+    "buttonsAboveFold": 9,
+    "primaryButtonsAboveFold": 2,
+    "pageHeight": 1201,
+    "words": 212,
+    "topStyles": [
+      "13px/400/rgb(197,187,167) ×498 \"rejected\"",
+      "14px/600/rgb(23,24,24) ×119 \"View decision\"",
+      "13px/600/rgb(240,230,210) ×84 \"Procurement Manager (preview)\"",
+      "14px/400/rgb(197,187,167) ×70 \"Due\"",
+      "12px/600/rgb(240,230,210) ×63 \"Rejected\"",
+      "13px/400/rgb(181,172,155) ×51 \"Active plans\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 6,
+    "targetsUnder24": 0,
+    "targets": 17
+  },
+  {
+    "name": "plans-manager",
+    "role": "manager",
+    "h1": "Organisation purchase plans",
+    "overflow": 0,
+    "typeStyles": 6,
+    "sizes": [
+      12,
+      14,
+      15,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "650"
+    ],
+    "textColours": 3,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/650 \"Organisation purchase plans\""
+    ],
+    "boxesAboveFold": 1,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 1,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 900,
+    "words": 35,
+    "topStyles": [
+      "14px/400/rgb(181,172,155) ×82 \"View plans in your organisation. Only bu\"",
+      "15px/500/rgb(181,172,155) ×62 \"No purchase plans have been assigned to \"",
+      "32px/650/rgb(240,230,210) ×27 \"Organisation purchase plans\"",
+      "14px/400/rgb(23,24,24) ×15 \"Skip to content\"",
+      "20px/500/rgb(240,230,210) ×12 \"Bunker Buddy\"",
+      "12px/400/rgb(181,172,155) ×11 \"24 Oct 2025\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 2
+  },
+  {
+    "name": "decision-history",
+    "role": "buyer",
+    "h1": "Your decision history",
+    "overflow": 0,
+    "typeStyles": 8,
+    "sizes": [
+      12,
+      13,
+      14,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 4,
+    "body": 14,
+    "largest": 32,
+    "ratio": 2.29,
+    "headings": [
+      "h1 32px/600 \"Your decision history\"",
+      "h2 20px/600 \"Couldn’t load your decisions\""
+    ],
+    "boxesAboveFold": 2,
+    "accentFillsAboveFold": 2,
+    "buttonsAboveFold": 2,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 35,
+    "topStyles": [
+      "14px/400/rgb(197,187,167) ×106 \"Every recommendation you have accepted, \"",
+      "20px/600/rgb(240,230,210) ×28 \"Couldn’t load your decisions\"",
+      "32px/600/rgb(240,230,210) ×21 \"Your decision history\"",
+      "14px/400/rgb(23,24,24) ×20 \"Skip to content\"",
+      "13px/400/rgb(240,230,210) ×16 \"2\"",
+      "13px/400/rgb(197,187,167) ×14 \"Purchase plans\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 1,
+    "targetsUnder24": 0,
+    "targets": 5
+  },
+  {
+    "name": "manager-decisions",
+    "role": "buyer",
+    "h1": "Manager decisions",
+    "overflow": 0,
+    "typeStyles": 11,
+    "sizes": [
+      12,
+      13,
+      14,
+      20,
+      32
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600",
+      "650",
+      "700"
+    ],
+    "textColours": 4,
+    "body": 13,
+    "largest": 32,
+    "ratio": 2.46,
+    "headings": [
+      "h1 32px/650 \"Manager decisions\"",
+      "h2 20px/650 \"Decisions · 2 unread\""
+    ],
+    "boxesAboveFold": 7,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 4,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 900,
+    "words": 80,
+    "topStyles": [
+      "13px/400/rgb(240,230,210) ×186 \"2\"",
+      "14px/400/rgb(181,172,155) ×84 \"Manager decisions on your plans. Showing\"",
+      "14px/400/rgb(240,230,210) ×67 \"Refresh decisions\"",
+      "13px/700/rgb(240,230,210) ×29 \"300\"",
+      "14px/400/rgb(158,158,255) ×22 \"Back to purchase plans\"",
+      "20px/650/rgb(240,230,210) ×19 \"Decisions\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 1,
+    "targetsUnder24": 1,
+    "targets": 9
+  },
+  {
+    "name": "forecast-widget",
+    "role": "buyer",
+    "h1": "",
+    "overflow": 0,
+    "typeStyles": 25,
+    "sizes": [
+      10,
+      11,
+      12,
+      12.5,
+      13,
+      14,
+      17,
+      20,
+      22
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600",
+      "700"
+    ],
+    "textColours": 12,
+    "body": 12,
+    "largest": 22,
+    "ratio": 1.83,
+    "headings": [
+      "h2 17px/600 \"MGO price forecast\""
+    ],
+    "boxesAboveFold": 5,
+    "accentFillsAboveFold": 1,
+    "buttonsAboveFold": 5,
+    "primaryButtonsAboveFold": 0,
+    "pageHeight": 1038,
+    "words": 199,
+    "topStyles": [
+      "12px/400/rgb(156,177,201) ×531 \"Forecast origin:\"",
+      "11px/400/rgb(95,112,131) ×154 \"Illustrative point forecast. Accuracy ha\"",
+      "12.5px/400/rgb(201,212,224) ×141 \"High-sulphur fuel oil (prev day)\"",
+      "11px/400/rgb(230,237,243) ×82 \"Sep 25\"",
+      "11px/400/rgb(126,143,159) ×65 \"Last observed quote (\"",
+      "13px/400/rgb(126,143,159) ×41 \"· Illustrative data, not a live forecast\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 4,
+    "targetsUnder24": 1,
+    "targets": 7
+  },
+  {
+    "name": "navigation",
+    "role": "buyer",
+    "h1": "Good morning, John",
+    "overflow": 0,
+    "typeStyles": 10,
+    "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      116
+    ],
+    "weights": [
+      "400",
+      "500",
+      "600"
+    ],
+    "textColours": 5,
+    "body": 14,
+    "largest": 116,
+    "ratio": 8.29,
+    "headings": [
+      "h1 28px/500 \"Good morning, John\""
+    ],
+    "boxesAboveFold": 1,
+    "accentFillsAboveFold": 3,
+    "buttonsAboveFold": 4,
+    "primaryButtonsAboveFold": 1,
+    "pageHeight": 900,
+    "words": 39,
+    "topStyles": [
+      "14px/400/rgb(240,230,210) ×54 \"Purchase plans\"",
+      "12px/400/rgb(197,187,167) ×35 \"Singapore MGO est. ·\"",
+      "20px/500/rgb(240,230,210) ×24 \"Bunker Buddy\"",
+      "116px/500/rgb(232,220,196) ×18 \"Good morning, John\"",
+      "18px/400/rgb(228,216,192) ×17 \"Friday 24 October\"",
+      "16px/600/rgb(23,24,24) ×16 \"Go to your plans\""
+    ],
+    "overflow390": 0,
+    "targetsUnder44": 0,
+    "targetsUnder24": 0,
+    "targets": 10
+  }
+]
