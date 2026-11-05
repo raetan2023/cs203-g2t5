@@ -7,7 +7,7 @@ import { ForecastProvider } from '../forecast/ForecastContext';
 import { buildMockForecast } from '../forecast/mockService';
 import { DEMO_PLAN, DEMO_ANALYSIS, DEMO_SCENARIO_DATE } from '../purchase-plan/fixtures';
 import { createMockPlanService } from '../purchase-plan/mockService';
-import { PlanError, type PlanAnalysis, type PlanResultContext } from '../purchase-plan/types';
+import { PlanError, type PlanAnalysis, type PlanResultContext, type BuyerDecisionInput, type BuyerDecisionRecord } from '../purchase-plan/types';
 import type { Horizon, ReadyForecast } from '../forecast/apiService';
 
 const draft = { ...DEMO_PLAN, status: 'draft' as const };
@@ -22,12 +22,36 @@ function analysis(h: Horizon = 14, context: PlanResultContext = draft): PlanAnal
       central_estimate: 710, run_id: forecast(h).run_id, model_version: 'ridge-test' } },
     recommendation: { status: 'ready', value: { recommendation_id: 'plan-rec', action: 'WAIT', explanation: 'One recommendation for this plan.' } } };
 }
-function service() { return { ...createMockPlanService({ initialPlan: draft, delayMs: 0 }),
-  submit: vi.fn().mockResolvedValue({ plan: submitted }), readSubmission: vi.fn().mockResolvedValue({ submission: { horizon_days: 14, analysis: analysis() } }) }; }
+function service() {
+  const history: BuyerDecisionRecord[] = [];
+  return {
+    ...createMockPlanService({ initialPlan: draft, delayMs: 0 }),
+    submit: vi.fn().mockResolvedValue({ plan: submitted }),
+    readSubmission: vi.fn().mockResolvedValue({ submission: { horizon_days: 14, analysis: analysis() } }),
+    readRecommendationDecisions: vi.fn(async () => [...history]),
+    recordRecommendationDecision: vi.fn(async (planId: string, input: BuyerDecisionInput) => {
+      const record = { id: String(history.length + 1), plan_id: planId, recommendation_id: input.recommendationId,
+        run_id: input.runId ?? null, action: input.action ?? null, decision: input.decision, reason: input.reason ?? '',
+        decided_at: '2025-10-24T08:00:00Z' };
+      history.unshift(record);
+      return record;
+    }),
+  };
+}
+
+async function accept(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Accept' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeEnabled());
+}
 
 it('confirms the selected recommendation, horizon, run and urgency, without trusting client prices', async () => {
   const api = service(), callback = vi.fn(), user = userEvent.setup();
   render(<RecommendationApproval analysis={analysis()} plan={draft} horizon={14} planService={api} onSubmitted={callback} />);
+  expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeDisabled();
+  await accept(user);
+  await user.click(screen.getByRole('button', { name: 'Ignore' }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeDisabled());
+  await accept(user);
   await user.click(screen.getByRole('button', { name: 'Submit for approval' }));
   expect(api.submit).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -45,6 +69,7 @@ it('blocks missing evidence and shows stale-selection errors for refresh and ret
   const view = render(<RecommendationApproval analysis={{ ...analysis(), approval_fingerprint: undefined }} plan={draft} horizon={14} planService={api} onSubmitted={vi.fn()} />);
   expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeDisabled();
   view.rerender(<RecommendationApproval analysis={analysis()} plan={draft} horizon={14} planService={api} onSubmitted={vi.fn()} />);
+  await accept(user);
   await user.click(screen.getByRole('button', { name: 'Submit for approval' }));
   await user.click(screen.getByRole('button', { name: 'Confirm submission' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('The forecast run changed.');
@@ -55,6 +80,7 @@ it('does not submit twice or publish a response after the selection component is
   let finish!: (value: { plan: typeof submitted }) => void;
   api.submit.mockReturnValue(new Promise(resolve => { finish = resolve; }));
   const view = render(<RecommendationApproval analysis={analysis()} plan={draft} horizon={14} planService={api} onSubmitted={callback} />);
+  await accept(user);
   await user.click(screen.getByRole('button', { name: 'Submit for approval' }));
   await user.click(screen.getByRole('button', { name: 'Confirm submission' }));
   expect(screen.getByRole('button', { name: 'Submitting…' })).toBeDisabled();
@@ -70,11 +96,12 @@ it('keeps one plan recommendation while selecting the forecast cost detail for a
   </ForecastProvider>);
   // A disabled placeholder holds the button's place while the recommendation loads.
   expect(await screen.findByText('One recommendation for this plan.')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeEnabled();
+  await accept(user);
   fireEvent.click(screen.getByRole('button', { name: /^14 days$/ }));
   await screen.findByText(/Cost detail included:/);
   await waitFor(() => expect(screen.getByText('14-day forecast')).toBeVisible());
   expect(screen.getByText('One recommendation for this plan.')).toBeVisible();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeEnabled());
   await user.click(screen.getByRole('button', { name: 'Submit for approval' }));
   await user.click(screen.getByRole('button', { name: 'Confirm submission' }));
   await waitFor(() => expect(api.submit).toHaveBeenCalledWith(draft.plan_id, expect.objectContaining({ horizon_days: 14, recommendation_id: 'plan-rec' })));
@@ -100,6 +127,7 @@ it('allows the deadline policy buy-now request using the reference price when no
     recommendation: { status: 'ready', value: { recommendation_id: 'buy-now-plan', action: 'BUY_NOW', explanation: 'Buying now is the only priced option.' } } };
   render(<RecommendationApproval analysis={data} plan={draft} horizon={7} planService={api} onSubmitted={vi.fn()} />);
   expect(screen.getByText(/Uses the observed reference price/)).toBeVisible();
+  await accept(user);
   await user.click(screen.getByRole('button', { name: 'Submit for approval' }));
   await user.click(screen.getByRole('button', { name: 'Confirm submission' }));
   expect(api.submit).toHaveBeenCalledWith(draft.plan_id, expect.objectContaining({ recommendation_id: 'buy-now-plan' }));
