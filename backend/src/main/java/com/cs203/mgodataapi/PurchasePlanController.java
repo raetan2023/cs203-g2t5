@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * Organisation-scoped plans. Buyers manage their own plans; managers and analysts
+ * Organisation-scoped plans. Procurement officers manage their own plans; managers and admins
  * have read-only organisation access. Role admission is enforced in SecurityConfig.
  */
 @RestController

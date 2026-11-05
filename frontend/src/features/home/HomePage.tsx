@@ -19,13 +19,11 @@ export function greetingFor(hour: number) {
 type Action = { label: string; href: string } | { label: string; onClick(): void };
 
 /** One primary action per organisation role, matching what that role can do elsewhere in the app. */
-export function homeAction({ role, canReadPlans, marketAvailable, onManageOrganisation }: {
-  role?: string; canReadPlans: boolean; marketAvailable: boolean; onManageOrganisation?: () => void;
+export function homeAction({ role, canReadPlans, onManageOrganisation }: {
+  role?: string; canReadPlans: boolean; onManageOrganisation?: () => void;
 }): Action | null {
   if (role === 'org:admin') return onManageOrganisation ? { label: 'Manage organisation', onClick: onManageOrganisation } : null;
   if (role === 'org:manager') return { label: 'Plans for approval', href: '/purchase-plans#approval-inbox' };
-  if (role === 'org:analyst') return marketAvailable ? { label: 'Market dashboard', href: '/market-dashboard' }
-    : { label: 'View purchase plans', href: '/purchase-plans' };
   return canReadPlans ? { label: 'Go to your plans', href: '/purchase-plans' } : null;
 }
 
@@ -49,7 +47,7 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
   const oneLine = width / (full.length * CHAR_EM);
   const split = !!name && oneLine < MIN_ONE_LINE_PX;
   const firstLine = split ? `${part},` : full;
-  const action = homeAction({ role, canReadPlans, marketAvailable, onManageOrganisation });
+  const action = homeAction({ role, canReadPlans, onManageOrganisation });
 
   return <main className="bb-home" aria-labelledby="home-greeting">
     <img className="bb-home-photo" src={harbour} alt="" />

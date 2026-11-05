@@ -41,6 +41,11 @@
   --bb-error-border: #e3b3a9;
   --bb-error-alert-text: #f2d9d2;
 
+  /* Decision feedback and the lower end of an indicative cost range. */
+  --bb-success-text: #b7cba6;
+  --bb-success-surface: #263126;
+  --bb-success-border: #4a5c44;
+
   /* warnings: experimental, stale or unavailable data (Phase 5, 2026-10-28; differs from errors by icon and label too) */
   --bb-warning-text: #e2c48a;
   --bb-warning-surface: #211e19;

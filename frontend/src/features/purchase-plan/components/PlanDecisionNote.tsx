@@ -8,7 +8,7 @@ export const decisionTime = (value: string) => new Date(value).toLocaleString('e
  * Tells the buyer where a submitted plan stands without opening it. The manager, time and reason come from
  * the plan's saved submission (GET /{planId}/submission), which buyers can already read for their own plans.
  */
-export function PlanDecisionNote({ plan, service }: { plan: PurchasePlan; service?: PurchasePlanService }) {
+export function PlanDecisionNote({ plan, service, canAct = true }: { plan: PurchasePlan; service?: PurchasePlanService; canAct?: boolean }) {
   const decided = plan.status === 'approved' || plan.status === 'rejected';
   const [result, setResult] = useState<{ planId: string; status?: string; decision?: ApprovalDecision | null; error?: boolean }>();
   useEffect(() => {
@@ -38,7 +38,7 @@ export function PlanDecisionNote({ plan, service }: { plan: PurchasePlan; servic
       {decision?.comment && <p className="pp-decision-comment">{approved ? 'Comment' : 'Reason'}: “{decision.comment}”</p>}
       {service?.readSubmission && !current && <p className="pp-decision-meta" role="status">Loading the manager’s note…</p>}
       {current?.error && <p className="pp-decision-meta">Couldn’t load the manager’s note. Open the decision to see it.</p>}
-      <p className="pp-decision-meta">{approved ? 'Buy using a current supplier quote, then open the decision to record the purchase.'
+      <p className="pp-decision-meta">{!canAct ? 'Read-only access. Open the decision to view the saved recommendation and manager comments.' : approved ? 'Buy using a current supplier quote, then open the decision to record the purchase.'
         : 'This plan stays locked. Open the decision to copy it to a new draft.'}</p>
     </div>
   </div>;

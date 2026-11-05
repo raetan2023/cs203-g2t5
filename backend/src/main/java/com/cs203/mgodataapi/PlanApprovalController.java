@@ -39,6 +39,7 @@ public class PlanApprovalController {
         var response = new java.util.LinkedHashMap<String, Object>();
         response.put("submission", approvals.submittedRecommendation(planId, access.organisationId()));
         response.put("decision", approvals.decision(planId, access.organisationId()));
+        response.put("buyer_label", approvals.buyerLabel(planId, access.organisationId()));
         var purchase = lifecycle.purchase(planId, access.organisationId());
         response.put("purchase", purchase);
         response.put("comparison", lifecycle.comparison(plan.orElseThrow(), access.organisationId(), purchase));

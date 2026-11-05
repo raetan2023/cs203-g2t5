@@ -21,8 +21,8 @@ const STATES = [
   { key: 'rec-awaiting', role: 'buyer', wait: 8000 }, { key: 'rec-approved', role: 'buyer', wait: 8000 }, { key: 'rec-rejected', role: 'buyer', wait: 8000 },
   { key: 'rec-withdrawn', role: 'buyer', wait: 8000 }, { key: 'rec-purchased', role: 'buyer', wait: 8000 },
   { key: 'rec-review', role: 'manager', wait: 8000 },
-  { key: 'rec-analyst', role: 'analyst' }, { key: 'rec-analyst-awaiting', role: 'analyst', wait: 8000 },
-  { key: 'home-admin', role: 'admin', path: '/purchase-plans/recommendation', name: 'rec-admin' },
+  { key: 'rec-admin', role: 'admin' }, { key: 'rec-admin-awaiting', role: 'admin', wait: 8000 },
+  { key: 'home-admin', role: 'admin', path: '/purchase-plans/recommendation', name: 'rec-admin-no-plan' },
 ];
 
 mkdirSync(out, { recursive: true });
