@@ -6,8 +6,59 @@ import { createMockAuthService, DEMO_USER } from '../preview/mockAuthService';
 import { createMockPlanService } from '../features/purchase-plan/mockService';
 import { createMockRecommendationService, RECOMMENDATION_DEMO_PLAN as plan } from '../features/recommendations/mockService';
 import type { PlanAnalysis } from '../features/purchase-plan/types';
+import { buildMockForecast } from '../features/forecast/mockService';
+import type { Horizon, ReadyForecast } from '../features/forecast/apiService';
 
 describe('recommendations app integration', () => {
+  it('shows fast results immediately, retains them while idle, and refreshes a changed publication on demand', async () => {
+    window.history.replaceState(null, '', `/purchase-plans/recommendation?plan_id=${plan.plan_id}`);
+    const analysis = await createMockRecommendationService({ delayMs: 0 }).read(plan);
+    const auth = { ...createMockAuthService({ user: DEMO_USER, delayMs: 0 }), readSession: async () => DEMO_USER };
+    const planService = { ...createMockPlanService({ initialPlan: plan, delayMs: 0 }), read: vi.fn(async () => ({ plan })) };
+    let publication = 'first-run';
+    const forecasts = { read: vi.fn(async (h: Horizon) => ({ ...buildMockForecast(h), run_id: publication,
+      anchor_quote_date: '2025-10-22', forecast_origin_date: '2025-10-22',
+      target_date: new Date(Date.parse('2025-10-22') + h * 86_400_000).toISOString().slice(0, 10),
+    }) as ReadyForecast) };
+    const service = { read: vi.fn(async (context: PlanAnalysis['context'], _horizon?: number, runId?: string) => {
+      const response = structuredClone(analysis);
+      response.context = context;
+      if (response.recommendation.status === 'ready') response.recommendation.value.explanation = `Guidance from ${runId}.`;
+      return response;
+    }) };
+    const props = { auth, scenarioDate: plan.scenario_as_of_date,
+      createPlanService: () => planService, createRecommendationService: () => service,
+      createPurchaseForecastService: () => forecasts };
+    vi.useFakeTimers();
+    try {
+      const view = render(<App {...props} />);
+      // Promise-only services should settle without advancing the loading view's step timers.
+      await act(async () => {});
+      const answer = () => within(screen.getByRole('region', { name: 'Recommendation' }));
+      expect(answer().getByText('Guidance from first-run.')).toBeVisible();
+      expect(screen.queryByText('Working out your recommendation')).not.toBeInTheDocument();
+      expect(service.read).toHaveBeenCalledOnce();
+      expect(forecasts.read).toHaveBeenCalledTimes(3);
+
+      publication = 'second-run';
+      await act(async () => { vi.advanceTimersByTime(180_000); document.dispatchEvent(new Event('visibilitychange')); });
+      view.rerender(<App {...props} mock />);
+      await act(async () => {});
+      expect(answer().getByText('Guidance from first-run.')).toBeVisible();
+      expect(service.read).toHaveBeenCalledOnce();
+      expect(forecasts.read).toHaveBeenCalledTimes(3);
+      expect(planService.read).toHaveBeenCalledOnce();
+
+      await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Refresh prices' })));
+      expect(answer().getByText('Guidance from second-run.')).toBeVisible();
+      expect(screen.queryByText('Guidance from first-run.')).not.toBeInTheDocument();
+      expect(service.read).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'second-run');
+      expect(forecasts.read).toHaveBeenCalledTimes(6);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('opens from the saved plan, refreshes edited inputs on return, and handles deletion', async () => {
     window.history.replaceState(null, '', '/purchase-plans');
     const planService = createMockPlanService({ initialPlan: plan, delayMs: 0 });

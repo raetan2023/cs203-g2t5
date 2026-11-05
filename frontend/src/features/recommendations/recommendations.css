@@ -12,7 +12,8 @@
 .recommendations .rec-header h1 { font-size: var(--bb-text-6xl); line-height: 38px; font-weight: 600; letter-spacing: -.025em; }
 .recommendations .rec-header p { font-size: var(--bb-text-md); line-height: 22px; }
 .rec-header strong { color: var(--bb-text); font-weight: 500; }
-.rec-header > a { display: inline-flex; align-items: center; gap: 6px; width: max-content; min-height: 32px; color: var(--bb-text-supporting); font-size: var(--bb-text-sm); text-decoration: none; border-radius: var(--bb-radius-control); }
+.rec-header > a { display: inline-flex; align-items: center; gap: 6px; width: max-content; min-height: 44px; color: var(--bb-text-supporting); font-size: var(--bb-text-sm); text-decoration: none; border-radius: var(--bb-radius-control); }
+.recommendations > .rec-notice, .recommendations > .pp-previous-plan { margin-bottom: var(--bb-space-6); }
 .rec-header > a:hover { color: var(--bb-text); }
 
 /* Desktop: answer and evidence on the left, decision rail on the right. Mobile: answer, rail, evidence. */

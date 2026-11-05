@@ -1,4 +1,13 @@
 export type PlanStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased';
+export interface ManagerOverview {
+  plan_count: number;
+  total_quantity_mt: number;
+  open_quantity_mt: number;
+  pending_approval_count: number;
+  reference_price_usd_per_mt: number | null;
+  reference_date: string | null;
+  exposure_usd: number | null;
+}
 export interface ApprovalNotification {
   notification_id: string;
   plan_id: string;
@@ -189,6 +198,7 @@ export interface PurchaseComparison {
   actual_minus_adjusted_estimate: number | null;
 }
 export interface SubmissionResponse {
+  buyer_label?: string | null;
   submission: SubmittedRecommendation | null;
   decision?: ApprovalDecision | null;
   purchase?: PurchaseRecord | null;
@@ -231,6 +241,7 @@ export interface BuyerDecisionRecord {
 }
 
 export interface PurchasePlanService {
+  managerOverview?(): Promise<ManagerOverview>;
   /** MPP-97: record and read the buyer's own accept/reject/ignore answers. Optional so preview/mocks can omit them. */
   recordRecommendationDecision?(planId: string, input: BuyerDecisionInput): Promise<BuyerDecisionRecord>;
   readRecommendationDecisions?(planId?: string): Promise<BuyerDecisionRecord[]>;

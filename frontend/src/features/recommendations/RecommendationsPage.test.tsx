@@ -136,12 +136,12 @@ it('pins guidance and impact to the selected publication and clears both when it
     : { status: 'unavailable' as const, reason: 'missing_news', message: 'Previous day news unavailable' }) };
   const service = ready();
   const guidance = vi.spyOn(service, 'read'), impact = vi.spyOn(service, 'readImpact');
-  render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
+  render(<ForecastProvider autoRefresh service={forecasts} scenarioDate={plan.scenario_as_of_date}>
     <RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
   expect(impact).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run');
-  expect(screen.getByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/After deadline/);
+  expect(await screen.findByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/After deadline/);
   current = false;
   await act(async () => document.dispatchEvent(new Event('visibilitychange')));
   expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
@@ -160,7 +160,7 @@ it('uses an available horizon when the default has expired and labels estimated 
   render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
     <RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
-  expect(await screen.findByRole('note', { name: 'Estimated news inputs' })).toHaveTextContent('Using estimated news data');
+  expect(await screen.findByRole('note', { name: 'News data limitations' })).toHaveTextContent('Using estimated news data');
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 14, undefined));
   expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
 });
@@ -284,5 +284,5 @@ it('shows the actual date when older news is used', async () => {
   render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
     <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
-  expect(await screen.findByRole('note', { name: 'Older news inputs' })).toHaveTextContent('23 Oct 2025');
+  expect(await screen.findByRole('note', { name: 'News data limitations' })).toHaveTextContent('23 Oct 2025');
 });

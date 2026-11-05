@@ -3,10 +3,9 @@ import { Brand } from '../../components/Brand';
 import './organisation.css';
 
 const responsibilities = [
-  ['01', 'Buyer', 'Purchase planning'],
+  ['01', 'Procurement Officer', 'Purchase planning'],
   ['02', 'Procurement Manager', 'Team oversight'],
-  ['03', 'Finance/Risk Analyst', 'Cost and risk analysis'],
-  ['04', 'Admin', 'People and access'],
+  ['03', 'Admin', 'People and access'],
 ];
 
 /** Layout is independent of Clerk so account and error states share one shell. */
@@ -26,7 +25,7 @@ export function OrganisationSelectionFrame({ children, unsupportedRole, busy, er
         <span className="bb-org-eyebrow"><span />YOUR TEAM WORKSPACE</span>
         <h1 id="bb-org-heading">{unsupportedRole ? 'Organisation role needs updating' : 'Choose your organisation'}</h1>
         <p className="bb-org-lead">{unsupportedRole
-          ? 'Ask your organisation admin to assign Buyer, Procurement Manager, Finance/Risk Analyst or Admin. You can also choose another organisation.'
+          ? 'Ask your organisation admin to assign Procurement Officer, Procurement Manager or Admin. You can also choose another organisation.'
           : 'A shared starting point for your team’s next bunker purchase. Choose a workspace to continue.'}</p>
         <div className="bb-org-route" aria-hidden="true">
           <svg viewBox="0 0 500 130" fill="none">
@@ -38,7 +37,7 @@ export function OrganisationSelectionFrame({ children, unsupportedRole, busy, er
           <div><span>Plan with clarity</span><span>Stay connected</span><span>Move together</span></div>
         </div>
         <div className="bb-org-team" aria-label="Team responsibilities">
-          <p className="bb-org-section-label">FOUR ROLES. ONE TEAM.</p>
+          <p className="bb-org-section-label">THREE ROLES. ONE TEAM.</p>
           <div className="bb-org-role-grid">{responsibilities.map(([number, name, description]) =>
             <div className="bb-org-role" key={number}><span>{number}</span><div><strong>{name}</strong><p>{description}</p></div></div>)}</div>
         </div>

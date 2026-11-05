@@ -23,10 +23,19 @@ describe('Home greeting', () => {
 });
 
 describe('Home primary action', () => {
+  it('provides a keyboard-accessible purchase-plan link for the whole homepage', async () => {
+    window.history.replaceState(null, '', '/home');
+    render(<HomePage displayName="Jordan" role="org:buyer" now={afternoon} />);
+    const background = screen.getByRole('link', { name: 'Open purchase plans' });
+    background.focus();
+    expect(background).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    expect(window.location.pathname).toBe('/purchase-plans');
+  });
+
   it.each([
-    ['org:buyer', 'Go to your plans', '/purchase-plans'],
+    ['org:officer', 'Go to your plans', '/purchase-plans'],
     ['org:manager', 'Plans for approval', '/purchase-plans#approval-inbox'],
-    ['org:analyst', 'Market dashboard', '/market-dashboard'],
   ])('links %s to the matching page', (role, name, href) => {
     render(<HomePage displayName="Jordan" role={role} marketAvailable now={afternoon} />);
     expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
@@ -37,13 +46,13 @@ describe('Home primary action', () => {
     render(<HomePage displayName="Jordan" role="org:admin" canReadPlans={false} onManageOrganisation={manage} now={afternoon} />);
     await userEvent.click(screen.getByRole('button', { name: 'Manage organisation' }));
     expect(manage).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('link', { name: 'Open purchase plans' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /plans/i })).not.toBeInTheDocument();
   });
 
   it('falls back when the target is not available', () => {
-    expect(homeAction({ role: 'org:analyst', canReadPlans: true, marketAvailable: false })).toEqual({ label: 'View purchase plans', href: '/purchase-plans' });
-    expect(homeAction({ role: 'org:admin', canReadPlans: false, marketAvailable: true })).toBeNull();
-    expect(homeAction({ canReadPlans: false, marketAvailable: true })).toBeNull();
+    expect(homeAction({ role: 'org:admin', canReadPlans: false })).toBeNull();
+    expect(homeAction({ canReadPlans: false })).toBeNull();
   });
 });
 

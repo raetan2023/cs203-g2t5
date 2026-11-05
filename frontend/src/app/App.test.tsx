@@ -20,9 +20,8 @@ async function login(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Password', { exact: true }), 'demo-password');
   await user.click(screen.getByRole('button', { name: 'Sign in' }));
 }
-async function openMenu(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(await screen.findByRole('button', { name: 'Open navigation' }));
-  return screen.getByRole('dialog', { name: 'Main navigation' });
+async function openMenu(_user: ReturnType<typeof userEvent.setup>) {
+  return (await screen.findByRole('navigation', { name: 'Main navigation' })).closest('header')!;
 }
 
 describe('shared app and auth journeys', () => {
@@ -83,7 +82,8 @@ describe('shared app and auth journeys', () => {
     await screen.findByText('500 MT');
     let menu = await openMenu(user);
     expect(within(menu).getByRole('link', { name: 'Purchase plans' })).toHaveAttribute('aria-current', 'page');
-    await user.click(within(menu).getByRole('link', { name: 'Home' }));
+    expect(screen.queryByRole('link', { name: 'Home' })).not.toBeInTheDocument();
+    await act(async () => navigate('/home'));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(screen.getByRole('link', { name: 'Go to your plans' }));
     expect(await screen.findByText('500 MT')).toBeVisible();
@@ -144,24 +144,16 @@ describe('shared app and auth journeys', () => {
     expect(await screen.findByText(/^Good (morning|afternoon|evening), John$/)).toBeVisible();
   });
 
-  it('traps navigation focus, supports Escape, and retains the session when sign-out fails', async () => {
-    window.history.replaceState(null, '', '/home');
+  it('shows inline navigation and retains the session when sign-out fails', async () => {
+    window.history.replaceState(null, '', '/purchase-plans');
     const { user } = setup(createMockAuthService({ user: DEMO_USER, delayMs: 0, failOnce: 'logout' }));
-    let menu = await openMenu(user);
-    expect(within(menu).getByRole('button', { name: 'Close navigation' })).toHaveFocus();
-    await user.tab({ shift: true });
-    expect(within(menu).getByRole('button', { name: 'Sign out' })).toHaveFocus();
-    await user.tab();
-    expect(within(menu).getByRole('button', { name: 'Close navigation' })).toHaveFocus();
-    expect(within(menu).queryByRole('button', { name: /Recommendation/ })).not.toBeInTheDocument();
-    expect(within(menu).getByRole('button', { name: 'Market dashboard' })).toBeDisabled();
-    fireEvent(menu, new Event('cancel', { bubbles: true, cancelable: true }));
-    expect(screen.getByRole('button', { name: 'Open navigation' })).toHaveFocus();
-    menu = await openMenu(user);
-    await user.click(within(menu).getByRole('button', { name: 'Sign out' }));
+    const header = await openMenu(user);
+    expect(within(header).getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(within(header).getByRole('button', { name: 'Sign out' }));
     expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't sign you out.");
-    expect(screen.getByText(/^Good (morning|afternoon|evening), John$/)).toBeVisible();
-    await user.click(within(menu).getByRole('button', { name: 'Sign out' }));
+    expect(screen.getByRole('heading', { name: 'Purchase plans' })).toBeVisible();
+    await user.click(within(header).getByRole('button', { name: 'Sign out' }));
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeVisible();
   });
 

@@ -16,7 +16,6 @@ public class OrganisationController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(Map.of(
                 "organisation_id", access.organisationId(), "role", access.roleKey(),
                 "can_read_plans", access.canReadPlans(), "can_write_plans", access.canWritePlans(),
-                "plan_scope", access.role() == OrganisationAccess.Role.ADMIN ? "none"
-                        : access.ownPlansOnly() ? "own" : "organisation"));
+                "plan_scope", access.ownPlansOnly() ? "own" : "organisation"));
     }
 }

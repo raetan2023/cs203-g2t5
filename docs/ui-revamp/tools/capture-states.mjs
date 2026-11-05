@@ -23,11 +23,11 @@ const STATES = [
   { key: 'rec-awaiting', role: 'buyer', wait: 8000 }, { key: 'rec-approved', role: 'buyer', wait: 8000 }, { key: 'rec-rejected', role: 'buyer', wait: 8000 },
   { key: 'rec-withdrawn', role: 'buyer', wait: 8000 }, { key: 'rec-purchased', role: 'buyer', wait: 8000 },
   { key: 'rec-review', role: 'manager', wait: 8000 },
-  { key: 'rec-analyst', role: 'analyst' }, { key: 'rec-analyst-awaiting', role: 'analyst', wait: 8000 },
-  { key: 'home-admin', role: 'admin', path: '/purchase-plans/recommendation', name: 'rec-admin' },
+  { key: 'rec-admin', role: 'admin' }, { key: 'rec-admin-awaiting', role: 'admin', wait: 8000 },
+  { key: 'home-admin', role: 'admin', path: '/purchase-plans/recommendation', name: 'rec-admin-no-plan' },
   // The rest of the app.
   { key: 'login', role: 'public' }, { key: 'signup', role: 'public' },
-  { key: 'home', role: 'buyer' }, { key: 'home-manager', role: 'manager' }, { key: 'home-analyst', role: 'analyst' }, { key: 'home-admin', role: 'admin' },
+  { key: 'home', role: 'buyer' }, { key: 'home-manager', role: 'manager' }, { key: 'home-admin', role: 'admin' },
   { key: 'home-price-error', role: 'buyer' },
   { key: 'multiple', role: 'buyer' }, { key: 'empty', role: 'buyer' }, { key: 'saved', role: 'buyer' }, { key: 'load-error', role: 'buyer' },
   { key: 'plans-decisions', role: 'buyer', wait: 6000 },
@@ -35,7 +35,6 @@ const STATES = [
   { key: 'plans-decisions', role: 'buyer', wait: 6000, path: '/purchase-plans/decisions', name: 'decision-history' },
   { key: 'plans-decisions', role: 'buyer', wait: 6000, path: '/purchase-plans/notifications', name: 'manager-decisions' },
   { key: 'market', role: 'buyer', name: 'forecast-widget' },
-  { key: 'home', role: 'buyer', menu: true, name: 'navigation' },
 ];
 
 /** Hierarchy metrics for the rendered page: what a reader's eye has to sort out. */
