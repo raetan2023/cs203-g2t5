@@ -50,8 +50,8 @@ class ForecastAccessHttpTests {
         verify(decoder).decode("invalid-token");
         verifyNoInteractions(forecasts);
     }
-    @Test void buyersManagersAndAnalystsCanReadAllSupportedHorizons() throws Exception {
-        for (String role : List.of("buyer", "manager", "analyst")) {
+    @Test void supportedRolesCanReadAllForecastHorizons() throws Exception {
+        for (String role : List.of("officer", "manager", "admin")) {
             for (int horizon : List.of(7, 14, 30)) {
                 mvc.perform(get(PATH).param("horizon_days", Integer.toString(horizon))
                         .with(member("org_a", role)))
@@ -62,23 +62,18 @@ class ForecastAccessHttpTests {
         }
         for (int horizon : List.of(7, 14, 30)) verify(forecasts, times(3)).read(horizon);
     }
-    @Test void adminIs403AndDoesNotInheritBusinessForecastAccess() throws Exception {
-        mvc.perform(get(PATH).with(member("org_a", "admin"))).andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.detail").value("Your organisation role does not allow this action."));
-        verifyNoInteractions(forecasts);
-    }
     @Test void missingInvalidOrConflictingOrganisationClaimsAre403() throws Exception {
         for (Map<String, Object> claims : List.<Map<String, Object>>of(
                 Map.of(), Map.of("app_role", "buyer"),
-                Map.of("o", Map.of("id", "org_a")), Map.of("o", Map.of("rol", "buyer")),
-                Map.of("o", Map.of("id", "", "rol", "buyer")),
-                Map.of("o", Map.of("id", "invalid_org", "rol", "buyer")),
+                Map.of("o", Map.of("id", "org_a")), Map.of("o", Map.of("rol", "officer")),
+                Map.of("o", Map.of("id", "", "rol", "officer")),
+                Map.of("o", Map.of("id", "invalid_org", "rol", "officer")),
                 Map.of("o", Map.of("id", "org_a", "rol", "member")),
                 Map.of("o", Map.of("id", "org_a", "rol", "unknown")),
                 Map.of("o", Map.of("id", "org_a", "rol", 5)), Map.of("o", "malformed"),
-                Map.of("o", Map.of("id", "org_a", "rol", "buyer"), "org_id", "org_other"),
-                Map.of("o", Map.of("id", "org_a", "rol", "buyer"), "org_role", "org:admin"),
-                Map.of("v", 2, "org_id", "org_a", "org_role", "org:buyer"))) {
+                Map.of("o", Map.of("id", "org_a", "rol", "officer"), "org_id", "org_other"),
+                Map.of("o", Map.of("id", "org_a", "rol", "officer"), "org_role", "org:admin"),
+                Map.of("v", 2, "org_id", "org_a", "org_role", "org:officer"))) {
             mvc.perform(get(PATH).with(jwt().jwt(token -> token.subject("user_test")
                             .claims(values -> values.putAll(claims)))))
                     .andExpect(status().isForbidden()).andExpect(jsonPath("$.detail").exists());
@@ -87,13 +82,13 @@ class ForecastAccessHttpTests {
     }
     @Test void explicitLegacyMembershipClaimsRemainSupported() throws Exception {
         mvc.perform(get(PATH).with(jwt().jwt(token -> token.subject("user_test")
-                        .claim("org_id", "org_a").claim("org_role", "org:buyer"))))
+                        .claim("org_id", "org_a").claim("org_role", "org:officer"))))
                 .andExpect(status().isOk());
         verify(forecasts).read(7);
     }
     @Test void sharedPublicationsRemainAvailableToPermittedMembersOfDifferentOrganisations() throws Exception {
         for (String org : List.of("org_a", "org_b"))
-            mvc.perform(get(PATH).with(member(org, "buyer"))).andExpect(status().isOk());
+            mvc.perform(get(PATH).with(member(org, "officer"))).andExpect(status().isOk());
         verify(forecasts, times(2)).read(7);
     }
 }

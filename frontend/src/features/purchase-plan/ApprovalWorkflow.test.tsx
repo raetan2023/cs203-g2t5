@@ -23,6 +23,19 @@ it('routes buyers to recommendation review without allowing direct plan-only sub
 });
 
 describe('manager approval inbox', () => {
+  it('shows team exposure only to managers', async () => {
+    const api = { ...service(), managerOverview: vi.fn().mockResolvedValue({ plan_count: 1,
+      total_quantity_mt: 10, open_quantity_mt: 10, pending_approval_count: 0,
+      reference_price_usd_per_mt: 600, reference_date: '2026-11-02', exposure_usd: 6000 }) };
+    const view = render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
+    expect(await screen.findByText('$6,000.00')).toBeVisible();
+    view.unmount();
+    api.managerOverview.mockClear();
+    render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} />);
+    await screen.findByRole('link', { name: /View recommendation/ });
+    expect(screen.queryByRole('region', { name: 'Team oversight' })).not.toBeInTheDocument();
+    expect(api.managerOverview).not.toHaveBeenCalled();
+  });
   const notification = { notification_id: 'n1', plan_id: 'p1', created_at: '2026-10-27T08:00:00Z', quantity_mt: 987, purchase_deadline: '2026-11-01', status: 'submitted' };
   it('shows submissions and lets a manager refresh the inbox', async () => {
     const api = service(); const user = userEvent.setup();
@@ -42,6 +55,42 @@ describe('manager approval inbox', () => {
     await screen.findByText('No plans have been submitted yet.');
     await act(async () => { finish({ notifications: [notification] }); });
     expect(screen.queryByText('987 MT')).not.toBeInTheDocument();
+  });
+  it('keeps same-team rows visible during refresh without returning to the loading placeholder', async () => {
+    const api = service();
+    api.notifications.mockResolvedValue({ notifications: [notification] });
+    render(<ApprovalInbox service={api} />);
+    await screen.findByText('987 MT');
+    let finish!: (result: unknown) => void;
+    api.notifications.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
+    await userEvent.click(screen.getByRole('button', { name: 'Refresh inbox' }));
+    expect(screen.getByText('987 MT')).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Approval inbox' })).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByText('Updating approval inbox…')).toBeInTheDocument();
+    expect(screen.queryByText('Loading approval notifications…')).not.toBeInTheDocument();
+    await act(async () => finish({ notifications: [] }));
+    expect(await screen.findByText('No plans have been submitted yet.')).toBeVisible();
+    expect(screen.queryByText('987 MT')).not.toBeInTheDocument();
+  });
+  it('clears a loaded team immediately when switching to another team', async () => {
+    const old = service(), next = service();
+    old.notifications.mockResolvedValue({ notifications: [notification] });
+    next.notifications.mockReturnValue(new Promise(() => {}));
+    const view = render(<ApprovalInbox service={old} />);
+    await screen.findByText('987 MT');
+    view.rerender(<ApprovalInbox service={next} />);
+    expect(screen.queryByText('987 MT')).not.toBeInTheDocument();
+    expect(screen.getByText('Loading approval notifications…')).toBeInTheDocument();
+  });
+  it('does not overlap polling requests while the previous read is unfinished', async () => {
+    vi.useFakeTimers();
+    try {
+      const api = service(); api.notifications.mockReturnValue(new Promise(() => {}));
+      const view = render(<ApprovalInbox service={api} />);
+      await act(async () => vi.advanceTimersByTime(90_000));
+      expect(api.notifications).toHaveBeenCalledOnce();
+      view.unmount();
+    } finally { vi.useRealTimers(); }
   });
   it('shows an access failure without leaking previously loaded notifications', async () => {
     const api = service(); const user = userEvent.setup();

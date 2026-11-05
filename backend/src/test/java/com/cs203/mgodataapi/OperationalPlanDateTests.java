@@ -15,7 +15,7 @@ class OperationalPlanDateTests {
     final PlanAnalysisService analysis = mock(PlanAnalysisService.class);
     final UUID owner = UUID.randomUUID(), id = UUID.randomUUID();
     final LocalDate today = LocalDate.parse("2026-10-26");
-    final Jwt token = Jwt.withTokenValue("test").header("alg", "RS256").subject("buyer").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")).build();
+    final Jwt token = Jwt.withTokenValue("test").header("alg", "RS256").subject("buyer").claim("o", java.util.Map.of("id", "org_a", "rol", "officer")).build();
     final PurchasePlanController controller = new PurchasePlanController(plans, users, dates, analysis);
 
     OperationalPlanDateTests() {

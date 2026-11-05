@@ -39,7 +39,7 @@ class RidgeLiveIntegrationTests {
     @Test void realRecommendationCarriesTheSelectedRunAndApprovalFingerprint() throws Exception {
         var saved = jdbc.queryForMap("select plan_id,user_id,quantity_mt,purchase_deadline,clerk_org_id from purchase_plans where clerk_org_id is not null and status='draft' order by purchase_deadline desc limit 1");
         when(users.resolve(anyString(), any())).thenReturn((UUID) saved.get("user_id"));
-        var membership = jwt().jwt(token -> token.claim("o", java.util.Map.of("id", saved.get("clerk_org_id").toString(), "rol", "buyer")));
+        var membership = jwt().jwt(token -> token.claim("o", java.util.Map.of("id", saved.get("clerk_org_id").toString(), "rol", "officer")));
         var forecast = assertInstanceOf(ForecastService.Ready.class, forecasts.read(14));
         String query = "?plan_id=" + saved.get("plan_id") + "&quantity_mt=" + saved.get("quantity_mt")
                 + "&purchase_deadline=" + saved.get("purchase_deadline") + "&scenario_as_of_date=" + forecasts.today()
@@ -59,7 +59,7 @@ class RidgeLiveIntegrationTests {
         UUID owner = (UUID) saved.get("user_id");
         when(users.resolve(anyString(), any())).thenReturn(owner);
         String organisationId = (String) saved.get("clerk_org_id");
-        var membership = jwt().jwt(token -> token.claim("o", java.util.Map.of("id", organisationId, "rol", "buyer")));
+        var membership = jwt().jwt(token -> token.claim("o", java.util.Map.of("id", organisationId, "rol", "officer")));
         LocalDate today = forecasts.today();
         var standalone = ridge.predict(30, today);
         var response = mvc.perform(get("/api/v1/purchase-plans/forecast?horizon_days=30").with(membership))

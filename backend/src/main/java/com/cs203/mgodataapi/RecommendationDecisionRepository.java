@@ -37,8 +37,8 @@ public class RecommendationDecisionRepository {
             String recommendationId, UUID runId, String action, String decision, String reason) {
         return jdbc.queryForObject(
                 "insert into plan_recommendation_decisions "
-              + "(plan_id, clerk_org_id, buyer_user_id, buyer_clerk_user_id, recommendation_id, run_id, action, decision, reason) "
-              + "values (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+              + "(plan_id, clerk_org_id, buyer_user_id, buyer_clerk_user_id, recommendation_id, run_id, action, decision, reason, decided_at) "
+              + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, clock_timestamp()) "
               + "returning " + COLUMNS,
                 MAPPER, planId, requireOrganisation(organisationId), buyerUserId, buyerClerkUserId,
                 recommendationId, runId, action, decision, reason);
@@ -48,7 +48,7 @@ public class RecommendationDecisionRepository {
         return jdbc.query(
                 "select " + COLUMNS + " from plan_recommendation_decisions "
               + "where buyer_user_id = ? and clerk_org_id = ? "
-              + "order by decided_at desc, decision_id",
+              + "order by decided_at desc, decision_id desc",
                 MAPPER, buyerUserId, requireOrganisation(organisationId));
     }
 
@@ -56,7 +56,7 @@ public class RecommendationDecisionRepository {
         return jdbc.query(
                 "select " + COLUMNS + " from plan_recommendation_decisions "
               + "where buyer_user_id = ? and clerk_org_id = ? and plan_id = ? "
-              + "order by decided_at desc, decision_id",
+              + "order by decided_at desc, decision_id desc",
                 MAPPER, buyerUserId, requireOrganisation(organisationId), planId);
     }
 

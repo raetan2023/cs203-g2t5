@@ -10,10 +10,11 @@ try {
   await server.listen();
   browser = await chromium.launch();
   const page = await browser.newPage();
+  page.setDefaultTimeout(15000);
   const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
+  page.on('pageerror', error => { errors.push(error.message); console.error(error.message); });
   const origin = server.resolvedUrls.local[0];
-  await page.route('**/__home-navigation__', async route => {
+  await page.route(/\/__home-navigation__(?:\?role=[^&]+)?$/, async route => {
     const html = await server.transformIndexHtml('/__home-navigation__', `
       <html><head><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
       <body><div id="root"></div><script type="module">
@@ -22,6 +23,7 @@ try {
         import { App } from '/src/app/App.tsx';
         import { createMockAuthService, DEMO_USER } from '/src/preview/mockAuthService.ts';
         import { createMockPlanService } from '/src/features/purchase-plan/mockService.ts';
+        const role = new URL(location.href).searchParams.get('role') || 'org:officer';
         history.replaceState(null, '', '/home');
         const auth = createMockAuthService({user: DEMO_USER, delayMs: 0});
         const plans = createMockPlanService({delayMs: 0});
@@ -31,6 +33,7 @@ try {
         ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, {
           auth, createPlanService: () => plans, scenarioDate: '2026-11-04',
           readMarketQuote: quote, MarketDashboard: Market,
+          planAccess: { organisation_id: 'org_preview', role, can_read_plans: true, can_write_plans: role === 'org:officer', plan_scope: role === 'org:officer' ? 'own' : 'organisation' },
         }));
       </script></body></html>`);
     await route.fulfill({ contentType: 'text/html', body: html });
@@ -59,19 +62,44 @@ try {
       assert.equal(await page.locator('.purchase-plan').evaluate(el => getComputedStyle(el).animationName), 'bb-page-enter');
       await home();
     }
-    await page.getByRole('button', { name: 'Open navigation' }).click();
-    assert.equal(await page.getByRole('dialog', { name: 'Main navigation' }).isVisible(), true);
-    assert.match(page.url(), /\/home$/);
-    await page.keyboard.press('Escape');
+    assert.equal(await page.getByRole('navigation').count(), 0);
+    assert.equal(await page.locator('.bb-header').count(), 0);
     await page.getByRole('link', { name: /Open market dashboard/ }).click();
     await page.getByRole('heading', { name: 'Synthetic market dashboard' }).waitFor();
     assert.match(page.url(), /\/market-dashboard$/);
+    assert.equal(await page.getByRole('navigation', { name: 'Main navigation' }).isVisible(), true);
+    assert.equal(await page.getByRole('link', { name: 'Home', exact: true }).count(), 0);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    if (process.env.LAYOUT_SCREENSHOT_DIR) await page.screenshot({ path: `${process.env.LAYOUT_SCREENSHOT_DIR}/topnav-${width}.png`, fullPage: true });
     await home();
     const background = page.getByRole('link', { name: 'Open purchase plans', exact: true });
     await background.focus();
     await page.keyboard.press('Enter');
     await page.waitForURL('**/purchase-plans');
     console.log(`PASS ${width}px: background, greeting, keyboard, header and market navigation`);
+  }
+  for (const role of ['org:officer', 'org:manager', 'org:admin']) {
+    for (const width of [320, 390, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto(new URL(`/__home-navigation__?role=${role}`, origin).href);
+      await page.getByRole('heading', { level: 1 }).waitFor();
+      assert.equal(await page.getByRole('navigation').count(), 0);
+      assert.equal(await page.locator('.bb-header').count(), 0);
+      await page.getByRole('link', { name: 'Market dashboard', exact: true }).click();
+      await page.getByRole('heading', { name: 'Synthetic market dashboard' }).waitFor();
+      const nav = page.getByRole('navigation', { name: 'Main navigation' });
+      assert.equal(await nav.getByRole('link', { name: 'Decision history' }).count(), role === 'org:officer' ? 1 : 0);
+      assert.equal(await nav.getByRole('link', { name: 'Organisation administration' }).count(), role === 'org:admin' ? 1 : 0);
+      assert.equal(await page.getByRole('dialog').count(), 0);
+      await nav.getByRole('link', { name: 'Purchase plans', exact: true }).click();
+      await page.locator('.purchase-plan').waitFor();
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      if (role === 'org:admin') {
+        await nav.getByRole('link', { name: 'Organisation administration' }).click();
+        await page.getByRole('heading', { name: 'Your organisation' }).waitFor();
+      }
+      console.log(`PASS ${role} at ${width}px: welcome, destinations and permissions`);
+    }
   }
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await home();

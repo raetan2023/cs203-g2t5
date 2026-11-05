@@ -1,4 +1,4 @@
-import { useAuth, useClerk, useUser, useOrganization } from '@clerk/react';
+import { useAuth, useClerk, useUser, useOrganization, OrganizationProfile } from '@clerk/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StatusPage } from '../components/StatusPage';
 import { ClerkAuthPage } from '../features/auth/ClerkAuthPage';
@@ -150,6 +150,15 @@ export function ClerkApp() {
   return <App
     key={contextKey}
     organisationControl={organisationReady ? <OrganisationControl name={organisationState.organization!.name} role={roleLabel!} /> : undefined}
+    organisationName={organisationReady ? organisationState.organization!.name : undefined}
+    organisationManagement={organisationReady && scenario.state === 'ready' && scenario.permissions.role === 'org:admin'
+      ? <OrganizationProfile key={orgId} routing="hash" afterLeaveOrganizationUrl="/home" appearance={{
+          ...organisationAppearance,
+          elements: { ...organisationAppearance.elements,
+            rootBox: { width: '100%', maxWidth: '100%' },
+            cardBox: { width: '100%', maxWidth: '100%', height: 'auto', minHeight: '520px', border: 'none', borderRadius: '0', boxShadow: 'none' },
+          },
+        }} /> : undefined}
     planAccess={scenario.state === 'ready' ? scenario.permissions : undefined}
     auth={auth}
     createPlanService={createPlanService}

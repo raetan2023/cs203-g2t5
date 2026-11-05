@@ -22,6 +22,21 @@ function form(api = service()) {
 }
 
 describe('manager decisions', () => {
+  it('renders the saved recommendation, buyer and reference in a keyboard-accessible panel', async () => {
+    const user = userEvent.setup();
+    render(<ManagerDecisionForm planId={plan.plan_id} fingerprint={fingerprint} service={service()}
+      onDecided={vi.fn()} onRefresh={vi.fn()} plan={plan} analysis={snapshot.analysis} buyerLabel="buyer@example.test" today={plan.scenario_as_of_date} />);
+    const opener = screen.getByRole('button', { name: 'Approve recommendation' });
+    await user.click(opener);
+    expect(screen.getByRole('dialog', { name: 'Approve plan' })).toBeVisible();
+    expect(screen.getByText('buyer@example.test')).toBeVisible();
+    expect(screen.getByText('USD 700.00/MT')).toBeVisible();
+    await user.keyboard('{Escape}');
+    // Native dialog cancellation is verified in the Chromium layout script.
+    const dialog = screen.queryByRole('dialog');
+    if (dialog) { await user.click(screen.getByRole('button', { name: 'Close review' })); }
+    expect(opener).toHaveFocus();
+  });
   it('confirms approval with the reviewed snapshot and optional comment', async () => {
     const user = userEvent.setup(); const { api, onDecided } = form();
     await user.click(screen.getByRole('button', { name: 'Approve recommendation' }));
@@ -29,15 +44,20 @@ describe('manager decisions', () => {
     await user.type(screen.getByLabelText('Approval comment (optional)'), '  Within budget  ');
     await user.click(screen.getByRole('button', { name: 'Confirm approval' }));
     expect(api.decide).toHaveBeenCalledWith(plan.plan_id, { decision: 'approved', comment: 'Within budget', approval_fingerprint: fingerprint });
+    expect(await screen.findByRole('heading', { name: 'Plan approved', level: 3 })).toBeVisible();
+    expect(onDecided).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Back to plan' }));
     expect(onDecided).toHaveBeenCalledOnce();
   });
   it('requires a nonblank rejection reason and supports cancelling before confirmation', async () => {
     const user = userEvent.setup(); const { api } = form();
     await user.click(screen.getByRole('button', { name: 'Reject recommendation' }));
-    expect(screen.getByRole('button', { name: 'Confirm rejection' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Confirm rejection' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Add a reason');
     await user.type(screen.getByLabelText('Rejection reason (required)'), '   ');
-    expect(screen.getByRole('button', { name: 'Confirm rejection' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Cancel decision' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm rejection' }));
+    expect(api.decide).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Close review' }));
     expect(api.decide).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Reject recommendation' }));
     await user.type(screen.getByLabelText('Rejection reason (required)'), 'Outside budget');
@@ -51,8 +71,9 @@ describe('manager decisions', () => {
     const { onDecided, unmount } = form(api);
     await user.click(screen.getByRole('button', { name: 'Approve recommendation' }));
     await user.click(screen.getByRole('button', { name: 'Confirm approval' }));
-    expect(screen.getByRole('button', { name: 'Saving decision…' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Cancel decision' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Confirm approval' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Saving decision');
+    expect(screen.getByRole('button', { name: 'Close review' })).toBeDisabled();
     unmount(); await act(async () => finish({ plan: { ...plan, status: 'approved' } }));
     expect(onDecided).not.toHaveBeenCalled(); expect(api.decide).toHaveBeenCalledOnce();
   });
@@ -65,7 +86,7 @@ describe('manager decisions', () => {
     await user.click(screen.getByRole('button', { name: 'Confirm rejection' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Another manager has already decided');
     expect(screen.getByLabelText('Rejection reason (required)')).toHaveValue('Budget constraint');
-    expect(screen.getByRole('button', { name: 'Confirm rejection' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Confirm rejection' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Reload request' }));
     expect(onRefresh).toHaveBeenCalledOnce();
   });
@@ -84,6 +105,8 @@ it('shows the manager controls only to a manager and refreshes the final audit a
   await user.click(screen.getByRole('button', { name: 'Reject recommendation' }));
   await user.type(screen.getByLabelText('Rejection reason (required)'), 'Outside the approved budget');
   await user.click(screen.getByRole('button', { name: 'Confirm rejection' }));
+  expect(await screen.findByRole('heading', { name: 'Plan rejected', level: 3 })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Back to plan' }));
   expect(await screen.findByRole('heading', { name: 'Recommendation rejected' })).toBeVisible();
   expect(screen.getByText('Outside the approved budget')).toBeVisible();
   expect(screen.getByText(/Decided by Procurement Manager/)).toBeVisible();

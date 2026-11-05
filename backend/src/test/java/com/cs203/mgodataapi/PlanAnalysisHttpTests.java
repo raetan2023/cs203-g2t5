@@ -36,8 +36,8 @@ class PlanAnalysisHttpTests {
     final HttpClient client = HttpClient.newHttpClient();
     @BeforeEach void setup() {
         when(operationalDate.today()).thenReturn(LocalDate.parse("2025-10-24"));
-        when(decoder.decode("owner-token")).thenReturn(Jwt.withTokenValue("owner-token").header("alg", "RS256").subject("owner").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")).build());
-        when(decoder.decode("other-token")).thenReturn(Jwt.withTokenValue("other-token").header("alg", "RS256").subject("other").claim("o", java.util.Map.of("id", "org_a", "rol", "buyer")).build());
+        when(decoder.decode("owner-token")).thenReturn(Jwt.withTokenValue("owner-token").header("alg", "RS256").subject("owner").claim("o", java.util.Map.of("id", "org_a", "rol", "officer")).build());
+        when(decoder.decode("other-token")).thenReturn(Jwt.withTokenValue("other-token").header("alg", "RS256").subject("other").claim("o", java.util.Map.of("id", "org_a", "rol", "officer")).build());
         when(users.resolve("owner", null)).thenReturn(owner);
         when(users.resolve("other", null)).thenReturn(other);
         when(plans.findByIdAndUser(planId, owner, "org_a")).thenReturn(Optional.of(plan));

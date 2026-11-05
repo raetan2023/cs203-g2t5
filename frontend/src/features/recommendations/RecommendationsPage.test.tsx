@@ -141,7 +141,7 @@ it('pins guidance and impact to the selected publication and clears both when it
   </ForecastProvider>);
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
   expect(impact).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run');
-  expect(screen.getByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/After deadline/);
+  expect(await screen.findByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/After deadline/);
   current = false;
   await act(async () => document.dispatchEvent(new Event('visibilitychange')));
   expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
