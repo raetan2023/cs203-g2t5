@@ -115,7 +115,7 @@ it('never offers approval requests to read-only viewers and shows the persisted 
   await screen.findByText('No recommendation available');
   expect(screen.queryByRole('button', { name: 'Submit for approval' })).not.toBeInTheDocument();
   view.rerender(<SubmittedRecommendationView plan={submitted} planService={api} />);
-  expect(await screen.findByRole('heading', { name: 'Plan recommendation · WAIT' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: 'Plan recommendation · Wait' })).toBeVisible();
   expect(screen.getByText('One recommendation for this plan.')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Submit for approval' })).not.toBeInTheDocument();
 });
@@ -146,6 +146,6 @@ it('leads a decided request with its status, who decided, the comment and the ne
   expect(within(status).getByText(/Read-only access/)).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Record purchase' })).not.toBeInTheDocument();
   expect(within(screen.getByRole('complementary', { name: 'Saved recommendation summary' })).getByText('Wait')).toBeVisible();
-  expect(screen.getByRole('heading', { name: 'Plan recommendation · WAIT' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Plan recommendation · Wait' })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Approve recommendation' })).not.toBeInTheDocument();
 });

@@ -148,7 +148,7 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
           {!analysis || !submission ? <section className="rec-card"><h2>Earlier plan-only submission</h2><p>This request was submitted before recommendation snapshots were introduced. No selected recommendation was saved.</p></section>
             : <section className="rec-detail" aria-label="Saved recommendation for approval">
               <div className="rec-section-head"><div>
-                <h2>Plan recommendation · {rec?.action.replaceAll('_', ' ')}</h2>
+                <h2>Plan recommendation · {rec ? actionLabel(rec.action) : 'Not saved'}</h2>
                 {rec && <p>{readableDates(rec.explanation)}</p>}
               </div></div>
               {cost ? <dl className="rec-detail-grid">

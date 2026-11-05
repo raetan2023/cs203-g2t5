@@ -86,13 +86,13 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current planning date.</p><button className="bb-button" onClick={reload}>Retry</button></section>
       : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Choose a saved purchase plan from your plans, or create a new one.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>
-      : <PlanDecision plan={plan} planService={planService} service={service} reload={reload} published={forecast} entries={comparison.entries} connected={forecastState.connected} onRefresh={refreshPrices}
+      : <PlanDecision plan={plan} planService={planService} service={service} reload={reload} published={forecast} entries={comparison.entries} connected={forecastState.connected} onRefresh={refreshPrices} readOnly={!canSubmit}
         horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={fitsSelected ? forecast?.run_id : undefined}
         requireEvidence={forecastState.connected && !forecast}
         showGuidance={!forecastState.connected || !!forecast}
         guidanceWaiting={forecastState.status === 'loading' ? 'loading' : 'error'}
         showImpact={!!service?.readImpact && (!forecastState.connected || (!!forecast && fitsSelected))}
-        impactNote={!forecastState.connected ? undefined : noHorizonFits ? 'No forecast lands before your deadline, so buying today is the only priced option.' : 'Cost impact is unavailable until a current forecast is ready for the selected horizon.'}
+        impactNote={!forecastState.connected || noHorizonFits ? undefined : 'Cost impact is unavailable until a current forecast is ready for the selected horizon.'}
         canRespond={canSubmit && plan.status === 'draft'}
         approval={canSubmit && plan.status === 'draft' && !!forecast ? { planService, horizon: forecastState.horizon, onSubmitted: (saved: PurchasePlan) => setResult({ scope, plan: saved }) } : undefined}>
         {(guidance, preparing) => {
@@ -120,8 +120,11 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
               knownMessage={!forecast ? (forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : undefined) : undefined}
               badge={!experimental && forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
             {!preparing && shown && <ExploredDetail column={shown} quantity={plan.quantity_mt} today={scenarioDate} experimental={experimental}
-              source={shown.forecast ? `${executedRidge ? 'Ridge model' : experimental ? 'Last quote carried forward' : forecast?.interval.method === 'gdelt_error_quantiles' ? 'Ridge model, published' : 'Model forecast'} · from the ${formatDate(shown.forecast.anchor_quote_date)} quote` : ''} />}
-            {experimental && !noHorizonFits && fitsSelected && <aside className="rec-notice" aria-label="Estimate limitations">
+              source={shown.forecast ? (executedRidge ? 'Executed Ridge · experimental bounds' : experimental ? 'Last-quote fallback · Ridge unavailable' : forecast?.interval.method === 'gdelt_error_quantiles' ? 'Ridge model, published' : 'Model forecast') : ''}
+              sourceFrom={shown.forecast ? `from the ${formatDate(shown.forecast.anchor_quote_date)} quote` : undefined} />}
+            {/* The limitations notice appears only when it carries a warning the detail above does not: a stale quote,
+                a target after the deadline, or no Ridge run. A fresh executed Ridge estimate is already labelled there. */}
+            {experimental && !noHorizonFits && fitsSelected && (afterDeadline || quoteAge > 7 || !executedRidge) && <aside className="rec-notice" aria-label="Estimate limitations">
               <WarningIcon /><div>
               <h2>{plan.days_remaining < 0 ? 'Your purchase deadline has passed' : afterDeadline ? 'This estimate is after your purchase deadline' : executedRidge ? 'Dated Ridge estimate' : 'Timing guidance unavailable'}</h2>
               <p>{afterDeadline ? 'Choose a shorter horizon if one fits your deadline. ' : ''}{quoteAge > 7 ? `The ${executedRidge ? 'model anchor' : 'latest price'} quote is ${quoteAge} days old (${formatDate(forecast!.anchor_quote_date)}). ` : executedRidge ? `The model targets ${formatDate(forecast!.target_date)} from its ${formatDate(forecast!.forecast_origin_date)} quote anchor. ` : 'No current Ridge forecast is available. '}{executedRidge && quoteAge > 7 ? `The ${forecastState.horizon}-day model targets ${formatDate(forecast!.target_date)} from that anchor. ` : ''}Compare this scenario with a current supplier quote before deciding when to buy.</p>
@@ -136,10 +139,10 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
 type Approval = { planService: PurchasePlanService; horizon: Horizon; onSubmitted(plan: PurchasePlan): void };
 
 /** Answer, decision rail and fine print; guidance and cost impact load and retry independently. */
-function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, canRespond, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, connected, onRefresh, children }: {
+function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, canRespond, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, connected, onRefresh, readOnly = false, children }: {
   plan: PurchasePlan & { urgency?: Urgency }; planService: PurchasePlanService; service?: RecommendationService; reload(): void; horizonDays?: number; runId?: string;
   requireEvidence: boolean; approval?: Approval; canRespond: boolean; showGuidance: boolean; guidanceWaiting: 'loading' | 'error'; showImpact: boolean; impactNote?: string;
-  published?: ReadyForecast; entries?: Entry[]; connected: boolean; onRefresh(): void; children(guidance: CurrentRecommendation | undefined, preparing: boolean): ReactNode;
+  published?: ReadyForecast; entries?: Entry[]; connected: boolean; onRefresh(): void; readOnly?: boolean; children(guidance: CurrentRecommendation | undefined, preparing: boolean): ReactNode;
 }) {
   const g = useAnalysis(showGuidance ? service : undefined, plan, 'read', horizonDays, runId);
   const i = useAnalysis(showImpact ? service : undefined, plan, 'readImpact', horizonDays, runId);
@@ -177,7 +180,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
       : g.loading ? <div role="status"><span className="rec-kicker">Recommended action</span><h2>Loading recommendation…</h2><p>The recommendation is loading for your selected saved purchase plan and current planning date.</p><div className="rec-skeleton" aria-hidden="true" /></div>
       : g.error ? <div role="alert"><span className="rec-kicker">Recommended action</span><h2>Couldn’t load analysis</h2><p>{g.message ?? 'We couldn’t load the recommendation for this plan and current date. Your plan remains saved.'}</p><button className="bb-button bb-button--secondary" onClick={g.changed ? reload : g.retry}>{g.changed ? 'Reload saved plan' : 'Retry recommendation'}</button></div>
       : !g.connected ? <div><span className="rec-kicker">Recommended action</span><h2>No recommendation available</h2><p>The recommendations service is not connected yet. Your purchase plan remains saved.</p></div>
-      : guidance ? <div className="rec-verdict">
+      : guidance ? <div className={`rec-verdict${actionLabel(guidance.action).length > 16 ? ' rec-verdict--long' : ''}`}>
         <span className="rec-verdict-icon" aria-hidden="true"><ActionIcon action={guidance.action} /></span>
         <div><span className="rec-kicker">Recommended action</span><h2>{actionLabel(guidance.action)}</h2>
           {tagline(guidance, plan) && <p className="rec-tagline">{tagline(guidance, plan)}</p>}
@@ -199,7 +202,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
       {demo && <p className="rec-demo">Synthetic demo data · Illustrative guidance only.</p>}
     </section>
 
-    <aside className="rec-rail" aria-label="Decision">
+    <aside className="rec-rail" aria-label={readOnly ? 'Recommendation summary' : 'Decision'}>
       <div className="rec-rail-card">
         <div><span className="rec-kicker">Recommendation summary</span>{preparing ? <span className="rec-shimmer rec-rail-pending" aria-hidden="true" />
           : <strong className="rec-rail-action">{guidance ? actionLabel(guidance.action) : 'No recommendation yet'}</strong>}</div>
