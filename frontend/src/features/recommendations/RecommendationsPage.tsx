@@ -1,6 +1,6 @@
+import BuyerDecisionLog from './BuyerDecisionLog';
 import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
 import { SubmittedRecommendationView, RecommendationApproval } from './RecommendationApproval';
-import BuyerDecisionLog from './BuyerDecisionLog';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppLink } from '../../app/router';
 import { calendarDays, formatDate } from '../purchase-plan/dates';
@@ -8,6 +8,7 @@ import type { CurrentRecommendation, PurchasePlan, PurchasePlanService, Urgency 
 import type { RecommendationService } from './service';
 import { useAnalysis } from './useAnalysis';
 import { RecommendationLoading } from './RecommendationLoading';
+import { NewsDataNotice } from './NewsDataNotice';
 import { CompareBuyingDates, ExploredDetail, WarningIcon, buildColumns, useHorizonComparison, type ColumnId, type Entry } from './TimingComparison';
 import { DataSources, forecastSource } from './PurchaseImpact';
 import { actionLabel, amount, change, changeRange, compact, dayDate, price, readableDates, usd } from './format';
@@ -76,12 +77,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       <h1 tabIndex={-1} ref={heading}>Purchase recommendation</h1>
       {plan && <p>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT · due {dayDate(plan.purchase_deadline, true)} · <strong>{remaining(plan.days_remaining)}</strong></p>}
     </header>
-    {forecast?.source_dates.gdelt_fallback && <section className="rec-notice" role="note" aria-label="Older news inputs">
-      <WarningIcon /><div><h2>Using the last available news data</h2><p>The latest completed GDELT day is missing. This recommendation uses article count and tone from {formatDate(forecast.source_dates.gdelt_fallback)}. Missing days have not been filled with invented values. News older than seven days cannot be used.</p></div>
-    </section>}
-    {forecast?.source_dates.gdelt_estimated && <section className="rec-notice" role="note" aria-label="Estimated news inputs">
-      <WarningIcon /><div><h2>Using estimated news data</h2><p>GDELT article count and average tone for {formatDate(forecast.source_dates.gdelt_estimated)} include API-supplied estimates. They affect the experimental price range, not the Ridge central estimate. Confirm a current supplier quote before buying.</p></div>
-    </section>}
+    <NewsDataNotice sourceDates={forecast?.source_dates} />
     {plan?.previous_plan_id && <PreviousPlanNote plan={plan} service={planService} />}
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current planning date.</p><button className="bb-button" onClick={reload}>Retry</button></section>
@@ -93,6 +89,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
         guidanceWaiting={forecastState.status === 'loading' ? 'loading' : 'error'}
         showImpact={!!service?.readImpact && (!forecastState.connected || (!!forecast && fitsSelected))}
         impactNote={!forecastState.connected || noHorizonFits ? undefined : 'Cost impact is unavailable until a current forecast is ready for the selected horizon.'}
+        canRespond={canSubmit && plan.status === 'draft'}
         approval={canSubmit && plan.status === 'draft' && !!forecast ? { planService, horizon: forecastState.horizon, onSubmitted: (saved: PurchasePlan) => setResult({ scope, plan: saved }) } : undefined}>
         {(guidance, preparing) => {
           const target = guidance?.evidence?.supported_target_date;
@@ -138,9 +135,9 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
 type Approval = { planService: PurchasePlanService; horizon: Horizon; onSubmitted(plan: PurchasePlan): void };
 
 /** Answer, decision rail and fine print; guidance and cost impact load and retry independently. */
-function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, connected, onRefresh, readOnly = false, children }: {
+function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, canRespond, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, connected, onRefresh, readOnly = false, children }: {
   plan: PurchasePlan & { urgency?: Urgency }; planService: PurchasePlanService; service?: RecommendationService; reload(): void; horizonDays?: number; runId?: string;
-  requireEvidence: boolean; approval?: Approval; showGuidance: boolean; guidanceWaiting: 'loading' | 'error'; showImpact: boolean; impactNote?: string;
+  requireEvidence: boolean; approval?: Approval; canRespond: boolean; showGuidance: boolean; guidanceWaiting: 'loading' | 'error'; showImpact: boolean; impactNote?: string;
   published?: ReadyForecast; entries?: Entry[]; connected: boolean; onRefresh(): void; readOnly?: boolean; children(guidance: CurrentRecommendation | undefined, preparing: boolean): ReactNode;
 }) {
   const g = useAnalysis(showGuidance ? service : undefined, plan, 'read', horizonDays, runId);
@@ -203,7 +200,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
 
     <aside className="rec-rail" aria-label={readOnly ? 'Recommendation summary' : 'Decision'}>
       <div className="rec-rail-card">
-        <div><span className="rec-kicker">{readOnly ? 'Recommendation' : 'Your decision'}</span>{preparing ? <span className="rec-shimmer rec-rail-pending" aria-hidden="true" />
+        <div><span className="rec-kicker">Recommendation summary</span>{preparing ? <span className="rec-shimmer rec-rail-pending" aria-hidden="true" />
           : <strong className="rec-rail-action">{guidance ? actionLabel(guidance.action) : 'No recommendation yet'}</strong>}</div>
         <dl className="rec-rail-facts">
           <div><dt>Plan</dt><dd>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT</dd></div>
@@ -213,8 +210,8 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
         </dl>
         {preparing && approval && <div className="rec-approval-pending"><button type="button" className="bb-button rec-submit" disabled>Submit for approval</button><p>Available when the recommendation is ready</p></div>}
         {approval && guidance && g.analysis && <RecommendationApproval key={`${g.analysis.approval_fingerprint}:${approval.horizon}`} analysis={g.analysis} plan={plan} horizon={approval.horizon} planService={approval.planService} onSubmitted={approval.onSubmitted} />}
-        {/* Accept / reject / ignore is the buyer's decision; read-only roles (manager, analyst) see the summary only. */}
-        {guidance && !readOnly && <BuyerDecisionLog planId={plan.plan_id} recommendationId={guidance.recommendation_id} runId={runId ?? published?.run_id} action={guidance.action} planService={planService} />}
+        {!approval && canRespond && guidance && <BuyerDecisionLog key={guidance.recommendation_id} planId={plan.plan_id}
+          recommendationId={guidance.recommendation_id} runId={runId ?? published?.run_id} action={guidance.action} planService={planService} />}
         {connected && <button type="button" className="bb-button bb-button--secondary rec-refresh" onClick={onRefresh}><RefreshIcon />Refresh prices</button>}
       </div>
       {quote && <p className="rec-rail-note">Prices use the MGO quote observed {dayDate(quote)}, {quoteAgeText(calendarDays(quote, plan.scenario_as_of_date))}. Confirm a current supplier quote before you buy.</p>}

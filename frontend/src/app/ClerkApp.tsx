@@ -1,4 +1,4 @@
-import { useAuth, useClerk, useUser, useOrganization } from '@clerk/react';
+import { useAuth, useClerk, useUser, useOrganization, OrganizationProfile } from '@clerk/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StatusPage } from '../components/StatusPage';
 import { ClerkAuthPage } from '../features/auth/ClerkAuthPage';
@@ -33,6 +33,8 @@ export function ClerkApp() {
   const organisationState = useOrganization();
   const [scenario, setScenario] = useState<Scenario>({ state: 'idle' });
   const [scenarioAttempt, setScenarioAttempt] = useState(0);
+  // Returning to the tab checks date/access without restarting purchase-plan predictions.
+  const [dataRevision, setDataRevision] = useState(0);
 
   const signedIn = authState.isLoaded && authState.isSignedIn && userState.isLoaded && userState.isSignedIn;
   const orgId = authState.orgId;
@@ -148,6 +150,15 @@ export function ClerkApp() {
   return <App
     key={contextKey}
     organisationControl={organisationReady ? <OrganisationControl name={organisationState.organization!.name} role={roleLabel!} /> : undefined}
+    organisationName={organisationReady ? organisationState.organization!.name : undefined}
+    organisationManagement={organisationReady && scenario.state === 'ready' && scenario.permissions.role === 'org:admin'
+      ? <OrganizationProfile key={orgId} routing="hash" afterLeaveOrganizationUrl="/home" appearance={{
+          ...organisationAppearance,
+          elements: { ...organisationAppearance.elements,
+            rootBox: { width: '100%', maxWidth: '100%' },
+            cardBox: { width: '100%', maxWidth: '100%', height: 'auto', minHeight: '520px', border: 'none', borderRadius: '0', boxShadow: 'none' },
+          },
+        }} /> : undefined}
     planAccess={scenario.state === 'ready' ? scenario.permissions : undefined}
     auth={auth}
     createPlanService={createPlanService}
@@ -155,7 +166,8 @@ export function ClerkApp() {
     createForecastService={createForecastService}
     createPurchaseForecastService={createPurchaseForecastService}
     dataRevision={scenarioAttempt}
-    refreshScenario={() => setScenarioAttempt(value => value + 1)}
+    purchaseDataRevision={dataRevision}
+    refreshScenario={() => { setDataRevision(value => value + 1); setScenarioAttempt(value => value + 1); }}
     scenarioDate={scenario.state === 'ready' ? scenario.date : ''}
     renderAuthPage={mode => <ClerkAuthPage mode={mode} />}
     MarketDashboard={MarketDashboard}
