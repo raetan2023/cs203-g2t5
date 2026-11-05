@@ -23,6 +23,12 @@ function mockFetch(status: number, body?: unknown) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('createApiPlanService', () => {
+  it('reads an optional authorised buyer label and rejects malformed labels', async () => {
+    mockFetch(200, { submission: null, decision: null, buyer_label: 'buyer@example.test' });
+    await expect(service.readSubmission!('p1')).resolves.toMatchObject({ buyer_label: 'buyer@example.test' });
+    mockFetch(200, { submission: null, decision: null, buyer_label: { email: 'unexpected' } });
+    await expect(service.readSubmission!('p1')).rejects.toMatchObject({ status: 502 });
+  });
   it('loads manager exposure using the session without accepting a requested team', async () => {
     const value = { plan_count: 2, total_quantity_mt: 20, open_quantity_mt: 10, pending_approval_count: 1,
       reference_price_usd_per_mt: 600, reference_date: '2026-11-02', exposure_usd: 6000 };

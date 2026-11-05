@@ -58,6 +58,7 @@ try {
   await select.selectOption('rec-review');
   await page.getByRole('button', { name: 'Approve recommendation', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm approval', exact: true }).click();
+  await page.getByRole('button', { name: 'Back to plan', exact: true }).click();
   await page.getByRole('heading', { name: 'Recommendation approved', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Record purchase', exact: true }).count(), 0, 'Manager is read-only after deciding');
   assert.deepEqual(errors, []);

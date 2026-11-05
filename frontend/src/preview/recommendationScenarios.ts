@@ -164,7 +164,7 @@ export function withPreviewApproval(plans: PurchasePlanService, scenario: Recomm
       const p = data.purchase, q = submission?.analysis.context.quantity_mt;
       const adjustedReference = reference != null && q && p ? reference * p.quantity_mt / q : null;
       const adjustedEstimate = estimate != null && q && p ? estimate * p.quantity_mt / q : null;
-      return { ...data, submission, comparison: p && q ? { currency: 'USD', planned_quantity_mt: q, actual_quantity_mt: p.quantity_mt,
+      return { ...data, buyer_label: 'buyer@preview.example', submission, comparison: p && q ? { currency: 'USD', planned_quantity_mt: q, actual_quantity_mt: p.quantity_mt,
         same_quantity: q === p.quantity_mt, actual_total: p.total_usd, reference_total: reference, central_total: estimate,
         forecast_total: c?.status === 'ready' ? c.value.forecast_total : null,
         actual_minus_reference: reference == null ? null : p.total_usd - reference,

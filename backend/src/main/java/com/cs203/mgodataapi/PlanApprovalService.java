@@ -116,6 +116,16 @@ public class PlanApprovalService {
         return rows.isEmpty() ? null : rows.getFirst();
     }
 
+    /** Called only after the controller authorizes the plan in the active organisation. */
+    public String buyerLabel(UUID planId, String orgId) {
+        var rows = jdbc.query("""
+                SELECT COALESCE(NULLIF(TRIM(u.email), ''), u.clerk_user_id) AS buyer_label
+                FROM purchase_plans p JOIN users u ON u.user_id = p.user_id
+                WHERE p.plan_id = ? AND p.clerk_org_id = ?
+                """, (rs, n) -> rs.getString("buyer_label"), planId, orgId);
+        return rows.isEmpty() ? null : rows.getFirst();
+    }
+
     public Map<String, Object> submittedRecommendation(UUID planId, String orgId) {
         var rows = jdbc.query("""
                 select recommendation_snapshot from plan_approval_notifications

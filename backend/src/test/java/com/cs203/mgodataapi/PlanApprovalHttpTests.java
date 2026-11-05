@@ -57,11 +57,13 @@ class PlanApprovalHttpTests {
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(saved));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(saved));
         when(approvals.submittedRecommendation(id, "org_a")).thenReturn(Map.of("horizon_days", 14));
+        when(approvals.buyerLabel(id, "org_a")).thenReturn("buyer@example.test");
         when(approvals.decision(id, "org_a")).thenReturn(Map.of("decision", "rejected", "comment", "Budget"));
         for (String role : List.of("buyer", "manager", "analyst"))
             mvc.perform(get(endpoint).with(member("org_a", role))).andExpect(status().isOk())
                     .andExpect(header().string("Cache-Control", "no-store"))
                     .andExpect(jsonPath("$.submission.horizon_days").value(14))
+                    .andExpect(jsonPath("$.buyer_label").value("buyer@example.test"))
                     .andExpect(jsonPath("$.decision.comment").value("Budget"));
         mvc.perform(get(endpoint).with(member("org_b", "manager"))).andExpect(status().isNotFound());
     }
