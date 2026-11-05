@@ -17,6 +17,7 @@ vi.mock('@clerk/react', () => ({
   OrganizationList: (props: { hidePersonal?: boolean; skipInvitationScreen?: boolean }) => <div data-testid="organisation-list"
     data-hide-personal={String(props.hidePersonal)} data-skip-invitations={String(props.skipInvitationScreen)}>Your organisations</div>,
   OrganizationSwitcher: () => <button>Switch organisation</button>,
+  OrganizationProfile: () => <div>Embedded organisation profile</div>,
 }));
 beforeEach(() => {
   clerk.auth.isLoaded = true; clerk.auth.isSignedIn = true;
@@ -36,8 +37,8 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 function accessReply() {
   const role = clerk.auth.orgRole;
   return reply({ organisation_id: clerk.auth.orgId, role,
-    can_read_plans: role !== 'org:admin', can_write_plans: role === 'org:buyer',
-    plan_scope: role === 'org:admin' ? 'none' : role === 'org:buyer' ? 'own' : 'organisation' });
+    can_read_plans: true, can_write_plans: role === 'org:buyer',
+    plan_scope: role === 'org:buyer' ? 'own' : 'organisation' });
 }
 
 
@@ -226,6 +227,18 @@ describe('Verified organisation permissions', () => {
     vi.stubGlobal('fetch', fetcher);
     return fetcher;
   }
+  it('embeds management only for the verified active admin organisation', async () => {
+    const fetcher = backend('org:admin');
+    window.history.replaceState(null, '', '/admin');
+    const view = render(<ClerkApp />);
+    expect(await screen.findByText('Embedded organisation profile')).toBeVisible();
+    expect(screen.getByRole('heading', { level: 1, name: 'Bunker Buddy' })).toBeVisible();
+    expect(fetcher.mock.calls.some(([url]) => url.includes('/admin/'))).toBe(false);
+    clerk.auth.orgRole = 'org:buyer';
+    view.rerender(<ClerkApp />);
+    expect(await screen.findByRole('heading', { name: 'Admin access required' })).toBeVisible();
+    expect(screen.queryByText('Embedded organisation profile')).not.toBeInTheDocument();
+  });
   it('opens Clerk organisation settings from an admin Home and shows the latest stored MGO estimate', async () => {
     const fetcher = backend('org:admin');
     window.history.replaceState(null, '', '/home');
@@ -236,7 +249,7 @@ describe('Verified organisation permissions', () => {
       .toHaveAttribute('href', '/market-dashboard');
     expect(fetcher.mock.calls.some(([url]) => url.endsWith('/purchase-plans'))).toBe(false);
   });
-  it.each(['org:manager', 'org:analyst'])('shows organisation plans read-only for %s', async role => {
+  it.each(['org:manager', 'org:analyst', 'org:admin'])('shows organisation plans read-only for %s', async role => {
     backend(role);
     window.history.replaceState(null, '', '/purchase-plans');
     render(<ClerkApp />);
@@ -245,13 +258,6 @@ describe('Verified organisation permissions', () => {
     for (const name of ['Create plan', 'Edit', 'Delete']) {
       expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
     }
-  });
-  it('does not request purchase plans for an admin opening a private plan URL', async () => {
-    const fetcher = backend('org:admin');
-    window.history.replaceState(null, '', '/purchase-plans');
-    render(<ClerkApp />);
-    expect(await screen.findByRole('heading', { name: 'Purchase-plan access is restricted' })).toBeInTheDocument();
-    expect(fetcher.mock.calls.some(([url]) => url.endsWith('/purchase-plans'))).toBe(false);
   });
   it('does not accept backend permissions from a different organisation', async () => {
     backend('org:buyer');

@@ -107,13 +107,12 @@ class PlanLifecycleHttpTests {
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan("purchased")));
         when(lifecycle.purchase(id, "org_a")).thenReturn(Map.of("supplier", "A", "total_usd", new BigDecimal("9000")));
         when(lifecycle.revisions(id, "org_a")).thenReturn(List.of(UUID.randomUUID().toString()));
-        for (String role : List.of("buyer", "manager", "analyst"))
+        for (String role : List.of("buyer", "manager", "analyst", "admin"))
             mvc.perform(get(root + "/" + id + "/submission").with(member(role, "org_a")))
                     .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                     .andExpect(jsonPath("$.purchase.supplier").value("A"))
                     .andExpect(jsonPath("$.revision_plan_ids.length()").value(1));
-        mvc.perform(get(root + "/" + id + "/submission").with(member("admin", "org_a"))).andExpect(status().isForbidden());
-        for (String role : List.of("buyer", "manager", "analyst"))
+        for (String role : List.of("buyer", "manager", "analyst", "admin"))
             mvc.perform(get(root + "/" + id + "/submission").with(member(role, "org_b"))).andExpect(status().isNotFound());
         when(users.resolve("user_buyer", null)).thenReturn(UUID.randomUUID());
         mvc.perform(get(root + "/" + id + "/submission").with(member("buyer", "org_a"))).andExpect(status().isNotFound());

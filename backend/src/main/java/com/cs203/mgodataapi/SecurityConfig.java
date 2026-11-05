@@ -34,12 +34,14 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                                .securityMatcher("/api/v1/purchase-plan/**", "/api/v1/purchase-plans/**", "/api/v1/organisation", "/api/v1/forecast")
+                                .securityMatcher("/api/v1/admin/**", "/api/v1/purchase-plan/**", "/api/v1/purchase-plans/**", "/api/v1/organisation", "/api/v1/forecast")
                 .cors(Customizer.withDefaults())
                 // No browser sessions or forms, so there is no cookie for a forged request to ride on.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(requests -> requests
+                        .requestMatchers("/api/v1/admin/**").access((auth, context) ->
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(ADMIN))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/organisation").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST, ADMIN))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/approval-notifications", "/api/v1/purchase-plans/manager-overview").access((auth, context) ->
@@ -54,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/submit").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans", "/api/v1/purchase-plans/**").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST, ADMIN))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
                         .requestMatchers(HttpMethod.PUT, "/api/v1/purchase-plans", "/api/v1/purchase-plans/*").access((auth, context) ->
@@ -62,7 +64,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/purchase-plans", "/api/v1/purchase-plans/*").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/forecast").access((auth, context) ->
-                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST))))
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST, ADMIN))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/recommendation-decision").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
                         .anyRequest().denyAll())

@@ -51,7 +51,7 @@ class ForecastAccessHttpTests {
         verifyNoInteractions(forecasts);
     }
     @Test void buyersManagersAndAnalystsCanReadAllSupportedHorizons() throws Exception {
-        for (String role : List.of("buyer", "manager", "analyst")) {
+        for (String role : List.of("buyer", "manager", "analyst", "admin")) {
             for (int horizon : List.of(7, 14, 30)) {
                 mvc.perform(get(PATH).param("horizon_days", Integer.toString(horizon))
                         .with(member("org_a", role)))
@@ -60,12 +60,7 @@ class ForecastAccessHttpTests {
                         .andExpect(jsonPath("$.reason").value("missing_run"));
             }
         }
-        for (int horizon : List.of(7, 14, 30)) verify(forecasts, times(3)).read(horizon);
-    }
-    @Test void adminIs403AndDoesNotInheritBusinessForecastAccess() throws Exception {
-        mvc.perform(get(PATH).with(member("org_a", "admin"))).andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.detail").value("Your organisation role does not allow this action."));
-        verifyNoInteractions(forecasts);
+        for (int horizon : List.of(7, 14, 30)) verify(forecasts, times(4)).read(horizon);
     }
     @Test void missingInvalidOrConflictingOrganisationClaimsAre403() throws Exception {
         for (Map<String, Object> claims : List.<Map<String, Object>>of(

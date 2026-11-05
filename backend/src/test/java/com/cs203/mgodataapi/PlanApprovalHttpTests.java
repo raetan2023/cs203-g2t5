@@ -50,7 +50,6 @@ class PlanApprovalHttpTests {
     @Test void submittedRecommendationHasTheSameOwnerAndOrganisationIsolationAsPlans() throws Exception {
         String endpoint = "/api/v1/purchase-plans/" + id + "/submission";
         mvc.perform(get(endpoint)).andExpect(status().isUnauthorized());
-        mvc.perform(get(endpoint).with(member("org_a", "admin"))).andExpect(status().isForbidden());
         mvc.perform(get(endpoint).with(member("org_b", "buyer"))).andExpect(status().isNotFound());
         verifyNoInteractions(approvals);
         var saved = new PurchasePlan(id, owner, BigDecimal.TEN, LocalDate.parse("2026-11-01"), LocalDate.parse("2026-10-27"));
@@ -59,13 +58,14 @@ class PlanApprovalHttpTests {
         when(approvals.submittedRecommendation(id, "org_a")).thenReturn(Map.of("horizon_days", 14));
         when(approvals.buyerLabel(id, "org_a")).thenReturn("buyer@example.test");
         when(approvals.decision(id, "org_a")).thenReturn(Map.of("decision", "rejected", "comment", "Budget"));
-        for (String role : List.of("buyer", "manager", "analyst"))
+        for (String role : List.of("buyer", "manager", "analyst", "admin"))
             mvc.perform(get(endpoint).with(member("org_a", role))).andExpect(status().isOk())
                     .andExpect(header().string("Cache-Control", "no-store"))
                     .andExpect(jsonPath("$.submission.horizon_days").value(14))
                     .andExpect(jsonPath("$.buyer_label").value("buyer@example.test"))
                     .andExpect(jsonPath("$.decision.comment").value("Budget"));
-        mvc.perform(get(endpoint).with(member("org_b", "manager"))).andExpect(status().isNotFound());
+        for (String role : List.of("manager", "analyst", "admin"))
+            mvc.perform(get(endpoint).with(member("org_b", role))).andExpect(status().isNotFound());
     }
 
     @Test void inboxIsManagerOnlyAndUsesVerifiedOrganisation() throws Exception {

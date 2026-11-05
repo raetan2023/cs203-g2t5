@@ -6,8 +6,8 @@ import { useBuyerDecisions } from '../features/purchase-plan/components/BuyerDec
 import { Brand } from './Brand';
 import { AppIcon } from './AppIcon';
 
-export function AppShell({ children, path, scenarioDate, onSignOut, marketAvailable = false, organisationControl, canReadPlans = true }: {
-  children: ReactNode; path: string; scenarioDate: string; onSignOut(): Promise<void>; marketAvailable?: boolean; organisationControl?: ReactNode; canReadPlans?: boolean;
+export function AppShell({ isAdmin = false, children, path, scenarioDate, onSignOut, marketAvailable = false, organisationControl, canReadPlans = true, canViewDecisionHistory = true }: {
+  isAdmin?: boolean; children: ReactNode; path: string; scenarioDate: string; onSignOut(): Promise<void>; marketAvailable?: boolean; organisationControl?: ReactNode; canReadPlans?: boolean; canViewDecisionHistory?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -25,12 +25,12 @@ export function AppShell({ children, path, scenarioDate, onSignOut, marketAvaila
       {organisationControl}
     </header>
     <div id="app-content" tabIndex={-1}>{children}</div>
-    {open && <Navigation canReadPlans={canReadPlans} unreadCount={count} path={path} marketAvailable={marketAvailable} onSignOut={onSignOut} onClose={() => { setOpen(false); trigger.current?.focus(); }} />}
+    {open && <Navigation canViewDecisionHistory={canViewDecisionHistory} isAdmin={isAdmin} canReadPlans={canReadPlans} unreadCount={count} path={path} marketAvailable={marketAvailable} onSignOut={onSignOut} onClose={() => { setOpen(false); trigger.current?.focus(); }} />}
   </div>;
 }
 
-function Navigation({ path, onClose, onSignOut, marketAvailable, canReadPlans, unreadCount }: {
-  path: string; onClose(): void; onSignOut(): Promise<void>; marketAvailable: boolean; canReadPlans: boolean; unreadCount: number;
+function Navigation({ canViewDecisionHistory, isAdmin, path, onClose, onSignOut, marketAvailable, canReadPlans, unreadCount }: {
+  canViewDecisionHistory: boolean; isAdmin: boolean; path: string; onClose(): void; onSignOut(): Promise<void>; marketAvailable: boolean; canReadPlans: boolean; unreadCount: number;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const close = useRef<HTMLButtonElement>(null);
@@ -68,9 +68,10 @@ function Navigation({ path, onClose, onSignOut, marketAvailable, canReadPlans, u
   }}>
     <div className="bb-sidebar-top"><Brand /><button ref={close} className="bb-icon-button" aria-label="Close navigation" disabled={busy} onClick={onClose}><AppIcon name="close" /></button></div>
     <nav>
+      {isAdmin && <AppLink href="/admin" aria-current={path === '/admin' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="chart" />Organisation administration</AppLink>}
       <AppLink href="/home" aria-current={path === '/home' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="home" />Home</AppLink>
       {canReadPlans && <AppLink href="/purchase-plans" aria-current={path.startsWith('/purchase-plans') ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="plan" />Purchase plans{unreadCount > 0 && <span className="pp-unread" aria-label={`${unreadCount} unread decisions`}>{unreadCount}</span>}</AppLink>}
-      {canReadPlans && <AppLink href="/purchase-plans/decisions" aria-current={path === '/purchase-plans/decisions' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="plan" />Decision history</AppLink>}
+      {canReadPlans && canViewDecisionHistory && <AppLink href="/purchase-plans/decisions" aria-current={path === '/purchase-plans/decisions' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="plan" />Decision history</AppLink>}
       {marketAvailable ? <AppLink href="/market-dashboard" aria-current={path === '/market-dashboard' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="chart" />Market dashboard</AppLink> : <button disabled title="Awaiting market dashboard integration"><AppIcon name="chart" />Market dashboard</button>}
     </nav>
     <div className="bb-sidebar-bottom">{error && <p role="alert">{error}</p>}<button className="bb-signout" disabled={busy} onClick={signOut}><AppIcon name="logout" />{busy ? 'Signing out...' : 'Sign out'}</button></div>

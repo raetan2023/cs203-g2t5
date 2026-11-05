@@ -23,13 +23,14 @@ export interface PurchasePlanPageProps {
   service: PurchasePlanService;
   canEdit?: boolean;
   isManager?: boolean;
+  isAdmin?: boolean;
   /** Required even before a plan exists: the API's null response has no date. */
   scenarioDate: string;
   /** Future analysis consumers clear cached results on context changes or successful writes. */
   onInvalidateAnalysis?: () => void;
 }
 
-export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, canEdit = true, isManager = false }: PurchasePlanPageProps) {
+export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, canEdit = true, isManager = false, isAdmin = false }: PurchasePlanPageProps) {
   const [state, setState] = useState<PageState>({ mode: 'loading' });
   const [plans, setPlans] = useState<PurchasePlan[]>([]);
   const [attempt, setAttempt] = useState(0);
@@ -39,7 +40,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
   /** Visible counterpart of the announcement; planId marks the card to highlight. Cleared by the next action. */
   const [notice, setNotice] = useState<{ text: string; planId: string | null } | null>(null);
   const editPlanId = new URLSearchParams(useSearch()).get('edit_plan_id');
-  const [filter, setFilter] = useState<'all' | 'open' | 'finished'>('all');
+  const [filter, setFilter] = useState<'all' | 'open' | 'finished' | 'submitted' | 'approved' | 'rejected'>('all');
   const [sort, setSort] = useState<PlanSort>('deadline');
   const [writingServices, setWritingServices] = useState<Set<PurchasePlanService>>(() => new Set());
   const writing = writingServices.has(service);
@@ -166,13 +167,13 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
 
   const filteredPlans = plans.filter(p => filter === 'all' || (filter === 'open'
     ? !['rejected', 'withdrawn', 'purchased'].includes(p.status ?? 'draft')
-    : ['rejected', 'withdrawn', 'purchased'].includes(p.status ?? 'draft')));
+    : filter === 'finished' ? ['rejected', 'withdrawn', 'purchased'].includes(p.status ?? 'draft') : p.status === filter));
 
   return <main className="purchase-plan">
     <div className="pp-sr-only" role="status">{announcement}</div>
     {state.mode === 'loading' ? isManager ? <ManagerPlansLoading /> : <LoadingState /> : <>
       <header className="pp-heading">
-        <div><h1>{canEdit ? "Purchase plans" : "Organisation purchase plans"}</h1><p>{saving ? 'Saving your purchase plan...' : canEdit ? 'Manage your purchase quantity and deadline.' : 'View plans in your organisation. Only buyers can create or change their own plans.'}</p></div>
+        <div><h1>{canEdit ? "Purchase plans" : "Organisation purchase plans"}</h1><p>{saving ? 'Saving your purchase plan...' : canEdit ? 'Manage your purchase quantity and deadline.' : isAdmin ? 'Read-only access to your organisation’s purchase plans, approval status and saved decisions.' : 'View plans in your organisation. Only buyers can create or change their own plans.'}</p></div>
         {canEdit && <div className="pp-create">
           {/* Fades out on its own (CSS); hovering holds it. The role="status" above announces it. */}
           {notice && <span className="pp-notice" onAnimationEnd={() => setNotice(null)}><Icon name="check" />{notice.text}</span>}
@@ -198,7 +199,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
         <div className="pp-list-heading">
           <h2>{canEdit ? 'Your plans' : 'Plans'}</h2>
           <div className="pp-filter" role="group" aria-label="Plan filter">
-            {(['all', 'open', 'finished'] as const).map(option => <button type="button" key={option} aria-pressed={filter === option} onClick={() => setFilter(option)}>{option === 'all' ? 'All' : option === 'open' ? 'Open' : 'Finished'}</button>)}
+            {(isAdmin ? ['all', 'submitted', 'approved', 'rejected'] as const : ['all', 'open', 'finished'] as const).map(option => <button type="button" key={option} aria-pressed={filter === option} onClick={() => setFilter(option)}>{option === 'all' ? 'All' : option === 'open' ? 'Open' : option === 'finished' ? 'Finished' : option === 'submitted' ? 'Pending approval' : option === 'approved' ? 'Approved' : 'Rejected'}</button>)}
           </div>
           <div className="pp-sort" role="group" aria-labelledby="pp-sort-label">
             <span className="pp-sort-label" id="pp-sort-label">Sort by</span>
@@ -206,7 +207,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
               onClick={() => setSort(option)}>{option === 'deadline' ? 'Deadline' : 'Volume'}</button>)}
           </div>
         </div>
-        {filteredPlans.length === 0 && <p role="status">No {filter} plans.</p>}
+        {filteredPlans.length === 0 && <p role="status">No {filter === 'submitted' ? 'plans pending approval' : `${filter} plans`}.</p>}
         <div className="pp-plan-grid">{sortPlans(filteredPlans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} service={service} busy={writing}
           saved={notice?.planId === plan.plan_id}
           editRef={state.plan?.plan_id === plan.plan_id ? editRef : undefined}

@@ -56,7 +56,7 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, 
         : <><span className="pp-countdown-value">{days} {unit}</span> {days === 0 ? 'left · due today' : 'left'}</>}
     </p>}
     {plan.previous_plan_id && <p><AppLink href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.previous_plan_id)}`}>View previous plan</AppLink></p>}
-    <PlanDecisionNote plan={plan} service={service} />
+    <PlanDecisionNote plan={plan} service={service} canAct={canEdit} />
     <div className="pp-actions">
       {!busy && <AppLink className="pp-button pp-button--primary pp-summary-link" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>{draft ? 'View recommendation' : plan.status === 'submitted' ? 'View submitted recommendation' : plan.status === 'approved' && canEdit ? 'View decision / record purchase' : plan.status === 'purchased' ? 'View purchase record' : plan.status === 'withdrawn' ? 'View withdrawn request' : 'View decision'} &rarr;</AppLink>}
       {canEdit && draft && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}

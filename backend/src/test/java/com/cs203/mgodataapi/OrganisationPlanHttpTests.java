@@ -54,13 +54,13 @@ class OrganisationPlanHttpTests {
         }
         verifyNoInteractions(plans, users);
     }
-    @Test void capabilitiesReflectAllFourRolesWithoutImplicitAdminBusinessAccess() throws Exception {
+    @Test void capabilitiesReflectAllFourRolesWithReadOnlyAdminAccess() throws Exception {
         for (String role : List.of("buyer", "manager", "analyst", "admin")) {
             mvc.perform(get("/api/v1/organisation").with(membership("org_a", role)))
                     .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                     .andExpect(jsonPath("$.organisation_id").value("org_a"))
                     .andExpect(jsonPath("$.role").value("org:" + role))
-                    .andExpect(jsonPath("$.can_read_plans").value(!role.equals("admin")))
+                    .andExpect(jsonPath("$.can_read_plans").value(true))
                     .andExpect(jsonPath("$.can_write_plans").value(role.equals("buyer")));
         }
         verifyNoInteractions(plans, users);
@@ -97,7 +97,7 @@ class OrganisationPlanHttpTests {
     @Test void managersAndAnalystsReadOrganisationPlansButCannotMutateThem() throws Exception {
         when(plans.findByOrganisation("org_a")).thenReturn(List.of(plan(id, colleague)));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan(id, colleague)));
-        for (String role : List.of("manager", "analyst")) {
+        for (String role : List.of("manager", "analyst", "admin")) {
             mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", role)))
                     .andExpect(status().isOk()).andExpect(jsonPath("$.plans[0].plan_id").value(id.toString()));
             mvc.perform(get("/api/v1/purchase-plans/" + id).with(membership("org_a", role))).andExpect(status().isOk());
@@ -120,7 +120,7 @@ class OrganisationPlanHttpTests {
                 PlanAnalysisProvider.Result.unavailable("missing_forecast", "No current forecast")));
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(plan(id, owner)));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan(id, colleague)));
-        for (String role : List.of("buyer", "manager", "analyst")) {
+        for (String role : List.of("buyer", "manager", "analyst", "admin")) {
             mvc.perform(get("/api/v1/purchase-plans/recommendation").with(membership("org_a", role))
                     .param("plan_id", id.toString()).param("quantity_mt", "100")
                     .param("purchase_deadline", deadline.toString()).param("scenario_as_of_date", today.toString())
@@ -134,11 +134,8 @@ class OrganisationPlanHttpTests {
                     .param("purchase_deadline", deadline.toString()).param("scenario_as_of_date", today.toString())
                     .param("urgency", "HIGH")).andExpect(status().isNotFound());
         }
-        mvc.perform(get("/api/v1/purchase-plans/recommendation").with(membership("org_a", "admin")))
-                .andExpect(status().isForbidden());
     }
-    @Test void adminMembershipDoesNotBypassPlanPolicy() throws Exception {
-        mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", "admin"))).andExpect(status().isForbidden());
+    @Test void adminMembershipDoesNotPermitPlanWrites() throws Exception {
         mvc.perform(post("/api/v1/purchase-plans").with(membership("org_a", "admin"))
                 .contentType(MediaType.APPLICATION_JSON).content(input)).andExpect(status().isForbidden());
         verifyNoInteractions(plans, users);
