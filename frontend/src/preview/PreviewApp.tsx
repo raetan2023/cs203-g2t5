@@ -20,6 +20,7 @@ const examples = {
   'rec-monitor': 'Recommendation - Monitor (8-day plan)', 'rec-buy': 'Recommendation - Buy now (33-day plan)', 'rec-wait': 'Recommendation - Wait (33-day plan)',
   'rec-awaiting': 'Approval - awaiting manager (buyer)', 'rec-review': 'Approval - manager review (manager)', 'rec-approved': 'Approval - approved (buyer)', 'rec-rejected': 'Approval - rejected (buyer)',
   'rec-withdrawn': 'Approval - withdrawn (buyer)', 'rec-purchased': 'Purchase - recorded (buyer)',
+  'rec-analyst': 'Recommendation - Wait, read-only (analyst)', 'rec-analyst-awaiting': 'Approval - awaiting manager (analyst)',
   'plans-decisions': 'Purchase plans - every approval state',
   'rec-ready': 'Recommendation - legacy fixture, no horizon fits', 'rec-loading': 'Recommendation - loading', 'rec-error': 'Recommendation - fails once', 'rec-unavailable': 'Recommendation - unavailable', 'rec-missing': 'Recommendation - missing forecast', 'rec-unsupported': 'Recommendation - unsupported context',
   'rec-empty': 'Recommendation - no saved plan',
@@ -33,8 +34,11 @@ const examples = {
 type Example = keyof typeof examples;
 const publicExamples = ['login', 'signup', 'login-error', 'signup-error'];
 const recommendationScenarios: Partial<Record<Example, RecommendationScenario>> = { 'rec-monitor': 'monitor', 'rec-buy': 'buy', 'rec-wait': 'wait',
-  'rec-awaiting': 'wait', 'rec-review': 'wait', 'rec-approved': 'wait', 'rec-rejected': 'wait', 'rec-withdrawn': 'wait', 'rec-purchased': 'wait' };
-const approvalStarts: Partial<Record<Example, 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased'>> = { 'rec-awaiting': 'submitted', 'rec-review': 'submitted', 'rec-approved': 'approved', 'rec-rejected': 'rejected', 'rec-withdrawn': 'withdrawn', 'rec-purchased': 'purchased' };
+  'rec-awaiting': 'wait', 'rec-review': 'wait', 'rec-approved': 'wait', 'rec-rejected': 'wait', 'rec-withdrawn': 'wait', 'rec-purchased': 'wait',
+  'rec-analyst': 'wait', 'rec-analyst-awaiting': 'wait' };
+const approvalStarts: Partial<Record<Example, 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased'>> = { 'rec-awaiting': 'submitted', 'rec-review': 'submitted', 'rec-approved': 'approved', 'rec-rejected': 'rejected', 'rec-withdrawn': 'withdrawn', 'rec-purchased': 'purchased', 'rec-analyst-awaiting': 'submitted' };
+/** Preview analyst: reads every plan in the organisation, cannot edit, submit or decide. */
+const PREVIEW_ANALYST: OrganisationPermissions = { ...PREVIEW_MANAGER, role: 'org:analyst' };
 const decisionPlans = previewDecisionPlans();
 const homeAccess: Partial<Record<Example, OrganisationPermissions>> = { home: PREVIEW_BUYER, 'home-price-error': PREVIEW_BUYER, 'home-manager': PREVIEW_MANAGER,
   'home-analyst': { ...PREVIEW_MANAGER, role: 'org:analyst' }, 'home-admin': { ...PREVIEW_BUYER, role: 'org:admin', can_read_plans: false, can_write_plans: false, plan_scope: 'none' } };
@@ -51,7 +55,7 @@ export function PreviewApp() {
   const scenario = recommendationScenarios[example];
   const withScenarioApproval = (plans: PurchasePlanService) => scenario ? withPreviewApproval(plans, scenario, approvalStarts[example])
     : example === 'plans-decisions' ? decisionPlans.withDecisions(plans) : plans;
-  const planAccess = homeAccess[example] ?? (example === 'rec-review' ? PREVIEW_MANAGER : scenario || example === 'plans-decisions' ? PREVIEW_BUYER : undefined);
+  const planAccess = homeAccess[example] ?? (example === 'rec-review' ? PREVIEW_MANAGER : example.startsWith('rec-analyst') ? PREVIEW_ANALYST : scenario || example === 'plans-decisions' ? PREVIEW_BUYER : undefined);
   const readMarketQuote = useMemo(() => example === 'home-price-error'
     ? async () => { await delay(slow ? 3500 : 600); throw new Error('Preview: market API unavailable.'); }
     : async () => { await delay(slow ? 3500 : 600); return PREVIEW_QUOTE; }, [example, slow]);

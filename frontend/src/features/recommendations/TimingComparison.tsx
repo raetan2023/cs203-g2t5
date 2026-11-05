@@ -114,7 +114,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
       </p>
       : <>
         {/* repeat(0, …) is invalid CSS, so the late group is only added when it has columns. */}
-        <div className="rec-columns" style={{ '--rec-columns': `repeat(${before.length}, minmax(0, 1fr)) 64px${after.length ? ` repeat(${after.length}, minmax(0, 1fr))` : ''}` } as CSSProperties}>
+        <div className="rec-columns" style={{ '--rec-columns': `repeat(${before.length}, minmax(0, 1fr)) 72px${after.length ? ` repeat(${after.length}, minmax(0, 1fr))` : ''}` } as CSSProperties}>
           {before.map(column)}
           <div className="rec-deadline-mark" aria-label={`Purchase deadline ${formatDate(deadline)}`}>
             <span>Deadline</span><span>{dayDate(deadline)}</span><i aria-hidden="true" />
@@ -128,8 +128,8 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
 }
 
 /** What one explored date could cost; reads the same forecasts as the columns. */
-export function ExploredDetail({ column, quantity, today, source, experimental }: {
-  column: Column; quantity: number; today: string; source: string; experimental: boolean;
+export function ExploredDetail({ column, quantity, today, source, sourceFrom, experimental }: {
+  column: Column; quantity: number; today: string; source: string; sourceFrom?: string; experimental: boolean;
 }) {
   const quote = column.quote;
   const reference = column.observed ? column.mid : column.forecast?.anchor_price;
@@ -140,12 +140,13 @@ export function ExploredDetail({ column, quantity, today, source, experimental }
     </div></div>
     <dl className="rec-detail-grid">
       <div><dt>{`Estimated total · ${amount(quantity)} MT`}</dt><dd>{column.observed ? total(column.mid * quantity) : totalRange(column.low * quantity, column.high * quantity)}</dd></div>
-      <div><dt>Compared with buying today</dt><dd>{column.observed || reference == null ? 'Reference price' : changeRange((column.low - reference) * quantity, (column.high - reference) * quantity)}</dd></div>
+      <div><dt>Compared with buying today</dt><dd>{column.observed || reference == null ? <span className="rec-na" aria-label="Not applicable: this is the reference price">—</span> : changeRange((column.low - reference) * quantity, (column.high - reference) * quantity)}</dd></div>
       <div><dt>Price per MT</dt><dd>{column.observed ? usd(column.mid) : `${usd(column.low)}–${amount(column.high)}`}</dd></div>
     </dl>
     <div className="rec-detail-foot">
       <span>{column.observed ? `MGO quote observed ${formatDate(quote ?? today)} · ${calendarDays(quote ?? today, today)} days old` : source}</span>
-      {!column.observed && experimental && <span className="rec-warning-text"><WarningIcon />Experimental range: no measured confidence coverage. Confirm a current supplier quote before buying.</span>}
+      {!column.observed && sourceFrom && <span>{sourceFrom}</span>}
+      {!column.observed && experimental && <span className="rec-warning-text"><WarningIcon />Experimental range: no measured confidence coverage.</span>}
       {column.late && <span>After your deadline, so it isn’t used in the recommendation. Totals are price × quantity, shown for comparison only.</span>}
       {!column.observed && column.forecast && column.mid !== reference && <span>Central estimate {usd(column.mid)}/MT · {change((column.mid - reference!) * quantity)} than today in total.</span>}
     </div>

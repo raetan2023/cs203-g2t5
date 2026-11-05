@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { PurchasePlanPage } from './PurchasePlanPage';
+import { BuyerDecisionsProvider } from './components/BuyerDecisions';
 import { DEMO_PLAN, DEMO_SCENARIO_DATE } from './fixtures';
 import { createMockPlanService } from './mockService';
 import { PlanError, type PurchasePlanService, type SavedPlanResponse } from './types';
@@ -27,6 +28,23 @@ async function createDraft(user: ReturnType<typeof userEvent.setup>, quantity = 
 }
 
 describe('purchase plan journeys', () => {
+  it('refreshes plans and decision notifications from the header without a Decisions panel', async () => {
+    const service = createMockPlanService({ delayMs: 0, initialPlan: DEMO_PLAN });
+    const list = vi.spyOn(service, 'list').mockResolvedValueOnce({ plans: [DEMO_PLAN] })
+      .mockResolvedValue({ plans: [{ ...DEMO_PLAN, quantity_mt: 987 }] });
+    service.buyerNotifications = vi.fn().mockResolvedValue({ notifications: [], unread_count: 0 });
+    const user = userEvent.setup();
+    render(<BuyerDecisionsProvider service={service} enabled><PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} /></BuyerDecisionsProvider>);
+    const create = await screen.findByRole('button', { name: 'Create plan' });
+    const header = create.closest('header')!;
+    expect(screen.queryByRole('region', { name: 'Decisions' })).not.toBeInTheDocument();
+    await user.click(within(header).getByRole('button', { name: 'Refresh' }));
+    expect(await screen.findByText('987 MT')).toBeVisible();
+    expect(list).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(service.buyerNotifications).toHaveBeenCalledTimes(2));
+    await user.click(await screen.findByRole('button', { name: 'Create plan' }));
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled();
+  });
   it('creates, discards edits, saves edits, cancels deletion, deletes and recreates', async () => {
     const user = setup();
     await createDraft(user);
