@@ -1,9 +1,8 @@
 /** Display names for Clerk membership roles; not a backend authorization policy. */
 export const ORGANISATION_ROLES = {
   'org:admin': 'Admin',
-  'org:buyer': 'Buyer',
+  'org:officer': 'Procurement Officer',
   'org:manager': 'Procurement Manager',
-  'org:analyst': 'Finance/Risk Analyst',
 } as const;
 
 export function organisationRoleLabel(role: string | null | undefined): string | null {

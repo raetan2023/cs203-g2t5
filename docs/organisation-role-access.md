@@ -3,17 +3,17 @@
 This branch includes frontend organisation selection and backend enforcement for
 organisation-scoped purchase plans. Draft submission and the shared manager inbox
 are documented in [plan submission](plan-submission.md). Manager decisions and audit records are included.
-Dedicated analyst and admin business consoles remain later work. The frontend foundation was introduced in commit `78e6bab`; this guide also
-covers the organisation-scoped backend and matching frontend permissions.
+Organisation admins can manage members and view their organisation’s plans.
 
 ## Clerk development setup
 
 1. Enable Organizations with membership optional while the integration is developed.
-2. In the default role set, keep Admin (`org:admin`) as creator role. Create Buyer,
-   Procurement Manager and Finance/Risk Analyst with dashboard keys `buyer`,
-   `manager` and `analyst`; Clerk exposes them to the React SDK as `org:buyer`,
-   `org:manager` and `org:analyst`.
-3. Set Buyer as the default member role.
+2. In the default role set, keep Admin (`org:admin`) as the creator role. Use
+   Procurement Officer (`org:officer`) and Procurement Manager (`org:manager`).
+   For an existing setup, update the Buyer role in Clerk to use the
+   Procurement Officer display name and the `org:officer` key. Reassign any Analyst members to a supported role before removing
+   Analyst from the Clerk role set.
+3. Set Procurement Officer as the default member role.
 4. Create Bunker Buddy and assign your signed-in test account as creator/admin.
 5. Use the same development application's publishable key in `frontend/.env.local`.
 
@@ -31,7 +31,7 @@ organisation and membership role exposed by Clerk's `useAuth` and `useOrganizati
   organisation switcher. Clerk provides the membership-management interface
   according to its own organisation permissions.
 - Unknown, missing or built-in `org:member` roles show a setup message instead of
-  silently assuming buyer/admin privileges. Assign one of the four configured roles.
+  silently assuming buyer/admin privileges. Assign one of the three supported roles.
 - Account, organisation and role changes reset application state. Old adapters do
   not send requests if the context changes while a token request is pending.
 
@@ -39,9 +39,8 @@ organisation and membership role exposed by Clerk's `useAuth` and `useOrganizati
 
 | Membership role | Read plans and their analysis | Create/edit/delete plans |
 | --- | --- | --- |
-| `org:buyer` | Own plans in the active organisation | Own drafts in the active organisation |
+| `org:officer` | Own plans in the active organisation | Own drafts in the active organisation |
 | `org:manager` | All assigned plans in the active organisation | Denied |
-| `org:analyst` | All assigned plans in the active organisation | Denied |
 | `org:admin` | All assigned plans in the active organisation, read-only | Denied |
 
 Admins have explicit read-only plan oversight and manage members through Clerk.
@@ -63,7 +62,7 @@ Missing, malformed, unknown or conflicting membership claims are denied. A globa
 user-level `app_role` is not used. Missing/invalid sessions receive 401; a signed-in
 session without the required membership/role receives 403.
 
-`GET /api/v1/organisation` requires a verified session and one of the four known
+`GET /api/v1/organisation` requires a verified session and one of the three supported
 roles. It returns `organisation_id`, `role`, `can_read_plans`, `can_write_plans` and
 `plan_scope` (`own`, `organisation` or `none`) with `Cache-Control: no-store`.
 The frontend verifies this response against Clerk's selected organisation/role
@@ -74,7 +73,7 @@ Organisation/role changes reset page state and invalidate old adapters.
 ## Shared forecast access
 
 `GET /api/v1/forecast?horizon_days=7` requires a verified Clerk session with an
-active organisation and one of `org:buyer`, `org:manager`, `org:analyst` or `org:admin`. Missing or
+active organisation and one of `org:officer`, `org:manager` or `org:admin`. Missing or
 invalid sessions return 401; missing, unsupported, malformed or conflicting
 organisation/role claims return 403. A shared API key alone does not grant access.
 
@@ -116,8 +115,8 @@ npm test
 npm run build
 ```
 
-The Clerk integration tests mock the SDK and cover sign-in, selection, all four
-roles, server-confirmed permissions, read-only manager/analyst/admin views and admin status filters, unknown roles, stale responses and delayed token requests. Backend
+The Clerk integration tests mock the SDK and cover sign-in, selection, all three
+roles, server-confirmed permissions, read-only manager and admin views and admin status filters, unknown roles, stale responses and delayed token requests. Backend
 HTTP tests exercise role denials, scoped reads/writes, tampered request fields and
 multiple plans. H2 PostgreSQL-mode tests execute organisation/owner read and delete
 queries with two organisations and NULL legacy rows; PostgreSQL INSERT/UPDATE

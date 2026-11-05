@@ -173,7 +173,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     <div className="pp-sr-only" role="status">{announcement}</div>
     {state.mode === 'loading' ? isManager ? <ManagerPlansLoading /> : <LoadingState /> : <>
       <header className="pp-heading">
-        <div><h1>{canEdit ? "Purchase plans" : "Organisation purchase plans"}</h1><p>{saving ? 'Saving your purchase plan...' : canEdit ? 'Manage your purchase quantity and deadline.' : isAdmin ? 'Read-only access to your organisation’s purchase plans, approval status and saved decisions.' : 'View plans in your organisation. Only buyers can create or change their own plans.'}</p></div>
+        <div><h1>{canEdit ? "Purchase plans" : "Organisation purchase plans"}</h1><p>{saving ? 'Saving your purchase plan...' : canEdit ? 'Manage your purchase quantity and deadline.' : isAdmin ? 'Read-only access to your organisation’s purchase plans, approval status and saved decisions.' : 'View plans in your organisation. Only procurement officers can create or change their own plans.'}</p></div>
         {canEdit && <div className="pp-create">
           {/* Fades out on its own (CSS); hovering holds it. The role="status" above announces it. */}
           {notice && <span className="pp-notice" onAnimationEnd={() => setNotice(null)}><Icon name="check" />{notice.text}</span>}

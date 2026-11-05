@@ -8,7 +8,7 @@ it('opens organisation management and explains the available roles', async () =>
   await userEvent.click(screen.getByRole('button', { name: 'Manage organisation' }));
   expect(manage).toHaveBeenCalledOnce();
   await userEvent.click(screen.getByText('Which role should I assign?'));
-  for (const role of ['Admin', 'Buyer', 'Procurement Manager', 'Analyst']) expect(screen.getByText(role, { exact: true })).toBeVisible();
+  for (const role of ['Admin', 'Procurement Officer', 'Procurement Manager']) expect(screen.getByText(role, { exact: true })).toBeVisible();
   expect(screen.queryByText('Model registry')).not.toBeInTheDocument();
   expect(screen.queryByText('System and data freshness')).not.toBeInTheDocument();
 });

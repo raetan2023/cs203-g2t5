@@ -9,7 +9,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 /** Active membership from an already verified Clerk JWT; never from request fields. */
 public record OrganisationAccess(String organisationId, Role role) {
-    public enum Role { BUYER, MANAGER, ANALYST, ADMIN }
+    public enum Role { OFFICER, MANAGER, ADMIN }
 
     public static Optional<OrganisationAccess> from(Jwt token) {
         if (token == null || token.getSubject() == null || token.getSubject().isBlank()) return Optional.empty();
@@ -28,9 +28,8 @@ public record OrganisationAccess(String organisationId, Role role) {
                 || !(rawRole instanceof String roleName)) return Optional.empty();
         String name = compact ? roleName : roleName.startsWith("org:") ? roleName.substring(4) : "";
         Role role = switch (name) {
-            case "buyer" -> Role.BUYER;
+            case "officer" -> Role.OFFICER;
             case "manager" -> Role.MANAGER;
-            case "analyst" -> Role.ANALYST;
             case "admin" -> Role.ADMIN;
             default -> null;
         };
@@ -55,7 +54,7 @@ public record OrganisationAccess(String organisationId, Role role) {
 
     public static OrganisationAccess requireBuyer(Jwt token) {
         var access = require(token);
-        if (!access.canWritePlans()) throw new ApiException(HttpStatus.FORBIDDEN, "Only buyers can change their own purchase plans.");
+        if (!access.canWritePlans()) throw new ApiException(HttpStatus.FORBIDDEN, "Only procurement officers can change their own purchase plans.");
         return access;
     }
 
@@ -64,8 +63,8 @@ public record OrganisationAccess(String organisationId, Role role) {
                 && from(token).map(access -> roles.contains(access.role())).orElse(false);
     }
 
-    public boolean ownPlansOnly() { return role == Role.BUYER; }
+    public boolean ownPlansOnly() { return role == Role.OFFICER; }
     public boolean canReadPlans() { return true; }
-    public boolean canWritePlans() { return role == Role.BUYER; }
+    public boolean canWritePlans() { return role == Role.OFFICER; }
     public String roleKey() { return "org:" + role.name().toLowerCase(java.util.Locale.ROOT); }
 }

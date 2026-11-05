@@ -8,7 +8,7 @@ import { buildMockForecast } from '../features/forecast/mockService';
 
 const clerk = vi.hoisted(() => {
   const user = { id: 'user_a', fullName: 'Rae', firstName: 'Rae', primaryEmailAddress: { emailAddress: 'rae@example.test' } };
-  return { auth: { isLoaded: true, isSignedIn: true, userId: 'user_a', orgId: 'org_a' as string | null, orgRole: 'org:buyer' as string | null, getToken: vi.fn(async () => 'session-a'), signOut: vi.fn() },
+  return { auth: { isLoaded: true, isSignedIn: true, userId: 'user_a', orgId: 'org_a' as string | null, orgRole: 'org:officer' as string | null, getToken: vi.fn(async () => 'session-a'), signOut: vi.fn() },
     user: { isLoaded: true, isSignedIn: true, user }, client: { openOrganizationProfile: vi.fn() },
     organisation: { isLoaded: true, organization: { id: 'org_a', name: 'Bunker Buddy' } as { id: string; name: string } | null } };
 });
@@ -21,7 +21,7 @@ vi.mock('@clerk/react', () => ({
 }));
 beforeEach(() => {
   clerk.auth.isLoaded = true; clerk.auth.isSignedIn = true;
-  clerk.auth.orgId = 'org_a'; clerk.auth.orgRole = 'org:buyer';
+  clerk.auth.orgId = 'org_a'; clerk.auth.orgRole = 'org:officer';
   clerk.user.isLoaded = true; clerk.user.isSignedIn = true;
   clerk.organisation.isLoaded = true;
   clerk.organisation.organization = { id: 'org_a', name: 'Bunker Buddy' };
@@ -37,8 +37,8 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 function accessReply() {
   const role = clerk.auth.orgRole;
   return reply({ organisation_id: clerk.auth.orgId, role,
-    can_read_plans: true, can_write_plans: role === 'org:buyer',
-    plan_scope: role === 'org:buyer' ? 'own' : 'organisation' });
+    can_read_plans: true, can_write_plans: role === 'org:officer',
+    plan_scope: role === 'org:officer' ? 'own' : 'organisation' });
 }
 
 
@@ -136,8 +136,8 @@ describe('Organisation selection and role recognition', () => {
   });
 
   it.each([
-    ['org:admin', 'Admin'], ['org:buyer', 'Buyer'],
-    ['org:manager', 'Procurement Manager'], ['org:analyst', 'Finance/Risk Analyst'],
+    ['org:admin', 'Admin'], ['org:officer', 'Procurement Officer'],
+    ['org:manager', 'Procurement Manager'],
   ])('shows the active organisation and %s membership role', async (role, label) => {
     configuration(); clerk.auth.orgRole = role;
     render(<ClerkApp />);
@@ -146,7 +146,7 @@ describe('Organisation selection and role recognition', () => {
     expect(screen.getByLabelText('Active organisation')).toHaveTextContent(label);
   });
 
-  it.each([null, 'org:member', 'org:unknown', 'toString'])('does not guess a role for %s', role => {
+  it.each([null, 'org:member', 'org:buyer', 'org:analyst', 'org:unknown', 'toString'])('does not guess a role for %s', role => {
     const fetcher = configuration(); clerk.auth.orgRole = role;
     render(<ClerkApp />);
     expect(screen.getByRole('heading', { name: 'Organisation role needs updating' })).toBeInTheDocument();
@@ -234,7 +234,7 @@ describe('Verified organisation permissions', () => {
     expect(await screen.findByText('Embedded organisation profile')).toBeVisible();
     expect(screen.getByRole('heading', { level: 1, name: 'Bunker Buddy' })).toBeVisible();
     expect(fetcher.mock.calls.some(([url]) => url.includes('/admin/'))).toBe(false);
-    clerk.auth.orgRole = 'org:buyer';
+    clerk.auth.orgRole = 'org:officer';
     view.rerender(<ClerkApp />);
     expect(await screen.findByRole('heading', { name: 'Admin access required' })).toBeVisible();
     expect(screen.queryByText('Embedded organisation profile')).not.toBeInTheDocument();
@@ -249,7 +249,7 @@ describe('Verified organisation permissions', () => {
       .toHaveAttribute('href', '/market-dashboard');
     expect(fetcher.mock.calls.some(([url]) => url.endsWith('/purchase-plans'))).toBe(false);
   });
-  it.each(['org:manager', 'org:analyst', 'org:admin'])('shows organisation plans read-only for %s', async role => {
+  it.each(['org:manager', 'org:admin'])('shows organisation plans read-only for %s', async role => {
     backend(role);
     window.history.replaceState(null, '', '/purchase-plans');
     render(<ClerkApp />);
@@ -260,9 +260,9 @@ describe('Verified organisation permissions', () => {
     }
   });
   it('does not accept backend permissions from a different organisation', async () => {
-    backend('org:buyer');
+    backend('org:officer');
     vi.stubGlobal('fetch', vi.fn(async (url: string) => url.endsWith('/organisation')
-      ? reply({ organisation_id: 'org_other', role: 'org:buyer', can_read_plans: true,
+      ? reply({ organisation_id: 'org_other', role: 'org:officer', can_read_plans: true,
           can_write_plans: true, plan_scope: 'own' }) : reply({ scenario_as_of_date: '2025-10-24' })));
     window.history.replaceState(null, '', '/home');
     render(<ClerkApp />);

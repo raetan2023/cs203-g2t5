@@ -20,8 +20,8 @@ export async function fetchOrganisationAccess(getToken: () => Promise<string | n
     ? 'Your organisation role is not available. Refresh your session or contact your admin.'
     : 'Could not verify organisation access. Check the backend and retry.');
   const data = await response.json() as OrganisationPermissions;
-  const expected = data?.role === 'org:buyer' ? ['own', true, true]
-    : data?.role === 'org:manager' || data?.role === 'org:analyst' || data?.role === 'org:admin' ? ['organisation', true, false]
+  const expected = data?.role === 'org:officer' ? ['own', true, true]
+    : data?.role === 'org:manager' || data?.role === 'org:admin' ? ['organisation', true, false]
     : null;
   if (!expected || !organisationRoleLabel(data.role) || typeof data.organisation_id !== 'string'
       || !/^org_[A-Za-z0-9]+$/.test(data.organisation_id)
