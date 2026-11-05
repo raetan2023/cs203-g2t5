@@ -56,6 +56,42 @@ describe('manager approval inbox', () => {
     await act(async () => { finish({ notifications: [notification] }); });
     expect(screen.queryByText('987 MT')).not.toBeInTheDocument();
   });
+  it('keeps same-team rows visible during refresh without returning to the loading placeholder', async () => {
+    const api = service();
+    api.notifications.mockResolvedValue({ notifications: [notification] });
+    render(<ApprovalInbox service={api} />);
+    await screen.findByText('987 MT');
+    let finish!: (result: unknown) => void;
+    api.notifications.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
+    await userEvent.click(screen.getByRole('button', { name: 'Refresh inbox' }));
+    expect(screen.getByText('987 MT')).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Approval inbox' })).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByText('Updating approval inbox…')).toBeInTheDocument();
+    expect(screen.queryByText('Loading approval notifications…')).not.toBeInTheDocument();
+    await act(async () => finish({ notifications: [] }));
+    expect(await screen.findByText('No plans have been submitted yet.')).toBeVisible();
+    expect(screen.queryByText('987 MT')).not.toBeInTheDocument();
+  });
+  it('clears a loaded team immediately when switching to another team', async () => {
+    const old = service(), next = service();
+    old.notifications.mockResolvedValue({ notifications: [notification] });
+    next.notifications.mockReturnValue(new Promise(() => {}));
+    const view = render(<ApprovalInbox service={old} />);
+    await screen.findByText('987 MT');
+    view.rerender(<ApprovalInbox service={next} />);
+    expect(screen.queryByText('987 MT')).not.toBeInTheDocument();
+    expect(screen.getByText('Loading approval notifications…')).toBeInTheDocument();
+  });
+  it('does not overlap polling requests while the previous read is unfinished', async () => {
+    vi.useFakeTimers();
+    try {
+      const api = service(); api.notifications.mockReturnValue(new Promise(() => {}));
+      const view = render(<ApprovalInbox service={api} />);
+      await act(async () => vi.advanceTimersByTime(90_000));
+      expect(api.notifications).toHaveBeenCalledOnce();
+      view.unmount();
+    } finally { vi.useRealTimers(); }
+  });
   it('shows an access failure without leaking previously loaded notifications', async () => {
     const api = service(); const user = userEvent.setup();
     api.notifications.mockResolvedValueOnce({ notifications: [notification] }).mockRejectedValue(new PlanError('Manager access has changed.', {}, 403));

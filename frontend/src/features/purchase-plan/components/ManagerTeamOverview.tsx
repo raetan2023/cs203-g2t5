@@ -1,28 +1,18 @@
-import { useEffect, useState } from 'react';
-import { requestError, type ManagerOverview, type PurchasePlanService } from '../types';
+import { type PurchasePlanService } from '../types';
 import { ErrorBanner, PlanButton } from './Primitives';
+import { useManagerRefresh } from '../useManagerRefresh';
+import { ManagerRefreshBar, ManagerSkeleton } from './ManagerLoading';
 
 export function ManagerTeamOverview({ service }: { service: PurchasePlanService }) {
-  const [result, setResult] = useState<{ service: PurchasePlanService; value?: ManagerOverview; error?: string }>();
-  const [revision, setRevision] = useState(0);
-  useEffect(() => {
-    let active = true;
-    setResult(undefined);
-    service.managerOverview!().then(value => {
-      if (active) setResult({ service, value });
-    }).catch(error => {
-      if (active) setResult({ service, error: requestError(error).detail });
-    });
-    return () => { active = false; };
-  }, [service, revision]);
-  const current = result?.service === service ? result : undefined;
-  const data = current?.value;
+  const { data, error, loading, refresh } = useManagerRefresh(service, () => service.managerOverview!());
+  const refreshing = loading && data !== undefined;
   const number = (value: number) => value.toLocaleString('en-GB', { maximumFractionDigits: 2 });
-  return <section className="pp-card" aria-label="Team oversight">
+  return <section className="pp-card pp-manager-panel" aria-label="Team oversight" aria-busy={loading}>
     <h2>Team oversight</h2>
     <p className="pp-card-description">Plans for your active organisation. Refresh to include your team’s latest changes.</p>
-    <PlanButton variant="secondary" disabled={!current} onClick={() => setRevision(value => value + 1)}>Refresh team overview</PlanButton>
-    {!current ? <p role="status">Loading team exposure…</p> : current.error ? <ErrorBanner>{current.error}</ErrorBanner> : data && <>
+    <PlanButton variant="secondary" disabled={loading} onClick={refresh}>Refresh team overview</PlanButton>
+    {refreshing && <ManagerRefreshBar label="Updating team exposure…" />}
+    {loading && !data ? <><p className="pp-sr-only" role="status">Loading team exposure…</p><ManagerSkeleton kind="totals" /></> : error ? <ErrorBanner>{error}</ErrorBanner> : data && <div className={`pp-refresh-content${refreshing ? ' pp-refresh-content--pending' : ''}`}>
       <dl className="pp-team-totals">
         <div><dt>Total plans</dt><dd>{data.plan_count}</dd></div>
         <div><dt>Total planned volume</dt><dd>{number(data.total_quantity_mt)} MT</dd></div>
@@ -34,6 +24,6 @@ export function ManagerTeamOverview({ service }: { service: PurchasePlanService 
       <p className="pp-card-description">{data.reference_date && data.reference_price_usd_per_mt !== null
         ? `Exposure = open volume × Singapore MGO reference price of USD ${number(data.reference_price_usd_per_mt)}/MT, observed ${data.reference_date}. This is an estimate, not a supplier quote or actual spend.`
         : 'No observed USD/MT reference price is available. Volume totals are still available.'}</p>
-    </>}
+    </div>}
   </section>;
 }
