@@ -25,7 +25,7 @@ describe('ClerkAuthPage', () => {
     render(<ClerkAuthPage mode="signup" />);
     expect(screen.getByRole('region', { name: 'Create account' })).toHaveTextContent('Clerk sign-up form');
     expect(received.props[0]).toMatchObject({ routing: 'hash', signInUrl: '/login', fallbackRedirectUrl: '/home' });
-    expect(clerkAppearance.variables).toMatchObject({ colorPrimary: colors.authAccent, colorBackground: colors.authCard, colorForeground: colors.authInk });
+    expect(clerkAppearance.variables).toMatchObject({ colorPrimary: colors.action, colorBackground: colors.canvas, colorForeground: colors.text });
   });
 
   it("keeps Clerk's first-step password field visible and reachable", async () => {

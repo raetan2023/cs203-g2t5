@@ -8,7 +8,7 @@ type Decision = {
 };
 
 const LABELS: Record<string, string> = { accept: 'Accepted', reject: 'Rejected', ignore: 'Ignored' };
-const COLORS: Record<string, string> = { accept: '#6cc58c', reject: '#f2849e', ignore: '#8a93a3' };
+const COLORS: Record<string, string> = { accept: 'var(--bb-success-text)', reject: 'var(--bb-error-text)', ignore: 'var(--bb-text-secondary)' };
 const when = (iso: string) => { try { return new Date(iso).toLocaleString(); } catch { return iso; } };
 
 /** Every recommendation the buyer has accepted, rejected or ignored, newest first. */
@@ -48,9 +48,9 @@ export function BuyerDecisionHistory({ planService }: { planService: PurchasePla
       : <section className="rec-card" aria-label="Decision history">
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
             {rows.map((d) => (
-              <li key={d.id} style={{ paddingLeft: 12, borderLeft: `3px solid ${COLORS[d.decision] || '#8a93a3'}` }}>
+              <li key={d.id}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                  <strong>{LABELS[d.decision] || d.decision}{d.action ? <span style={{ opacity: 0.6, fontWeight: 400 }}> · advised {String(d.action).replaceAll('_', ' ').toLowerCase()}</span> : null}</strong>
+                  <strong style={{ color: COLORS[d.decision] || 'var(--bb-text-secondary)' }}>{LABELS[d.decision] || d.decision}{d.action ? <span style={{ opacity: 0.6, fontWeight: 400 }}> · advised {String(d.action).replaceAll('_', ' ').toLowerCase()}</span> : null}</strong>
                   <span style={{ opacity: 0.6, fontSize: 13 }}>{when(d.decided_at)}</span>
                 </div>
                 {d.reason ? <p style={{ margin: '4px 0 0', fontSize: 14 }}>{d.reason}</p> : null}
