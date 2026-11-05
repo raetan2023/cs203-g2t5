@@ -26,6 +26,31 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('shared app and auth journeys', () => {
+  it('opens unread manager decisions on a separate page and clears the badge after marking seen', async () => {
+    window.history.replaceState(null, '', '/purchase-plans');
+    const auth = createMockAuthService({ user: DEMO_USER, delayMs: 0 });
+    const service = createMockPlanService({ delayMs: 0 });
+    let seen = false;
+    service.buyerNotifications = vi.fn(async () => ({ unread_count: seen ? 0 : 1, notifications: [{
+      notification_id: 'notice-1', plan_id: 'plan-1', decision: 'approved' as const,
+      created_at: '2026-11-04T08:00:00Z', seen_at: seen ? '2026-11-04T09:00:00Z' : null,
+      quantity_mt: 500, purchase_deadline: '2026-11-10', manager_label: 'Manager', comment: 'Approved for purchase.',
+    }] }));
+    service.markNotificationSeen = vi.fn(async () => { seen = true; });
+    const user = userEvent.setup();
+    render(<App auth={auth} scenarioDate={DEMO_SCENARIO_DATE} createPlanService={() => service} />);
+    await screen.findByRole('heading', { name: 'Purchase plans' });
+    expect(screen.queryByRole('region', { name: 'Decisions' })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('link', { name: '1 unread decision' }));
+    expect(await screen.findByRole('heading', { name: 'Manager decisions' })).toBeVisible();
+    expect(window.location.pathname).toBe('/purchase-plans/notifications');
+    await user.click(await screen.findByRole('button', { name: 'Mark as seen' }));
+    await waitFor(() => expect(screen.queryByRole('link', { name: '1 unread decision' })).not.toBeInTheDocument());
+    await user.click(screen.getByRole('link', { name: 'Back to purchase plans' }));
+    expect(await screen.findByRole('heading', { name: 'Purchase plans' })).toBeVisible();
+    expect(screen.queryByRole('region', { name: 'Decisions' })).not.toBeInTheDocument();
+  });
+
   it('validates sign-in fields and toggles the password without submitting', async () => {
     const { user, auth } = setup();
     const signIn = vi.spyOn(auth, 'signIn');
