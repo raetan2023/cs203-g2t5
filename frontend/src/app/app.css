@@ -2,6 +2,8 @@
 @import '../styles/base.css';
 
 .bb-brand { display: inline-flex; align-items: center; gap: var(--bb-space-3); font-size: 20px; font-weight: 500; white-space: nowrap; }
+.bb-brand-home { display: inline-flex; color: inherit; text-decoration: none; }
+.bb-brand-home:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 4px; border-radius: var(--bb-radius-control); }
 .bb-brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--bb-action); color: var(--bb-text-on-action); flex-shrink: 0; }
 .bb-header { min-height: 64px; display: flex; align-items: center; gap: var(--bb-space-3); padding: var(--bb-space-2) var(--bb-page-pad); background: var(--bb-canvas); border-bottom: 1px solid var(--bb-border-subtle); }
 .bb-menu, .bb-icon-button { border: 1px solid transparent; border-radius: var(--bb-radius-control); display: grid; place-items: center; cursor: pointer; color: var(--bb-text); background: transparent; width: 44px; height: 44px; flex-shrink: 0; }

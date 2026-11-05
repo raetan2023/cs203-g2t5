@@ -18,7 +18,7 @@ export function AppShell({ isAdmin = false, children, path, scenarioDate, onSign
     <header className="bb-header">
       <button ref={trigger} className="bb-menu" aria-label="Open navigation" aria-expanded={open} aria-controls="app-navigation" onClick={() => setOpen(true)}><Icon name="menu" /></button>
       {/* Home shows today's date in its greeting instead of the chip. */}
-      <Brand />{home ? null : path === '/market-dashboard'
+      <AppLink className="bb-brand-home" href="/home" aria-label="Bunker Buddy home"><Brand /></AppLink>{home ? null : path === '/market-dashboard'
         ? <span className="bb-date">MARKET OVERVIEW</span>
         : <time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>}
       {count > 0 && <AppLink className="bb-decisions-alert" href="/purchase-plans#decisions">{count} unread {count === 1 ? 'decision' : 'decisions'}</AppLink>}
@@ -66,7 +66,7 @@ function Navigation({ canViewDecisionHistory, isAdmin, path, onClose, onSignOut,
     if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items.at(-1)!.focus(); }
     else if (!event.shiftKey && document.activeElement === items.at(-1)) { event.preventDefault(); items[0].focus(); }
   }}>
-    <div className="bb-sidebar-top"><Brand /><button ref={close} className="bb-icon-button" aria-label="Close navigation" disabled={busy} onClick={onClose}><AppIcon name="close" /></button></div>
+    <div className="bb-sidebar-top"><AppLink className="bb-brand-home" href="/home" aria-label="Bunker Buddy home" onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><Brand /></AppLink><button ref={close} className="bb-icon-button" aria-label="Close navigation" disabled={busy} onClick={onClose}><AppIcon name="close" /></button></div>
     <nav>
       {isAdmin && <AppLink href="/admin" aria-current={path === '/admin' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="chart" />Organisation administration</AppLink>}
       <AppLink href="/home" aria-current={path === '/home' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="home" />Home</AppLink>
