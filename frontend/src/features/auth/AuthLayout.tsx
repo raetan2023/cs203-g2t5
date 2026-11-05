@@ -1,35 +1,77 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Brand } from '../../components/Brand';
-import { ReactiveShip } from './ReactiveShip';
-import { useAuthFormSignals } from './useAuthFormSignals';
+import poster from './assets/signin-ship-poster.jpg';
+import shipVideo from './assets/signin-ship.mp4';
 import './auth.css';
 
-/** Sign-in / sign-up layout shared by the Clerk page and the mock preview page: a dusk scene whose ship reacts to the form card. */
-export function AuthLayout({ label, children }: { label: string; children: ReactNode }) {
-  const card = useRef<HTMLElement>(null);
-  const signals = useAuthFormSignals(card);
-
-  // A returned error shakes the card once; restarting the class replays the animation.
+function useReducedMotion() {
+  const [reduce, setReduce] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
   useEffect(() => {
-    const element = card.current;
-    if (!signals.shake || !element) return;
-    element.classList.remove('auth-shake');
-    void element.offsetWidth;
-    element.classList.add('auth-shake');
-  }, [signals.shake]);
+    const query = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!query) return;
+    const update = () => setReduce(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  return reduce;
+}
 
+/**
+ * Looping aerial shot of a container ship (Pexels 15795926, full 49s, centre-cropped to 900x900, native 59.94fps, 1s fades at both ends);
+ * a still frame when reduced motion is on or the video fails.
+ */
+function HeroVideo() {
+  const reduce = useReducedMotion();
+  const [failed, setFailed] = useState(false);
+  const video = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const element = video.current;
+    if (!element) return;
+    // React does not always write the muted attribute, which blocks autoplay; set it on the element.
+    element.muted = true;
+    const play = () => { try { void element.play()?.catch(() => {}); } catch { /* not supported (tests) */ } };
+    // No decoding while the tab is hidden.
+    const onVisibility = () => { if (document.hidden) element.pause(); else play(); };
+    play();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [reduce, failed]);
+
+  if (reduce || failed) return <img className="auth-hero-media" src={poster} alt="" data-auth-hero="poster" />;
+  // No poster: the clip fades in from (and out to) black, so it rises out of the dark panel and loops without a jump cut.
+  return <video ref={video} className="auth-hero-media" src={shipVideo} autoPlay muted loop playsInline preload="auto"
+    onError={() => setFailed(true)} onTimeUpdate={event => skyShade(event.currentTarget)} data-auth-hero="video" />;
+}
+
+/**
+ * The camera tilts up to a pale sky over the second half of the clip. Only then does the brand need a darker shade
+ * behind it, so --sky goes 0 -> 1 from 18s to 38s (CSS fades .auth-hero-shade-sky in on it); the dark-water half stays light.
+ */
+function skyShade(video: HTMLVideoElement) {
+  const sky = Math.min(1, Math.max(0, (video.currentTime - 18) / 20));
+  video.closest<HTMLElement>('.auth-hero')?.style.setProperty('--sky', sky.toFixed(2));
+}
+
+/** Sign-in / sign-up layout shared by the Clerk page and the mock preview page: ship video panel left, form right. */
+export function AuthLayout({ label, children }: { label: string; children: ReactNode }) {
   return <div className="auth-page">
-    <ReactiveShip levels={signals.levels} bridge={signals.bridge} dim={signals.dim} sail={signals.sail} paused={signals.paused} />
     <main className="auth-content">
-      <div className="auth-intro">
+      <div className="auth-hero">
+        <div className="auth-hero-scene" aria-hidden="true">
+          <HeroVideo />
+          <span className="auth-hero-shade-top" />
+          <span className="auth-hero-shade-bottom" />
+          <span className="auth-hero-shade-corner" />
+          <span className="auth-hero-shade-sky" />
+        </div>
         <div className="auth-header"><Brand /></div>
         <div className="auth-copy">
           <h1 id="auth-intro-title">A clearer course.<br />A smarter purchase.</h1>
-          <p>Navigate MGO price uncertainty with forecasts and a purchase plan built around you.</p>
+          <p>Forecasts for Singapore MGO, with purchase plans built around your deadlines.</p>
         </div>
       </div>
-      <section ref={card} className="auth-form-area" aria-label={label}
-        onAnimationEnd={event => { if (event.target === event.currentTarget) event.currentTarget.classList.remove('auth-shake'); }}>{children}</section>
+      <section className="auth-form-area" aria-label={label}>{children}</section>
     </main>
   </div>;
 }

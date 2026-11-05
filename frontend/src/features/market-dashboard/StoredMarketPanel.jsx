@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useDatabaseMarket } from './useBrentMarket';
+import { chart } from '../../styles/theme';
 import './stored-market.css';
 
 function valid(data) {
@@ -121,11 +122,11 @@ export default function StoredMarketPanel() {
         <span className="sm-history-date">{range} days ending {dateLabel(selected.ticker.observedDate)}</span></div>
       <div className="sm-chart"><ResponsiveContainer width="100%" height={300}>
         <LineChart data={history} margin={{ top: 20, right: 16, bottom: 8, left: 0 }}>
-          <CartesianGrid stroke="#203044" strokeDasharray="3 5" vertical={false} />
-          <XAxis dataKey="date" tickFormatter={shortDate} stroke="#7c91a8" tickLine={false} axisLine={false} minTickGap={45} tick={{ fontSize: 11 }} dy={12} />
-          <YAxis domain={['auto', 'auto']} stroke="#7c91a8" tickLine={false} axisLine={false} width={64} tickFormatter={value => format(value, 1)} tick={{ fontSize: 11 }} />
-          <Tooltip content={<HistoryTooltip unit={selected.ticker.unit} />} cursor={{ stroke: '#3f5b70', strokeDasharray: '4 4' }} />
-          <Line type="linear" dataKey="value" name={selected.ticker.label} stroke="#39d4bd" strokeWidth={2.5} dot={history.length < 3} activeDot={{ r: 5, fill: '#39d4bd', stroke: '#0d1c2b', strokeWidth: 3 }} isAnimationActive={false} />
+          <CartesianGrid stroke={chart.grid} strokeDasharray="3 5" vertical={false} />
+          <XAxis dataKey="date" tickFormatter={shortDate} stroke={chart.axis} tickLine={false} axisLine={false} minTickGap={45} tick={{ fontSize: 12 }} dy={12} />
+          <YAxis domain={['auto', 'auto']} stroke={chart.axis} tickLine={false} axisLine={false} width={64} tickFormatter={value => format(value, 1)} tick={{ fontSize: 12 }} />
+          <Tooltip content={<HistoryTooltip unit={selected.ticker.unit} />} cursor={{ stroke: chart.cursor, strokeDasharray: '4 4' }} />
+          <Line type="linear" dataKey="value" name={selected.ticker.label} stroke={chart.series1} strokeWidth={2.5} dot={history.length < 3} activeDot={{ r: 5, fill: chart.series1, stroke: chart.dotRing, strokeWidth: 3 }} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer></div>
       <div className="sm-chart-footer"><span><i /> Actual stored observations</span><span>{history.length} observations · {history.length ? `${shortDate(history[0].date)} – ${shortDate(history.at(-1).date)}` : 'No history'}</span></div>

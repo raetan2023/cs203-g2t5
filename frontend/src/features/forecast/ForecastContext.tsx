@@ -7,7 +7,7 @@ const missing: ForecastState = { connected: false, horizon: 7, setHorizon() {}, 
 const Context = createContext<ForecastState>(missing);
 
 /** One shared active result per horizon for both screens, scoped to session and application date. */
-export function ForecastProvider({ service, scenarioDate, revision, children }: { service?: ForecastService; scenarioDate: string; revision?: number; children: ReactNode }) {
+export function ForecastProvider({ service, scenarioDate, revision, autoRefresh = false, children }: { service?: ForecastService; scenarioDate: string; revision?: number; autoRefresh?: boolean; children: ReactNode }) {
   const [horizon, setHorizon] = useState<Horizon>(7);
   const [attempt, setAttempt] = useState(0);
   const scope = useMemo(() => ({}), [service, scenarioDate, revision]);
@@ -32,11 +32,12 @@ export function ForecastProvider({ service, scenarioDate, revision, children }: 
   }, []);
   useEffect(() => {
     if (!service) return;
+    if (!autoRefresh) return;
     const timer = setInterval(() => { if (document.visibilityState === 'visible') retry(); }, 60_000);
     const visible = () => { if (document.visibilityState === 'visible') retry(); };
     document.addEventListener('visibilitychange', visible);
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', visible); };
-  }, [service, scope, retry]);
+  }, [service, scope, retry, autoRefresh]);
   useEffect(() => {
     if (!service) return;
     if (cache.current.scope !== scope) cache.current = { scope, entries: new Map() };

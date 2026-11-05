@@ -5,3 +5,9 @@
 # Design-skill working files (Taste, Impeccable)
 .taste-skill/
 .impeccable/
+
+# Build output (never commit compiled classes)
+target/
+
+# Raw design-inspiration source clips are kept local only (see docs/ui-revamp)
+docs/ui-revamp/assets/inspo/**/*.mp4
