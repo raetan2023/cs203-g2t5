@@ -1,6 +1,6 @@
+import BuyerDecisionLog from './BuyerDecisionLog';
 import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
 import { SubmittedRecommendationView, RecommendationApproval } from './RecommendationApproval';
-import BuyerDecisionLog from './BuyerDecisionLog';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppLink } from '../../app/router';
 import { calendarDays, formatDate } from '../purchase-plan/dates';
@@ -93,6 +93,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
         guidanceWaiting={forecastState.status === 'loading' ? 'loading' : 'error'}
         showImpact={!!service?.readImpact && (!forecastState.connected || (!!forecast && fitsSelected))}
         impactNote={!forecastState.connected ? undefined : noHorizonFits ? 'No forecast lands before your deadline, so buying today is the only priced option.' : 'Cost impact is unavailable until a current forecast is ready for the selected horizon.'}
+        canRespond={canSubmit && plan.status === 'draft'}
         approval={canSubmit && plan.status === 'draft' && !!forecast ? { planService, horizon: forecastState.horizon, onSubmitted: (saved: PurchasePlan) => setResult({ scope, plan: saved }) } : undefined}>
         {(guidance, preparing) => {
           const target = guidance?.evidence?.supported_target_date;
@@ -135,9 +136,9 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
 type Approval = { planService: PurchasePlanService; horizon: Horizon; onSubmitted(plan: PurchasePlan): void };
 
 /** Answer, decision rail and fine print; guidance and cost impact load and retry independently. */
-function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, connected, onRefresh, children }: {
+function PlanDecision({ plan, planService, service, reload, horizonDays, runId, requireEvidence, approval, canRespond, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, connected, onRefresh, children }: {
   plan: PurchasePlan & { urgency?: Urgency }; planService: PurchasePlanService; service?: RecommendationService; reload(): void; horizonDays?: number; runId?: string;
-  requireEvidence: boolean; approval?: Approval; showGuidance: boolean; guidanceWaiting: 'loading' | 'error'; showImpact: boolean; impactNote?: string;
+  requireEvidence: boolean; approval?: Approval; canRespond: boolean; showGuidance: boolean; guidanceWaiting: 'loading' | 'error'; showImpact: boolean; impactNote?: string;
   published?: ReadyForecast; entries?: Entry[]; connected: boolean; onRefresh(): void; children(guidance: CurrentRecommendation | undefined, preparing: boolean): ReactNode;
 }) {
   const g = useAnalysis(showGuidance ? service : undefined, plan, 'read', horizonDays, runId);
@@ -200,7 +201,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
 
     <aside className="rec-rail" aria-label="Decision">
       <div className="rec-rail-card">
-        <div><span className="rec-kicker">Your decision</span>{preparing ? <span className="rec-shimmer rec-rail-pending" aria-hidden="true" />
+        <div><span className="rec-kicker">Recommendation summary</span>{preparing ? <span className="rec-shimmer rec-rail-pending" aria-hidden="true" />
           : <strong className="rec-rail-action">{guidance ? actionLabel(guidance.action) : 'No recommendation yet'}</strong>}</div>
         <dl className="rec-rail-facts">
           <div><dt>Plan</dt><dd>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT</dd></div>
@@ -210,7 +211,8 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
         </dl>
         {preparing && approval && <div className="rec-approval-pending"><button type="button" className="bb-button rec-submit" disabled>Submit for approval</button><p>Available when the recommendation is ready</p></div>}
         {approval && guidance && g.analysis && <RecommendationApproval key={`${g.analysis.approval_fingerprint}:${approval.horizon}`} analysis={g.analysis} plan={plan} horizon={approval.horizon} planService={approval.planService} onSubmitted={approval.onSubmitted} />}
-        {guidance && <BuyerDecisionLog planId={plan.plan_id} recommendationId={guidance.recommendation_id} runId={runId ?? published?.run_id} action={guidance.action} planService={planService} />}
+        {!approval && canRespond && guidance && <BuyerDecisionLog key={guidance.recommendation_id} planId={plan.plan_id}
+          recommendationId={guidance.recommendation_id} runId={runId ?? published?.run_id} action={guidance.action} planService={planService} />}
         {connected && <button type="button" className="bb-button bb-button--secondary rec-refresh" onClick={onRefresh}><RefreshIcon />Refresh prices</button>}
       </div>
       {quote && <p className="rec-rail-note">Prices use the MGO quote observed {dayDate(quote)}, {quoteAgeText(calendarDays(quote, plan.scenario_as_of_date))}. Confirm a current supplier quote before you buy.</p>}

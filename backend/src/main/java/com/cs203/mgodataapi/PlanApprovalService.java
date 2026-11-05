@@ -58,6 +58,18 @@ public class PlanApprovalService {
         if (!selection.recommendation_id().equals(recommendation.recommendation_id())
                 || !selection.approval_fingerprint().equals(verified.get("approval_fingerprint")) || !today.equals(dates.today()))
             throw new ApiException(HttpStatus.CONFLICT, "The recommendation or forecast changed. Reload it and confirm your selection again.");
+        var decisions = jdbc.queryForList("""
+                select decision, action, run_id from plan_recommendation_decisions
+                where plan_id = ? and buyer_user_id = ? and clerk_org_id = ?
+                  and recommendation_id = ?
+                order by decided_at desc, decision_id desc limit 1""",
+                planId, owner, orgId, selection.recommendation_id());
+        if (decisions.isEmpty() || !"accept".equals(decisions.getFirst().get("decision"))
+                || !selection.run_id().equals(decisions.getFirst().get("run_id"))
+                || !recommendation.action().equals(decisions.getFirst().get("action"))) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Accept the current recommendation before submitting it for manager approval.");
+        }
         String snapshot;
         try { snapshot = mapper.writeValueAsString(Map.of("horizon_days", selection.horizon_days(), "analysis", verified)); }
         catch (Exception failure) { throw new IllegalStateException("The recommendation could not be saved.", failure); }

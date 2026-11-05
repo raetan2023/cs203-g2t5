@@ -41,6 +41,7 @@ class PlanApprovalServiceTests {
         jdbc.execute("CREATE TABLE plan_approval_notifications (notification_id UUID PRIMARY KEY, plan_id UUID NOT NULL UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, recommendation_snapshot TEXT)");
         jdbc.execute("CREATE TABLE plan_approval_decisions (decision_id UUID PRIMARY KEY, plan_id UUID NOT NULL UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, manager_user_id UUID NOT NULL, manager_clerk_user_id TEXT NOT NULL, manager_label TEXT NOT NULL, decision TEXT NOT NULL, decision_comment TEXT NOT NULL, decided_at TIMESTAMP WITH TIME ZONE NOT NULL)");
         jdbc.execute("CREATE TABLE plan_decision_notifications (notification_id UUID PRIMARY KEY, plan_id UUID UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, decision TEXT NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, seen_at TIMESTAMP WITH TIME ZONE)");
+        jdbc.execute("CREATE TABLE plan_recommendation_decisions (decision_id UUID PRIMARY KEY, plan_id UUID NOT NULL, clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, recommendation_id TEXT NOT NULL, run_id UUID, action TEXT, decision TEXT NOT NULL, decided_at TIMESTAMP WITH TIME ZONE NOT NULL)");
         plans = new PurchasePlanRepository(jdbc);
         OperationalDate dates = mock(OperationalDate.class);
         when(dates.today()).thenReturn(today);
@@ -62,6 +63,7 @@ class PlanApprovalServiceTests {
         approvals = (PlanApprovalService) proxy.getProxy();
         jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, ?, ?, ?, ?, 'draft', NULL, NULL)", id, owner, BigDecimal.TEN, today.plusDays(40), today, "org_a");
         choice = selection(7, "NORMAL");
+        respond(choice, choice.run_id(), "accept", now);
     }
     PurchasePlan submit(UUID planId, UUID buyer, String org) { return approvals.submit(planId, buyer, org, choice); }
 
@@ -83,6 +85,32 @@ class PlanApprovalServiceTests {
                 context.quantity_mt(), context.purchase_deadline(), context.scenario_as_of_date());
     }
 
+    private void respond(PlanApprovalRequest selection, UUID decisionRun, String decision, Instant at) {
+        var plan = plans.findByIdAndUser(id, owner, "org_a").orElseThrow();
+        var context = PlanAnalysisService.Context.of(plan, today).withUrgency(selection.urgency());
+        var data = analysis.read(context, false, selection.horizon_days(), selection.run_id());
+        var guidance = (PlanAnalysisProvider.Guidance) ((PlanAnalysisProvider.Result<?>) data.get("recommendation")).value();
+        jdbc.update("INSERT INTO plan_recommendation_decisions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                UUID.randomUUID(), id, "org_a", owner, selection.recommendation_id(), decisionRun,
+                guidance.action(), decision, java.sql.Timestamp.from(at));
+    }
+
+    @Test void submissionRequiresLatestAcceptanceForTheCurrentRecommendationAndRun() {
+        jdbc.update("DELETE FROM plan_recommendation_decisions");
+        assertEquals(409, assertThrows(ApiException.class, () -> submit(id, owner, "org_a")).status().value());
+        respond(choice, UUID.randomUUID(), "accept", now);
+        assertEquals(409, assertThrows(ApiException.class, () -> submit(id, owner, "org_a")).status().value());
+        respond(choice, run, "accept", now.plusSeconds(1));
+        respond(choice, UUID.randomUUID(), "reject", now.plusSeconds(2));
+        assertEquals(409, assertThrows(ApiException.class, () -> submit(id, owner, "org_a")).status().value());
+        respond(choice, run, "ignore", now.plusSeconds(3));
+        assertEquals(409, assertThrows(ApiException.class, () -> submit(id, owner, "org_a")).status().value());
+        assertEquals("draft", plans.findByIdAndUser(id, owner, "org_a").orElseThrow().status());
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM plan_approval_notifications", Integer.class));
+        respond(choice, run, "accept", now.plusSeconds(4));
+        assertEquals("submitted", submit(id, owner, "org_a").status());
+    }
+
     @Test void ownedValidDraftCreatesOneDurableOrganisationNotification() {
         var saved = submit(id, owner, "org_a");
         assertEquals("submitted", saved.status()); assertEquals(now, saved.submittedAt());
@@ -97,6 +125,7 @@ class PlanApprovalServiceTests {
     }
     @Test void selectionIsFrozenAndCannotBeReplacedByNewForecasts() {
         choice = selection(14, "HIGH");
+        respond(choice, choice.run_id(), "accept", now.plusSeconds(1));
         submit(id, owner, "org_a");
         var saved = approvals.submittedRecommendation(id, "org_a");
         assertEquals(14, saved.get("horizon_days"));
@@ -225,6 +254,7 @@ class PlanApprovalServiceTests {
     @Test void shortDeadlineBuyNowCanBeSubmittedWithoutInventingAForecastCost() {
         jdbc.update("UPDATE purchase_plans SET purchase_deadline=? WHERE plan_id=?", today.plusDays(3), id);
         choice = selection(7, "NORMAL");
+        respond(choice, choice.run_id(), "accept", now);
         assertEquals("submitted", submit(id, owner, "org_a").status());
         var payload = (java.util.Map<?, ?>)approvals.submittedRecommendation(id, "org_a").get("analysis");
         assertEquals("unavailable", ((java.util.Map<?, ?>)payload.get("cost_impact")).get("status"));
