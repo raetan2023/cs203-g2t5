@@ -1,10 +1,7 @@
 /* Sign-in / sign-up: ship video panel left (brand + headline over it), card-less dark form right.
-   Design: docs/ui-revamp/assets/inspo/sign-in-page ("Sign in — source 2, video warmed to match"). Geist is used on these pages only. */
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap');
+   Design: docs/ui-revamp/assets/inspo/sign-in-page ("Sign in — source 2, video warmed to match"). */
 
-.auth-page { min-height: 100svh; background: var(--bb-auth-card); color: var(--bb-auth-ink); }
-/* On the content, not .auth-page, so the shared base `font` shorthand on .auth-page cannot override it. */
-.auth-content, .auth-content button, .auth-content input { font-family: 'Geist', var(--bb-font); }
+.auth-page { min-height: 100svh; background: var(--bb-canvas); color: var(--bb-text); }
 .auth-content { display: flex; gap: 20px; min-height: 100svh; padding: 20px; font-size: 14px; line-height: 20px; }
 
 /* Half the page, the height of the viewport; it stays put while a tall form (sign-up) scrolls.
@@ -51,14 +48,14 @@
 .clerk-auth-host .cl-card { margin: 0 !important; width: 100% !important; }
 /* Clerk draws its outlines as layered box-shadows (uneven at fractional scaling) and re-applies them on hover/focus,
    so fields and buttons get a real border here and Clerk's shadows are cleared. */
-.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]) { border: 1px solid var(--bb-auth-line) !important; box-shadow: none !important; }
-.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]):hover { border-color: var(--bb-auth-muted) !important; }
-.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]):focus { border-color: var(--bb-auth-accent) !important;
+.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]) { border: 1px solid var(--bb-border-control) !important; box-shadow: none !important; }
+.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]):hover { border-color: var(--bb-text-secondary) !important; }
+.clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]):focus { border-color: var(--bb-action) !important;
   box-shadow: 0 0 0 3px rgb(234 223 201 / .22) !important; }
 .clerk-auth-host .cl-formFieldInput:focus-visible { outline: none !important; }
 .clerk-auth-host .cl-socialButtonsBlockButton, .clerk-auth-host .cl-socialButtonsIconButton {
-  border: 1px solid var(--bb-auth-line) !important; box-shadow: none !important; }
-.clerk-auth-host .cl-socialButtonsBlockButton:hover, .clerk-auth-host .cl-socialButtonsIconButton:hover { border-color: var(--bb-auth-muted) !important; }
+  border: 1px solid var(--bb-border-control) !important; box-shadow: none !important; }
+.clerk-auth-host .cl-socialButtonsBlockButton:hover, .clerk-auth-host .cl-socialButtonsIconButton:hover { border-color: var(--bb-text-secondary) !important; }
 .clerk-auth-host .cl-formButtonPrimary { box-shadow: none !important; }
 .clerk-auth-host .cl-formButtonPrimary::after { display: none !important; }
 /* Clerk collapses its first-step password row until the field has a value; keep it open (ClerkAuthPage.tsx). */
@@ -67,49 +64,49 @@
 /* Chrome paints autofilled fields white; cover it with the field colour and keep the border. */
 .clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]):-webkit-autofill,
 .auth-field input:-webkit-autofill {
-  -webkit-text-fill-color: var(--bb-auth-ink); caret-color: var(--bb-auth-ink);
-  box-shadow: inset 0 0 0 100px var(--bb-auth-field) !important;
+  -webkit-text-fill-color: var(--bb-text); caret-color: var(--bb-text);
+  box-shadow: inset 0 0 0 100px var(--bb-surface-input) !important;
   transition: background-color 100000s 0s; }
 .clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]):-webkit-autofill:focus,
 .auth-field input:-webkit-autofill:focus {
-  box-shadow: inset 0 0 0 100px var(--bb-auth-field), 0 0 0 3px rgb(234 223 201 / .22) !important; }
+  box-shadow: inset 0 0 0 100px var(--bb-surface-input), 0 0 0 3px rgb(234 223 201 / .22) !important; }
 
 /* Mock/preview form (AuthPage); the Clerk form gets the same look from clerkAppearance in styles/theme.ts. */
-.auth-card { display: flex; flex-direction: column; gap: 22px; color: var(--bb-auth-ink); }
+.auth-card { display: flex; flex-direction: column; gap: 22px; color: var(--bb-text); }
 .auth-card h2 { margin: 0; text-align: center; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -.02em; }
-.auth-subtitle { margin: -14px 0 0; text-align: center; color: var(--bb-auth-muted); font-size: 14px; }
+.auth-subtitle { margin: -14px 0 0; text-align: center; color: var(--bb-text-secondary); font-size: 14px; }
 .auth-social { display: flex; flex-wrap: wrap; gap: 10px; }
 .auth-social button { flex: 1 1 150px; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 10px;
-  border: 1px solid var(--bb-auth-line); border-radius: 8px; background: transparent; color: var(--bb-auth-ink); font-size: 14px; font-weight: 500; }
+  border: 1px solid var(--bb-border-control); border-radius: 8px; background: transparent; color: var(--bb-text); font-size: 14px; font-weight: 500; }
 .auth-microsoft { display: grid; grid-template-columns: 7px 7px; grid-template-rows: 7px 7px; gap: 1px; }
 .auth-microsoft i { background: currentColor; }
-.auth-google { font-size: 18px; font-weight: 700; line-height: 1; }
-.auth-helper { margin: -12px 0 0; color: var(--bb-auth-muted); font-size: 12px; }
-.auth-divider { display: flex; align-items: center; gap: var(--bb-space-3); color: var(--bb-auth-muted); font-size: 12px; }
-.auth-divider::before, .auth-divider::after { content: ''; height: 1px; flex: 1; background: var(--bb-auth-line); opacity: .6; }
+.auth-google { font-size: 18px; font-weight: 600; line-height: 1; }
+.auth-helper { margin: -12px 0 0; color: var(--bb-text-secondary); font-size: 12px; }
+.auth-divider { display: flex; align-items: center; gap: var(--bb-space-3); color: var(--bb-text-secondary); font-size: 12px; }
+.auth-divider::before, .auth-divider::after { content: ''; height: 1px; flex: 1; background: var(--bb-border-control); opacity: .6; }
 .auth-card form { display: flex; flex-direction: column; gap: 18px; }
-.auth-field label { display: block; margin-bottom: 8px; color: var(--bb-auth-label); font-size: 13px; line-height: 18px; font-weight: 500; }
-.auth-field input { width: 100%; min-width: 0; height: 46px; padding: 0 14px; border: 1px solid var(--bb-auth-line); border-radius: 8px;
-  background: var(--bb-auth-field); color: var(--bb-auth-ink); font-size: 15px; transition: border-color .2s, box-shadow .2s; }
-.auth-field input::placeholder { color: var(--bb-auth-placeholder); opacity: 1; }
-.auth-field input:focus { outline: none; border-color: var(--bb-auth-accent); box-shadow: 0 0 0 3px rgb(234 223 201 / .22); }
-.auth-field input[aria-invalid=true] { border-color: var(--bb-auth-error); }
+.auth-field label { display: block; margin-bottom: 8px; color: var(--bb-text); font-size: 13px; line-height: 18px; font-weight: 500; }
+.auth-field input { width: 100%; min-width: 0; height: 46px; padding: 0 14px; border: 1px solid var(--bb-border-control); border-radius: 8px;
+  background: var(--bb-surface-input); color: var(--bb-text); font-size: 15px; transition: border-color .2s, box-shadow .2s; }
+.auth-field input::placeholder { color: var(--bb-text-tertiary); opacity: 1; }
+.auth-field input:focus { outline: none; border-color: var(--bb-action); box-shadow: 0 0 0 3px rgb(234 223 201 / .22); }
+.auth-field input[aria-invalid=true] { border-color: var(--bb-error-text); }
 .auth-password { position: relative; }
 .auth-password input { padding-right: 48px; }
 .auth-password button { position: absolute; top: 1px; right: 1px; width: 44px; height: 44px; display: grid; place-items: center; border: 0;
-  background: transparent; color: var(--bb-auth-muted); cursor: pointer; }
-.auth-remember { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 32px; color: var(--bb-text-supporting); font-size: 13px; }
-.auth-remember input { width: 16px; height: 16px; margin: 0; accent-color: var(--bb-auth-accent); }
+  background: transparent; color: var(--bb-text-secondary); cursor: pointer; }
+.auth-remember { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 32px; color: var(--bb-text-secondary); font-size: 13px; }
+.auth-remember input { width: 16px; height: 16px; margin: 0; accent-color: var(--bb-action); }
 .auth-remember span { font-size: 12px; }
-.auth-demo-note { margin: 0; padding: 9px 12px; border-radius: 8px; background: var(--bb-auth-field); color: var(--bb-auth-muted); font-size: 12px; }
-.auth-error { margin: 0; color: var(--bb-auth-error); font-size: 13px; line-height: 18px; }
-.auth-field-error { margin: 6px 0 0; color: var(--bb-auth-error); font-size: 12px; }
-.auth-card .auth-submit { width: 100%; min-height: 48px; margin-top: 4px; border: 0; border-radius: 8px; background: var(--bb-auth-accent);
-  color: var(--bb-auth-on-accent); font-size: 15px; font-weight: 600; transition: background .15s, transform .1s; }
-.auth-card .auth-submit:hover:not(:disabled) { background: var(--bb-auth-accent-hover); }
+.auth-demo-note { margin: 0; padding: 9px 12px; border-radius: 8px; background: var(--bb-surface-input); color: var(--bb-text-secondary); font-size: 12px; }
+.auth-error { margin: 0; color: var(--bb-error-text); font-size: 13px; line-height: 18px; }
+.auth-field-error { margin: 6px 0 0; color: var(--bb-error-text); font-size: 12px; }
+.auth-card .auth-submit { width: 100%; min-height: 48px; margin-top: 4px; border: 0; border-radius: 8px; background: var(--bb-action);
+  color: var(--bb-text-on-action); font-size: 15px; font-weight: 600; transition: background .15s, transform .1s; }
+.auth-card .auth-submit:hover:not(:disabled) { background: var(--bb-action-hover); }
 .auth-card .auth-submit:active:not(:disabled) { transform: scale(.985); }
-.auth-switch { margin: 0; text-align: center; color: var(--bb-auth-muted); font-size: 14px; }
-.auth-switch a, .auth-switch-link { color: var(--bb-auth-accent); font-weight: 500; text-underline-offset: 3px; }
+.auth-switch { margin: 0; text-align: center; color: var(--bb-text-secondary); font-size: 14px; }
+.auth-switch a, .auth-switch-link { color: var(--bb-action); font-weight: 500; text-underline-offset: 3px; }
 .auth-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Narrow screens: the panel becomes a banner above the form. */

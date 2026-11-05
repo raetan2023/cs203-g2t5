@@ -47,7 +47,7 @@ export function OrganisationSelectionFrame({ children, unsupportedRole, busy, er
           <span className="bb-org-panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="4" y="3" width="16" height="18" rx="3" /><path d="M8 7h2m4 0h2M8 11h2m4 0h2M10 21v-6h4v6" /></svg></span>
           <div><h2 id="bb-org-panel-heading">Your organisations</h2><p>Select your team or create a new workspace.</p></div>
         </div>
-        {unsupportedRole && <p className="bb-org-role-warning" role="status">Your current membership needs one of the four supported roles.</p>}
+        {unsupportedRole && <p className="bb-org-role-warning" role="status">Your current membership needs one of the three supported roles.</p>}
         <div className="bb-org-picker">{children}</div>
         <div className="bb-org-invitation-note">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" /><path d="m3 7 9 6 9-6" /></svg>
