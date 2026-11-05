@@ -2,6 +2,7 @@ import { PlanError, type PurchasePlan, type PurchasePlanService, type ApprovalNo
 import { parseAnalysis } from '../recommendations/apiService';
 import { parseBuyerNotifications, parseOutcomes } from './lifecycleTransport';
 import { isValidDate } from './dates';
+import type { ManagerOverview } from './types';
 import { createRecommendationDecisionsService } from '../recommendations/recommendationDecisionsApi';
 
 export interface ApiOptions {
@@ -86,6 +87,21 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
   }
 
   return {
+    async managerOverview() {
+      const payload: unknown = await request('GET', undefined, undefined, 'manager-overview');
+      const value = payload as ManagerOverview | undefined;
+      const nonnegative = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+      if (!value || !Number.isSafeInteger(value.plan_count) || value.plan_count < 0
+          || !Number.isSafeInteger(value.pending_approval_count) || value.pending_approval_count < 0
+          || value.pending_approval_count > value.plan_count
+          || !nonnegative(value.total_quantity_mt) || !nonnegative(value.open_quantity_mt)
+          || value.open_quantity_mt > value.total_quantity_mt
+          || !(value.reference_price_usd_per_mt === null && value.reference_date === null && value.exposure_usd === null
+            || nonnegative(value.reference_price_usd_per_mt) && value.reference_price_usd_per_mt > 0
+              && typeof value.reference_date === 'string' && isValidDate(value.reference_date) && nonnegative(value.exposure_usd)))
+        throw new PlanError('The team exposure response was invalid. Please retry.', {}, 502);
+      return value;
+    },
     recordRecommendationDecision(planId, input) { return decisions.record(planId, input); },
     readRecommendationDecisions(planId) { return decisions.history(planId); },
     async withdraw(planId, reason = '') {

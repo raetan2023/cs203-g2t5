@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(HttpMethod.GET, "/api/v1/organisation").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER, MANAGER, ANALYST, ADMIN))))
-                        .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/approval-notifications").access((auth, context) ->
+                        .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/approval-notifications", "/api/v1/purchase-plans/manager-overview").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(MANAGER))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/my-notifications").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(BUYER))))
