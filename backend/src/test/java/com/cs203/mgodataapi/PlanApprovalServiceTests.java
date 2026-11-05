@@ -65,6 +65,16 @@ class PlanApprovalServiceTests {
     }
     PurchasePlan submit(UUID planId, UUID buyer, String org) { return approvals.submit(planId, buyer, org, choice); }
 
+    @Test void buyerDetailsStayInsideTheAuthorizedPlanOrganisation() {
+        jdbc.execute("CREATE TABLE users (user_id UUID PRIMARY KEY, clerk_user_id TEXT, email TEXT)");
+        jdbc.update("INSERT INTO users VALUES (?, 'user_buyer', 'buyer@example.test')", owner);
+        assertEquals("buyer@example.test", approvals.buyerLabel(id, "org_a"));
+        assertNull(approvals.buyerLabel(id, "org_b"));
+        assertNull(approvals.buyerLabel(UUID.randomUUID(), "org_a"));
+        jdbc.update("UPDATE users SET email = NULL WHERE user_id = ?", owner);
+        assertEquals("user_buyer", approvals.buyerLabel(id, "org_a"));
+    }
+
     PlanApprovalRequest selection(int horizon, String urgency) {
         var context = PlanAnalysisService.Context.of(plans.findByIdAndUser(id, owner, "org_a").orElseThrow(), today).withUrgency(urgency);
         var data = analysis.read(context, false, horizon, run);

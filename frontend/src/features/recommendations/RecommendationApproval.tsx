@@ -117,6 +117,7 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
             service={planService} today={today} onChanged={saved => onChanged?.(saved)} onReload={onReload ?? refreshDecision} />}
           {!canAct && current.revision_plan_ids?.map(id => <p key={id}><AppLink href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(id)}`}>View copied plan</AppLink></p>)}
           {deciding && <ManagerDecisionForm key={`${plan.plan_id}:${analysis!.approval_fingerprint}`} planId={plan.plan_id}
+            plan={plan} analysis={analysis} buyerLabel={current.buyer_label} today={today}
             fingerprint={analysis!.approval_fingerprint!} service={planService} onDecided={refreshDecision} onRefresh={refreshDecision} />}
         </section>
 
