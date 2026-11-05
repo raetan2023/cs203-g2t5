@@ -22,21 +22,23 @@
 .bb-status h1 { font-size: var(--bb-text-5xl); color: var(--bb-text); }
 .bb-status [role=alert] { padding: var(--bb-space-3) var(--bb-space-4); border: 1px solid var(--bb-error-border); border-radius: var(--bb-radius-control); background: var(--bb-error-surface); color: var(--bb-error-alert-text); }
 .bb-spinner { display: block; margin: 0 auto var(--bb-space-6); width: 56px; height: 56px; border: 5px solid var(--bb-text-secondary); border-right-color: transparent; border-radius: 50%; }
-.bb-sidebar { position: fixed; inset: 0 auto 0 0; width: 312px; max-width: calc(100vw - 24px); height: 100dvh; max-height: 100dvh; margin: 0; padding: var(--bb-space-6) var(--bb-space-6) var(--bb-space-10); border: 0; border-right: 1px solid var(--bb-border-subtle); background: var(--bb-surface); color: var(--bb-text); font: inherit; overflow-y: auto; }
-.bb-sidebar[open] { display: flex; flex-direction: column; }
-.bb-sidebar::backdrop { background: var(--bb-backdrop); }
-.bb-sidebar-top { display: flex; align-items: center; justify-content: space-between; gap: var(--bb-space-2); margin-bottom: var(--bb-space-10); }
-.bb-sidebar nav { display: grid; gap: var(--bb-space-2); }
-.bb-sidebar nav a, .bb-sidebar nav button, .bb-signout { min-height: 44px; width: 100%; display: flex; align-items: center; gap: var(--bb-space-3); padding: 10px var(--bb-space-4); background: transparent; border: 0; border-left: 2px solid transparent; border-radius: var(--bb-radius-control); color: var(--bb-text); text-decoration: none; text-align: left; font: inherit; cursor: pointer; }
-.bb-sidebar nav svg, .bb-signout svg { flex-shrink: 0; color: var(--bb-text-secondary); }
-.bb-sidebar nav a:hover, .bb-signout:hover:not(:disabled) { background: var(--bb-surface-hover); }
-.bb-sidebar nav a[aria-current=page] { background: var(--bb-surface-hover); color: var(--bb-text); font-weight: 600; border-left-color: var(--bb-text); }
-.bb-sidebar nav a[aria-current=page] svg { color: var(--bb-text); }
-.bb-coming { margin-left: auto; font-size: var(--bb-text-xs); text-transform: uppercase; white-space: nowrap; background: var(--bb-surface-hover); color: var(--bb-text-secondary); padding: 2px var(--bb-space-1); border-radius: var(--bb-radius-control); }
-.bb-sidebar nav button { font-size: var(--bb-text-sm); }
-.bb-sidebar-bottom { margin-top: auto; padding-top: var(--bb-space-6); }
-.bb-sidebar-bottom p { color: var(--bb-error-text); font-size: var(--bb-text-sm); }
+/* Navigation stays at the top at every viewport size. */
+.bb-header { flex-wrap: wrap; }
+.bb-topnav { display: flex; flex-wrap: wrap; gap: var(--bb-space-2); }
+.bb-topnav a, .bb-signout { display: inline-flex; align-items: center; gap: var(--bb-space-2); min-height: 44px; padding: var(--bb-space-2) var(--bb-space-3); border: 1px solid transparent; border-radius: var(--bb-radius-control); color: var(--bb-text-secondary); background: transparent; font: inherit; font-size: var(--bb-text-sm); text-decoration: none; cursor: pointer; }
+.bb-topnav a:hover, .bb-signout:hover:not(:disabled) { background: var(--bb-surface-hover); color: var(--bb-text); }
+.bb-topnav a[aria-current=page] { color: var(--bb-text); background: var(--bb-surface-hover); border-color: var(--bb-border-control); font-weight: 600; }
+.bb-topnav a:focus-visible, .bb-signout:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.bb-header-account { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2); }
+.bb-signout:disabled { opacity: .55; cursor: wait; }
+@media (max-width: 1050px) { .bb-topnav { order: 3; width: 100%; } }
+@media (max-width: 480px) { .bb-header .bb-brand { font-size: var(--bb-text-xl); } .bb-topnav { gap: 0; } .bb-header-account { gap: 0; } }
 .bb-notice { margin: 0; padding: var(--bb-space-3) var(--bb-space-6); background: var(--bb-surface); color: var(--bb-text-supporting); border-bottom: 1px solid var(--bb-border-subtle); }
 @media (max-width: 640px) { .bb-date { display: none; } }
 .bb-decisions-alert { color: var(--bb-text); font-size: var(--bb-text-sm); padding: var(--bb-space-2); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); text-decoration: none; }
 @media (max-width: 640px) { .bb-decisions-alert { max-width: 100px; font-size: var(--bb-text-xs); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  #app-content > .purchase-plan, #app-content > .recommendations { animation: bb-page-enter 180ms var(--bb-ease-out); }
+  @keyframes bb-page-enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+}

@@ -1,49 +1,15 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { AppLink } from '../app/router';
-import { Icon } from '../features/purchase-plan/components/Primitives';
-import { formatDate } from '../features/purchase-plan/dates';
 import { useBuyerDecisions } from '../features/purchase-plan/components/BuyerDecisions';
 import { Brand } from './Brand';
 import { AppIcon } from './AppIcon';
 
-export function AppShell({ isAdmin = false, children, path, scenarioDate, onSignOut, marketAvailable = false, organisationControl, canReadPlans = true, canViewDecisionHistory = true }: {
+export function AppShell({ isAdmin = false, children, path, onSignOut, marketAvailable = false, organisationControl, canReadPlans = true, canViewDecisionHistory = true }: {
   isAdmin?: boolean; children: ReactNode; path: string; scenarioDate: string; onSignOut(): Promise<void>; marketAvailable?: boolean; organisationControl?: ReactNode; canReadPlans?: boolean; canViewDecisionHistory?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const trigger = useRef<HTMLButtonElement>(null);
-  const home = path === '/home';
-  const count = useBuyerDecisions()?.data?.unread_count ?? 0;
-  return <div className={home ? 'bb-app bb-app--home' : 'bb-app'}>
-    <a className="bb-skip" href="#app-content">Skip to content</a>
-    <header className="bb-header">
-      <button ref={trigger} className="bb-menu" aria-label="Open navigation" aria-expanded={open} aria-controls="app-navigation" onClick={() => setOpen(true)}><Icon name="menu" /></button>
-      {/* Home shows today's date in its greeting instead of the chip. */}
-      <AppLink className="bb-brand-home" href="/home" aria-label="Bunker Buddy home"><Brand /></AppLink>{home ? null : path === '/market-dashboard'
-        ? <span className="bb-date">MARKET OVERVIEW</span>
-        : <time className="bb-date" dateTime={scenarioDate}>{formatDate(scenarioDate)}</time>}
-      {count > 0 && <AppLink className="bb-decisions-alert" href="/purchase-plans/notifications">{count} unread {count === 1 ? 'decision' : 'decisions'}</AppLink>}
-      {organisationControl}
-    </header>
-    <div id="app-content" tabIndex={-1}>{children}</div>
-    {open && <Navigation canViewDecisionHistory={canViewDecisionHistory} isAdmin={isAdmin} canReadPlans={canReadPlans} unreadCount={count} path={path} marketAvailable={marketAvailable} onSignOut={onSignOut} onClose={() => { setOpen(false); trigger.current?.focus(); }} />}
-  </div>;
-}
-
-function Navigation({ canViewDecisionHistory, isAdmin, path, onClose, onSignOut, marketAvailable, canReadPlans, unreadCount }: {
-  canViewDecisionHistory: boolean; isAdmin: boolean; path: string; onClose(): void; onSignOut(): Promise<void>; marketAvailable: boolean; canReadPlans: boolean; unreadCount: number;
-}) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const close = useRef<HTMLButtonElement>(null);
   const lock = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  useEffect(() => {
-    const element = dialog.current!;
-    const previous = document.activeElement as HTMLElement | null;
-    const overflow = document.body.style.overflow;
-    element.showModal(); close.current?.focus(); document.body.style.overflow = 'hidden';
-    return () => { element.close(); document.body.style.overflow = overflow; if (previous?.isConnected) previous.focus(); };
-  }, []);
   async function signOut() {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError('');
@@ -51,29 +17,25 @@ function Navigation({ canViewDecisionHistory, isAdmin, path, onClose, onSignOut,
     catch { setError("We couldn't sign you out. Please try again."); }
     finally { lock.current = false; setBusy(false); }
   }
-  return <dialog id="app-navigation" className="bb-sidebar" ref={dialog} aria-label="Main navigation" onCancel={event => { event.preventDefault(); if (!lock.current) onClose(); }} onClick={event => {
-    if (event.target === event.currentTarget && !lock.current) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      if (event.clientX > rect.right || event.clientX < rect.left) onClose();
-    }
-  }} onKeyDown={event => {
-    if (event.key !== 'Tab') return;
-    // Enumerate in tree order before filtering so keyboard order stays stable.
-    const items = Array.from(dialog.current!.querySelectorAll<HTMLElement>('*')).filter(item =>
-      (item instanceof HTMLAnchorElement && item.hasAttribute('href')) ||
-      (item instanceof HTMLButtonElement && !item.disabled));
-    if (!items.length) { event.preventDefault(); return; }
-    if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items.at(-1)!.focus(); }
-    else if (!event.shiftKey && document.activeElement === items.at(-1)) { event.preventDefault(); items[0].focus(); }
-  }}>
-    <div className="bb-sidebar-top"><AppLink className="bb-brand-home" href="/home" aria-label="Bunker Buddy home" onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><Brand /></AppLink><button ref={close} className="bb-icon-button" aria-label="Close navigation" disabled={busy} onClick={onClose}><AppIcon name="close" /></button></div>
-    <nav>
-      {isAdmin && <AppLink href="/admin" aria-current={path === '/admin' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="chart" />Organisation administration</AppLink>}
-      <AppLink href="/home" aria-current={path === '/home' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="home" />Home</AppLink>
-      {canReadPlans && <AppLink href="/purchase-plans" aria-current={path.startsWith('/purchase-plans') ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="plan" />Purchase plans{unreadCount > 0 && <span className="pp-unread" aria-label={`${unreadCount} unread decisions`}>{unreadCount}</span>}</AppLink>}
-      {canReadPlans && canViewDecisionHistory && <AppLink href="/purchase-plans/decisions" aria-current={path === '/purchase-plans/decisions' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="plan" />Decision history</AppLink>}
-      {marketAvailable ? <AppLink href="/market-dashboard" aria-current={path === '/market-dashboard' ? 'page' : undefined} onClick={event => { if (busy) event.preventDefault(); else onClose(); }}><AppIcon name="chart" />Market dashboard</AppLink> : <button disabled title="Awaiting market dashboard integration"><AppIcon name="chart" />Market dashboard</button>}
-    </nav>
-    <div className="bb-sidebar-bottom">{error && <p role="alert">{error}</p>}<button className="bb-signout" disabled={busy} onClick={signOut}><AppIcon name="logout" />{busy ? 'Signing out...' : 'Sign out'}</button></div>
-  </dialog>;
+  const home = path === '/home';
+  const count = useBuyerDecisions()?.data?.unread_count ?? 0;
+  return <div className={home ? 'bb-app bb-app--home' : 'bb-app'}>
+    <a className="bb-skip" href="#app-content">Skip to content</a>
+    {!home && <header className="bb-header">
+      <span className="bb-brand-home"><Brand /></span>
+      <nav className="bb-topnav" aria-label="Main navigation">
+      {isAdmin && <AppLink href="/admin" aria-current={path === '/admin' ? 'page' : undefined}><AppIcon name="chart" />Organisation administration</AppLink>}
+      {canReadPlans && <AppLink href="/purchase-plans" aria-current={path.startsWith('/purchase-plans') && path !== '/purchase-plans/decisions' ? 'page' : undefined}><AppIcon name="plan" />Purchase plans{count > 0 && <span className="pp-unread" aria-label={`${count} unread decisions`}>{count}</span>}</AppLink>}
+      {canReadPlans && canViewDecisionHistory && <AppLink href="/purchase-plans/decisions" aria-current={path === '/purchase-plans/decisions' ? 'page' : undefined}><AppIcon name="plan" />Decision history</AppLink>}
+      {marketAvailable ? <AppLink href="/market-dashboard" aria-current={path === '/market-dashboard' ? 'page' : undefined}><AppIcon name="chart" />Market dashboard</AppLink> : null}
+      </nav>
+      <div className="bb-header-account">
+        {count > 0 && <AppLink className="bb-decisions-alert" href="/purchase-plans/notifications">{count} unread {count === 1 ? 'decision' : 'decisions'}</AppLink>}
+        {organisationControl}
+        <button className="bb-signout" disabled={busy} onClick={signOut}><AppIcon name="logout" />{busy ? 'Signing out...' : 'Sign out'}</button>
+      </div>
+    </header>}
+    {error && <p className="bb-notice" role="alert">{error}</p>}
+    <div id="app-content" tabIndex={-1}>{children}</div>
+  </div>;
 }

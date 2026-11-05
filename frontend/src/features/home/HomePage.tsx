@@ -51,6 +51,7 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
 
   return <main className="bb-home" aria-labelledby="home-greeting">
     <img className="bb-home-photo" src={harbour} alt="" />
+    {(canReadPlans || marketAvailable || role === 'org:admin') && <AppLink className="bb-home-plan-link" href={role === 'org:admin' ? '/admin' : canReadPlans ? '/purchase-plans' : '/market-dashboard'} aria-label={role === 'org:admin' ? 'Open organisation administration' : canReadPlans ? 'Open purchase plans' : 'Open market dashboard'} />}
     <div className="bb-home-content" ref={content}>
       <div className="bb-home-intro">
         <h1 id="home-greeting" className="bb-home-greeting">
@@ -60,9 +61,11 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
         <p className="bb-home-date">{longDate(today)}</p>
       </div>
       <div className="bb-home-actions">
+        {role === 'org:admin' && <AppLink className="bb-button bb-home-cta" href="/admin">Enter administration<AppIcon name="arrow" /></AppLink>}
         {action && ('href' in action
           ? <AppLink className="bb-button bb-home-cta" href={action.href}>{action.label}<AppIcon name="arrow" /></AppLink>
           : <button type="button" className="bb-button bb-home-cta" onClick={action.onClick}>{action.label}<AppIcon name="arrow" /></button>)}
+        {marketAvailable && <AppLink className="bb-button bb-button--secondary bb-home-cta" href="/market-dashboard">Market dashboard<AppIcon name="arrow" /></AppLink>}
         {readQuote && <QuoteCard read={readQuote} linked={marketAvailable} />}
       </div>
     </div>
