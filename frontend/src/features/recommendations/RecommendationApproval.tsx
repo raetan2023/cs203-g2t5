@@ -55,7 +55,7 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
       <p><strong>Submit {guidance ? `“${guidance.action.replaceAll('_', ' ').toLowerCase()}”` : 'this recommendation'} for approval?</strong> The plan and this recommendation are locked while managers review it.</p>
       <div className="rec-approval-actions"><button className="bb-button bb-button--secondary" disabled={busy} onClick={() => setConfirm(false)}>Cancel</button>
       <button className="bb-button" disabled={busy || !valid} onClick={submit}>{busy ? 'Submitting…' : 'Confirm submission'}</button></div>
-    </div> : <button className="bb-button rec-submit" disabled={!valid} onClick={() => setConfirm(true)}>Submit for approval</button>}
+    </div> : <button className={valid ? 'bb-button rec-submit' : 'bb-button bb-button--secondary rec-submit'} disabled={!valid} onClick={() => setConfirm(true)}>Submit for approval</button>}
     {error && <p role="alert">{error} Your selection has not been confirmed. Refresh the page if the plan or forecast changed.</p>}
     {accepted && !valid && <p className="rec-approval-note">A saved draft and a current priced recommendation are required.</p>}
     {referenceOnly ? <p className="rec-approval-note">Uses the observed reference price for buying now. No supported forecast cost is available within the deadline.</p>

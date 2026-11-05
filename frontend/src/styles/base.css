@@ -1,9 +1,20 @@
+@import '@fontsource/ibm-plex-sans/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-500.css';
+@import '@fontsource/ibm-plex-sans/latin-600.css';
+
 /* Global base for the app shell. Values come from tokens.css. Scoped to .bb-app / .auth-page so
    Clerk-owned UI and prototype entries are not restyled globally. */
 html, body, #root { margin: 0; min-width: 320px; min-height: 100%; background: var(--bb-canvas); }
-.bb-app, .auth-page { font: 14px/1.5 var(--bb-font); color: var(--bb-text); }
+/* Anything rendered outside .bb-app (loading and error pages, Clerk pieces) inherits this, not the browser's serif. */
+body { font: var(--bb-type-body); color: var(--bb-text); }
+.bb-app, .auth-page { font: var(--bb-type-body); color: var(--bb-text); }
 .bb-app *, .auth-page * { box-sizing: border-box; }
-.bb-app button, .auth-page button, .auth-page input { font: inherit; }
+/* :where() keeps these at zero specificity, so a page or component class always wins. */
+:where(.bb-app, .auth-page) button, :where(.auth-page) input { font: inherit; }
+:where(.bb-app, .auth-page) a { color: var(--bb-text); text-underline-offset: 3px; }
+:where(.bb-app) h1 { font: var(--bb-type-title); }
+:where(.bb-app) h2 { font: var(--bb-type-heading); }
+:where(.bb-app) h3 { font: var(--bb-type-body-strong); }
 .bb-app :focus-visible, .auth-page :focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 4px; }
 .bb-app button:disabled, .auth-page button:disabled { cursor: not-allowed; opacity: .5; }
 
