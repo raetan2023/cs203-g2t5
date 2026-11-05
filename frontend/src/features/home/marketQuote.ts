@@ -1,3 +1,5 @@
+import { getStored } from './storedApi';
+
 /** The Home price card reads the same stored observations as the Market dashboard. */
 export const MGO_SERIES_KEY = 'SGP_MGO_OBSERVED';
 
@@ -42,20 +44,5 @@ export function parseMgoQuote(data: unknown): MgoQuote | null {
 }
 
 export function createStoredMgoQuoteReader(): ReadMgoQuote {
-  const env = import.meta.env ?? {};
-  const base = (env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
-  return async () => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const response = await fetch(`${base}/api/v1/market/stored`, {
-        cache: 'no-store', signal: controller.signal,
-        headers: { ...(env.VITE_API_KEY && { 'X-API-Key': env.VITE_API_KEY }) },
-      });
-      if (!response.ok) throw new Error('Could not read the stored MGO price.');
-      return parseMgoQuote(await response.json());
-    } finally {
-      clearTimeout(timeout);
-    }
-  };
+  return async () => parseMgoQuote(await getStored('/api/v1/market/stored', 'Could not read the stored MGO price.'));
 }

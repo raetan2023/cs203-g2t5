@@ -13,6 +13,8 @@ import { fetchOrganisationAccess, type OrganisationPermissions } from '../featur
 import { organisationRoleLabel } from '../features/organisation/roles';
 import { organisationAppearance } from '../features/organisation/appearance';
 import { createStoredMgoQuoteReader } from '../features/home/marketQuote';
+import { createStoredNewsReader } from '../features/home/newsFeed';
+import { createStoredAlertsReader } from '../features/home/newsAlerts';
 
 type Scenario =
   | { state: 'idle' | 'loading' }
@@ -129,6 +131,8 @@ export function ClerkApp() {
     () => createApiRecommendationService({ getToken: getContextToken }), [getContextToken],
   );
   const readMarketQuote = useMemo(() => createStoredMgoQuoteReader(), []);
+  const readNews = useMemo(() => createStoredNewsReader(), []);
+  const readAlerts = useMemo(() => createStoredAlertsReader(), []);
   // Members, invitations and roles are managed in Clerk; the backend has no member endpoints.
   const manageOrganisation = useCallback(
     () => clerk.openOrganizationProfile({ appearance: organisationAppearance }), [clerk],
@@ -172,6 +176,8 @@ export function ClerkApp() {
     renderAuthPage={mode => <ClerkAuthPage mode={mode} />}
     MarketDashboard={MarketDashboard}
     readMarketQuote={readMarketQuote}
+    readNews={readNews}
+    readAlerts={readAlerts}
     onManageOrganisation={manageOrganisation}
   />;
 }
