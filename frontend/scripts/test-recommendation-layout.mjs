@@ -29,6 +29,7 @@ try {
       const forecastAt = h => ({...buildMockForecast(h), run_id: 'layout-fixture', forecast: 1351.5, low: 1199.583, high: 1385.546,
         anchor_price: 1351.5, anchor_quote_date: '2026-10-26', forecast_origin_date: '2026-10-26',
         target_date: new Date(Date.parse('2026-10-26') + h * 86400000).toISOString().slice(0,10),
+        source_dates: {...buildMockForecast(h).source_dates, gdelt_fallback: '2026-10-25', gdelt_estimated: '2026-10-25'},
         model_version: 'ridge-sha256-' + 'a'.repeat(64), interval: {...buildMockForecast(h).interval, method: 'experimental_gdelt_scaled_quantiles'}});
       const forecastService = {read: async h => forecastAt(h)};
       const read = async (context, h = 7) => {
@@ -51,6 +52,7 @@ try {
   });
   await page.goto(new URL('/__recommendation-layout__', server.resolvedUrls.local[0]).href);
   await page.getByRole('heading', { name: 'Monitor', exact: true }).waitFor();
+  assert.equal(await page.getByRole('note', { name: 'News data limitations' }).count(), 1);
   for (const width of [1920, 1440, 1280, 1024, 768, 600, 390, 320]) {
     await page.setViewportSize({ width, height: 1100 });
     for (const expanded of [false, true]) {
@@ -60,9 +62,13 @@ try {
           const {x,y,right,bottom} = document.querySelector(selector).getBoundingClientRect();
           return {x,y,right,bottom};
         };
-        return { scrollWidth: document.documentElement.scrollWidth, answer: rect('.rec-answer'), rail: rect('.rec-rail'), evidence: rect('.rec-evidence'),
+        const back = document.querySelector('.rec-header > a').getBoundingClientRect();
+        const notice = document.querySelector('.recommendations > .rec-notice').getBoundingClientRect();
+        return { backHeight: back.height, noticeGap: document.querySelector('.rec-layout').getBoundingClientRect().top - notice.bottom, scrollWidth: document.documentElement.scrollWidth, answer: rect('.rec-answer'), rail: rect('.rec-rail'), evidence: rect('.rec-evidence'),
           overflow: [...document.querySelectorAll('.recommendations button, .rec-tile-value, .rec-detail-grid dd, .rec-col-values strong, .rec-rail-facts dd')].filter(el => el.getClientRects().length && (el.getBoundingClientRect().right > innerWidth + 1 || el.scrollWidth > el.clientWidth + 2)).map(el => el.textContent) };
       });
+      assert.ok(layout.backHeight >= 44, 'back link has a comfortable hit target');
+      assert.ok(layout.noticeGap >= 24, 'news notice is separated from the answer');
       assert.ok(layout.scrollWidth <= width, `page overflow at ${width}px, expanded=${expanded}`);
       assert.deepEqual(layout.overflow, [], `content overflow at ${width}px`);
       if (width > 1050) {

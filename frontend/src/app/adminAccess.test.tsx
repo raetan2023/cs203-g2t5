@@ -17,7 +17,6 @@ function setup(role: string, signedIn = true) {
 it.each(['org:officer', 'org:manager'])('blocks direct admin URLs and navigation for %s', async role => {
   setup(role);
   expect(await screen.findByRole('heading', { name: 'Admin access required' })).toBeVisible();
-  await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
   expect(screen.queryByRole('link', { name: 'Organisation administration' })).not.toBeInTheDocument();
 });
 it('provides the admin console and delegates role controls to Clerk', async () => {
@@ -25,7 +24,6 @@ it('provides the admin console and delegates role controls to Clerk', async () =
   expect(await screen.findByRole('heading', { name: 'Your organisation' })).toBeVisible();
   await userEvent.click(screen.getByRole('button', { name: 'Manage organisation' }));
   expect(manage).toHaveBeenCalledOnce();
-  await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
   expect(screen.getByRole('link', { name: 'Organisation administration' })).toHaveAttribute('href', '/admin');
 });
 it('redirects a signed-out admin URL to sign-in without making admin requests', async () => {
@@ -38,13 +36,11 @@ it.each(['org:admin', 'org:manager'])('hides buyer history and explains direct h
   setup(role);
   expect(await screen.findByRole('heading', { name: 'Procurement officer decision history' })).toBeVisible();
   expect(screen.getByRole('link', { name: 'View purchase plans' })).toHaveAttribute('href', '/purchase-plans');
-  await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
   expect(screen.queryByRole('link', { name: 'Decision history' })).not.toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Purchase plans' })).toBeVisible();
 });
 it('keeps decision history navigation available to buyers', async () => {
   setup('org:officer');
   await screen.findByRole('heading', { name: 'Admin access required' });
-  await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
   expect(screen.getByRole('link', { name: 'Decision history' })).toHaveAttribute('href', '/purchase-plans/decisions');
 });

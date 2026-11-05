@@ -1,6 +1,5 @@
 /* Home: full-bleed harbour photo with the shell header laid over it (design: docs/ui-revamp/assets/inspo/home-page). */
 .bb-app--home { position: relative; }
-.bb-app--home .bb-header { position: absolute; inset: 0 0 auto; z-index: 2; background: transparent; border-bottom-color: transparent; }
 .bb-app--home #app-content { max-width: none; }
 
 .bb-home { position: relative; isolation: isolate; min-height: max(100dvh, 620px); display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; background: var(--bb-canvas); color: var(--bb-text); }
@@ -39,4 +38,15 @@ a.bb-home-quote:hover { border-color: var(--bb-border-control); background: colo
   .bb-home-date { font-size: var(--bb-text-xl); }
   .bb-home-actions { flex-direction: column; align-items: stretch; }
   .bb-home-quote { min-width: 0; }
+}
+
+/* The background is a real link; header controls and the market card keep their own targets. */
+.bb-home-plan-link { position: absolute; inset: 0; z-index: 0; }
+.bb-home-plan-link:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: -6px; }
+.bb-home-plan-link ~ .bb-home-content { position: relative; z-index: 1; pointer-events: none; }
+.bb-home-plan-link ~ .bb-home-content a, .bb-home-plan-link ~ .bb-home-content button { pointer-events: auto; }
+@media (prefers-reduced-motion: no-preference) {
+  .bb-home-cta svg { transition: transform var(--bb-motion-fast) var(--bb-ease-out); }
+  .bb-home-plan-link:hover ~ .bb-home-content .bb-home-cta svg,
+  .bb-home-cta:hover svg, .bb-home-cta:focus-visible svg { transform: translateX(3px); }
 }
