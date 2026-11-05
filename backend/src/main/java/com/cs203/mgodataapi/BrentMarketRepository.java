@@ -23,6 +23,11 @@ public class BrentMarketRepository {
     }
 
     public List<Observation> latest() {
+        return latestObserved(seriesKey);
+    }
+
+    /** Up to 60 observed values of one series, newest first. */
+    public List<Observation> latestObserved(String seriesKey) {
         return jdbc.query("""
                 SELECT s.series_key, s.source_name, s.unit, s.currency_code,
                        o.observation_date, o.value

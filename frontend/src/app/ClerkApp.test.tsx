@@ -234,6 +234,7 @@ describe('Verified organisation permissions', () => {
       if (url.endsWith('/news/latest?limit=40')) return reply({ storage: 'supabase', updatedAt: '2026-11-02T00:00:00Z', items: [
         { title: 'OPEC+ producers hold December oil output steady', url: 'https://example.com/opec', source: 'reuters.com',
           seenAt: '2026-11-01T22:00:00Z', topic: 'production_decision', marketBias: 'neutral' }] });
+      if (url.endsWith('/news/alerts')) return reply({ storage: 'supabase', news: null, price: null });
       throw new Error('Unexpected request');
     });
     vi.stubGlobal('fetch', fetcher);

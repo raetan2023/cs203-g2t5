@@ -3,6 +3,8 @@ import { AppLink } from '../../app/router';
 import { AppIcon } from '../../components/AppIcon';
 import type { MgoQuote, ReadMgoQuote } from './marketQuote';
 import { topicLabel, type NewsFeed, type ReadNews } from './newsFeed';
+import type { ReadAlerts } from './newsAlerts';
+import { MarketAlerts } from './MarketAlerts';
 import harbour from './assets/harbour-dusk.jpg';
 import './home.css';
 
@@ -28,7 +30,7 @@ export function homeAction({ role, canReadPlans, onManageOrganisation }: {
   return canReadPlans ? { label: 'Go to your plans', href: '/purchase-plans' } : null;
 }
 
-export function HomePage({ displayName, role, canReadPlans = true, marketAvailable = false, today, readQuote, readNews, onManageOrganisation, now = new Date() }: {
+export function HomePage({ displayName, role, canReadPlans = true, marketAvailable = false, today, readQuote, readNews, readAlerts, onManageOrganisation, now = new Date() }: {
   displayName: string;
   role?: string;
   canReadPlans?: boolean;
@@ -39,6 +41,8 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
   readQuote?: ReadMgoQuote;
   /** Omitted where no news API is connected; the Latest news section is then hidden. */
   readNews?: ReadNews;
+  /** Omitted where no news API is connected; the Market alerts tiles are then hidden. */
+  readAlerts?: ReadAlerts;
   onManageOrganisation?: () => void;
   now?: Date;
 }) {
@@ -79,6 +83,7 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
         </div>
       </div>
     </section>
+    {readAlerts && <MarketAlerts read={readAlerts} />}
     {readNews && <LatestNews read={readNews} now={now} />}
   </main>;
 }
