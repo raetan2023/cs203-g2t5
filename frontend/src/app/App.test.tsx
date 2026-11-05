@@ -125,7 +125,11 @@ describe('shared app and auth journeys', () => {
     let menu = await openMenu(user);
     expect(within(menu).getByRole('button', { name: 'Close navigation' })).toHaveFocus();
     await user.tab({ shift: true });
+    expect(within(menu).getByRole('link', { name: 'Bunker Buddy home' })).toHaveFocus();
+    await user.tab({ shift: true });
     expect(within(menu).getByRole('button', { name: 'Sign out' })).toHaveFocus();
+    await user.tab();
+    expect(within(menu).getByRole('link', { name: 'Bunker Buddy home' })).toHaveFocus();
     await user.tab();
     expect(within(menu).getByRole('button', { name: 'Close navigation' })).toHaveFocus();
     expect(within(menu).queryByRole('button', { name: /Recommendation/ })).not.toBeInTheDocument();
