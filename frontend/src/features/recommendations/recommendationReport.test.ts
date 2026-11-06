@@ -74,6 +74,12 @@ it('shows the Wait cost card with the saving against today', () => {
   expect(metrics.items[3]).toMatchObject({ label: 'Est. cost on 06 Dec', value: 'USD 596,500', note: 'About USD 16,220 less than today' });
 });
 
+it('uses the buy date’s own forecast cost when the page supplies it, so the report and hero agree', () => {
+  const agreed = buildRecommendationReport({ plan, guidance, analysis, columns, buyNow: 612720, waitCost: 595848, demo: false });
+  const metrics = agreed.blocks.find(b => b.kind === 'metrics') as Extract<ReportBlock, { kind: 'metrics' }>;
+  expect(metrics.items[3]).toMatchObject({ value: 'USD 595,848', note: 'About USD 16,872 less than today' });
+});
+
 it('explains that a forecast on the deadline is used on its own', () => {
   const onDeadline = buildRecommendationReport({ plan: { ...plan, purchase_deadline: '2026-11-20', days_remaining: 14 }, analysis, buyNow: 612720, demo: false,
     columns: columns.map(c => c.id === 30 ? { ...c, late: true } : c),

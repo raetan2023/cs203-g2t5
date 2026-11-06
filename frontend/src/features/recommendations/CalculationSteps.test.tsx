@@ -11,13 +11,13 @@ const evidence = (overrides: Partial<RecommendationEvidence>): RecommendationEvi
 const show = (e: RecommendationEvidence, action: string, columns = [column(14, '2026-11-09', true), column(30, '2026-11-25')]) =>
   render(<CalculationSteps evidence={e} action={action} columns={columns} deadline="2026-11-26" quantity={10} />);
 
-it('explains a Wait: one forecast on its own, the expected saving and the date', () => {
+it('explains a Wait: one forecast on its own, the signal against today and the date', () => {
   show(evidence({}), 'WAIT');
   expect(screen.getByText('30-day')).toBeVisible();
   expect(screen.getByText('It lands before your Thu 26 Nov deadline.')).toBeVisible();
   expect(screen.getByText('Uses the 30-day forecast on its own.')).toBeVisible();
-  expect(screen.getByText('Expected saving')).toBeVisible();
-  expect(screen.getByText('Today is USD 1,300.00/MT, so waiting could cost about USD 1,000 less.')).toBeVisible();
+  expect(screen.getByText('Signal below today')).toBeVisible();
+  expect(screen.getByText('Today is USD 1,300.00/MT, so the blended signal comes to about USD 1,000 less in total.')).toBeVisible();
   expect(screen.getByText(/so buying on Wed 25 Nov is expected to cost less/)).toBeVisible();
 });
 
@@ -30,7 +30,7 @@ it('never claims the range clears today’s price, because the news-aware model 
 it('explains a Buy now when forecasts sit above today', () => {
   show(evidence({ signal_price: 1400, signal_low: 1350, signal_high: 1450, supported_target_date: '2026-11-06' }), 'BUY_NOW');
   expect(screen.getByText('No expected saving')).toBeVisible();
-  expect(screen.getByText('Today is USD 1,300.00/MT, so waiting could cost about USD 1,000 more.')).toBeVisible();
+  expect(screen.getByText('Today is USD 1,300.00/MT, so the blended signal comes to about USD 1,000 more in total.')).toBeVisible();
   expect(screen.getByText(/buying today is the better option/)).toBeVisible();
 });
 

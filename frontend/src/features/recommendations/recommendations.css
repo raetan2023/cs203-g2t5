@@ -16,6 +16,34 @@
 .recommendations > .rec-notice, .recommendations > .pp-previous-plan { margin-bottom: var(--bb-space-6); }
 .rec-header > a:hover { color: var(--bb-text); }
 
+/* The answer card: verdict and its date, then quote -> buy date -> difference. */
+.rec-hero { display: flex; flex-direction: column; gap: var(--bb-space-2); min-width: 0; }
+.rec-hero-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--bb-space-1) var(--bb-space-4); }
+.rec-hero-action { display: inline-flex; align-items: center; gap: var(--bb-space-3); min-width: 0; }
+.rec-hero .rec-verdict-icon { margin-top: 0; }
+.recommendations .rec-answer .rec-hero h2 { margin: 0; font: var(--bb-type-display); }
+.recommendations .rec-answer .rec-hero--long h2 { font: var(--bb-type-figure-lg); }
+.rec-hero-date { font: var(--bb-type-figure); font-weight: 400; color: var(--bb-text-secondary); }
+.rec-boxes { display: grid; gap: var(--bb-space-4); align-items: stretch; }
+.rec-boxes--3 { grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr) minmax(0, 1.1fr); }
+.rec-boxes--2 { grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr); }
+.rec-boxes--1 { grid-template-columns: minmax(0, 360px); }
+.rec-box { display: flex; flex-direction: column; gap: var(--bb-space-1); min-width: 0; padding: var(--bb-space-5); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-control); }
+.rec-box-label { font: var(--bb-type-label); color: var(--bb-text-tertiary); }
+.rec-box-value { font: var(--bb-type-figure); overflow-wrap: anywhere; }
+.rec-box-value span { font: var(--bb-type-body); color: var(--bb-text-secondary); }
+.rec-box-note { font: var(--bb-type-label); color: var(--bb-text-secondary); }
+.rec-box--pick { border-color: var(--bb-action); }
+.rec-box--pick .rec-box-label { color: var(--bb-action); font-weight: 600; }
+.rec-box--pick .rec-box-value { font: var(--bb-type-figure-lg); }
+.rec-box--pick .rec-box-value span { font: var(--bb-type-body); }
+.rec-box--good { border-color: var(--bb-success-border); background: var(--bb-success-surface); }
+.rec-box--good .rec-box-label { color: var(--bb-success-text); }
+.rec-box--bad { border-color: color-mix(in srgb, var(--bb-error-border) 40%, transparent); background: var(--bb-error-surface); }
+.rec-box--bad .rec-box-label { color: var(--bb-error-text); }
+.rec-box-arrow { display: flex; align-items: center; justify-content: center; color: var(--bb-text-secondary); }
+.recommendations .rec-hero-source { padding-top: var(--bb-space-4); border-top: 1px solid var(--bb-border-subtle); font: var(--bb-type-label); font-weight: 400; line-height: 18px; color: var(--bb-text-tertiary); }
+
 /* Draft recommendation: one column, read top to bottom, ending on the decision. */
 .rec-flow { display: flex; flex-direction: column; gap: var(--bb-space-12); min-width: 0; }
 .recommendations .rec-data-line { margin-bottom: var(--bb-space-6); font: var(--bb-type-body); }
@@ -41,14 +69,10 @@
 .recommendations .rec-tagline { margin-top: var(--bb-space-2); font: var(--bb-type-lead); color: var(--bb-text); }
 .recommendations .rec-reason { margin-top: 2px; max-width: 64ch; font: var(--bb-type-body); }
 
-.rec-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--bb-space-4); padding-top: var(--bb-space-6); border-top: 1px solid var(--bb-border-subtle); }
 .rec-tile { display: flex; flex-direction: column; gap: var(--bb-space-2); min-width: 0; }
 .rec-tile--note { justify-content: center; }
 .rec-tile-label { font: var(--bb-type-label); color: var(--bb-text-tertiary); }
 .recommendations .rec-tile-note { font: var(--bb-type-label); color: var(--bb-text-secondary); }
-.rec-tile-value { font: var(--bb-type-figure); overflow-wrap: anywhere; }
-/* The recommended figure is the screen's answer figure, so it leads its sibling by about a third. */
-.rec-tile--recommended .rec-tile-value { font: var(--bb-type-figure-lg); }
 .rec-tile .bb-button { margin-top: var(--bb-space-2); align-self: flex-start; }
 .recommendations .rec-demo { font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); }
 
@@ -225,6 +249,11 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
 .rec-calc-steps span { font: var(--bb-type-body); color: var(--bb-text-secondary); }
 .rec-calc-steps .rec-calc-label { font: var(--bb-type-label); color: var(--bb-text-tertiary); }
 
+/* Three boxes need room for a price on one line, so they stack before the page's other narrow layouts. */
+@media (max-width: 900px) {
+  .rec-boxes--3, .rec-boxes--2, .rec-boxes--1 { grid-template-columns: minmax(0, 1fr); }
+  .rec-box-arrow { transform: rotate(90deg); }
+}
 @media (max-width: 1050px) {
   .rec-calc-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--bb-space-5) var(--bb-space-3); }
   .rec-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'answer' 'rail' 'evidence'; grid-template-rows: none; }
@@ -241,7 +270,8 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
   .rec-verdict { gap: var(--bb-space-3); }
   .rec-verdict-icon { width: 28px; height: 28px; margin-top: var(--bb-space-6); }
   .rec-verdict-icon svg { width: 28px; height: 28px; }
-  .rec-tile--recommended .rec-tile-value { font: var(--bb-type-figure); }
+  .recommendations .rec-answer .rec-hero h2 { font: var(--bb-type-figure-lg); }
+  .recommendations .rec-answer .rec-hero--long h2 { font: var(--bb-type-figure); }
   /* Columns stack; the deadline marker becomes a labelled rule between eligible and late dates. */
   .rec-columns { grid-template-columns: minmax(0, 1fr); }
   .rec-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(72px, 40%); grid-template-areas: 'head plot' 'values plot'; gap: var(--bb-space-2) var(--bb-space-3); padding: var(--bb-space-4) var(--bb-space-4); }

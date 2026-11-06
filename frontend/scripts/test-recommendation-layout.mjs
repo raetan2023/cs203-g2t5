@@ -65,7 +65,7 @@ try {
         const back = document.querySelector('.rec-header > a').getBoundingClientRect();
         const notice = document.querySelector('.recommendations > .rec-notice').getBoundingClientRect();
         return { backHeight: back.height, noticeGap: document.querySelector('.rec-flow').getBoundingClientRect().top - notice.bottom, scrollWidth: document.documentElement.scrollWidth, answer: rect('.rec-answer'), compare: rect('.rec-compare'), summary: rect('.rec-summary'), evidence: rect('.rec-evidence'),
-          overflow: [...document.querySelectorAll('.recommendations button, .rec-tile-value, .rec-detail-grid dd, .rec-col-values strong, .rec-summary-facts dd')].filter(el => el.getClientRects().length && (el.getBoundingClientRect().right > innerWidth + 1 || el.scrollWidth > el.clientWidth + 2)).map(el => el.textContent) };
+          overflow: [...document.querySelectorAll('.recommendations button, .rec-box-value, .rec-detail-grid dd, .rec-col-values strong, .rec-summary-facts dd')].filter(el => el.getClientRects().length && (el.getBoundingClientRect().right > innerWidth + 1 || el.scrollWidth > el.clientWidth + 2)).map(el => el.textContent) };
       });
       assert.ok(layout.backHeight >= 44, 'back link has a comfortable hit target');
       assert.ok(layout.noticeGap >= 24, 'news notice is separated from the answer');
@@ -83,7 +83,7 @@ try {
       await page.screenshot({ path: process.env.LAYOUT_SCREENSHOT_DIR + '/recommendation-' + width + '.png', fullPage: true });
     }
   }
-  assert.match(await page.locator('.rec-tile-value').nth(1).innerText(), /USD 11,874,658,922–13,715,504,613/);
+  assert.match(await page.locator('.rec-box').nth(1).innerText(), /Range USD 11\.87bn–13\.72bn/);
   await page.getByRole('button', { name: '14 days', exact: true }).click();
   await page.waitForFunction(() => document.querySelector('.rec-col[aria-pressed="true"]')?.textContent.includes('14 days'));
   await page.getByText('If you buy Tue 10 Nov · 14-day forecast').waitFor();

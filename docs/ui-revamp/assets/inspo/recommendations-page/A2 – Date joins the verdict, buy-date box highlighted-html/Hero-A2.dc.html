@@ -1,0 +1,63 @@
+<!doctype html>
+<meta charset="utf-8"><style data-dc-design-system-vars>@layer{:root{--ground:#0c0d0e;--surface-card:#1a1b1c;--surface-border:#2d2c29;--surface-input:#2c3443;--beige:#eadfc9;--on-accent:#0c0d0e;--ink:#f0e6d2;--ink-soft:#c5bba7;--ink-muted:#b5ac9b;--hero-water:#080a0c;--hero-haze:#2a241b;--hero-light:#eadfc9;--space-1:4px;--space-2:8px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;--radius-sm:6px;--radius-md:8px;--radius-lg:12px;--font-sans:system-ui, -apple-system, "Segoe UI", sans-serif;--text-display:300 64px/70px var(--font-sans);--text-title:400 32px/40px var(--font-sans);--text-lead:400 18px/32px var(--font-sans);--text-body:400 14px/20px var(--font-sans);--text-label:600 13px/18px var(--font-sans);}}</style>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hero A2 – Date in the verdict</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#eadfc9}a:hover{color:#f0e6d2}
+</style>
+</helmet>
+<div style="width: 1200px; height: 600px; box-sizing: border-box; padding: 40px; background: #0c0d0e; color: #f0e6d2; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">
+  <section aria-label="Recommendation" style="background: #1a1b1c; border: 1px solid #2d2c29; border-radius: 12px; padding: 36px 40px; display: flex; flex-direction: column; gap: 30px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <span style="font-size: 13px; color: #b5ac9b;">Recommended action</span>
+      <div style="display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap;">
+        <span style="display: flex; align-items: center; gap: 14px; font-size: 60px; line-height: 64px; font-weight: 700; letter-spacing: -0.02em;"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#eadfc9" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Wait</span>
+        <span style="font-size: 32px; line-height: 38px; font-weight: 400; color: #c5bba7;">and buy on Sun 06 Dec</span>
+      </div>
+      <span style="font-size: 14px; color: #b5ac9b;">That still leaves 212 days before your 06 Jul 2027 deadline.</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; align-items: stretch;">
+      <div style="border: 1px solid #2d2c29; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 13px; color: #b5ac9b;">Latest quote · 26 Oct</span>
+        <span style="font-size: 30px; font-weight: 700;">$1,351.50<span style="font-size: 15px; font-weight: 400; color: #b5ac9b;">/MT</span></span>
+        <span style="font-size: 13px; color: #b5ac9b;">USD 9,145,601 for 6,767 MT</span>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b5ac9b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16"></path><path d="M14 6l6 6-6 6"></path></svg>
+      </div>
+      <div style="border: 1px solid #eadfc9; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 13px; font-weight: 600; color: #eadfc9;">Your buy date · Sun 06 Dec</span>
+        <span style="font-size: 30px; font-weight: 700;">$1,137.33<span style="font-size: 15px; font-weight: 400; color: #b5ac9b;">/MT</span></span>
+        <span style="font-size: 13px; color: #b5ac9b;">USD 7,696,295 forecast</span>
+      </div>
+      <div style="border: 1px solid #2a4a35; background: #142019; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 13px; color: #8fd8a6;">Expected saving</span>
+        <span style="font-size: 30px; font-weight: 700;">≈ USD 1.45m</span>
+        <span style="font-size: 13px; color: #c5bba7;">$214.17/MT · 16% below the latest quote</span>
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid #2d2c29; padding-top: 18px;">
+      <span style="font-size: 13px; line-height: 19px; color: #b5ac9b;">According to Bunker Buddy's 30-day MGO forecast (Ridge regression), based on the 26 Oct quote. Forecasts are estimates, not guaranteed prices.</span>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":600}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
