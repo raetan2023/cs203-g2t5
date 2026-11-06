@@ -15,10 +15,13 @@ public class PublicController {
 
     private final MarketDataStore store;
     private final String serviceName;
+    private final String revision;
 
-    public PublicController(MarketDataStore store, @Value("${spring.application.name}") String serviceName) {
+    public PublicController(MarketDataStore store, @Value("${spring.application.name}") String serviceName,
+                            @Value("${APP_REVISION:}") String revision) {
         this.store = store;
         this.serviceName = serviceName;
+        this.revision = revision;
     }
 
     @Hidden
@@ -45,6 +48,10 @@ public class PublicController {
     @Tag(name = "Operations")
     @GetMapping("/health")
     public Map<String, String> health() {
+        if (!revision.isBlank()) {
+            return Map.of("status", "ok", "service", serviceName, "version", MgoDataApiApplication.VERSION,
+                    "revision", revision);
+        }
         return Map.of("status", "ok", "service", serviceName, "version", MgoDataApiApplication.VERSION);
     }
 }
