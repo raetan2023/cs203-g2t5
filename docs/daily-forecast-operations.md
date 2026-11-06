@@ -1,12 +1,29 @@
 # Daily GDELT-informed ranges: operations and verification
 
-For the current **purchase-plan-only experimental range**, see [purchase-plan experimental ranges](purchase-plan-experimental-ranges.md). It reads stored GDELT/MGO directly through Spring and does not depend on this legacy calibrated batch pipeline.
+The scheduled **Daily GDELT inputs for recommendations** workflow now fetches the
+[MGO Data API GDELT snapshot](https://mgo-data-api.vercel.app/api/v1/data/gdelt?mode=snapshot).
+It imports paired article count and average tone for completed UTC days into the
+existing Supabase market tables. It requires at least one pair within seven days,
+preserves the API's estimated/observed labels, and skips estimates for dates with
+existing observed GDELT values. The workflow requires no OpenAI key or retraining.
+The [purchase-plan experimental ranges](purchase-plan-experimental-ranges.md)
+read those tables through Spring. This workflow does not publish the legacy
+forecast batches or refresh the upstream API itself.
+
+Run the workflow manually with `publish=false` (the default) to see the latest
+paired date and provenance without writes. After reviewing the output, run with
+`publish=true` to import. Scheduled writes use the existing
+`DAILY_FORECASTS_ENABLED=true` repository variable. With that switch enabled,
+the general market sync leaves scheduled GDELT imports to this workflow.
+
+The sections below describe the legacy classified-headline batch, which is
+available through the Python CLI for research and no longer runs on this schedule.
 
 ## What runs where
 
-GitHub Actions executes `ridge-regression-model/src/daily_pipeline.py` at 00:17 UTC (08:17 Singapore), with best-effort timing. Ridge supplies the central forecast. Independent quantile models learn chronological out-of-sample log-price errors from market and historical GDELT classification features. Inference collects the latest rolling 24-hour window (through the last 15-minute indexing boundary) and falls back to the newest complete verified archive within 7 days. Actual UTC window dates are shown; yesterday's exact date is not required. Inference runs daily; model retraining runs Mondays or explicit `--retrain`.
+The legacy CLI `ridge-regression-model/src/daily_pipeline.py` uses Ridge for the central forecast. Independent quantile models learn chronological out-of-sample log-price errors from market and historical GDELT classification features. Inference collects the latest rolling 24-hour window (through the last 15-minute indexing boundary) and falls back to the newest complete verified archive within 7 days. Actual UTC window dates are shown; yesterday's exact date is not required. When invoked on Mondays or with explicit `--retrain`, the CLI attempts retraining.
 
-Actions publishes all three horizons in one Supabase transaction. Spring's authenticated `GET /api/v1/forecast?horizon_days=7` reads the same active batch used by purchase-plan cost analysis. The dashboard and recommendation screens share horizon/run state. Failed, stale or insufficient inputs show unavailable, never synthetic/old ranges. There is no required Python web server.
+With `--apply`, the legacy CLI publishes all three horizons in one Supabase transaction. Spring's authenticated `GET /api/v1/forecast?horizon_days=7` reads the active legacy batch. Failed, stale or insufficient inputs show unavailable, never synthetic/old ranges. There is no required Python web server.
 
 The new batch model uses exact observed target dates at decision+h, one row per observed target; no interpolated labels or duplicate daily pseudo-outcomes. Same-day MGO quotes are excluded conservatively because publication timestamps are unknown. Existing market publication lags and <=7-day freshness are enforced in training as well as serving. A current decision-date forecast differs intentionally from the older quote-origin experiment.
 
@@ -14,11 +31,8 @@ The new batch model uses exact observed target dates at decision+h, one row per 
 
 1. Apply `docs/migrations/20261026_published_forecasts.sql` once to the intended database. **Applied and verified on 26 October 2026** using the existing backend database connection: four new tables, private `forecast-models` bucket, and server-only atomic publication function. Existing plans and market history were not changed. One authentic unavailable batch was published from an offline invocation with missing prior-day news; no synthetic/ready prices were written.
 2. Existing repository secrets `SUPABASE_URL` and `SUPABASE_SECRET_KEY` are present. The encrypted GitHub secret `OPENAI_API_KEY` and model variable `NEWS_LLM_MODEL=gpt-4.1-mini` are now configured; the OpenAI adapter passed a live classification request. No credential is embedded in source or committed files. The existing OpenAI adapter reuses the same news taxonomy.
-3. Make the workflow available on the default branch through normal code review. The feature branch/PR alone does not enable schedules. `DAILY_FORECASTS_ENABLED` must remain unset/false until the manual verification below.
-4. Provide genuine historical complete news archives. Recent DOC API retention is insufficient to bootstrap 30 proper +20 calibration +40 chronological evaluation observations once label purges are applied, even with dense daily prices. Sparse MGO makes this worse. Do not lower the gates or pretend aggregate tone CSV rows establish complete headline coverage.
-5. Run the workflow manually with `retrain=true` and `publish=false` first. With the existing Supabase settings it reads validated remote bundles/archives without publishing. Inspect `run.json`, `forecasts.json`, evaluation reports and the Actions summary. Then run with `publish=true` and verify storage/API/UI before setting `DAILY_FORECASTS_ENABLED=true`.
-
-The existing supplied OpenAI credential was configured as an encrypted Actions secret; no new credential was created. Scheduling remains disabled until sufficient historical evidence and manual validation exist.
+3. Provide genuine historical complete news archives. Recent DOC API retention is insufficient to bootstrap 30 proper +20 calibration +40 chronological evaluation observations once label purges are applied, even with dense daily prices. Sparse MGO makes this worse. Do not lower the gates or pretend aggregate tone CSV rows establish complete headline coverage.
+4. Run the CLI with `--retrain --read-published` first. With the existing Supabase settings it reads validated remote bundles/archives without publishing. Inspect `run.json`, `forecasts.json`, and evaluation reports before considering `--apply`.
 
 ## Historical backfill and initial training
 
