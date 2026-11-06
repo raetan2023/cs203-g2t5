@@ -14,3 +14,7 @@ export function isValidDate(value: string): boolean {
 export function calendarDays(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 }
+
+export function addCalendarDays(value: string, days: number): string {
+  return new Date(Date.parse(`${value}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+}

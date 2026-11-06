@@ -3,7 +3,7 @@ import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
 import { SubmittedRecommendationView, RecommendationApproval } from './RecommendationApproval';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppLink } from '../../app/router';
-import { calendarDays, formatDate } from '../purchase-plan/dates';
+import { addCalendarDays, calendarDays, formatDate } from '../purchase-plan/dates';
 import type { CurrentRecommendation, PurchasePlan, PurchasePlanService, Urgency } from '../purchase-plan/types';
 import type { RecommendationService } from './service';
 import { useAnalysis } from './useAnalysis';
@@ -20,7 +20,9 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
   canSubmit?: boolean; canDecide?: boolean; planId?: string | null; planService: PurchasePlanService; service?: RecommendationService; scenarioDate: string; refreshScenario?: () => void;
 }) {
   const forecastState = useForecastContext();
-  const forecast = forecastState.data?.status === 'ready' ? forecastState.data : undefined;
+  const selectedForecast = forecastState.data?.status === 'ready' ? forecastState.data : undefined;
+  const forecast = selectedForecast && selectedForecast.target_date === addCalendarDays(scenarioDate, forecastState.horizon)
+    ? selectedForecast : undefined;
   const [attempt, setAttempt] = useState(0);
   const reload = () => { forecastState.retry(); refreshScenario?.(); setAttempt(value => value + 1); };
   const scope = useMemo(() => ({}), [planService, service, scenarioDate, attempt, planId]);
@@ -41,28 +43,27 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
   }, [scope, planService, scenarioDate, planId]);
   const active = result?.scope === scope ? result : undefined;
   const plan = active?.plan;
-  const comparison = useHorizonComparison(plan ? forecastState.service : undefined, scenarioDate, String(forecastState.refreshKey), forecast?.run_id);
+  const comparison = useHorizonComparison(plan ? forecastState.service : undefined, scenarioDate, String(forecastState.refreshKey), selectedForecast?.run_id);
+  const referenceForecast = selectedForecast ?? comparison.entries?.find(entry => entry.forecast)?.forecast;
   const { experimental, executedRidge } = forecastSource(forecast);
   const quoteAge = forecast ? calendarDays(forecast.anchor_quote_date, scenarioDate) : 0;
-  const targetFor = (h: Horizon) => {
-    const base = forecast ? Date.parse(forecast.target_date) - forecastState.horizon * 86_400_000 : Date.parse(scenarioDate);
-    return new Date(base + h * 86_400_000).toISOString().slice(0, 10);
-  };
+  const targetFor = (h: Horizon) => addCalendarDays(scenarioDate, h);
   const horizons = [7, 14, 30] as const;
-  const fittingHorizons = plan ? horizons.filter(h => (!comparison.entries || comparison.entries.some(entry => entry.horizon === h && entry.forecast))
+  const fittingHorizons = plan ? horizons.filter(h => (!comparison.entries || comparison.entries.some(entry => entry.horizon === h && entry.forecast?.target_date === targetFor(h)))
     && targetFor(h) <= plan.purchase_deadline && targetFor(h) > scenarioDate) : [];
   const noHorizonFits = !!plan && !!forecast && forecastState.connected && fittingHorizons.length === 0;
+  const outdatedForecast = !!referenceForecast && !forecast;
   const fitsSelected = fittingHorizons.includes(forecastState.horizon);
   useEffect(() => {
     if (plan && forecast && !fitsSelected && fittingHorizons.length > 0) forecastState.setHorizon(fittingHorizons[0]);
   }, [plan, forecast, fitsSelected, fittingHorizons[0], forecastState.setHorizon]);
   useEffect(() => {
     // One expired/unavailable horizon must not hide the other usable forecasts.
-    if (!plan || forecastState.status !== 'success' || forecastState.data?.status !== 'unavailable') return;
-    const available = comparison.entries?.filter(entry => entry.forecast);
+    if (!plan || forecastState.status !== 'success' || forecast) return;
+    const available = comparison.entries?.filter(entry => entry.forecast?.target_date === targetFor(entry.horizon));
     const next = available?.find(entry => entry.forecast!.target_date <= plan.purchase_deadline) ?? available?.[0];
     if (next) forecastState.setHorizon(next.horizon);
-  }, [plan, forecastState.status, forecastState.data, comparison.entries, forecastState.setHorizon]);
+  }, [plan, forecastState.status, forecast, scenarioDate, comparison.entries, forecastState.setHorizon]);
   const afterDeadline = !!(plan && forecast && forecast.target_date > plan.purchase_deadline);
   if (plan?.status && plan.status !== 'draft') return <SubmittedRecommendationView key={`${plan.plan_id}:${plan.status}:${attempt}`} canDecide={canDecide} canAct={canSubmit} today={scenarioDate}
     onChanged={saved => setResult({ scope, plan: saved })} onReload={reload} plan={plan} planService={planService} />;
@@ -77,12 +78,12 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       <h1 tabIndex={-1} ref={heading}>Purchase recommendation</h1>
       {plan && <p>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT · due {dayDate(plan.purchase_deadline, true)} · <strong>{remaining(plan.days_remaining)}</strong></p>}
     </header>
-    <NewsDataNotice sourceDates={forecast?.source_dates} />
+    <NewsDataNotice sourceDates={referenceForecast?.source_dates} />
     {plan?.previous_plan_id && <PreviousPlanNote plan={plan} service={planService} />}
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current planning date.</p><button className="bb-button" onClick={reload}>Retry</button></section>
       : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Choose a saved purchase plan from your plans, or create a new one.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>
-      : <PlanDecision plan={plan} planService={planService} service={service} reload={reload} published={forecast} entries={comparison.entries} connected={forecastState.connected} onRefresh={refreshPrices} readOnly={!canSubmit}
+      : <PlanDecision plan={plan} planService={planService} service={service} reload={reload} published={referenceForecast} entries={comparison.entries} connected={forecastState.connected} onRefresh={refreshPrices} readOnly={!canSubmit}
         horizonDays={forecastState.connected ? forecastState.horizon : undefined} runId={fitsSelected ? forecast?.run_id : undefined}
         requireEvidence={forecastState.connected && !forecast}
         showGuidance={!forecastState.connected || !!forecast}
@@ -100,7 +101,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
           return <>
             {noHorizonFits && <section className="rec-card rec-deadline-notice" role="status" aria-label="Purchase deadline guidance">
               <h2>{plan.days_remaining < 0 ? 'Your purchase deadline has passed' : 'Your deadline is before the available forecasts'}</h2>
-              <p>The model supports 7, 14 and 30 days from its observed quote. No available forecast lands after today and on or before your deadline of {formatDate(plan.purchase_deadline)}. A shorter forecast is not available.</p>
+              <p>No available 7, 14 or 30-day forecast from today lands on or before your deadline of {formatDate(plan.purchase_deadline)}. A shorter forecast is not available.</p>
               {forecast && <p>The buy-today cost above uses the observed {formatDate(forecast.anchor_quote_date)} quote. It is a reference, not a forecast or supplier offer.</p>}
               <p>{plan.days_remaining < 0 ? 'Update your purchase plan and obtain a current supplier quote.' : 'Obtain a current supplier quote for your purchase window. You can edit the deadline in your saved plan if your requirements change.'}</p>
               <AppLink className="bb-button bb-button--secondary" href="/purchase-plans">Review purchase plan</AppLink>
@@ -108,7 +109,9 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
             {/* While the estimate loads, the recommendation's progress view covers it. */}
             {forecastState.connected && !forecast && forecastState.status !== 'loading' && <section className="rec-card" role={forecastState.status === 'error' ? 'alert' : 'status'}>
               <h2>Price estimate unavailable</h2>
-              <p>{forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : 'The selected price horizon could not be loaded.'}</p>
+              <p>{outdatedForecast
+                ? `An updated forecast for ${formatDate(targetFor(forecastState.horizon))} (${forecastState.horizon} days from today) is required. Older estimates are excluded from costs, recommendations and approval requests.`
+                : forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : 'The selected price horizon could not be loaded.'}</p>
               <button className="bb-button" onClick={forecastState.retry}>Retry price estimate</button>
             </section>}
             {preparing ? <CompareSkeleton /> : forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
@@ -142,12 +145,15 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
 }) {
   const g = useAnalysis(showGuidance ? service : undefined, plan, 'read', horizonDays, runId);
   const i = useAnalysis(showImpact ? service : undefined, plan, 'readImpact', horizonDays, runId);
+  const expectedTarget = horizonDays == null ? undefined : addCalendarDays(plan.scenario_as_of_date, horizonDays);
+  const currentAnalysis = !connected || g.analysis?.forecast.status === 'ready' && g.analysis.forecast.value.target_date === expectedTarget;
   const value = g.analysis?.recommendation.status === 'ready' ? g.analysis.recommendation.value : undefined;
-  const guidance = value && (!requireEvidence || value.evidence) ? value : undefined;
+  const guidance = currentAnalysis && value && (!requireEvidence || value.evidence) ? value : undefined;
   const evidence = guidance?.evidence;
   const impact = i.analysis?.cost_impact.status === 'ready' ? i.analysis.cost_impact.value : undefined;
   const impactForecast = i.analysis?.forecast.status === 'ready' ? i.analysis.forecast.value : undefined;
-  const impactReady = impact?.target_date && impactForecast?.target_date === impact.target_date ? impact : undefined;
+  const impactReady = impact?.target_date && impactForecast?.target_date === impact.target_date
+    && (!connected || impact.target_date === expectedTarget) ? impact : undefined;
   const buyNow = evidence?.buy_now_cost_usd ?? impactReady?.reference_total ?? (published ? published.anchor_price * plan.quantity_mt : undefined);
   const waitTarget = guidance?.action === 'WAIT' && evidence?.supported_target_date && evidence.alternative_cost_usd != null ? evidence.supported_target_date : undefined;
   const reference = (g.analysis ?? i.analysis)?.reference;
@@ -232,7 +238,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
           <ul>{evidence.reasons.map((reason, n) => <li key={n}>{readableDates(reason)}</li>)}</ul>
         </div>
       </details>}
-      <DataSources impact={i.analysis} guidance={g.analysis} published={published} />
+      <DataSources impact={impactReady ? i.analysis : undefined} guidance={currentAnalysis ? g.analysis : undefined} published={published} />
     </div>
   </div>;
 }

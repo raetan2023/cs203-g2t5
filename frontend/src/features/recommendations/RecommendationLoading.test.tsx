@@ -10,7 +10,7 @@ import { RecommendationsPage } from './RecommendationsPage';
 import { createMockRecommendationService, RECOMMENDATION_DEMO_PLAN as plan } from './mockService';
 import type { Entry } from './TimingComparison';
 
-const TODAY = '2025-10-24', DEADLINE = '2025-10-30';
+const TODAY = '2025-10-22', DEADLINE = '2025-10-30';
 const ready = (horizon: 7 | 14 | 30, target: string, low: number, high: number) => ({ horizon, forecast: {
   ...buildMockForecast(horizon), anchor_quote_date: '2025-10-22', anchor_price: 700, target_date: target, low, high, forecast: (low + high) / 2,
 } as ReadyForecast });
@@ -89,7 +89,7 @@ describe('recommendation loading', () => {
 it('shows progress while live forecasts back the request and swaps in the answer as soon as it arrives', async () => {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   const forecasts = { read: vi.fn(async (h: 7 | 14 | 30) => ({ ...buildMockForecast(h), anchor_quote_date: '2025-10-22', forecast_origin_date: '2025-10-22',
-    target_date: new Date(Date.parse('2025-10-22') + h * 86_400_000).toISOString().slice(0, 10) }) as ReadyForecast) };
+    target_date: new Date(Date.parse(plan.scenario_as_of_date) + h * 86_400_000).toISOString().slice(0, 10) }) as ReadyForecast) };
   let resolve!: (value: PlanAnalysis) => void;
   const mock = createMockRecommendationService({ delayMs: 0 });
   const service = { ...mock, read: vi.fn(() => new Promise<PlanAnalysis>(r => { resolve = r; })) };
@@ -99,7 +99,9 @@ it('shows progress while live forecasts back the request and swaps in the answer
   const answer = await screen.findByRole('region', { name: 'Recommendation' });
   expect(await within(answer).findByText('Working out your recommendation')).toBeVisible();
   expect(answer).toHaveAttribute('aria-busy', 'true');
-  await act(async () => resolve(await mock.read(plan, 7, 'synthetic-preview')));
+  const body = await mock.read(plan, 7, 'synthetic-preview');
+  if (body.forecast.status === 'ready') body.forecast.value.target_date = '2025-10-31';
+  await act(async () => resolve(body));
   expect(await within(answer).findByText('Consider purchasing on 29 October')).toBeVisible();
   expect(screen.queryByText('Working out your recommendation')).not.toBeInTheDocument();
 });

@@ -14,7 +14,7 @@ const draft = { ...DEMO_PLAN, status: 'draft' as const };
 const submitted = { ...draft, status: 'submitted' as const, submitted_at: '2025-10-24T08:00:00Z' };
 const forecast = (h: Horizon) => ({ ...buildMockForecast(h), status: 'ready' as const, run_id: '00000000-0000-0000-0000-000000000001',
   anchor_quote_date: '2025-10-22', forecast_origin_date: '2025-10-22',
-  target_date: new Date(Date.parse('2025-10-22') + h * 86400000).toISOString().slice(0, 10) } as ReadyForecast);
+  target_date: new Date(Date.parse(DEMO_SCENARIO_DATE) + h * 86400000).toISOString().slice(0, 10) } as ReadyForecast);
 function analysis(h: Horizon = 14, context: PlanResultContext = draft): PlanAnalysis {
   return { ...structuredClone(DEMO_ANALYSIS), source: 'api', provenance: 'model', approval_fingerprint: (h === 7 ? 'a' : 'b').repeat(64), context: { ...context, urgency: context.urgency ?? 'NORMAL' },
     forecast: { status: 'ready', value: { prices: { lower: 680, upper: 740 }, target_date: forecast(h).target_date,
@@ -73,6 +73,18 @@ it('blocks missing evidence and shows stale-selection errors for refresh and ret
   await user.click(screen.getByRole('button', { name: 'Submit for approval' }));
   await user.click(screen.getByRole('button', { name: 'Confirm submission' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('The forecast run changed.');
+});
+
+it('never submits a forecast targeting a different date from the requested horizon', async () => {
+  const api = service(), user = userEvent.setup();
+  const stale = analysis(14);
+  if (stale.forecast.status === 'ready') stale.forecast.value.target_date = '2025-11-05';
+  render(<RecommendationApproval analysis={stale} plan={draft} horizon={14} planService={api} onSubmitted={vi.fn()} />);
+  await user.click(screen.getByRole('button', { name: 'Accept' }));
+  expect(screen.getByText('An updated 14-day forecast for 07 Nov 2025 is required before submitting.')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeDisabled();
+  expect(screen.queryByText(/Cost detail included:/)).not.toBeInTheDocument();
+  expect(api.submit).not.toHaveBeenCalled();
 });
 
 it('does not submit twice or publish a response after the selection component is unmounted', async () => {
