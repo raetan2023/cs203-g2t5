@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import type { Forecast, Horizon, ReadyForecast } from '../forecast/apiService';
 import { useForecastContext } from '../forecast/ForecastContext';
 import { deriveDirection } from '../forecast/utils';
-import { amount, dayDate, perMt } from '../recommendations/format';
-import { ageLabel, daysOld } from './format';
+import { amount, perMt } from '../recommendations/format';
+import { ageLabel, daysOld, fullDate, shortDate } from './format';
 import { Symbol } from './StoredMarketPanel';
 
 const HORIZONS: Horizon[] = [7, 14, 30];
@@ -28,7 +28,7 @@ function useHorizonForecasts() {
 
 function QuoteTile({ anchor, date, age }: { anchor: number; date: string; age: number }) {
   return <li className="mf-tile">
-    <div className="mf-tile-head"><strong>Latest quote</strong><span>{dayDate(date)}</span></div>
+    <div className="mf-tile-head"><strong>Latest quote</strong><span>{shortDate(date)}</span></div>
     <div className="mf-figure"><span className="mf-value">${perMt(anchor)}</span></div>
     <span className="mf-detail">Observed · {ageLabel(age)}</span>
   </li>;
@@ -38,7 +38,7 @@ function HorizonTile({ forecast }: { forecast: ReadyForecast }) {
   const direction = deriveDirection(forecast.forecast, forecast.anchor_price);
   const percent = Math.abs((forecast.forecast - forecast.anchor_price) / forecast.anchor_price * 100).toFixed(1);
   return <li className="mf-tile">
-    <div className="mf-tile-head"><strong>{forecast.horizon_days} days</strong><span>{dayDate(forecast.target_date)}</span></div>
+    <div className="mf-tile-head"><strong>{forecast.horizon_days} days</strong><span>{shortDate(forecast.target_date)}</span></div>
     <div className="mf-figure">
       <span className="mf-value">${perMt(forecast.forecast)}</span>
       <span className={`mf-change sm-${direction === 'flat' ? 'neutral' : direction}`}>
@@ -64,18 +64,15 @@ function ForecastSteps({ forecasts, age }: { forecasts: ReadyForecast[]; age: nu
   const newsDay = first.source_dates.gdelt ?? first.news_window_start.slice(0, 10);
   const measured = first.interval.nominal_coverage != null;
   const experimental = first.interval.method === 'experimental_gdelt_scaled_quantiles';
-  const news = first.source_dates.gdelt_estimated ? 'Includes estimated news figures for that day, not only observed ones.'
-    : first.source_dates.gdelt_fallback ? 'The latest completed news day is missing, so this is the last available day.'
-      : 'That day’s article count and tone go into the model.';
   return <section className="mf-steps" aria-labelledby="mf-steps-title">
     <div><h3 id="mf-steps-title">How this forecast was made</h3><p>Four steps from market data to price range.</p></div>
     <ol>
       <li><span className="mf-step-label">1 · Latest quote</span><strong>USD {perMt(first.anchor_price)}/MT</strong>
-        <span>The last observed MGO price, from {dayDate(first.anchor_quote_date)}, now {ageLabel(age)}.</span></li>
-      <li><span className="mf-step-label">2 · News signal</span><strong>GDELT {dayDate(newsDay)}</strong><span>{news}</span></li>
+        <span>The last observed MGO price, from {shortDate(first.anchor_quote_date)}, now {ageLabel(age)}.</span></li>
+      <li><span className="mf-step-label">2 · News signal</span><strong>GDELT {shortDate(newsDay)}</strong><span>Synthesise world news and obtain overall market signal.</span></li>
       <li><span className="mf-step-label">3 · Central estimate</span><strong>{first.model_version.startsWith('ridge-') ? 'Ridge regression' : first.model_version}</strong>
         <span>The model gives one price for each of the {forecasts.length === 1 ? 'available horizon' : `${forecasts.length} horizons`}, from the quote, related markets and news.</span></li>
-      <li className="mf-step-result"><span className="mf-step-label">4 · Price range</span>
+      <li><span className="mf-step-label">4 · Price range</span>
         <strong>{measured ? `${Math.round(first.interval.nominal_coverage! * 100)}% target range` : 'Experimental range'}</strong>
         <span>{experimental ? 'Past forecast errors set each range, and unusually heavy or strongly toned news widens it. Coverage isn’t measured.'
           : 'Past forecast errors set each range around the central estimate.'}</span></li>
@@ -106,8 +103,8 @@ export function MarketForecast({ today }: { today: string }) {
     <div className="mf-header">
       <div className="mf-intro">
         <div className="mf-title"><h2>MGO price forecast</h2>
-          {first && <span className="sm-chip">{first.synthetic ? 'Synthetic preview' : first.forecast_origin_date === today ? 'Updated today' : `Updated ${dayDate(first.forecast_origin_date)}`}</span>}</div>
-        {first ? <p>From the latest quote of USD {perMt(first.anchor_price)}/MT on {dayDate(first.anchor_quote_date)}. Each horizon is a separate estimate with its own range.</p>
+          {first && <span className="sm-chip">{first.synthetic ? 'Synthetic preview' : first.forecast_origin_date === today ? 'Updated today' : `Updated ${shortDate(first.forecast_origin_date)}`}</span>}</div>
+        {first ? <p>From the latest quote of USD {perMt(first.anchor_price)}/MT on {shortDate(first.anchor_quote_date)}. Each horizon is a separate estimate with its own range.</p>
           : <p>Experimental forecast from market and news signals. Purchasing outcomes are uncertain.</p>}
       </div>
       {first && <button type="button" className="bb-button bb-button--secondary sm-refresh" onClick={refresh} disabled={refreshing} aria-label="Refresh forecast" aria-busy={refreshing}>
@@ -119,7 +116,7 @@ export function MarketForecast({ today }: { today: string }) {
       : !results ? <ForecastMessage title="Loading forecast…" />
         : !first ? <ForecastMessage alert={Boolean(failed?.error)} title="Forecast unavailable" retry={retry}
           detail={[failed?.forecast?.status === 'unavailable' ? failed.forecast.message : failed?.error,
-            lastRun && `Last successful forecast: ${dayDate(lastRun.origin_date, true)}. It is not shown as a current forecast.`].filter(Boolean).join(' ')} />
+            lastRun && `Last successful forecast: ${fullDate(lastRun.origin_date)}. It is not shown as a current forecast.`].filter(Boolean).join(' ')} />
           : <>
             <ul className="mf-tiles" aria-label="Forecast by horizon">
               <QuoteTile anchor={first.anchor_price} date={first.anchor_quote_date} age={age} />
@@ -129,7 +126,7 @@ export function MarketForecast({ today }: { today: string }) {
             </ul>
             <div className="mf-footnote">
               {first.interval.nominal_coverage == null ? <span>Experimental ranges, coverage not measured.</span> : <span />}
-              <span>Ran {dayDate(first.forecast_origin_date)} · {first.model_version.startsWith('ridge-') ? 'Ridge regression' : first.model_version}</span>
+              <span>Ran {shortDate(first.forecast_origin_date)} · {first.model_version.startsWith('ridge-') ? 'Ridge regression' : first.model_version}</span>
             </div>
             <ForecastSteps forecasts={forecasts} age={age} />
           </>}
