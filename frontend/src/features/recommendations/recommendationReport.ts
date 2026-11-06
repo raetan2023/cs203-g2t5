@@ -125,7 +125,7 @@ function summaryText({ plan, guidance, analysis }: ReportInput) {
 const percent = (weight: number) => `${Math.round(weight * 100)}%`;
 
 /** The forecasts the backend actually blended (at most two, nearest the deadline), with their weights. */
-function drivers({ guidance, columns }: ReportInput) {
+function drivers({ guidance, columns }: Pick<ReportInput, 'guidance' | 'columns'>) {
   return (guidance.evidence?.signal_inputs ?? []).map(input => {
     const column = columns.find(c => c.id !== 'today' && c.date === input.target_date);
     return { date: input.target_date, weight: input.weight, label: column ? column.label.replace(' days', '-day') : dayDate(input.target_date),
@@ -137,7 +137,7 @@ const listing = (items: string[]) => items.length <= 1 ? items.join('') : `${ite
 const forecastName = (c: Column) => `${c.label.replace(' days', '-day')} forecast (${dayDate(c.date!)})`;
 
 /** "Why this recommendation", written for buyers from the same numbers the backend used. */
-function plainReasons(input: ReportInput) {
+export function plainReasons(input: Pick<ReportInput, 'plan' | 'guidance' | 'analysis' | 'columns'>) {
   const { plan, guidance, analysis, columns } = input;
   const evidence = guidance.evidence;
   const reference = analysis.reference.status === 'ready' ? analysis.reference.value : undefined;
@@ -172,7 +172,8 @@ function plainReasons(input: ReportInput) {
   if (signal != null && today != null) {
     reasons.push(`The model estimates a price of about USD ${perMt(signal)} per MT`
       + (low != null && high != null ? `, with a rough range of USD ${perMt(low)} to USD ${perMt(high)}.` : '.'));
-    const gap = today - signal, total = Math.abs(gap) * plan.quantity_mt;
+    const gap = today - signal, saved = evidence?.alternative_minus_now_usd;
+    const total = saved != null && Math.sign(saved) === -Math.sign(gap) ? Math.abs(saved) : Math.abs(gap) * plan.quantity_mt;
     reasons.push(gap > 0 ? `That is about USD ${perMt(gap)} per MT below today’s price, or roughly ${usd(total)} less for your ${amount(plan.quantity_mt)} MT, if the estimate holds.`
       : gap < 0 ? `That is about USD ${perMt(-gap)} per MT more than today, so waiting is not expected to save money.`
       : 'That is about the same as today, so waiting is not expected to save money.');
@@ -193,7 +194,7 @@ const COVERED_CAVEATS = [/^Forecast savings are estimates/i, /^Reference prices 
   /news-aware Ridge central estimate/i, /^No available forecast fits the deadline/i];
 
 /** Plain-language caveats, merged so each point is made once. */
-function plainLimitations({ guidance, analysis }: ReportInput) {
+export function plainLimitations({ guidance, analysis }: Pick<ReportInput, 'guidance' | 'analysis'>) {
   const evidence = guidance.evidence;
   const forecast = analysis.forecast.status === 'ready' ? analysis.forecast.value : undefined;
   const backend = evidence?.limitations ?? [];
