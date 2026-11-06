@@ -21,8 +21,8 @@ export function AppShell({ isAdmin = false, children, path, onSignOut, marketAva
   const count = useBuyerDecisions()?.data?.unread_count ?? 0;
   return <div className={home ? 'bb-app bb-app--home' : 'bb-app'}>
     <a className="bb-skip" href="#app-content">Skip to content</a>
-    {!home && <header className="bb-header">
-      <span className="bb-brand-home"><Brand /></span>
+    <header className="bb-header">
+      <AppLink className="bb-brand-home" href="/home" aria-label="Bunker Buddy home"><Brand /></AppLink>
       <nav className="bb-topnav" aria-label="Main navigation">
       {isAdmin && <AppLink href="/admin" aria-current={path === '/admin' ? 'page' : undefined}><AppIcon name="chart" />Organisation administration</AppLink>}
       {canReadPlans && <AppLink href="/purchase-plans" aria-current={path.startsWith('/purchase-plans') && path !== '/purchase-plans/decisions' ? 'page' : undefined}><AppIcon name="plan" />Purchase plans{count > 0 && <span className="pp-unread" aria-label={`${count} unread decisions`}>{count}</span>}</AppLink>}
@@ -34,8 +34,8 @@ export function AppShell({ isAdmin = false, children, path, onSignOut, marketAva
         {organisationControl}
         <button className="bb-signout" disabled={busy} onClick={signOut}><AppIcon name="logout" />{busy ? 'Signing out...' : 'Sign out'}</button>
       </div>
-    </header>}
-    {error && <p className="bb-notice" role="alert">{error}</p>}
+    </header>
+    {error &&<p className="bb-notice" role="alert">{error}</p>}
     <div id="app-content" tabIndex={-1}>{children}</div>
   </div>;
 }

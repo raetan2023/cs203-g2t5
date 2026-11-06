@@ -157,6 +157,17 @@ describe('shared app and auth journeys', () => {
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeVisible();
   });
 
+  it('keeps the top navigation and sign-out on Home, and links the brand back to Home', async () => {
+    window.history.replaceState(null, '', '/home');
+    const { user } = setup(createMockAuthService({ user: DEMO_USER, delayMs: 0 }));
+    const header = await openMenu(user);
+    expect(within(header).getByRole('button', { name: 'Sign out' })).toBeVisible();
+    await user.click(within(header).getByRole('link', { name: 'Purchase plans' }));
+    expect(window.location.pathname).toBe('/purchase-plans');
+    await user.click(within(await openMenu(user)).getByRole('link', { name: 'Bunker Buddy home' }));
+    expect(window.location.pathname).toBe('/home');
+  });
+
   it('handles session expiry and does not restore private data with browser navigation', async () => {
     window.history.replaceState(null, '', '/purchase-plans');
     const { auth, user } = setup(createMockAuthService({ user: DEMO_USER, delayMs: 0 }));
