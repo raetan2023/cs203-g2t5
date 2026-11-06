@@ -29,7 +29,6 @@ beforeEach(() => {
   clerk.auth.signOut.mockReset();
   clerk.client.openOrganizationProfile.mockReset();
 });
-vi.mock('../features/forecast/ForecastChart', () => ({ default: () => null }));
 
 vi.mock('../features/auth/ClerkAuthPage', () => ({ ClerkAuthPage: () => <p>Clerk sign-in</p> }));
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });

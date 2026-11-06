@@ -110,6 +110,13 @@
   --bb-price-up: #ee8c7c;   /* dearer */
   --bb-price-down: #9ec48a; /* cheaper */
   --bb-price-flat: #b5ac9b; /* = text-secondary */
+  /* Whole-card tints for the market price cards: surface, outline, then the chip and rule on top of it. */
+  --bb-price-up-surface: #241717;
+  --bb-price-up-border: #5a2e2a;
+  --bb-price-up-chip: #3d2220;
+  --bb-price-down-surface: #142019;
+  --bb-price-down-border: #2a4a35;
+  --bb-price-down-chip: #1d3325;
 
   /* chart presentation (provisional aliases of approved tokens, 2026-11-04; theme.ts `chart` mirrors them for Recharts) */
   --bb-chart-grid: var(--bb-border-subtle);
