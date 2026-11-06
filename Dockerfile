@@ -19,6 +19,8 @@ RUN python3 -m venv .venv && .venv/bin/pip install --no-cache-dir -r /tmp/requir
 COPY ridge-regression-model/ ridge-regression-model/
 COPY --from=build /src/target/*.jar backend/app.jar
 WORKDIR /app/backend
+ARG APP_REVISION
+ENV APP_REVISION=${APP_REVISION}
 ENV PORT=8000
 EXPOSE 8000
 CMD ["java", "-XX:MaxRAMPercentage=60", "-jar", "app.jar"]

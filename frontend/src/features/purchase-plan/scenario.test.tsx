@@ -28,18 +28,18 @@ describe('active historical scenario', () => {
     let date = DEMO_SCENARIO_DATE;
     const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0, getScenarioDate: () => date });
     const view = render(<PurchasePlanPage service={service} scenarioDate={date} />);
-    expect(await screen.findByText('22 days')).toBeVisible();
+    expect(await screen.findByText('22 days left')).toBeVisible();
     date = nextDate;
     view.rerender(<PurchasePlanPage service={service} scenarioDate={date} />);
-    expect(await screen.findByText('14 days')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(await screen.findByText('14 days left')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: /^Edit / }));
     expect(screen.getByLabelText('Purchase deadline')).toHaveAttribute('min', nextDate);
     fireEvent.change(screen.getByLabelText('Purchase deadline'), { target: { value: '2025-10-31' } });
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     expect(screen.getByText('Purchase deadline cannot be before 2025-11-01.')).toBeVisible();
     fireEvent.change(screen.getByLabelText('Purchase deadline'), { target: { value: nextDate } });
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
-    expect(await screen.findByText('0 days')).toBeVisible();
+    expect(await screen.findByText('Due today')).toBeVisible();
   });
 
   it('does not display a backend response for an obsolete scenario as current and can retry', async () => {
@@ -48,9 +48,9 @@ describe('active historical scenario', () => {
     vi.spyOn(service, 'list').mockResolvedValueOnce({ plans: [DEMO_PLAN] }).mockResolvedValueOnce({ plans: [refreshed] });
     render(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
     expect(await screen.findByRole('alert')).toHaveTextContent('current application date');
-    expect(screen.queryByText('22 days')).not.toBeInTheDocument();
+    expect(screen.queryByText('22 days left')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(await screen.findByText('14 days')).toBeVisible();
+    expect(await screen.findByText('14 days left')).toBeVisible();
   });
 
   it('ignores late reads, including an A to B to A scenario transition', async () => {
@@ -77,19 +77,19 @@ describe('active historical scenario', () => {
       .mockResolvedValue({ plans: [{ ...refreshed, quantity_mt: 600 }] });
     vi.spyOn(service, 'update').mockReturnValue(pending.promise);
     const view = render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} />);
-    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    await user.click(await screen.findByRole('button', { name: /^Edit / }));
     fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '600' } });
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     view.rerender(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
-    expect(await screen.findByText('14 days')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled();
+    expect(await screen.findByText('14 days left')).toBeVisible();
+    expect(screen.getByRole('button', { name: /^Edit / })).toBeDisabled();
     expect(screen.getByRole('button', { name: /More actions/ })).toBeDisabled();
     await act(async () => pending.resolve({ plan: { ...DEMO_PLAN, quantity_mt: 600 } }));
     expect(await screen.findByText('600 MT')).toBeVisible();
-    expect(screen.getByText('14 days')).toBeVisible();
-    expect(screen.queryByText('22 days')).not.toBeInTheDocument();
+    expect(screen.getByText('14 days left')).toBeVisible();
+    expect(screen.queryByText('22 days left')).not.toBeInTheDocument();
     expect(read).toHaveBeenCalledTimes(3);
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /^Edit / })).toBeEnabled();
   });
 
   it('ignores a previous account save after replacing the service', async () => {
@@ -99,7 +99,7 @@ describe('active historical scenario', () => {
     vi.spyOn(oldService, 'update').mockReturnValue(pending.promise);
     const newService = createMockPlanService({ delayMs: 0 });
     const view = render(<PurchasePlanPage service={oldService} scenarioDate={DEMO_SCENARIO_DATE} />);
-    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    await user.click(await screen.findByRole('button', { name: /^Edit / }));
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     view.rerender(<PurchasePlanPage service={newService} scenarioDate={DEMO_SCENARIO_DATE} />);
     await screen.findByText("You haven't created a purchase plan yet.");
@@ -119,7 +119,7 @@ describe('active historical scenario', () => {
     await chooseDelete(user);
     await user.click(screen.getByRole('button', { name: 'Delete plan' }));
     view.rerender(<PurchasePlanPage service={service} scenarioDate={nextDate} />);
-    expect(await screen.findByText('14 days')).toBeVisible();
+    expect(await screen.findByText('14 days left')).toBeVisible();
     await act(async () => pending.resolve());
     expect(await screen.findByText("You haven't created a purchase plan yet.")).toBeVisible();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -137,7 +137,7 @@ describe('active historical scenario', () => {
     fireEvent.change(screen.getByLabelText('Purchase deadline'), { target: { value: '2025-11-15' } });
     await user.click(screen.getByRole('button', { name: 'Save plan' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('current application date');
-    expect(screen.queryByText('22 days')).not.toBeInTheDocument();
+    expect(screen.queryByText('22 days left')).not.toBeInTheDocument();
     expect(invalidate).toHaveBeenCalledTimes(1);
   });
 
@@ -146,7 +146,7 @@ describe('active historical scenario', () => {
     const invalidate = vi.fn();
     const service = createMockPlanService({ initialPlan: DEMO_PLAN, delayMs: 0, failOnce: { update: true } });
     render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} onInvalidateAnalysis={invalidate} />);
-    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    await user.click(await screen.findByRole('button', { name: /^Edit / }));
     invalidate.mockClear();
     fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '600' } });
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
@@ -155,7 +155,7 @@ describe('active historical scenario', () => {
     expect(invalidate).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('500 MT')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: /^Edit / }));
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     await screen.findByText('500 MT');
     expect(invalidate).toHaveBeenCalledTimes(1);

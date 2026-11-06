@@ -11,7 +11,7 @@ import { BuyerDecisionsProvider, BuyerDecisions } from '../purchase-plan/compone
 import { AppShell } from '../../components/AppShell';
 
 afterEach(() => { window.history.replaceState(null, '', '/'); });
-async function fixture(start: 'submitted' | 'approved' | 'rejected' | 'purchased' = 'submitted') {
+async function fixture(start: 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased' = 'submitted') {
   const service = withPreviewApproval(createMockPlanService({ initialPlan: scenarioPlan('wait'), scenarioDate: SCENARIO_DATE, delayMs: 0 }), 'wait', start);
   return { service, plan: (await service.read(scenarioPlan('wait').plan_id)).plan! };
 }
@@ -21,20 +21,18 @@ function Request({ service, initial, canAct = true }: { service: PurchasePlanSer
     onChanged={setPlan} onReload={() => { void service.read(plan.plan_id).then(({ plan }) => { if (plan) { setPlan(plan); setAttempt(n => n + 1); } }); }} />;
 }
 
-it('confirms withdrawal, keeps its reason, and offers a linked draft afterwards', async () => {
-  const { service, plan } = await fixture(), user = userEvent.setup();
-  const withdraw = vi.spyOn(service, 'withdraw');
+it('offers no way to withdraw a submitted request', async () => {
+  const { service, plan } = await fixture();
   render(<Request service={service} initial={plan} />);
-  await user.click(await screen.findByRole('button', { name: 'Withdraw request' }));
-  expect(withdraw).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('button', { name: 'Cancel' }));
-  await user.click(screen.getByRole('button', { name: 'Withdraw request' }));
-  await user.type(screen.getByLabelText('Withdrawal reason (optional)'), 'Schedule changed');
-  await user.click(screen.getByRole('button', { name: 'Confirm withdrawal' }));
+  expect(await screen.findByText('Await a manager decision.')).toBeVisible();
+  expect(screen.queryByRole('button', { name: /Withdraw/ })).not.toBeInTheDocument();
+});
+
+it('still lets an already withdrawn plan be copied', async () => {
+  const { service, plan } = await fixture('withdrawn');
+  render(<Request service={service} initial={plan} />);
   expect(await screen.findByRole('heading', { name: 'Request withdrawn' })).toBeVisible();
-  expect(screen.getByText(/Schedule changed/)).toBeVisible();
   expect(screen.getByRole('button', { name: 'Copy to new draft' })).toBeVisible();
-  expect((await service.readSubmission!(plan.plan_id)).withdrawal?.reason).toBe('Schedule changed');
 });
 
 it('copies a rejected plan into an editable linked draft with the earlier rejection note', async () => {

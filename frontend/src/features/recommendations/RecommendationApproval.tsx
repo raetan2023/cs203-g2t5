@@ -94,7 +94,7 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
   const approved = status === 'approved';
   const deciding = canDecide && status === 'submitted' && !decision && !!planService.decide && !!analysis?.approval_fingerprint;
   const nextStep = deciding ? 'Review the saved recommendation, then approve or reject it. The first decision is final.'
-    : !canAct ? 'Read-only access to the saved request, manager decision and purchase history.' : status === 'submitted' ? 'Await a manager decision, or withdraw this request if your plans change.'
+    : !canAct ? 'Read-only access to the saved request, manager decision and purchase history.' : status === 'submitted' ? 'Await a manager decision.'
     : status === 'purchased' ? 'The actual purchase is recorded below. The plan and approval history remain saved.'
     : status === 'withdrawn' ? 'This request was withdrawn. Copy it to a new draft to request approval again.'
     : approved ? 'Buy using a current supplier quote, then record the actual purchase. Approval does not place an order.'

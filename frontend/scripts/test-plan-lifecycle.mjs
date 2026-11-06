@@ -22,15 +22,13 @@ try {
     await page.locator('.preview-tools').evaluate(el => { el.style.visibility = ''; });
   };
   await select.selectOption('rec-awaiting');
-  await page.getByRole('button', { name: 'Withdraw request', exact: true }).click();
-  await page.getByLabel('Withdrawal reason (optional)').fill('Delivery schedule changed.');
-  await snap('withdraw-desktop');
-  await page.getByRole('button', { name: 'Confirm withdrawal', exact: true }).click();
-  await page.getByRole('heading', { name: 'Request withdrawn', exact: true }).waitFor();
+  await page.getByText('Await a manager decision.').waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Withdraw request', exact: true }).count(), 0);
+  await select.selectOption('rec-rejected');
   await page.getByRole('button', { name: 'Copy to new draft', exact: true }).click();
   await page.getByRole('button', { name: 'Create linked draft', exact: true }).click();
   await page.getByRole('heading', { name: 'Your purchase plan', exact: true }).waitFor();
-  await page.getByText('Earlier reason: Delivery schedule changed.', { exact: true }).waitFor();
+  await page.getByText(/^Earlier reason:/).waitFor();
   await snap('copied-draft-desktop');
 
   await select.selectOption('rec-approved');
@@ -49,9 +47,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 1050 });
   await snap('purchase-record-desktop');
   await page.getByRole('link', { name: 'Back to purchase plans', exact: true }).click();
-  await page.getByRole('button', { name: 'Mark as seen', exact: true }).click();
-  await page.getByRole('link', { name: '1 unread decision', exact: true }).waitFor({ state: 'detached' });
-  await page.getByRole('button', { name: 'Finished', exact: true }).click();
+  await page.getByRole('button', { name: /^Finished \(\d+\)$/ }).click();
   await page.getByText('Purchased', { exact: true }).waitFor();
   await snap('decisions-and-finished-plans');
 
@@ -62,7 +58,7 @@ try {
   await page.getByRole('heading', { name: 'Recommendation approved', exact: true }).waitFor();
   assert.equal(await page.getByRole('button', { name: 'Record purchase', exact: true }).count(), 0, 'Manager is read-only after deciding');
   assert.deepEqual(errors, []);
-  console.log(`PASS withdrawal, linked draft, purchase, comparison, notifications, filters, manager role and desktop/mobile overflow. Screenshots: ${output}`);
+  console.log(`PASS no withdrawal, linked draft, purchase, comparison, notifications, filters, manager role and desktop/mobile overflow. Screenshots: ${output}`);
 } finally {
   await browser?.close(); await server.close();
 }
