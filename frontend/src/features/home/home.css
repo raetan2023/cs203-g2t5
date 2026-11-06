@@ -70,17 +70,16 @@ a.bb-home-quote:hover { border-color: var(--bb-border-control); background: colo
 .bb-home-news-table th:nth-child(1) { width: 104px; }
 .bb-home-news-table th:nth-child(2) { width: 15%; }
 .bb-home-news-table thead td { width: 32px; border-bottom: 1px solid var(--bb-border-subtle); }
-.bb-home-news-table tbody tr { position: relative; transition: background-color var(--bb-motion-fast) var(--bb-ease-out); }
+.bb-home-news-table tbody tr { transition: background-color var(--bb-motion-fast) var(--bb-ease-out); }
 .bb-home-news-table tbody tr:hover { background: var(--bb-surface-hover); }
 .bb-home-news-table td { padding: var(--bb-space-4) var(--bb-space-4) var(--bb-space-4) 0; border-bottom: 1px solid var(--bb-border-subtle); vertical-align: middle; }
 .bb-home-news-date, .bb-home-news-source { color: var(--bb-text-tertiary); font-size: 12px; line-height: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .bb-home-news-source { overflow: hidden; text-overflow: ellipsis; max-width: 0; }
 .bb-home-news-table .bb-home-news-topic { color: var(--bb-text-secondary); font-size: 12px; line-height: 16px; text-align: right; white-space: nowrap; }
 .bb-home-news-headline { font: var(--bb-type-body-strong); }
-.bb-home-news-headline a { color: var(--bb-text); text-decoration: none; outline: none; }
-/* The headline link covers the whole row, so any part of it opens the article. */
-.bb-home-news-headline a::after { content: ''; position: absolute; inset: 0; border-radius: 2px; }
-.bb-home-news-headline a:focus-visible::after { outline: 2px solid var(--bb-focus); outline-offset: -2px; }
+.bb-home-news-headline a { color: var(--bb-text); text-decoration: none; }
+.bb-home-news-headline a:hover { text-decoration: underline; }
+.bb-home-news-headline a:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 3px; }
 .bb-home-news-table td.bb-home-news-out { padding-right: var(--bb-space-1); color: var(--bb-text-secondary); font-size: var(--bb-text-md); text-align: right; transition: color var(--bb-motion-fast) var(--bb-ease-out); }
 .bb-home-news-table tbody tr:hover .bb-home-news-out { color: var(--bb-text); }
 
