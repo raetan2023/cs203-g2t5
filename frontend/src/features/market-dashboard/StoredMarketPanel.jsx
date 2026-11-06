@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useDatabaseMarket } from './useBrentMarket';
-import { ageLabel, daysOld, singaporeToday, STALE_AFTER_DAYS, withMinus } from './format';
+import { ageLabel, daysOld, fullDate, shortDate, singaporeToday, STALE_AFTER_DAYS, withMinus } from './format';
 import { chart } from '../../styles/theme';
 import './stored-market.css';
 
@@ -12,8 +12,6 @@ function valid(data) {
 }
 const format = (value, digits = 4) => new Intl.NumberFormat('en-US', { maximumFractionDigits: digits }).format(value);
 const twoPlaces = value => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
-const dateLabel = value => new Date(`${value}T00:00:00`).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
-const shortDate = value => new Date(`${value}T00:00:00`).toLocaleDateString('en-SG', { day: 'numeric', month: 'short' });
 const monthLabel = value => new Date(`${value}T00:00:00`).toLocaleDateString('en-SG', { month: 'long', year: 'numeric' });
 const fuelName = label => label.replace(/^Bunker sales:\s*/i, '').toLowerCase()
   .replace(/\b\w/g, char => char.toUpperCase()).replace(/\b(Lng|Mgo|Mdo|B100)\b/g, word => word.toUpperCase());
@@ -22,6 +20,15 @@ const salesUnit = unit => (unit || '').replace(/\s*\(as published\)\s*$/i, '');
 const order = ['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'BRENT_CRUDE', 'DUBAI_CRUDE', 'USD_INDEX'];
 // An unlisted series sorts after every listed one, so it can never displace MGO.
 const orderOf = key => { const index = order.indexOf(key); return index < 0 ? order.length : index; };
+const DAY_MS = 86400000;
+const AXIS_STEPS = 5;
+const isoDate = time => new Date(time).toISOString().slice(0, 10);
+/** Evenly spaced whole days across the window, so the axis reads as a calendar even when quotes are sparse. */
+function axisTicks(points) {
+  if (points.length < 2) return points.map(point => point.time);
+  const first = points[0].time, span = points.at(-1).time - first;
+  return [...new Set(Array.from({ length: AXIS_STEPS + 1 }, (_, step) => first + Math.round(span * step / AXIS_STEPS / DAY_MS) * DAY_MS))];
+}
 const TONE_LIMIT = 10; // GDELT tone rarely leaves ±10, so the gauge clamps there.
 
 export function Symbol({ name, ...props }) {
@@ -54,9 +61,9 @@ function Change({ ticker, plain = false }) {
   </span>;
 }
 
-function HistoryTooltip({ active, payload, label, unit }) {
+function HistoryTooltip({ active, payload, unit }) {
   if (!active || !payload?.length) return null;
-  return <div className="sm-tooltip"><span>{dateLabel(label)}</span><strong>{format(payload[0].value)} <small>{unit}</small></strong></div>;
+  return <div className="sm-tooltip"><span>{fullDate(payload[0].payload.date)}</span><strong>{format(payload[0].value)} <small>{unit}</small></strong></div>;
 }
 
 const AgeBadge = ({ date, today }) => {
@@ -72,12 +79,13 @@ function PriceCard({ ticker, featured, today }) {
     <div className="sm-price"><Price ticker={ticker} compact /></div>
     <div className="sm-price-unit">{unitLabel(ticker)}</div>
     <Change ticker={ticker} />
-    <div className="sm-card-footer"><time dateTime={ticker.observedDate}>{dateLabel(ticker.observedDate)}</time><span title={ticker.source}>{ticker.source.replace(/ manual export$/i, '')}</span></div>
+    <div className="sm-card-footer"><time dateTime={ticker.observedDate}>{fullDate(ticker.observedDate)}</time><span title={ticker.source}>{ticker.source.replace(/ manual export$/i, '')}</span></div>
   </article>;
 }
 
 function HistoryPanel({ chartSeries, selected, history, range, setRange, setSelectedKey }) {
   const [showValues, setShowValues] = useState(false);
+  const points = history.map(row => ({ ...row, time: Date.parse(`${row.date}T00:00:00Z`) }));
   return <section className="sm-panel sm-history" aria-label="Stored observation history">
     <div className="sm-panel-heading"><div><h2>Market history</h2>
       <div className="sm-history-summary"><span className="sm-history-price"><Price ticker={selected.ticker} /></span><Change ticker={selected.ticker} plain /></div></div>
@@ -87,17 +95,17 @@ function HistoryPanel({ chartSeries, selected, history, range, setRange, setSele
       </div>
     </div>
     <div className="sm-chart"><ResponsiveContainer width="100%" height={300}>
-      <LineChart data={history} margin={{ top: 12, right: 8, bottom: 8, left: 0 }}>
+      <LineChart data={points} margin={{ top: 12, right: 24, bottom: 8, left: 0 }}>
         <CartesianGrid stroke={chart.grid} strokeDasharray="4 4" vertical={false} />
-        <XAxis dataKey="date" tickFormatter={shortDate} stroke={chart.axis} tickLine={false} axisLine={false} minTickGap={45} tick={{ fontSize: 12 }} dy={12} />
+        <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} ticks={axisTicks(points)} tickFormatter={time => shortDate(isoDate(time))} stroke={chart.axis} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={32} tick={{ fontSize: 12 }} dy={12} />
         <YAxis domain={['auto', 'auto']} stroke={chart.axis} tickLine={false} axisLine={false} width={56} tickFormatter={value => format(value, 1)} tick={{ fontSize: 12 }} />
         <Tooltip content={<HistoryTooltip unit={selected.ticker.unit} />} cursor={{ stroke: chart.cursor, strokeDasharray: '4 4' }} />
         <Line type="linear" dataKey="value" name={selected.ticker.label} stroke={chart.series1} strokeWidth={2.5} dot={history.length < 3} activeDot={{ r: 5, fill: chart.series1, stroke: chart.dotRing, strokeWidth: 3 }} isAnimationActive={false} />
       </LineChart>
     </ResponsiveContainer></div>
-    <div className="sm-panel-footer"><span>{history.length} observations · {history.length ? `${shortDate(history[0].date)} – ${dateLabel(history.at(-1).date)}` : 'No history'}</span>
+    <div className="sm-panel-footer"><span>{history.length} observations · {history.length ? `${shortDate(history[0].date)} – ${fullDate(history.at(-1).date)}` : 'No history'}</span>
       <button type="button" className="sm-text-button" aria-expanded={showValues} onClick={() => setShowValues(value => !value)}>{showValues ? 'Hide recent values' : 'View recent values'}</button></div>
-    {showValues && <div className="sm-table-scroll"><table><thead><tr><th>Date</th><th className="sm-number">Value ({selected.ticker.unit})</th></tr></thead><tbody>{history.slice(-7).reverse().map(row => <tr key={row.date}><td>{row.date}</td><td className="sm-number">{format(row.value)}</td></tr>)}</tbody></table></div>}
+    {showValues && <div className="sm-table-scroll"><table><thead><tr><th>Date</th><th className="sm-number">Value ({selected.ticker.unit})</th></tr></thead><tbody>{history.slice(-7).reverse().map(row => <tr key={row.date}><td>{fullDate(row.date)}</td><td className="sm-number">{format(row.value)}</td></tr>)}</tbody></table></div>}
   </section>;
 }
 
@@ -138,7 +146,7 @@ function NewsPanel({ news, today }) {
   const toneWord = !tone ? '' : tone.value < 0 ? 'Negative' : tone.value > 0 ? 'Positive' : 'Neutral';
   const place = tone ? (Math.max(-TONE_LIMIT, Math.min(TONE_LIMIT, tone.value)) + TONE_LIMIT) / (TONE_LIMIT * 2) * 100 : 50;
   return <section className="sm-panel sm-news" aria-label="GDELT daily aggregates">
-    <div className="sm-panel-heading"><div><h2>Market pulse</h2><p>Oil and shipping news · {dateLabel(latest)} · GDELT</p></div><AgeBadge date={latest} today={today} /></div>
+    <div className="sm-panel-heading"><div><h2>Market pulse</h2><p>Oil and shipping news · {fullDate(latest)} · GDELT</p></div><AgeBadge date={latest} today={today} /></div>
     <div className="sm-news-metrics">
       {count && <div><span>Matched articles</span><strong><Price ticker={count} compact /></strong></div>}
       {tone && <div><span>Average tone</span><strong title={format(tone.value)}>{withMinus(twoPlaces(tone.value))}</strong><small>{toneWord}</small></div>}
@@ -201,6 +209,6 @@ export default function StoredMarketPanel({ forecast = null, today = singaporeTo
       {sales.length > 0 && <SalesPanel sales={sales} />}
       {news.length > 0 && <NewsPanel news={news} today={today} />}
     </div>}
-    {data && <footer className="sm-footer"><span>{series.length} series stored · Re-reads every minute. Observation dates may differ from today.</span><span>Refreshing reads stored data; it does not run an import.</span></footer>}
+    {data && <footer className="sm-footer"><span>{series.length} series stored · Re-reads every minute. Observation dates may differ from today.</span></footer>}
   </main>;
 }

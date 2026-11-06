@@ -17,12 +17,12 @@ describe('market forecast', () => {
     const tiles = within(await screen.findByRole('list', { name: 'Forecast by horizon' })).getAllByRole('listitem');
     expect(tiles).toHaveLength(4);
     expect(tiles[0]).toHaveTextContent('Latest quote');
-    expect(tiles[0]).toHaveTextContent('Mon 26 Oct');
+    expect(tiles[0]).toHaveTextContent('26 Oct');
     expect(tiles[0]).toHaveTextContent('11 days old');
     expect(tiles[1]).toHaveTextContent('$1,338.00');
     expect(tiles[1]).toHaveTextContent('↓ 1.0%');
     expect(tiles[1]).toHaveTextContent('Range $1,240 – 1,436');
-    expect(tiles[3]).toHaveTextContent('Sun 06 Dec');
+    expect(tiles[3]).toHaveTextContent('6 Dec');
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     expect(screen.queryByText(/Bars share one scale/)).not.toBeInTheDocument();
     expect(screen.getByText(/coverage not measured/)).toBeInTheDocument();
@@ -34,7 +34,7 @@ describe('market forecast', () => {
     const steps = await screen.findByRole('region', { name: 'How this forecast was made' });
     expect(within(steps).getAllByRole('listitem')).toHaveLength(4);
     expect(steps).toHaveTextContent('USD 1,351.50/MT');
-    expect(steps).toHaveTextContent('Includes estimated news figures');
+    expect(steps).toHaveTextContent('Synthesise world news and obtain overall market signal.');
     expect(steps).toHaveTextContent('Ridge regression');
     expect(steps).toHaveTextContent('Experimental range');
     expect(screen.queryByRole('button', { name: 'Download report' })).not.toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('market forecast', () => {
     show(service);
     const message = await screen.findByRole('status');
     expect(message).toHaveTextContent('The previous run is stale.');
-    expect(message).toHaveTextContent('Last successful forecast: Tue 20 Oct 2026. It is not shown as a current forecast.');
+    expect(message).toHaveTextContent('Last successful forecast: 20 Oct 2026. It is not shown as a current forecast.');
     const before = vi.mocked(service.read).mock.calls.length;
     await userEvent.click(screen.getByRole('button', { name: 'Retry forecast' }));
     await waitFor(() => expect(vi.mocked(service.read).mock.calls.length).toBeGreaterThan(before));
