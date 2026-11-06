@@ -144,6 +144,11 @@ public class PurchaseForecastService {
                 + "Model horizon is " + horizon + " calendar days from decision date " + origin
                 + ". Observed reference quote: " + modelAnchor + ". Target: " + target + ". Stored GDELT UTC day: " + selectedNewsDay
                 + "; articles " + counts.get(selectedNewsDay) + "; tone " + tones.get(selectedNewsDay) + ".";
+        if (model.path("evaluation").path("evaluation_rows").asInt() > 0) limits +=
+                " Chronological central-price evaluation: " + model.path("evaluation").path("evaluation_rows").asInt()
+                + " rows; MAE " + model.path("evaluation").path("mae").asText()
+                + " USD/MT versus persistence " + model.path("evaluation").path("persistence_mae").asText()
+                + " USD/MT. This model has not established a purchasing advantage.";
         if (estimatedNewsDates.contains(selectedNewsDay)) limits += " Estimated GDELT inputs: article count and/or average tone for "
                 + selectedNewsDay + " include API-supplied estimates, not observed news. Historical news ranks use observed days only.";
         if (selectedNewsDay.isBefore(yesterday)) limits += " Latest completed news is missing; using last available paired GDELT day "
