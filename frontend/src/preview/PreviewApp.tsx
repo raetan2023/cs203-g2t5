@@ -58,7 +58,7 @@ export function PreviewApp() {
   useStoredMarketFixture(marketScenario ?? null);
   const withScenarioApproval = (plans: PurchasePlanService) => scenario ? withPreviewApproval(plans, scenario, approvalStarts[example])
     : example === 'plans-decisions' ? decisionPlans.withDecisions(plans) : plans;
-  const planAccess = homeAccess[example] ?? (example === 'rec-review' ? PREVIEW_MANAGER : example.startsWith('rec-admin') ? PREVIEW_ADMIN : scenario || marketScenario || example === 'plans-decisions' ? PREVIEW_BUYER : undefined);
+  const planAccess = homeAccess[example] ?? (example === 'rec-review' ? PREVIEW_MANAGER : example.startsWith('rec-admin') ? PREVIEW_ADMIN : scenario || example === 'plans-decisions' ? PREVIEW_BUYER : undefined);
   const readMarketQuote = useMemo(() => example === 'home-price-error'
     ? async () => { await delay(slow ? 3500 : 600); throw new Error('Preview: market API unavailable.'); }
     : async () => { await delay(slow ? 3500 : 600); return PREVIEW_QUOTE; }, [example, slow]);
