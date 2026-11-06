@@ -424,16 +424,27 @@ it('shows a date after the deadline for comparison without making it the cost de
   expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('14-day forecast · Mon 09 Nov')).toBeVisible();
 });
 
-it('generates the mock report from the page’s data and says it is a mock', async () => {
+it('downloads a planning PDF from the page’s data', async () => {
   const createObjectURL = vi.fn((_: Blob) => 'blob:report');
   vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
   const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
   renderStale(staleAnalysis());
   await findInAnswer('Monitor');
-  expect(screen.getByText(/It isn’t sent to managers yet/)).toBeVisible();
+  expect(screen.getByText(/Manager approval is recorded separately/)).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Download report' }));
   expect(click).toHaveBeenCalledOnce();
-  expect(createObjectURL.mock.calls[0][0].type).toBe('application/pdf');
+  const report = createObjectURL.mock.calls[0][0];
+  expect(report.type).toBe('application/pdf');
+  expect((click.mock.contexts[0] as HTMLAnchorElement).download).toMatch(/^recommendation-BB-[0-9A-Z]{8}\.pdf$/);
+  const contents = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsText(report);
+  });
+  expect(contents).toContain('(Purchase Recommendation) Tj');
+  expect(contents).toContain('(Monitor) Tj');
+  expect(contents).toContain(`(${stalePlan.plan_id}) Tj`);
   click.mockRestore();
 });
 
