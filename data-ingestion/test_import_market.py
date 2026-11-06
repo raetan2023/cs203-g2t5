@@ -1,4 +1,5 @@
 import contextlib
+from datetime import date
 import io
 import json
 from pathlib import Path
@@ -58,8 +59,44 @@ class MarketImportTests(unittest.TestCase):
         for group in market.normalize(data, "gdelt"):
             self.assertEqual(group["metadata"]["source_name"], "GDELT")
             self.assertEqual([r["value_type"] for r in group["rows"]], ["OBSERVED", "ESTIMATED"])
+        data["data"][1]["source"] = "ChatGPT web search"
+        data["data"][1]["metadata"]["imputation_method"] = "chat_web_search"
+        for group in market.normalize(data, "gdelt"):
+            self.assertEqual(group["rows"][1]["value_type"], "ESTIMATED")
         data["data"][1]["metadata"].pop("imputed")
         with self.assertRaises(ValueError): market.normalize(data, "gdelt")
+
+    def test_daily_gdelt_import_keeps_completed_pairs_and_rejects_stale_snapshot(self):
+        data = payload("gdelt", "gdelt_article_count", metadata={"average_tone": -2.5})
+        row = data["data"][0]
+        data["data"] += [
+            {**row, "date": "2026-08-02", "metadata": {}},
+            {**row, "date": "2026-08-03"},
+            {**row, "date": "2026-08-04"},
+        ]
+        for group in market.completed_gdelt(data, date(2026, 8, 3)):
+            self.assertEqual([r["observation_date"] for r in group["rows"]], ["2026-08-01"])
+        with self.assertRaisesRegex(ValueError, "last 7 days"):
+            market.completed_gdelt(data, date(2026, 8, 12))
+
+    def test_market_sync_accepts_labelled_gdelt_estimates_without_overwriting_observed_data(self):
+        brent = payload("brent")
+        data = payload("gdelt", "gdelt_article_count")
+        row = {**data["data"][0], "source": "ChatGPT web search",
+               "metadata": {"average_tone": -1, "imputed": True, "data_status": "estimated",
+                            "imputation_method": "chat_web_search"}}
+        data["data"] = [row, {**row, "date": "2026-08-02"}]
+        responses = [brent, data, [{"observation_date": "2026-08-01"}]]
+        with patch.object(market.db, "request_json", side_effect=responses) as request, \
+             patch.object(market.db, "check_supabase", return_value=("https://db.test", {})), \
+             patch.object(market.db, "write_series") as write, contextlib.redirect_stdout(io.StringIO()):
+            market.run(["brent", "gdelt"], apply=True)
+        self.assertIn("value_type=eq.OBSERVED", request.call_args.args[0])
+        self.assertEqual(write.call_count, 3)
+        self.assertEqual(write.call_args_list[0].args[0]["series_key"], "BRENT_CRUDE")
+        for call in write.call_args_list[1:]:
+            self.assertEqual([r["observation_date"] for r in call.args[1]], ["2026-08-02"])
+            self.assertEqual(call.args[1][0]["value_type"], "ESTIMATED")
 
     def test_invalid_source_blocks_every_write(self):
         with tempfile.TemporaryDirectory() as tmp:
