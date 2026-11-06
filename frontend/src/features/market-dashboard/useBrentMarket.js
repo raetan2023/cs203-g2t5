@@ -49,13 +49,3 @@ export function useDatabaseMarket(endpoint, validate, name) {
 
   return { ...state, refresh };
 }
-
-function validBrent(data) {
-  return data.storage === 'supabase' && typeof data.ticker?.value === 'number'
-    && Number.isFinite(data.ticker.value) && /^\d{4}-\d{2}-\d{2}$/.test(data.ticker.observedDate)
-    && Array.isArray(data.history);
-}
-
-export function useBrentMarket() {
-  return useDatabaseMarket('/api/v1/market/brent', validBrent, 'Brent');
-}

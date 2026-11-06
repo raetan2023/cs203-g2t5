@@ -45,7 +45,7 @@ describe('stored market dashboard', () => {
     render(<StoredMarketPanel />);
     expect(await screen.findByRole('region', { name: 'Monthly bunker sales' })).toHaveTextContent('thousand tonnes');
     expect(screen.getByText(/Dates identify the represented month/)).toBeInTheDocument();
-    expect(screen.getAllByText('0').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('0.00').length).toBeGreaterThan(0);
   });
 
   it('shows empty storage without fabricated indicators or forecasts', async () => {
@@ -63,9 +63,9 @@ describe('stored market dashboard', () => {
     expect(within(region).getAllByRole('row')).toHaveLength(7);
     fireEvent.click(screen.getByRole('button', { name: 'View all 8 categories' }));
     expect(within(region).getAllByRole('row')).toHaveLength(9);
-    fireEvent.change(screen.getByLabelText('Filter fuel categories'), { target: { value: 'Fuel 0' } });
+    fireEvent.change(screen.getByLabelText('Find a fuel category'), { target: { value: 'Fuel 0' } });
     expect(within(region).getAllByRole('row')).toHaveLength(2);
-    expect(within(region).getByText('0')).toBeInTheDocument();
+    expect(within(region).getByText('0.00')).toBeInTheDocument();
   });
 
   it('changes the displayed history range without inventing daily observations', async () => {
@@ -92,7 +92,7 @@ describe('stored market dashboard', () => {
     expect(dates()).toEqual(['2026-02-04', '2026-02-18', '2026-02-19', '2026-03-05']);
     fireEvent.click(screen.getByRole('button', { name: '15 days' }));
     expect(dates()).toEqual(['2026-02-19', '2026-03-05']);
-    expect(screen.getByText(/15 days ending/)).toBeInTheDocument();
+    expect(screen.getByText(/2 observations ·/)).toBeInTheDocument();
   });
 
   it('refreshes on click and spins the icon until the request finishes', async () => {
@@ -134,6 +134,58 @@ describe('stored market dashboard', () => {
     expect(menu).toHaveValue('USD_INDEX');
     expect(screen.getByRole('region', { name: 'Monthly bunker sales' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'GDELT daily aggregates' })).toBeInTheDocument();
+  });
+
+  it('keeps MGO first and puts an unlisted price series last', async () => {
+    serve([series('UNKNOWN_PRICE', 'Undocumented price', 'prices', 5, 'USD', '2026-10-14'),
+      series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-10-14'),
+      series('SGP_MGO_OBSERVED', 'Singapore MGO', 'prices', 1351.5, 'USD/MT', '2026-10-14')]);
+    render(<StoredMarketPanel />);
+    const region = await screen.findByRole('region', { name: 'Stored prices and index' });
+    expect(within(region).getAllByRole('heading').map(heading => heading.textContent))
+      .toEqual(['Singapore MGO', 'Brent crude', 'Undocumented price']);
+  });
+
+  it('flags any series over seven days old and opens the chart on MGO', async () => {
+    const mgo = series('SGP_MGO_OBSERVED', 'Singapore MGO', 'prices', 1351.5, 'USD/MT', '2026-10-26', 'USD');
+    const brent = series('BRENT_CRUDE', 'Brent crude', 'prices', 123.1, 'USD/barrel', '2026-11-01', 'USD');
+    serve([brent, mgo]);
+    render(<StoredMarketPanel today="2026-11-06" />);
+    expect(await screen.findByText('11 days old')).toBeInTheDocument();
+    expect(screen.queryByText('5 days old')).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Choose a series' })).toHaveValue('SGP_MGO_OBSERVED');
+  });
+
+  it('colours a card by what the move means for a buyer, and leaves the USD index neutral', async () => {
+    const moved = (key, label, changeAbs) => { const item = series(key, label, 'prices', 100, 'USD/barrel', '2026-10-14', 'USD'); item.ticker.changeAbs = changeAbs; item.ticker.changePct = changeAbs; return item; };
+    serve([moved('BRENT_CRUDE', 'Brent crude', -3.92), moved('DUBAI_CRUDE', 'Dubai crude', 0.24), moved('USD_INDEX', 'Broad USD index', -0.06)]);
+    render(<StoredMarketPanel />);
+    const card = async name => (await screen.findByRole('heading', { name })).closest('article');
+    expect(await card('Brent crude')).toHaveClass('sm-tone-down');
+    expect(await card('Dubai crude')).toHaveClass('sm-tone-up');
+    expect(await card('Broad USD index')).toHaveClass('sm-tone-neutral');
+    expect(within(await card('Brent crude')).getByText(/−3.92%/)).toBeInTheDocument();
+  });
+
+  it('marks MGO fuel rows and states one month and unit for the whole table', async () => {
+    serve([series('MPA_BUNKER_SALES_A', 'Bunker sales: LOW SULPHUR MARINE GAS OIL', 'sales', 378.84, 'thousand tonnes (as published)', '2026-09-01'),
+      series('MPA_BUNKER_SALES_B', 'Bunker sales: MARINE FUEL OIL', 'sales', 1993.2, 'thousand tonnes (as published)', '2026-09-01')]);
+    render(<StoredMarketPanel />);
+    const region = await screen.findByRole('region', { name: 'Monthly bunker sales' });
+    expect(within(region).getByText('September 2026 · monthly, as published')).toBeInTheDocument();
+    expect(within(region).getByRole('columnheader', { name: 'Sales · thousand tonnes' })).toBeInTheDocument();
+    expect(within(region).getAllByText('MGO')).toHaveLength(1);
+  });
+
+  it('shows the news tone on a gauge and keeps the caveat', async () => {
+    serve([series('GDELT_ARTICLE_COUNT', 'GDELT daily article count', 'news', 187, 'articles', '2026-10-27'),
+      series('GDELT_AVERAGE_TONE', 'GDELT average tone', 'news', -1.189, 'tone', '2026-10-27')]);
+    render(<StoredMarketPanel today="2026-11-06" />);
+    const region = await screen.findByRole('region', { name: 'GDELT daily aggregates' });
+    expect(within(region).getByText('−1.19')).toBeInTheDocument();
+    expect(within(region).getByRole('img', { name: /Average tone -1.19, negative/ })).toBeInTheDocument();
+    expect(within(region).getByText(/Context, not a price signal/)).toBeInTheDocument();
+    expect(within(region).getByText('10 days old')).toBeInTheDocument();
   });
 
   it('omits the history chart when no supported series has multiple valid dates', async () => {
