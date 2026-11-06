@@ -19,13 +19,13 @@ import org.springframework.stereotype.Service;
 import static com.cs203.mgodataapi.ForecastService.*;
 
 /** Explicitly experimental alternative for purchase plans only.
- * Original Ridge quantile-artifact bounds expand with the latest usable completed news day's activity/tone ranks.
+ * Decision-day news-aware Ridge empirical bounds expand with the latest usable completed news day's activity/tone ranks.
  * This heuristic has no measured conditional coverage. It never modifies dashboard forecasts.
  */
 @Service
 public class PurchaseForecastService {
     public static final String METHOD = "experimental_gdelt_scaled_quantiles";
-    private static final String VERSION = "purchase-ridge-news-db-v5";
+    private static final String VERSION = "purchase-decision-ridge-gdelt-v6";
     private final PurchaseForecastRepository repository;
     private final Clock clock;
     private final RidgeInference ridge;
@@ -83,6 +83,9 @@ public class PurchaseForecastService {
         if (ChronoUnit.DAYS.between(selectedNewsDay, yesterday.plusDays(1)) > 7)
             return unavailable("stale_news", "The latest paired GDELT inputs are older than seven days (" + selectedNewsDay + "). Refresh news data.");
         if (prices.isEmpty()) return unavailable("missing_reference", "No observed MGO quote is available.");
+        // The decision-day training pipeline conservatively excludes same-day quotes.
+        prices.remove(origin);
+        if (prices.isEmpty()) return unavailable("missing_reference", "A prior observed MGO quote is required for this decision day.");
         LocalDate quoteDate = prices.lastKey();
         long age = ChronoUnit.DAYS.between(quoteDate, origin);
         if (age > 30) return unavailable("stale_reference", "The latest observed MGO quote is older than 30 days.");
@@ -119,11 +122,11 @@ public class PurchaseForecastService {
                     || !Double.isFinite(central.doubleValue()) || !Double.isFinite(modelHigh.doubleValue())
                     || rawLow.signum() <= 0 || rawHigh.compareTo(rawLow) < 0
                     || !model.path("inference_snapshot").asText().matches("[a-f0-9]{64}")
-                    || !target.equals(modelAnchor.plusDays(horizon)) || !target.isAfter(origin)
+                    || !target.equals(origin.plusDays(horizon)) || !target.isAfter(origin)
                     || modelAnchor.isAfter(origin) || central.signum() <= 0 || modelLow.signum() <= 0
                     || modelHigh.compareTo(modelLow) < 0 || modelAnchorPrice.signum() <= 0
                     || !model.path("as_of_date").asText().equals(origin.toString())
-                    || !model.path("execution").asText().equals("src.predict.predict:standardscaler+ridgecv")
+                    || !model.path("execution").asText().equals("src.decision_ridge:standardscaler+ridgecv+gdelt")
                     || !model.path("artifact_sha256").asText().matches("[a-f0-9]{64}")
                     || !model.path("input_snapshot").asText().matches("[a-f0-9]{64}")
                     || !modelVersion.startsWith("ridge-")) throw new IllegalArgumentException();
@@ -135,18 +138,18 @@ public class PurchaseForecastService {
         double q90 = Math.max(0, Math.log(modelHigh.divide(central, MathContext.DECIMAL64).doubleValue()));
         BigDecimal low = price(central, q10 * multiplier), high = price(central, q90 * multiplier);
         String limits = "Experimental news-adjusted q10/q90-based bounds; no measured conditional coverage or purchasing advantage. "
-                + "Original repository Ridge pipeline executed using the current database observation snapshot " + model.path("input_snapshot").asText()
-                + ". Central prediction is unchanged by news. Baseline calibrated quantile endpoints expand away from the Ridge centre by "
+                + "Decision-day news-aware Ridge pipeline executed using the current database observation snapshot " + model.path("input_snapshot").asText()
+                + ". GDELT article count and tone enter the Ridge central prediction. Empirical residual endpoints expand away from the Ridge centre by "
                 + String.format(java.util.Locale.ROOT, "%.2f", multiplier) + "x. No additional quote-age scaling is applied. "
-                + "Model horizon is " + horizon + " calendar days from its observed anchor " + modelAnchor
-                + ", not from today. Target: " + target + ". Stored GDELT UTC day: " + selectedNewsDay
+                + "Model horizon is " + horizon + " calendar days from decision date " + origin
+                + ". Observed reference quote: " + modelAnchor + ". Target: " + target + ". Stored GDELT UTC day: " + selectedNewsDay
                 + "; articles " + counts.get(selectedNewsDay) + "; tone " + tones.get(selectedNewsDay) + ".";
         if (estimatedNewsDates.contains(selectedNewsDay)) limits += " Estimated GDELT inputs: article count and/or average tone for "
                 + selectedNewsDay + " include API-supplied estimates, not observed news. Historical news ranks use observed days only.";
         if (selectedNewsDay.isBefore(yesterday)) limits += " Latest completed news is missing; using last available paired GDELT day "
                 + selectedNewsDay + ". Missing days have not been filled with invented values.";
         Interval interval = new Interval(METHOD, null, null, 0,
-                "Experimental adjustment of original quantile artifacts; conditional news coverage not evaluated.", null, null, null, limits);
+                "Chronological news-aware Ridge; residual ranges are not calibrated confidence.", null, null, null, limits);
         List<History> history = prices.entrySet().stream().skip(Math.max(0, prices.size() - 20))
                 .map(e -> new History(e.getKey(), e.getValue())).toList();
         Map<String, LocalDate> sourceDates = new TreeMap<>();
@@ -158,8 +161,8 @@ public class PurchaseForecastService {
         List<Driver> drivers = new ArrayList<>();
         for (var driver : model.path("top_drivers"))
             drivers.add(new Driver(driver.path("feature").asText(), new BigDecimal(driver.path("contribution").asText())));
-        Value value = new Value(horizon, target, origin, modelAnchor, modelAnchor, anchor, (int) ChronoUnit.DAYS.between(modelAnchor, origin),
-                central, low, high, rawLow, rawHigh, "USD/metric tonne", "unevaluated", null, 0,
+        Value value = new Value(horizon, target, origin, origin, modelAnchor, anchor, (int) ChronoUnit.DAYS.between(modelAnchor, origin),
+                central, low, high, rawLow, rawHigh, "USD/metric tonne", "unevaluated", null, model.path("evaluation").path("evaluation_rows").asInt(),
                 drivers, interval, selectedNewsDay.atStartOfDay(ZoneOffset.UTC).toInstant(),
                 selectedNewsDay.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant(), sourceDates, history);
         // Stable across horizons/requests, changes when the underlying database evidence changes.

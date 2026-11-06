@@ -96,3 +96,13 @@ it('preserves executed Ridge quote horizons while allowing newer stored news and
   expect(() => parseForecast({ ...body, as_of_date: '2026-11-06' }, 30)).toThrow();
   expect(() => parseForecast({ ...body, source_dates: { gdelt: '2026-10-27' } }, 30)).toThrow();
 });
+
+it('accepts decision-day news-aware Ridge dates without moving the observed quote date', () => {
+  const body = { ...payload(), as_of_date: '2026-11-06', forecast_origin_date: '2026-11-06',
+    anchor_quote_date: '2026-10-26', published_at: '2026-11-06T01:00:00Z', target_date: '2026-11-13', model_version: `ridge-decision-gdelt-7d-sha256-${'a'.repeat(64)}`,
+    interval: { ...payload().interval, method: 'experimental_gdelt_scaled_quantiles', nominal_coverage: null, empirical_coverage: null, baseline_coverage: null, evaluation_rows: 0 },
+    source_dates: { mgo: '2026-10-26', gdelt: '2026-11-05' }, history: [],
+    news_window_start: '2026-11-05T00:00:00Z', news_window_end: '2026-11-06T00:00:00Z' };
+  expect(parseForecast(body, 7)).toMatchObject({ status: 'ready', target_date: '2026-11-13', anchor_quote_date: '2026-10-26' });
+  expect(() => parseForecast({ ...body, target_date: '2026-11-02' }, 7)).toThrow();
+});
