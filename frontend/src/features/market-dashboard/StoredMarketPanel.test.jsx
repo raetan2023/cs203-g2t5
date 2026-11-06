@@ -188,6 +188,16 @@ describe('stored market dashboard', () => {
     expect(within(region).getByText('10 days old')).toBeInTheDocument();
   });
 
+  it('writes every date one way, with no weekday, leading zero or four-letter month', async () => {
+    serve([series('SGP_MGO_OBSERVED', 'Singapore MGO', 'prices', 1351.5, 'USD/MT', '2026-09-06', 'USD')]);
+    render(<StoredMarketPanel today="2026-09-08" />);
+    const region = await screen.findByRole('region', { name: 'Stored prices and index' });
+    expect(within(region).getByText('6 Sep 2026')).toBeInTheDocument();
+    expect(screen.getByText(/5 Sep – 6 Sep 2026/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'View recent values' }));
+    expect(screen.getAllByText('6 Sep 2026').length).toBeGreaterThan(1);
+  });
+
   it('omits the history chart when no supported series has multiple valid dates', async () => {
     const item = series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-10-14');
     item.history = [{ date: '2026-10-14', value: 120 }, { date: '2026-10-14', value: 121 },
