@@ -78,6 +78,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       <h1 tabIndex={-1} ref={heading}>Purchase recommendation</h1>
       {plan && <p>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT · due {dayDate(plan.purchase_deadline, true)} · <strong>{remaining(plan.days_remaining)}</strong></p>}
     </header>
+    {referenceForecast?.synthetic && <p className="rec-source-label" role="note">Fallback estimate · Prices and timing use illustrative trend logic.</p>}
     <NewsDataNotice sourceDates={referenceForecast?.source_dates} />
     {plan?.previous_plan_id && <PreviousPlanNote plan={plan} service={planService} />}
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
@@ -117,9 +118,9 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
             {preparing ? <CompareSkeleton /> : forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
               explored={shown?.id} recommended={recommended} onExplore={explore}
               knownMessage={!forecast ? (forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : undefined) : undefined}
-              badge={!experimental && forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
+              badge={forecast?.model_version === 'illustrative-trend-fallback-v1' ? 'Fallback estimate' : !experimental && forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
             {!preparing && shown && <ExploredDetail column={shown} quantity={plan.quantity_mt} today={scenarioDate} experimental={experimental}
-              source={shown.forecast ? (executedRidge ? 'Executed Ridge · experimental bounds' : experimental ? 'Last-quote fallback · Ridge unavailable' : forecast?.interval.method === 'gdelt_error_quantiles' ? 'Ridge model, published' : 'Model forecast') : ''}
+              source={shown.forecast ? (shown.forecast.model_version === 'illustrative-trend-fallback-v1' ? 'Fallback estimate' : executedRidge ? 'Executed Ridge · experimental bounds' : experimental ? 'Last-quote fallback · Ridge unavailable' : forecast?.interval.method === 'gdelt_error_quantiles' ? 'Ridge model, published' : 'Model forecast') : ''}
               sourceFrom={shown.forecast ? `from the ${formatDate(shown.forecast.anchor_quote_date)} quote` : undefined} />}
             {/* The limitations notice appears only when it carries a warning the detail above does not: a stale quote,
                 a target after the deadline, or no Ridge run. A fresh executed Ridge estimate is already labelled there. */}
@@ -198,7 +199,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
         {waitTarget ? <div className="rec-tile rec-tile--recommended">
           <span className="rec-tile-label">Buy on {dayDate(waitTarget)}</span>
           <strong className="rec-tile-value">{usd(evidence!.alternative_cost_usd!)}</strong>
-          <span className="rec-tile-note">{evidence!.alternative_minus_now_usd != null && `About ${change(evidence!.alternative_minus_now_usd)} than buying today · `}weighted forecast signal</span>
+          <span className="rec-tile-note">{evidence!.alternative_minus_now_usd != null && `About ${change(evidence!.alternative_minus_now_usd)} than buying today · `}{published?.model_version === 'illustrative-trend-fallback-v1' ? 'illustrative trend estimate' : 'weighted forecast signal'}</span>
         </div> : impactTile}
       </div>}
       {demo && <p className="rec-demo">Synthetic demo data · Illustrative guidance only.</p>}

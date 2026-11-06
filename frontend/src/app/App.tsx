@@ -1,3 +1,4 @@
+import { createPurchaseFallback } from '../features/recommendations/fallbackService';
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { AppLink, navigate, usePath, useSearch } from './router';
 import { BuyerDecisions, BuyerDecisionsProvider } from '../features/purchase-plan/components/BuyerDecisions';
@@ -28,6 +29,7 @@ export interface AppProps {
   createPurchaseForecastService?(user: SessionUser): ForecastService;
   createRecommendationService?(user: SessionUser): RecommendationService;
   scenarioDate: string;
+  purchaseFallback?: boolean;
   dataRevision?: number;
   purchaseDataRevision?: number;
   refreshScenario?: () => void;
@@ -48,7 +50,7 @@ export interface AppProps {
   onManageOrganisation?: () => void;
 }
 
-export function App({ auth, createPlanService, scenarioDate, refreshScenario, dataRevision, purchaseDataRevision, mock = false, renderAuthPage, MarketDashboard, createRecommendationService, createForecastService, createPurchaseForecastService, organisationControl, organisationName, organisationManagement, planAccess, readMarketQuote, readNews, readAlerts, onManageOrganisation }: AppProps) {
+export function App({ purchaseFallback = false, auth, createPlanService, scenarioDate, refreshScenario, dataRevision, purchaseDataRevision, mock = false, renderAuthPage, MarketDashboard, createRecommendationService, createForecastService, createPurchaseForecastService, organisationControl, organisationName, organisationManagement, planAccess, readMarketQuote, readNews, readAlerts, onManageOrganisation }: AppProps) {
   const path = usePath();
   const search = useSearch();
   const selectedPlanId = new URLSearchParams(search).get('plan_id');
@@ -58,7 +60,7 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, da
   const returnPath = useRef('/home');
   const read = useRef<{ auth: AuthService; attempt: number; promise: ReturnType<AuthService['readSession']> } | null>(null);
   const generation = useRef(0);
-  const planStore = useRef<{ userId: string; service: PurchasePlanService; recommendations?: RecommendationService; forecasts?: ForecastService; purchaseForecasts?: ForecastService } | null>(null);
+  const planStore = useRef<{ userId: string; service: PurchasePlanService; recommendations?: RecommendationService; forecasts?: ForecastService; purchaseForecasts?: ForecastService; fallback?: { date: string; services: ReturnType<typeof createPurchaseFallback> } } | null>(null);
 
   function acceptUser(user: SessionUser | null) {
     generation.current++;
@@ -109,9 +111,14 @@ export function App({ auth, createPlanService, scenarioDate, refreshScenario, da
   }
   if (!user) return <div className="bb-app"><main className="bb-status"><h1>Page not found</h1><AppLink className="bb-button" href="/login">Go to sign in</AppLink></main></div>;
   if (!planStore.current || planStore.current.userId !== user.id) planStore.current = { userId: user.id, service: createPlanService(user), recommendations: createRecommendationService?.(user), forecasts: createForecastService?.(user), purchaseForecasts: createPurchaseForecastService?.(user) };
-  const recommendationPage = <RecommendationsPage canDecide={planAccess?.role === 'org:manager'} canSubmit={planAccess?.can_write_plans ?? false} planId={selectedPlanId} refreshScenario={refreshScenario} key={user.id} planService={planStore.current.service} service={planStore.current.recommendations} scenarioDate={scenarioDate} />;
-  const purchaseRecommendation = planStore.current.purchaseForecasts
-    ? <ForecastProvider service={planStore.current.purchaseForecasts} scenarioDate={scenarioDate} revision={purchaseDataRevision}>{recommendationPage}</ForecastProvider>
+  if (purchaseFallback && planStore.current.purchaseForecasts && planStore.current.fallback?.date !== scenarioDate) {
+    planStore.current.fallback = { date: scenarioDate, services: createPurchaseFallback(planStore.current.purchaseForecasts, planStore.current.recommendations, scenarioDate) };
+  }
+  const purchaseForecasts = planStore.current.fallback?.services.forecasts ?? planStore.current.purchaseForecasts;
+  const recommendations = planStore.current.fallback?.services.recommendations ?? planStore.current.recommendations;
+  const recommendationPage = <RecommendationsPage canDecide={planAccess?.role === 'org:manager'} canSubmit={planAccess?.can_write_plans ?? false} planId={selectedPlanId} refreshScenario={refreshScenario} key={user.id} planService={planStore.current.service} service={recommendations} scenarioDate={scenarioDate} />;
+  const purchaseRecommendation = purchaseForecasts
+    ? <ForecastProvider service={purchaseForecasts} scenarioDate={scenarioDate} revision={purchaseDataRevision}>{recommendationPage}</ForecastProvider>
     : recommendationPage;
   return <BuyerDecisionsProvider key={user.id} service={planStore.current.service} enabled={planAccess?.can_write_plans ?? true}><ForecastProvider autoRefresh service={planStore.current.forecasts} scenarioDate={scenarioDate} revision={dataRevision}><AppShell canViewDecisionHistory={planAccess ? planAccess.role === 'org:officer' : true} isAdmin={planAccess?.role === 'org:admin'} canReadPlans={planAccess?.can_read_plans ?? true} organisationControl={organisationControl} path={path} scenarioDate={scenarioDate} marketAvailable={!!MarketDashboard} onSignOut={async () => {
     await auth.signOut(); acceptUser(null); returnPath.current = '/home'; setNotice(''); navigate('/login', true);
