@@ -38,37 +38,37 @@ describe('purchase plan journeys', () => {
     const create = await screen.findByRole('button', { name: 'Create plan' });
     const header = create.closest('header')!;
     expect(screen.queryByRole('region', { name: 'Decisions' })).not.toBeInTheDocument();
-    await user.click(within(header).getByRole('button', { name: 'Refresh' }));
+    await user.click(within(header).getByRole('button', { name: 'Refresh plans' }));
     expect(await screen.findByText('987 MT')).toBeVisible();
     expect(list).toHaveBeenCalledTimes(2);
     await waitFor(() => expect(service.buyerNotifications).toHaveBeenCalledTimes(2));
     await user.click(await screen.findByRole('button', { name: 'Create plan' }));
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Refresh plans' })).toBeDisabled();
   });
   it('creates, discards edits, saves edits, cancels deletion, deletes and recreates', async () => {
     const user = setup();
     await createDraft(user);
     await user.click(screen.getByRole('button', { name: 'Save plan' }));
     expect(await screen.findByText('500 MT')).toBeVisible();
-    expect(screen.getByText('22 days')).toBeVisible();
+    expect(screen.getByText('22 days left')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Create plan' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: /^Edit / })).toHaveFocus();
     expect(screen.getByText('Plan saved')).toBeVisible();
 
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: /^Edit / }));
     expect(screen.queryByText('Plan saved')).not.toBeInTheDocument();
     await user.clear(screen.getByLabelText('Quantity'));
     await user.type(screen.getByLabelText('Quantity'), '600');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByText('500 MT')).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: /^Edit / }));
     expect(screen.getByLabelText('Quantity')).toHaveValue(500);
     await user.clear(screen.getByLabelText('Quantity'));
     await user.type(screen.getByLabelText('Quantity'), '600');
     fireEvent.change(screen.getByLabelText('Purchase deadline'), { target: { value: '2025-11-20' } });
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     expect(await screen.findByText('600 MT')).toBeVisible();
-    expect(screen.getByText('27 days')).toBeVisible();
+    expect(screen.getByText('27 days left')).toBeVisible();
 
     await chooseDelete(user);
     const dialog = screen.getByRole('dialog');
@@ -88,7 +88,7 @@ describe('purchase plan journeys', () => {
     await createDraft(user, '250', '2025-10-24');
     await user.click(screen.getByRole('button', { name: 'Save plan' }));
     expect(await screen.findByText('250 MT')).toBeVisible();
-    expect(screen.getByText('0 days')).toBeVisible();
+    expect(screen.getByText('Due today')).toBeVisible();
   });
 
   it('cancels create and validates required, positive quantity and historical dates', async () => {
@@ -208,7 +208,7 @@ describe('multiple purchase plans', () => {
     const card = screen.getByText('250 MT').closest('section')!;
     expect(within(card).getByRole('link', { name: /View recommendation/ }))
       .toHaveAttribute('href', `/purchase-plans/recommendation?plan_id=${second.plan_id}`);
-    await user.click(within(card).getByRole('button', { name: 'Edit' }));
+    await user.click(within(card).getByRole('button', { name: /^Edit / }));
     fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '300' } });
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     await screen.findByText('300 MT');
@@ -231,21 +231,30 @@ describe('plan overview and sorting', () => {
   ];
   const titles = () => screen.getAllByRole('heading', { level: 3 }).map(heading => heading.textContent);
 
-  it('summarises active plans and the next deadline, and sorts by deadline or volume without changing plans', async () => {
+  it('sorts by deadline or volume from a dropdown without changing plans', async () => {
     const service = createMockPlanService({ delayMs: 0, initialPlans: plans });
     const writes = [vi.spyOn(service, 'create'), vi.spyOn(service, 'update'), vi.spyOn(service, 'delete')];
     const user = setup(service);
+    const sort = await screen.findByRole('combobox', { name: 'Sort by' });
+    expect(sort).toHaveValue('deadline');
+    expect(titles()[0]).toMatch(/^300 MT/);
+    await user.selectOptions(sort, 'volume');
+    expect(titles().map(title => title?.split(' MT')[0])).toEqual(['900', '300', '100']);
+    for (const write of writes) expect(write).not.toHaveBeenCalled();
+  });
+
+  it('keeps the summary strip and sort buttons for read-only viewers', async () => {
+    const service = createMockPlanService({ delayMs: 0, initialPlans: plans });
+    const user = userEvent.setup();
+    render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} />);
     const overview = await screen.findByRole('region', { name: 'Plan summary' });
     expect(within(overview).getByText('Active plans').nextSibling).toHaveTextContent('3');
     expect(within(overview).getByText('Overdue plans').nextSibling).toHaveTextContent('0');
     expect(within(overview).getByText('Next deadline').nextSibling).toHaveTextContent(/4\s*days/);
-    expect(titles()[0]).toMatch(/^300 MT/);
     const sort = screen.getByRole('group', { name: 'Sort by' });
-    expect(within(sort).getByRole('button', { name: 'Deadline' })).toHaveAttribute('aria-pressed', 'true');
     await user.click(within(sort).getByRole('button', { name: 'Volume' }));
     expect(within(sort).getByRole('button', { name: 'Volume' })).toHaveAttribute('aria-pressed', 'true');
     expect(titles().map(title => title?.split(' MT')[0])).toEqual(['900', '300', '100']);
-    for (const write of writes) expect(write).not.toHaveBeenCalled();
   });
 });
 

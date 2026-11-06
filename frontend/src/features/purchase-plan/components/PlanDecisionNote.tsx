@@ -3,6 +3,14 @@ import type { ApprovalDecision, PurchasePlan, PurchasePlanService } from '../typ
 import { Icon } from './Primitives';
 
 export const decisionTime = (value: string) => new Date(value).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const decisionDay = (value: string) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+
+/** The officer's card note: always one line. The status pill and the buttons carry the rest. */
+function NoteLine({ icon, text, tone, busy = false }: { icon: 'clock' | 'check-circle' | 'cross-circle'; text: string; tone?: 'approved' | 'rejected'; busy?: boolean }) {
+  return <div className={`pp-decision pp-decision--line${tone ? ` pp-decision--${tone}` : ''}`}>
+    <Icon name={icon} /><p title={text} role={busy ? 'status' : undefined}>{text}</p>
+  </div>;
+}
 
 /**
  * Tells the buyer where a submitted plan stands without opening it. The manager, time and reason come from
@@ -20,6 +28,9 @@ export function PlanDecisionNote({ plan, service, canAct = true }: { plan: Purch
     return () => { active = false; };
   }, [decided, service, plan.plan_id, plan.status]);
 
+  if (canAct && plan.status === 'submitted') return <NoteLine icon="clock" text="Locked while managers review it." />;
+  if (canAct && plan.status === 'purchased') return <NoteLine icon="check-circle" text="See the actual cost and saved estimate." />;
+  if (canAct && plan.status === 'withdrawn') return <NoteLine icon="cross-circle" text="You withdrew this request." />;
   if (plan.status === 'submitted') return <div className="pp-decision pp-decision--submitted">
     <Icon name="clock" /><p><strong>Awaiting manager approval.</strong> All managers in your organisation have been notified. This plan is locked while awaiting review.</p>
   </div>;
@@ -29,6 +40,15 @@ export function PlanDecisionNote({ plan, service, canAct = true }: { plan: Purch
   const approved = plan.status === 'approved';
   const current = result?.planId === plan.plan_id && result.status === plan.status ? result : undefined;
   const decision = current?.decision;
+  if (canAct) {
+    const icon = approved ? 'check-circle' : 'cross-circle', tone = approved ? 'approved' : 'rejected';
+    if (service?.readSubmission && !current) return <NoteLine icon={icon} tone={tone} text="Loading the manager’s note…" busy />;
+    if (current?.error) return <NoteLine icon={icon} tone={tone} text="Couldn’t load the manager’s note. Open the decision to see it." />;
+    if (!decision) return <NoteLine icon={icon} tone={tone} text="Manager decision recorded." />;
+    // A rejection's reason is what the officer needs before copying; who and when are behind View decision.
+    return <NoteLine icon={icon} tone={tone} text={!approved && decision.comment ? `Reason: ${decision.comment}`
+      : `${approved ? 'Approved' : 'Rejected'} by ${decision.manager_label} · ${decisionDay(decision.decided_at)}`} />;
+  }
   return <div className={`pp-decision pp-decision--${plan.status}`}>
     <Icon name={approved ? 'check-circle' : 'cross-circle'} />
     <div>
@@ -38,8 +58,7 @@ export function PlanDecisionNote({ plan, service, canAct = true }: { plan: Purch
       {decision?.comment && <p className="pp-decision-comment">{approved ? 'Comment' : 'Reason'}: “{decision.comment}”</p>}
       {service?.readSubmission && !current && <p className="pp-decision-meta" role="status">Loading the manager’s note…</p>}
       {current?.error && <p className="pp-decision-meta">Couldn’t load the manager’s note. Open the decision to see it.</p>}
-      <p className="pp-decision-meta">{!canAct ? 'Read-only access. Open the decision to view the saved recommendation and manager comments.' : approved ? 'Buy using a current supplier quote, then open the decision to record the purchase.'
-        : 'This plan stays locked. Open the decision to copy it to a new draft.'}</p>
+      <p className="pp-decision-meta">Read-only access. Open the decision to view the saved recommendation and manager comments.</p>
     </div>
   </div>;
 }
