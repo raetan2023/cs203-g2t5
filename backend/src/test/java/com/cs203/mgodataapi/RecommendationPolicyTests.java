@@ -90,4 +90,13 @@ class RecommendationPolicyTests {
     @Test void invalidQuantityRejected() {
         assertThrows(ApiException.class, () -> RecommendationPolicy.evaluate(new PlanAnalysisService.Context(UUID.randomUUID(), BigDecimal.ZERO, date, date), null));
     }
+
+    @Test void staleReferenceCannotRecommendBuyingWhenNoForecastFits() {
+        var p = prices(14, "695");
+        var stale = new Prices(date, Result.ready(new Reference(new BigDecimal("720"), date.minusDays(11), basis)), p.forecast());
+        var result = RecommendationPolicy.evaluate(context(3), stale);
+        assertEquals("MONITOR", result.action());
+        assertNull(result.evidence().supported_target_date());
+        assertNull(result.evidence().alternative_cost_usd());
+    }
 }

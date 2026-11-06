@@ -37,7 +37,7 @@ public class PlanAnalysisService {
             Prices prices = provider.prices(context.scenario_as_of_date, horizon);
             if (!context.scenario_as_of_date.equals(prices.scenario_as_of_date())) throw new IllegalArgumentException("Provider scenario mismatch");
             Result<Reference> reference = validateReference(prices.reference(), context.scenario_as_of_date);
-            Result<Forecast> forecast = validateForecast(prices.forecast(), context.scenario_as_of_date);
+            Result<Forecast> forecast = validateForecast(prices.forecast(), context.scenario_as_of_date, horizon);
             if (expectedRunId != null && (!"ready".equals(forecast.status()) || !expectedRunId.equals(forecast.value().run_id())))
                 throw new ApiException(HttpStatus.CONFLICT, "The forecast run changed. Reload the forecast and cost impact.");
             Result<Impact> cost = calculate(context, reference, forecast);
@@ -50,7 +50,7 @@ public class PlanAnalysisService {
                     Prices candidate = days == horizon ? prices : provider.prices(context.scenario_as_of_date, days);
                     if (!context.scenario_as_of_date.equals(candidate.scenario_as_of_date()))
                         throw new IllegalArgumentException("Provider scenario mismatch");
-                    Result<Forecast> candidateForecast = validateForecast(candidate.forecast(), context.scenario_as_of_date);
+                    Result<Forecast> candidateForecast = validateForecast(candidate.forecast(), context.scenario_as_of_date, days);
                     if ("ready".equals(candidateForecast.status())) {
                         if (snapshot != null && !java.util.Objects.equals(snapshot.run_id(), candidateForecast.value().run_id()))
                             throw new ApiException(HttpStatus.CONFLICT, "Forecast sources changed. Reload the comparison.");
@@ -108,7 +108,7 @@ public class PlanAnalysisService {
             return Result.unavailable("unsupported_horizon", "The reference observation is not available at this planning date.");
         return result;
     }
-    private static Result<Forecast> validateForecast(Result<Forecast> result, LocalDate scenario) {
+    private static Result<Forecast> validateForecast(Result<Forecast> result, LocalDate scenario, int horizon) {
         validateResult(result);
         if (!"ready".equals(result.status())) return result;
         Forecast f = result.value();
@@ -119,6 +119,9 @@ public class PlanAnalysisService {
                 || f.prices().lower().compareTo(f.prices().upper()) > 0 || blank(f.range_description())
                 || (f.central_estimate() != null && !nonnegative(f.central_estimate())))
             return Result.unavailable("invalid_bounds", "The forecast bounds or uncertainty description are invalid.");
+        if (!f.target_date().equals(scenario.plusDays(horizon)))
+            return Result.unavailable("unsupported_horizon", "An updated " + horizon + "-day forecast for "
+                    + scenario.plusDays(horizon) + " is required. The available forecast targets " + f.target_date() + ".");
         return result;
     }
 

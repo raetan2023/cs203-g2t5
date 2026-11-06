@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import type { ForecastService, Horizon, ReadyForecast } from '../forecast/apiService';
 import { buildMockForecast } from '../forecast/mockService';
@@ -32,6 +32,35 @@ it('dates today’s detail by the observed quote, not by the planning date', () 
   const columns = buildColumns([7, 14, 30].map(h => ({ horizon: h as Horizon, forecast: entry(h as Horizon, 1000) })), '2026-10-28', '2026-12-01');
   render(<ExploredDetail column={columns[0]} quantity={10} today="2026-10-28" source="" experimental={false} />);
   expect(screen.getByText('MGO quote observed 26 Oct 2026 · 2 days old')).toBeVisible();
+});
+
+it('counts buying dates from today and never reuses an older forecast for a different target', () => {
+  render(<CompareBuyingDates entries={[
+    { horizon: 7, message: 'Forecast target date has passed.' },
+    { horizon: 14, forecast: entry(14, 980) },
+    { horizon: 30, forecast: entry(30, 1000) },
+  ]} quantity={888} today="2026-11-06" deadline="2026-11-26" recommended={[]} onExplore={() => {}} />);
+  for (const [horizon, date] of [[7, 'Fri 13 Nov'], [14, 'Fri 20 Nov'], [30, 'Sun 06 Dec']] as const) {
+    const card = screen.getByRole('button', { name: `${horizon} days` });
+    expect(within(card).getByText(date)).toBeVisible();
+    expect(card).toBeDisabled();
+    expect(card).toHaveAccessibleDescription(/Unavailable/);
+    expect(within(card).queryByText(/USD/)).not.toBeInTheDocument();
+  }
+  expect(screen.getByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/latest 14-day forecast targets 09 Nov 2026/);
+  expect(screen.getByRole('button', { name: 'Today' })).toHaveAccessibleDescription(/Quote from Mon 26 Oct/);
+  expect(screen.getByText(/Dates count from today, 06 Nov 2026/)).toBeVisible();
+});
+
+it('uses a forecast with the requested target even when its reference quote is older', () => {
+  const forecast = { ...entry(14, 980), target_date: '2026-11-20' };
+  const columns = buildColumns([{ horizon: 14, forecast }], '2026-11-06', '2026-11-19');
+  expect(columns[1]).toMatchObject({ date: '2026-11-20', forecast, late: true, mid: 980 });
+});
+
+it('keeps calendar horizons correct across month and year boundaries', () => {
+  const columns = buildColumns([7, 14, 30].map(horizon => ({ horizon: horizon as Horizon })), '2026-12-25', '2027-02-01');
+  expect(columns.map(c => c.date)).toEqual(['2027-01-01', '2027-01-08', '2027-01-24']);
 });
 
 it('rejects a comparison assembled from different source snapshots', async () => {
