@@ -92,8 +92,9 @@ it('shows a failed copy and re-reads the plans in case it saved', async () => {
   const list = vi.spyOn(service, 'list');
   await user.click(await screen.findByRole('button', { name: 'Finished (1)' }));
   await user.click(screen.getByRole('button', { name: /^Copy to new draft/ }));
-  expect(await screen.findByRole('alert')).toBeVisible();
+  // The error shows, the page re-reads, and the error shows again, so check it after the re-read.
   await waitFor(() => expect(list).toHaveBeenCalled());
+  expect(await screen.findByRole('alert')).toBeVisible();
   expect(await screen.findByRole('button', { name: /^Copy to new draft/ })).toBeEnabled();
   await user.click(screen.getByRole('button', { name: /^Copy to new draft/ }));
   expect(await screen.findByRole('heading', { name: 'Your purchase plan' })).toBeVisible();
