@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useSearch } from '../../app/router';
 import { useBuyerDecisions } from './components/BuyerDecisions';
 import { PreviousPlanNote } from './components/PreviousPlanNote';
@@ -42,7 +42,11 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
   const [notice, setNotice] = useState<{ text: string; planId: string | null } | null>(null);
   const editPlanId = new URLSearchParams(useSearch()).get('edit_plan_id');
   const [filter, setFilter] = useState<'all' | 'open' | 'finished' | 'submitted' | 'approved' | 'rejected'>('all');
+  /** Officers see plans by whose move it is; managers and admins keep the status filter above. */
+  const [tab, setTab] = useState<PlanGroup>('todo');
+  const [copyError, setCopyError] = useState('');
   const [sort, setSort] = useState<PlanSort>('deadline');
+  const sortId = useId();
   const [writingServices, setWritingServices] = useState<Set<PurchasePlanService>>(() => new Set());
   const writing = writingServices.has(service);
   const createRef = useRef<HTMLButtonElement>(null);
@@ -57,6 +61,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
   useEffect(() => {
     activeContext.current = context;
     invalidate.current?.();
+    setCopyError('');
     return () => { activeContext.current = null; };
   }, [context]);
   // Sharing this promise avoids consuming fail-once fixtures twice in StrictMode.
@@ -118,6 +123,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setPlans(previous => [...previous.filter(plan => plan.plan_id !== response.plan.plan_id), response.plan]
       .sort((a, b) => a.purchase_deadline.localeCompare(b.purchase_deadline) || a.plan_id.localeCompare(b.plan_id)));
     setState({ mode: 'view', plan: response.plan });
+    setTab('todo');
     setAnnouncement('Purchase plan saved.');
     setNotice({ text: 'Plan saved', planId: response.plan.plan_id });
   }
@@ -144,9 +150,36 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setNotice({ text: 'Plan deleted', planId: null });
   }
 
+  /** Copies a rejected or withdrawn plan, then opens the new draft in the edit form. */
+  async function copyPlan(source: PurchasePlan) {
+    if (!canEdit || !service.revise || state.mode !== 'view') return;
+    clearFeedback();
+    setWritingServices(previous => new Set(previous).add(service));
+    let response;
+    try {
+      response = await service.revise(source.plan_id);
+    } catch (error) {
+      if (activeContext.current !== context) { reconcilePreviousWrite(); return; }
+      // The copy may have saved even though the reply failed, so re-read before offering it again.
+      setCopyError(requestError(error).detail);
+      setAttempt(value => value + 1);
+      return;
+    } finally {
+      finishWrite();
+    }
+    if (activeContext.current !== context) { reconcilePreviousWrite(); return; }
+    invalidate.current?.();
+    const message = scenarioError(response.plan);
+    if (message) { setState({ mode: 'error', message }); return; }
+    setPlans(previous => [...previous, response.plan]);
+    setTab('todo');
+    setState({ mode: 'form', plan: response.plan });
+  }
+
   function clearFeedback() {
     setAnnouncement('');
     setNotice(null);
+    setCopyError('');
   }
 
   function finishWrite() {
@@ -166,9 +199,10 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setAttempt(value => value + 1);
   }
 
-  const filteredPlans = plans.filter(p => filter === 'all' || (filter === 'open'
+  const filteredPlans = canEdit ? plans.filter(p => planGroup(p) === tab) : plans.filter(p => filter === 'all' || (filter === 'open'
     ? !['rejected', 'withdrawn', 'purchased'].includes(p.status ?? 'draft')
     : filter === 'finished' ? ['rejected', 'withdrawn', 'purchased'].includes(p.status ?? 'draft') : p.status === filter));
+  const copies = new Map(plans.flatMap(p => p.previous_plan_id ? [[p.previous_plan_id, p.plan_id] as const] : []));
 
   return <main className="purchase-plan">
     <div className="pp-sr-only" role="status">{announcement}</div>
@@ -178,12 +212,12 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
         {canEdit && <div className="pp-create">
           {/* Fades out on its own (CSS); hovering holds it. The role="status" above announces it. */}
           {notice && <span className="pp-notice" onAnimationEnd={() => setNotice(null)}><Icon name="check" />{notice.text}</span>}
-          <PlanButton variant="secondary" disabled={writing || state.mode === 'form' || showDelete} onClick={() => {
+          <PlanButton variant="secondary" className="pp-icon-button" aria-label="Refresh plans" title="Refresh plans" disabled={writing || state.mode === 'form' || showDelete} onClick={() => {
             clearFeedback();
             invalidate.current?.();
             if (decisions?.service === service) decisions.refresh();
             setAttempt(value => value + 1);
-          }}>Refresh</PlanButton>
+          }}><Icon name="refresh" /></PlanButton>
           <PlanButton ref={createRef} disabled={writing || state.mode !== 'view'} onClick={() => {
             clearFeedback(); setState({ mode: 'form', plan: null });
           }}><Icon name="plus" />Create plan</PlanButton>
@@ -200,10 +234,28 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
       {state.mode === 'view' && plans.length === 0 && <section className="pp-empty" aria-label="No purchase plan">
         <p>{canEdit ? "You haven't created a purchase plan yet." : 'No purchase plans have been assigned to this organisation yet.'}</p>
       </section>}
+      {state.mode === 'view' && copyError && <div className="pp-copy-error"><ErrorBanner>{copyError}</ErrorBanner></div>}
       {state.mode === 'view' && plans.length > 0 && <>
-        <PlanOverview plans={plans} />
-        <div className="pp-list-heading">
-          <h2>{canEdit ? 'Your plans' : 'Plans'}</h2>
+        {!canEdit && <PlanOverview plans={plans} />}
+        {canEdit ? <div className="pp-list-heading">
+          <h2 className="pp-sr-only">Your plans</h2>
+          <div className="pp-tabs" role="group" aria-label="Plan filter">
+            {PLAN_GROUPS.map(group => <button type="button" key={group.id} aria-pressed={tab === group.id} onClick={() => setTab(group.id)}>
+              {group.label} ({plans.filter(plan => planGroup(plan) === group.id).length})
+            </button>)}
+          </div>
+          <div className="pp-sort-select">
+            <label htmlFor={sortId}>Sort by</label>
+            <span className="pp-select">
+              <select id={sortId} value={sort} onChange={event => setSort(event.target.value as PlanSort)}>
+                <option value="deadline">Deadline</option>
+                <option value="volume">Volume</option>
+              </select>
+              <Icon name="chevron-down" />
+            </span>
+          </div>
+        </div> : <div className="pp-list-heading">
+          <h2>Plans</h2>
           <div className="pp-filter" role="group" aria-label="Plan filter">
             {(isAdmin ? ['all', 'submitted', 'approved', 'rejected'] as const : ['all', 'open', 'finished'] as const).map(option => <button type="button" key={option} aria-pressed={filter === option} onClick={() => setFilter(option)}>{option === 'all' ? 'All' : option === 'open' ? 'Open' : option === 'finished' ? 'Finished' : option === 'submitted' ? 'Pending approval' : option === 'approved' ? 'Approved' : 'Rejected'}</button>)}
           </div>
@@ -212,10 +264,12 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
             {(['deadline', 'volume'] as const).map(option => <button key={option} type="button" aria-pressed={sort === option}
               onClick={() => setSort(option)}>{option === 'deadline' ? 'Deadline' : 'Volume'}</button>)}
           </div>
-        </div>
-        {filteredPlans.length === 0 && <p role="status">No {filter === 'submitted' ? 'plans pending approval' : `${filter} plans`}.</p>}
+        </div>}
+        {filteredPlans.length === 0 && <p role="status">{canEdit ? PLAN_GROUPS.find(group => group.id === tab)!.empty : `No ${filter === 'submitted' ? 'plans pending approval' : `${filter} plans`}.`}</p>}
         <div className="pp-plan-grid">{sortPlans(filteredPlans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} service={service} busy={writing}
           saved={notice?.planId === plan.plan_id}
+          copiedPlanId={copies.get(plan.plan_id)}
+          onCopy={service.revise ? () => void copyPlan(plan) : undefined}
           editRef={state.plan?.plan_id === plan.plan_id ? editRef : undefined}
           deleteRef={state.plan?.plan_id === plan.plan_id ? deleteRef : undefined} onEdit={() => {
             clearFeedback(); setState({ mode: 'form', plan });
@@ -234,6 +288,19 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
 }
 
 type PlanSort = 'deadline' | 'volume';
+type PlanGroup = 'todo' | 'awaiting' | 'finished';
+
+const PLAN_GROUPS: { id: PlanGroup; label: string; empty: string }[] = [
+  { id: 'todo', label: 'To do', empty: 'Nothing to do right now.' },
+  { id: 'awaiting', label: 'Awaiting approval', empty: 'No plans awaiting approval.' },
+  { id: 'finished', label: 'Finished', empty: 'No finished plans.' },
+];
+
+/** Whose move it is. Rejected plans are Finished because copying is optional and the original can never leave To do. */
+function planGroup(plan: PurchasePlan): PlanGroup {
+  const status = plan.status ?? 'draft';
+  return status === 'draft' || status === 'approved' ? 'todo' : status === 'submitted' ? 'awaiting' : 'finished';
+}
 
 /** Display order only; the saved plans are not changed. ISO dates sort as strings; ties keep their saved order. */
 function sortPlans(plans: PurchasePlan[], sort: PlanSort) {
