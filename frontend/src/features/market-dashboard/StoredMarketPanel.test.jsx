@@ -36,15 +36,15 @@ describe('stored market dashboard', () => {
   it('preserves unknown futures units and does not label the value as dollars', async () => {
     serve([series('SGP_GASOIL_FUT', 'Singapore gasoil futures', 'prices', 171.08, 'source-defined', '2026-10-16')]);
     render(<StoredMarketPanel />);
-    expect(await screen.findByText(/Physical unit and contract definition/)).toBeInTheDocument();
+    expect((await screen.findAllByText('Unit pending verification')).length).toBeGreaterThan(0);
     expect(screen.queryByText('$171.08')).not.toBeInTheDocument();
   });
 
-  it('retains zero sales in published units and explains monthly date labels', async () => {
+  it('retains zero sales in published units and names the month', async () => {
     serve([series('MPA_BUNKER_SALES_MGO', 'Bunker sales: MGO', 'sales', 0, 'thousand tonnes', '2026-08-01')]);
     render(<StoredMarketPanel />);
     expect(await screen.findByRole('region', { name: 'Monthly bunker sales' })).toHaveTextContent('thousand tonnes');
-    expect(screen.getByText(/Dates identify the represented month/)).toBeInTheDocument();
+    expect(screen.getByText('August 2026 · monthly, as published')).toBeInTheDocument();
     expect(screen.getAllByText('0.00').length).toBeGreaterThan(0);
   });
 

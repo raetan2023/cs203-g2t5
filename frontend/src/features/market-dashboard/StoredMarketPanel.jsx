@@ -24,7 +24,7 @@ const order = ['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'BRENT_CRUDE', 'DUBAI_CRUDE
 const orderOf = key => { const index = order.indexOf(key); return index < 0 ? order.length : index; };
 const TONE_LIMIT = 10; // GDELT tone rarely leaves ±10, so the gauge clamps there.
 
-function Symbol({ name, ...props }) {
+export function Symbol({ name, ...props }) {
   const shapes = {
     refresh: <><path d="M3 11a9 9 0 0 1 15.4-6.4L21 7M21 3v4h-4" /><path d="M21 13a9 9 0 0 1-15.4 6.4L3 17M7 17H3v4" /></>,
     layers: <><path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5" /></>,
@@ -125,10 +125,9 @@ function SalesPanel({ sales }) {
       </tr>;
     })}</tbody></table></div>
     {search && !visible.length && <p className="sm-table-empty">No fuel categories match “{search}”.</p>}
-    <div className="sm-panel-footer">
-      {!search && sales.length > 6 ? <button type="button" className="sm-text-button" onClick={() => setShowAll(value => !value)}>{showAll ? 'Show fewer categories' : `View all ${sales.length} categories`}</button> : <span />}
-      <span>Dates identify the represented month, not the release date. Categories aren’t summed.</span>
-    </div>
+    {!search && sales.length > 6 && <div className="sm-panel-footer">
+      <button type="button" className="sm-text-button" onClick={() => setShowAll(value => !value)}>{showAll ? 'Show fewer categories' : `View all ${sales.length} categories`}</button>
+    </div>}
   </section>;
 }
 
@@ -174,7 +173,6 @@ export default function StoredMarketPanel({ forecast = null, today = singaporeTo
     return date >= startDate && date <= endDate;
   }).sort((a, b) => a.date.localeCompare(b.date));
   const checked = data ? new Date(data.fetchedAt).toLocaleTimeString('en-SG', { hour: 'numeric', minute: '2-digit' }) : null;
-  const unverified = prices.filter(s => s.ticker.unit === 'source-defined').map(s => s.ticker.label);
 
   return <main className="stored-market" aria-label="Stored market dashboard">
     <header className="sm-header">
@@ -191,12 +189,9 @@ export default function StoredMarketPanel({ forecast = null, today = singaporeTo
       <p><strong>Not yet stored:</strong> {data.missing.join(', ')}. No example prices are substituted.</p></details>}
     {data && !series.length && <div className="sm-message sm-empty"><Symbol name="layers" /><h2>No imported market observations are available.</h2><p>Your market overview will appear after the first data import.</p></div>}
 
-    {prices.length > 0 && <div className="sm-prices-block">
-      <section aria-label="Stored prices and index" className="sm-prices">
-        {prices.map(({ ticker }, index) => <PriceCard key={ticker.seriesKey} ticker={ticker} featured={index === 0} today={today} />)}
-      </section>
-      {unverified.length > 0 && <p className="sm-unit-note">{unverified.join(' and ')}: Physical unit and contract definition are not verified. No price conversion is applied.</p>}
-    </div>}
+    {prices.length > 0 && <section aria-label="Stored prices and index" className="sm-prices">
+      {prices.map(({ ticker }, index) => <PriceCard key={ticker.seriesKey} ticker={ticker} featured={index === 0} today={today} />)}
+    </section>}
 
     {forecast}
 

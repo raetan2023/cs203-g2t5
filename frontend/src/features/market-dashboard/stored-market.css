@@ -37,7 +37,6 @@
 .stored-market .sm-empty h2 { font: var(--bb-type-heading); color: var(--bb-text); }
 
 /* Price cards: the whole card carries the buyer's reading of the move. */
-.sm-prices-block { display: flex; flex-direction: column; gap: var(--bb-space-3); }
 .sm-prices { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--bb-space-3); }
 .sm-price-card { --sm-card-rule: var(--bb-border-subtle); --sm-chip: var(--bb-surface-overlay); min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--bb-space-2); padding: var(--bb-space-5); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); }
 .sm-tone-up { --sm-card-rule: var(--bb-price-up-chip); --sm-chip: var(--bb-price-up-chip); background: var(--bb-price-up-surface); border-color: var(--bb-price-up-border); }
@@ -61,7 +60,6 @@
 .sm-card-footer { align-self: stretch; display: flex; justify-content: space-between; gap: var(--bb-space-2); margin-top: auto; padding-top: var(--bb-space-3); border-top: 1px solid var(--sm-card-rule); font: var(--bb-type-label); color: var(--bb-text-secondary); }
 .sm-card-footer > time { flex-shrink: 0; }
 .sm-card-footer > span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.stored-market .sm-unit-note { font: var(--bb-type-label); color: var(--bb-warning-text); }
 
 /* Shared panel parts */
 .sm-panel { min-width: 0; border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); overflow: hidden; }
@@ -88,26 +86,17 @@
 .mf-value-missing { color: var(--bb-text-secondary); }
 .mf-change { font: var(--bb-type-label); font-weight: 600; white-space: nowrap; }
 .mf-detail { font: var(--bb-type-label); color: var(--bb-text-secondary); }
-.mf-track { position: relative; height: 10px; margin-top: auto; border-radius: var(--bb-radius-pill); background: var(--bb-surface-overlay); }
-.mf-detail + .mf-track { margin-top: var(--bb-space-2); }
-.mf-dot { position: absolute; top: -2px; width: 14px; height: 14px; margin-left: -7px; border-radius: var(--bb-radius-pill); background: var(--bb-text-secondary); }
-.mf-range { position: absolute; top: 0; height: 10px; border-radius: var(--bb-radius-pill); }
-.mf-range-7 { background: var(--bb-action); }
-.mf-range-14 { background: var(--bb-text-secondary); }
-.mf-range-30 { background: var(--bb-text-tertiary); }
-.mf-quote-line { position: absolute; top: -3px; width: 2px; height: 16px; margin-left: -1px; background: var(--bb-text); box-shadow: 0 0 0 1px var(--bb-surface); }
 .mf-footnote { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--bb-space-2) var(--bb-space-4); padding-top: var(--bb-space-3); border-top: 1px solid var(--bb-border-subtle); font: var(--bb-type-label); color: var(--bb-text-secondary); }
 .mf-message { display: flex; flex-direction: column; align-items: flex-start; gap: var(--bb-space-2); padding: var(--bb-space-5); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-control); font: var(--bb-type-body); color: var(--bb-text-secondary); }
 .mf-message strong { font: var(--bb-type-body-strong); color: var(--bb-text); }
 .mf-steps { display: flex; flex-direction: column; gap: var(--bb-space-4); }
-.stored-market .mf-steps h3, .stored-market .mf-report h3 { font: var(--bb-type-heading); }
-.mf-steps p, .mf-report p { font: var(--bb-type-body); color: var(--bb-text-secondary); }
+.stored-market .mf-steps h3 { font: var(--bb-type-heading); }
+.mf-steps p { font: var(--bb-type-body); color: var(--bb-text-secondary); }
 .mf-steps ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--bb-space-3); }
 .mf-steps li { min-width: 0; display: flex; flex-direction: column; gap: var(--bb-space-2); padding-top: var(--bb-space-3); border-top: 2px solid var(--bb-border-subtle); font: var(--bb-type-body); color: var(--bb-text-secondary); }
 .mf-steps .mf-step-result { border-top-color: var(--bb-action); }
 .mf-steps strong { font: var(--bb-type-heading); color: var(--bb-text); overflow-wrap: anywhere; }
 .mf-steps .mf-step-label { font: var(--bb-type-label); color: var(--bb-text-tertiary); }
-.mf-report { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--bb-space-3) var(--bb-space-4); padding: var(--bb-space-4) var(--bb-space-5); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-control); background: var(--bb-canvas); }
 
 /* History */
 .sm-history-summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--bb-space-1) var(--bb-space-3); margin-top: var(--bb-space-1); }
@@ -196,7 +185,6 @@
   .sm-news-metrics { padding: 0 var(--bb-space-4); }
   .sm-tone { padding: var(--bb-space-5) var(--bb-space-4) 0; }
   .stored-market .sm-news-note { margin: var(--bb-space-5) var(--bb-space-4); }
-  .mf-report .bb-button { width: 100%; }
 }
 @media (max-width: 460px) {
   .mf-tiles, .mf-steps ol { grid-template-columns: minmax(0, 1fr); }
