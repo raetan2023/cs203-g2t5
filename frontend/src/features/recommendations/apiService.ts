@@ -49,7 +49,9 @@ function evidence(value: unknown): RecommendationEvidence {
     alternative_cost_usd: optionalNumber(e.alternative_cost_usd), alternative_minus_now_usd: optionalNumber(e.alternative_minus_now_usd),
     reference_age_days: optionalNumber(e.reference_age_days), supported_target_date: e.supported_target_date == null ? null : date(e.supported_target_date),
     horizon_description: e.horizon_description == null ? null : text(e.horizon_description), reasons: strings(e.reasons), limitations: strings(e.limitations),
-    allocations: e.allocations.map(v => { const a = object(v); const q = number(a.quantity_mt, true); if (q <= 0) throw invalid(); return { date: date(a.date), quantity_mt: q }; }) };
+    allocations: e.allocations.map(v => { const a = object(v); const q = number(a.quantity_mt, true); if (q <= 0) throw invalid(); return { date: date(a.date), quantity_mt: q }; }),
+    signal_price: optionalNumber(e.signal_price), signal_low: optionalNumber(e.signal_low), signal_high: optionalNumber(e.signal_high),
+    signal_inputs: Array.isArray(e.signal_inputs) ? e.signal_inputs.map(v => { const i = object(v); return { target_date: date(i.target_date), weight: number(i.weight, true), price: number(i.price, true) }; }) : undefined };
 }
 
 /** Validate every transport value before exposing it to display components. Never derive totals here. */

@@ -68,7 +68,9 @@ export function ForecastProvider({ service, scenarioDate, revision, autoRefresh 
     });
     return () => { active = false; };
   }, [scope, horizon, attempt, service]);
-  const current = result?.scope === scope && result.horizon === horizon && result.attempt === attempt ? result.value : undefined;
+  // A refresh keeps a good result on screen until the new one lands, so the page doesn't reset every minute.
+  const held = result?.scope === scope && result.horizon === horizon && result.value.status === 'success' && result.value.data.status === 'ready';
+  const current = result?.scope === scope && result.horizon === horizon && (result.attempt === attempt || held) ? result.value : undefined;
   const value: ForecastState = !service ? { ...missing, horizon, setHorizon } : { refreshKey: attempt, service: comparisonService, connected: true, horizon, setHorizon, retry, ...(current ?? { status: 'loading' }) };
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

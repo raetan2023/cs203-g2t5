@@ -125,7 +125,7 @@ class PlanAnalysisServiceTests {
         assertEquals(org.springframework.http.HttpStatus.CONFLICT, assertThrows(ApiException.class, () -> service.read(context, false, 7, run)).status());
     }
 
-    @Test void quoteAnchoredTargetsCannotSupplyCurrentHorizonCostsOrApproval() {
+    @Test void quoteAnchoredTargetsSupplyCostsAndGuidanceOnTheirRealDates() {
         var today = LocalDate.parse("2026-11-06");
         var quote = LocalDate.parse("2026-10-26");
         var context = new PlanAnalysisService.Context(UUID.randomUUID(), new BigDecimal("888"), LocalDate.parse("2026-11-26"), today);
@@ -139,14 +139,20 @@ class PlanAnalysisServiceTests {
                     Result.ready(new Reference(new BigDecimal("1351.5"), quote, basis)), Result.ready(f)));
         }
         var service = new PlanAnalysisService(provider);
-        var impact = service.read(context, true, 14, null);
-        assertEquals("unsupported_horizon", ((Result<?>) impact.get("forecast")).reason());
-        assertTrue(((Result<?>) impact.get("forecast")).message().contains("2026-11-20"));
-        assertEquals("unavailable", ((Result<?>) impact.get("cost_impact")).status());
-        var guidance = (Guidance) ((Result<?>) service.read(context, false, 14, null).get("recommendation")).value();
+        var impact = service.read(context, true, 14, run);
+        assertEquals("ready", ((Result<?>) impact.get("forecast")).status());
+        var cost = (PlanAnalysisService.Impact) ((Result<?>) impact.get("cost_impact")).value();
+        assertEquals(quote.plusDays(14), cost.target_date());
+        var guidance = (Guidance) ((Result<?>) service.read(context, false, 14, run).get("recommendation")).value();
         assertEquals("MONITOR", guidance.action());
         assertNull(guidance.evidence().supported_target_date());
+        assertEquals(0, new BigDecimal("1351.5").compareTo(guidance.evidence().signal_price()));
+        var inputs = guidance.evidence().signal_inputs();
+        assertEquals(java.util.List.of(quote.plusDays(30), quote.plusDays(14)), inputs.stream().map(SignalInput::target_date).toList());
+        assertEquals(94, inputs.getFirst().weight().movePointRight(2).setScale(0, java.math.RoundingMode.HALF_UP).intValue());
+        // A target that has already passed stays unavailable, and a run cannot be pinned to it.
+        assertEquals("unsupported_horizon", ((Result<?>) service.read(context, true, 7, null).get("forecast")).reason());
         assertEquals(org.springframework.http.HttpStatus.CONFLICT,
-                assertThrows(ApiException.class, () -> service.read(context, false, 14, run)).status());
+                assertThrows(ApiException.class, () -> service.read(context, false, 7, run)).status());
     }
 }

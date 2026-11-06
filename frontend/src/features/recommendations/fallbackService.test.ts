@@ -25,6 +25,31 @@ it('retries the real source on refresh instead of permanently caching a failure'
   await services.forecasts.read(7); await services.forecasts.read(7);
   expect(source.read).toHaveBeenCalledTimes(6);
 });
+it('keeps real forecasts on their own target dates and leaves a passed horizon unavailable', async()=>{
+  const seed=createPurchaseFallback({read:async()=>{throw new Error('offline');}},undefined,context.scenario_as_of_date);
+  const sample=await seed.forecasts.read(14) as ReadyForecast;
+  const source={read:async(h:7|14|30)=>h===7?{status:'unavailable' as const,reason:'ridge_unavailable',message:'Target passed.'}
+    :{...sample,horizon_days:h,run_id:'real',synthetic:false,anchor_quote_date:'2026-10-26',target_date:h===14?'2026-11-09':'2026-11-25',model_version:'real-model'}};
+  const services=createPurchaseFallback(source,undefined,context.scenario_as_of_date);
+  expect(await services.forecasts.read(7)).toMatchObject({status:'unavailable',message:'Target passed.'});
+  expect(await services.forecasts.read(14)).toMatchObject({status:'ready',target_date:'2026-11-09',model_version:'real-model'});
+  expect(await services.forecasts.read(30)).toMatchObject({status:'ready',target_date:'2026-11-25',run_id:'real'});
+});
+it('accepts a real analysis dated from the quote rather than replacing it with an illustrative one', async()=>{
+  const seed=createPurchaseFallback({read:async()=>{throw new Error('offline');}},undefined,context.scenario_as_of_date);
+  const sample=await seed.forecasts.read(14) as ReadyForecast;
+  const body=await seed.recommendations.read(context,14);
+  if(body.forecast.status==='ready') body.forecast.value.target_date='2026-11-09';
+  const live={...body,source:'api' as const,provenance:'model' as const};
+  const services=createPurchaseFallback({read:async h=>({...sample,horizon_days:h,synthetic:false,target_date:'2026-11-09',model_version:'real-model'})},{read:async()=>live},context.scenario_as_of_date);
+  expect(await services.recommendations.read(context,14)).toBe(live);
+});
+it('falls back to illustrative estimates only when no real forecast is still to come', async()=>{
+  const seed=createPurchaseFallback({read:async()=>{throw new Error('offline');}},undefined,context.scenario_as_of_date);
+  const sample=await seed.forecasts.read(14) as ReadyForecast;
+  const services=createPurchaseFallback({read:async h=>({...sample,horizon_days:h,synthetic:false,target_date:'2026-11-02'})},undefined,context.scenario_as_of_date);
+  expect(await services.forecasts.read(14)).toMatchObject({status:'ready',synthetic:true,target_date:'2026-11-20'});
+});
 it('prioritizes current real forecasts and real recommendation responses', async()=>{
   const seed=createPurchaseFallback({read:async()=>{throw new Error('offline');}},undefined,context.scenario_as_of_date);
   const sample=await seed.forecasts.read(14) as ReadyForecast;

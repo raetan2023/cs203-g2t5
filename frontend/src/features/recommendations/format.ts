@@ -4,6 +4,8 @@ import { formatDate } from '../purchase-plan/dates';
 export const amount = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 0 });
 export const price = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 2 });
 export const usd = (value: number) => `USD ${amount(value)}`;
+/** A per-tonne price, always to the cent: a quote of 1,351.50 must not read as 1,352. */
+export const perMt = (value: number) => value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function compact(value: number) {
   const magnitude = Math.abs(value);
@@ -15,6 +17,9 @@ export function compact(value: number) {
 /** Totals stay exact below a million and shorten above it, so very large plans stay readable. */
 export const total = (value: number) => `USD ${compact(value)}`;
 export const totalRange = (lower: number, upper: number) => `USD ${compact(lower)}–${compact(upper)}`;
+/** Both ends in one unit, so a range never reads "845,891–1.49m". */
+export const compactRange = (lower: number, upper: number) => upper >= 1_000_000 && upper < 1_000_000_000
+  ? `${(lower / 1_000_000).toFixed(2)}m–${(upper / 1_000_000).toFixed(2)}m` : `${compact(lower)}–${compact(upper)}`;
 
 /** Signed difference against buying today, worded without implying a direction is good or bad. */
 export function change(value: number) {

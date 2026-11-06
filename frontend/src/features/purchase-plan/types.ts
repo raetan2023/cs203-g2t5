@@ -142,6 +142,11 @@ export interface RecommendationEvidence {
   reasons: string[];
   limitations: string[];
   allocations: { date: string; quantity_mt: number }[];
+  /** Weighted signal behind the action. Absent on saved snapshots and illustrative fallback results. */
+  signal_price?: number | null;
+  signal_low?: number | null;
+  signal_high?: number | null;
+  signal_inputs?: { target_date: string; weight: number; price: number }[];
 }
 export interface CurrentRecommendation {
   evidence?: RecommendationEvidence;

@@ -1,7 +1,6 @@
-import BuyerDecisionLog from './BuyerDecisionLog';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppLink } from '../../app/router';
-import { addCalendarDays, formatDate } from '../purchase-plan/dates';
+import { formatDate } from '../purchase-plan/dates';
 import { requestError, type PlanAnalysis, type PurchasePlan, type PurchasePlanService, type SubmissionResponse } from '../purchase-plan/types';
 import type { Horizon } from '../forecast/apiService';
 import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
@@ -11,11 +10,13 @@ import { EvidenceView } from './RecommendationEvidence';
 import { actionLabel, amount, dayDate, readableDates, usd } from './format';
 import { decisionTime } from '../purchase-plan/components/PlanDecisionNote';
 
-export function RecommendationApproval({ analysis, plan, horizon, planService, onSubmitted }: {
-  analysis: PlanAnalysis; plan: PurchasePlan; horizon: Horizon; planService: PurchasePlanService; onSubmitted(plan: PurchasePlan): void;
+export const SUBMIT_LABEL = 'Accept and submit for approval';
+
+/** Accepting and submitting are one step for the officer; the backend still requires the Accept to be on record first. */
+export function RecommendationApproval({ analysis, plan, horizon, planService, onSubmitted, refresh }: {
+  analysis: PlanAnalysis; plan: PurchasePlan; horizon: Horizon; planService: PurchasePlanService; onSubmitted(plan: PurchasePlan): void; refresh?: ReactNode;
 }) {
   const [confirm, setConfirm] = useState(false);
-  const [acceptance, setAcceptance] = useState<{ key: string; service: PurchasePlanService }>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const active = useRef(true);
@@ -23,19 +24,19 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
   useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
   const guidance = analysis.recommendation.status === 'ready' ? analysis.recommendation.value : undefined;
   const forecast = analysis.forecast.status === 'ready' ? analysis.forecast.value : undefined;
-  const targetMatches = forecast?.target_date === addCalendarDays(plan.scenario_as_of_date, horizon);
-  const decisionKey = `${plan.plan_id}:${guidance?.recommendation_id}:${forecast?.run_id}:${guidance?.action}`;
-  const accepted = acceptance?.key === decisionKey && acceptance.service === planService;
+  const upcoming = !!forecast && forecast.target_date > plan.scenario_as_of_date;
   const referenceOnly = guidance?.action === 'BUY_NOW' && analysis.reference.status === 'ready'
     && analysis.cost_impact.status === 'unavailable' && analysis.cost_impact.reason === 'unsupported_horizon';
-  const valid = accepted && plan.status === 'draft' && !!planService.submit && analysis.source === 'api' && analysis.provenance === 'model'
-    && !!guidance && !!forecast?.run_id && targetMatches && (analysis.cost_impact.status === 'ready' || referenceOnly)
+  const valid = plan.status === 'draft' && !!planService.submit && analysis.source === 'api' && analysis.provenance === 'model'
+    && !!guidance && !!forecast?.run_id && upcoming && (analysis.cost_impact.status === 'ready' || referenceOnly)
     && !!analysis.approval_fingerprint?.match(/^[a-f0-9]{64}$/);
 
   async function submit() {
     if (!valid || !planService.submit || !forecast?.run_id || !guidance || pending.current) return;
     pending.current = true; setBusy(true); setError('');
     try {
+      await planService.recordRecommendationDecision?.(plan.plan_id, { recommendationId: guidance.recommendation_id, runId: forecast.run_id,
+        action: guidance.action, decision: 'accept', reason: '' });
       const { plan: saved } = await planService.submit(plan.plan_id, {
         horizon_days: horizon, run_id: forecast.run_id, recommendation_id: guidance.recommendation_id,
         approval_fingerprint: analysis.approval_fingerprint!, urgency: analysis.context.urgency ?? 'NORMAL',
@@ -47,22 +48,20 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
     finally { pending.current = false; if (active.current) setBusy(false); }
   }
   return <section className="rec-approval" aria-label="Submit for approval">
-    {guidance && <BuyerDecisionLog key={decisionKey}
-      planId={plan.plan_id} recommendationId={guidance.recommendation_id} runId={forecast?.run_id}
-      action={guidance.action} planService={planService} locked={confirm || busy}
-      onDecisionChange={(decision: string | null) => setAcceptance(decision === 'accept' ? { key: decisionKey, service: planService } : undefined)} />}
-    {!accepted && <p className="rec-approval-note">Accept this recommendation before submitting it for manager approval.</p>}
     {confirm ? <div className="rec-approval-confirm" role="group" aria-label="Confirm submission">
-      <p><strong>Submit {guidance ? `“${guidance.action.replaceAll('_', ' ').toLowerCase()}”` : 'this recommendation'} for approval?</strong> The plan and this recommendation are locked while managers review it.</p>
+      <p><strong>Accept {guidance ? `“${actionLabel(guidance.action).toLowerCase()}”` : 'this recommendation'} and submit it for approval?</strong> The plan and this recommendation are locked while managers review it.</p>
       <div className="rec-approval-actions"><button className="bb-button bb-button--secondary" disabled={busy} onClick={() => setConfirm(false)}>Cancel</button>
       <button className="bb-button" disabled={busy || !valid} onClick={submit}>{busy ? 'Submitting…' : 'Confirm submission'}</button></div>
-    </div> : <button className={valid ? 'bb-button rec-submit' : 'bb-button bb-button--secondary rec-submit'} disabled={!valid} onClick={() => setConfirm(true)}>Submit for approval</button>}
-    {error && <p role="alert">{error} Your selection has not been confirmed. Refresh the page if the plan or forecast changed.</p>}
-    {accepted && !valid && <p className="rec-approval-note">A saved draft and a current priced recommendation are required.</p>}
-    {!targetMatches ? <p className="rec-approval-note">An updated {horizon}-day forecast for {formatDate(addCalendarDays(plan.scenario_as_of_date, horizon))} is required before submitting.</p>
+    </div> : <div className="rec-approval-row">
+      <button className={valid ? 'bb-button rec-submit' : 'bb-button bb-button--secondary rec-submit'} disabled={!valid} onClick={() => setConfirm(true)}>{SUBMIT_LABEL}</button>
+      {refresh}
+    </div>}
+    {error && <p role="alert">{error} Nothing was submitted. Refresh the page if the plan or forecast changed.</p>}
+    {!upcoming ? <p className="rec-approval-note">An updated {horizon}-day forecast is required before submitting.</p>
+      : !valid ? <p className="rec-approval-note">A saved draft and a current priced recommendation are required.</p>
       : referenceOnly ? <p className="rec-approval-note">Uses the observed reference price for buying now. No supported forecast cost is available within the deadline.</p>
-      : <p className="rec-approval-note">Cost detail included: <strong>{horizon}-day forecast</strong>{forecast ? ` · target ${formatDate(forecast.target_date)}` : ''}. Select an eligible date to change it.</p>}
-    <p className="rec-approval-note">Every manager in your organisation receives the recommendation, its reasons and this cost detail.</p>
+      : null}
+    <p className="rec-approval-note">Every manager in your organisation receives the recommendation, its reasons and the selected cost detail.</p>
   </section>;
 }
 
