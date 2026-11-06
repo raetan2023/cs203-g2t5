@@ -9,7 +9,7 @@ function result(action: string, evidence: RecommendationEvidence, overlaps: bool
   const stale = (evidence.reference_age_days ?? 0) > 7;
   if (action === 'MONITOR') return overlaps && stale ? 'The range overlaps today’s price and the quote is over 7 days old.'
     : stale ? 'The quote is over 7 days old, too old for timing advice.' : 'The range overlaps today’s price, so the direction is uncertain.';
-  if (action === 'WAIT') return `The range stays below today’s price${evidence.supported_target_date ? `, so buying on ${dayDate(evidence.supported_target_date)} is expected to cost less` : ''}.`;
+  if (action === 'WAIT') return `The central forecast is below today’s price${evidence.supported_target_date ? `, so buying on ${dayDate(evidence.supported_target_date)} is expected to cost less` : ''}.`;
   return 'The forecast shows no saving over today’s price, so buying today is the better option.';
 }
 

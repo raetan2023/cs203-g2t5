@@ -21,6 +21,12 @@ it('explains a Wait: one forecast on its own, the expected saving and the date',
   expect(screen.getByText(/so buying on Wed 25 Nov is expected to cost less/)).toBeVisible();
 });
 
+it('never claims the range clears today’s price, because the news-aware model can Wait while it overlaps', () => {
+  show(evidence({ signal_low: 1000, signal_high: 1600 }), 'WAIT');
+  expect(screen.getByText(/The central forecast is below today’s price/)).toBeVisible();
+  expect(screen.queryByText(/range stays below/)).not.toBeInTheDocument();
+});
+
 it('explains a Buy now when forecasts sit above today', () => {
   show(evidence({ signal_price: 1400, signal_low: 1350, signal_high: 1450, supported_target_date: '2026-11-06' }), 'BUY_NOW');
   expect(screen.getByText('No expected saving')).toBeVisible();

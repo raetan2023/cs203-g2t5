@@ -7,9 +7,11 @@ import { amount, price, readableDates } from './format';
 export function forecastSource(published?: ReadyForecast) {
   const experimental = published?.interval.method === 'experimental_gdelt_scaled_quantiles';
   const executedRidge = experimental && !!published?.model_version.includes('-sha256-');
-  const label = executedRidge ? 'Ridge regression (executed repository artifact)' : experimental ? 'Last observed quote (persistence)'
+  // The decision-day model counts from today, and news moves its central price as well as its range.
+  const newsAware = !!published?.model_version.startsWith('ridge-decision-gdelt-');
+  const label = newsAware ? 'News-aware Ridge regression (executed)' : executedRidge ? 'Ridge regression (executed repository artifact)' : experimental ? 'Last observed quote (persistence)'
     : published?.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression (published)' : published ? 'Published model forecast' : 'Source-supplied estimate';
-  return { experimental, executedRidge, label };
+  return { experimental, executedRidge, newsAware, label };
 }
 
 /** Fine print: data sources, calculation notes, assumptions and policy limitations, each said once. */
@@ -27,7 +29,7 @@ export function DataSources({ impact, guidance, published }: { impact?: PlanAnal
       {forecast && <dl className="rec-sources">
         <div><dt>Estimate source</dt><dd>{label}</dd></div>
         {executedRidge && <div><dt>Ridge artifact SHA-256</dt><dd>{published!.model_version.split('-sha256-')[1]?.slice(0, 12)}…</dd></div>}
-        {executedRidge && <div><dt>Model horizon</dt><dd>{published!.horizon_days} days from {formatDate(published!.anchor_quote_date)}</dd></div>}
+        {executedRidge && <div><dt>Model horizon</dt><dd>{published!.horizon_days} days from {formatDate(published!.forecast_origin_date)}</dd></div>}
         {reference?.status === 'ready' && <div><dt>Reference price · {formatDate(reference.value.observation_date)}</dt><dd>{reference.value.basis.currency} {price(reference.value.price)}/{reference.value.basis.unit}</dd></div>}
         <div><dt>Estimate date</dt><dd>{formatDate(forecast.target_date)}</dd></div>
         {newsDate && <div><dt>News used</dt><dd>{formatDate(newsDate)} · UTC day</dd></div>}

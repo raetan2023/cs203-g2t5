@@ -363,6 +363,30 @@ it('uses each forecast on its real target date, defaults to the one nearest the 
   await waitFor(() => expect(screen.getByRole('button', { name: 'Accept and submit for approval' })).toBeEnabled());
 });
 
+it('counts the news-aware model from today, even with an old quote', async () => {
+  const forecasts = { read: async (h: 7 | 14 | 30) => h === 7
+    ? { status: 'unavailable' as const, reason: 'ridge_unavailable', message: 'Ridge is busy.' }
+    : { ...baseForecast(h), run_id: 'news-aware', anchor_quote_date: '2026-10-26', forecast_origin_date: staleToday, anchor_price: 1351.5,
+      target_date: addCalendarDays(staleToday, h), model_version: `ridge-decision-gdelt-${h}d-sha256-${'a'.repeat(64)}`, source_dates: { mgo: '2026-10-26', gdelt_estimated: '2026-11-05' },
+      interval: { ...baseForecast(h).interval, method: 'experimental_gdelt_scaled_quantiles' } } as ReadyForecast };
+  const service = liveService();
+  const read = vi.spyOn(service, 'read');
+  render(<ForecastProvider service={forecasts} scenarioDate={staleToday}>
+    <RecommendationsPage planId={stalePlan.plan_id} planService={createMockPlanService({ initialPlan: stalePlan, getScenarioDate: () => staleToday, delayMs: 0 })} service={service} scenarioDate={staleToday} />
+  </ForecastProvider>);
+  await waitFor(() => expect(read).toHaveBeenCalledWith(expect.anything(), 14, 'news-aware'));
+  expect(await screen.findByText('News-aware Ridge · experimental bounds')).toBeVisible();
+  const seven = screen.getByRole('button', { name: '7 days' });
+  expect(seven).toHaveAccessibleDescription(/Unavailable/);
+  expect(seven).not.toHaveAccessibleDescription(/Passed/);
+  expect(screen.getByRole('button', { name: '14 days' })).toHaveTextContent('Fri 20 Nov');
+  expect(screen.getByRole('button', { name: '30 days' })).toHaveAccessibleDescription(/After deadline/);
+  expect(screen.getByText(/Forecast dates count from today\./)).toBeVisible();
+  const notice = screen.getByRole('note', { name: 'Data freshness' });
+  expect(notice).toHaveTextContent('(11 days old)');
+  expect(notice).toHaveTextContent('which affect the model price and its range');
+});
+
 it('walks through the four calculation steps from the policy’s own signal', async () => {
   renderStale(staleAnalysis());
   const steps = await screen.findByRole('region', { name: 'How this was calculated' });

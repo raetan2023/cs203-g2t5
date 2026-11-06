@@ -39,10 +39,10 @@ class PurchaseForecastServiceTests {
             return tools.jackson.databind.json.JsonMapper.builder().build().readTree("""
                 {"status":"ready","horizon_days":%s,"unit":"USD/metric tonne","anchor_quote_date":"2026-10-25","as_of_date":"2026-10-26",
                  "anchor_price":%s,"forecast":850,"low":750,"high":950,"raw_q10_price":760,"raw_q90_price":940,
-                 "execution":"src.predict.predict:standardscaler+ridgecv","input_source":"supabase",
+                 "execution":"src.decision_ridge:standardscaler+ridgecv+gdelt","input_source":"supabase",
                  "artifact_sha256":"%s","input_snapshot":"%s","inference_snapshot":"%s",
                  "model_version":"ridge-%sd-executed","target_date":"%s"}
-                """.formatted(h, rows.stream().filter(r -> r.series().equals("SGP_MGO_OBSERVED") && r.date().equals(origin.minusDays(1))).map(r -> r.value().toPlainString()).findFirst().orElse("800"), "a".repeat(64), "b".repeat(64), "c".repeat(64), h, origin.minusDays(1).plusDays(h)));
+                """.formatted(h, rows.stream().filter(r -> r.series().equals("SGP_MGO_OBSERVED") && r.date().equals(origin.minusDays(1))).map(r -> r.value().toPlainString()).findFirst().orElse("800"), "a".repeat(64), "b".repeat(64), "c".repeat(64), h, origin.plusDays(h)));
         });
     }
     PurchaseForecastRepository.Observation row(String series, LocalDate date, double value) {
@@ -51,7 +51,7 @@ class PurchaseForecastServiceTests {
                 mgo ? "USD/MT" : series.equals("GDELT_ARTICLE_COUNT") ? "articles" : "tone",
                 mgo ? "USD" : null, date, BigDecimal.valueOf(value));
     }
-    @Test void yesterdayNewsWidensBoundsWithoutMovingPointOrDashboardAndPinsAcrossHorizons() {
+    @Test void newsWrapperWidensBoundsWithoutOverridingExecutedModelPointAndPinsAcrossHorizons() {
         Ready quiet = assertInstanceOf(Ready.class, service.read(7));
         assertNull(quiet.data().interval().nominal_coverage());
         assertNull(quiet.data().interval().empirical_coverage());
@@ -121,17 +121,6 @@ class PurchaseForecastServiceTests {
         assertEquals("stale_reference", assertInstanceOf(Unavailable.class, service.read(7)).reason());
     }
     @Test void guidanceAndCostsReadTheSameDataAndRejectAChangedNewsRun() {
-        // A same-day observed quote makes the executed quote-origin horizons current.
-        var predictions = new java.util.HashMap<Integer, tools.jackson.databind.JsonNode>();
-        for (int h : new int[] {7, 14, 30}) {
-            var prediction = ((tools.jackson.databind.node.ObjectNode) ridge.predict(h, origin)).deepCopy();
-            prediction.put("anchor_quote_date", origin.toString());
-            prediction.put("anchor_price", 850);
-            prediction.put("target_date", origin.plusDays(h).toString());
-            predictions.put(h, prediction);
-        }
-        rows.add(row("SGP_MGO_OBSERVED", origin, 850));
-        when(ridge.predict(anyInt(), eq(origin))).thenAnswer(call -> predictions.get(call.<Integer>getArgument(0)).deepCopy());
         var forecastService = mock(ForecastService.class);
         when(forecastService.today()).thenReturn(origin);
         var provider = new PublishedForecastAnalysisProvider(forecastService, service);
@@ -153,7 +142,7 @@ class PurchaseForecastServiceTests {
         var valid = (tools.jackson.databind.node.ObjectNode) ridge.predict(7, origin);
         for (String field : List.of("target_date", "unit", "artifact_sha256")) {
             var invalid = valid.deepCopy();
-            invalid.put(field, field.equals("target_date") ? origin.plusDays(7).toString() : "incompatible");
+            invalid.put(field, field.equals("target_date") ? origin.minusDays(1).plusDays(7).toString() : "incompatible");
             when(ridge.predict(7, origin)).thenReturn(invalid);
             assertEquals("invalid_ridge_response", assertInstanceOf(Unavailable.class, service.read(7)).reason());
         }

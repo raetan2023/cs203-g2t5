@@ -65,6 +65,18 @@ it('keeps both ends of a large range in one unit', () => {
   expect(screen.getByText('Range 0.85m–1.49m')).toBeVisible();
 });
 
+it('counts a model from its own origin, so an old quote alone never marks a date as passed', () => {
+  const fromToday = (h: Horizon) => ({ ...entry(h, 1000), forecast_origin_date: '2026-11-06', target_date: new Date(Date.parse('2026-11-06') + h * 86400000).toISOString().slice(0, 10) });
+  render(<CompareBuyingDates entries={[{ horizon: 7, message: 'News missing.' }, { horizon: 14, forecast: fromToday(14) }, { horizon: 30, forecast: fromToday(30) }]}
+    quantity={10} today="2026-11-06" deadline="2026-12-20" recommended={[]} onSelect={() => {}} />);
+  const seven = screen.getByRole('button', { name: '7 days' });
+  expect(within(seven).getByText('Fri 13 Nov')).toBeVisible();
+  expect(seven).toHaveAccessibleDescription(/Unavailable/);
+  expect(seven).not.toHaveAccessibleDescription(/Passed/);
+  expect(within(screen.getByRole('button', { name: '14 days' })).getByText('Fri 20 Nov')).toBeVisible();
+  expect(screen.getByText(/Forecast dates count from today\./)).toBeVisible();
+});
+
 it('treats a forecast whose target has arrived as passed, even if one is returned', () => {
   const columns = buildColumns([{ horizon: 7, forecast: entry(7, 980) }], '2026-11-02', '2026-11-26');
   expect(columns[1]).toMatchObject({ date: '2026-11-02', past: true, forecast: undefined });

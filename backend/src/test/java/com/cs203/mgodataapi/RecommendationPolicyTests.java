@@ -99,4 +99,16 @@ class RecommendationPolicyTests {
         assertNull(result.evidence().supported_target_date());
         assertNull(result.evidence().alternative_cost_usd());
     }
+
+    @Test void newsAwareCentralEstimatesDriveTimingDespiteOldReferenceAndWideRanges() {
+        for (String point : new String[] {"695", "745"}) {
+            var source = prices(14, point);
+            var f = source.forecast().value();
+            var news = new Forecast(new Range(new BigDecimal("600"), new BigDecimal("900")), f.target_date(),
+                    basis, "Experimental range", "14 days", f.central_estimate(), UUID.randomUUID(), "ridge-decision-gdelt-14d-sha256-test");
+            var dated = new Prices(date, Result.ready(new Reference(new BigDecimal("720"), date.minusDays(11), basis)), Result.ready(news));
+            assertEquals(point.equals("695") ? "WAIT" : "BUY_NOW", RecommendationPolicy.evaluate(context(20), dated).action());
+            assertEquals("BUY_NOW", RecommendationPolicy.evaluate(context(3), dated).action());
+        }
+    }
 }
