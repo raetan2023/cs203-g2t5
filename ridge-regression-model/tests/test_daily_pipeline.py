@@ -124,7 +124,7 @@ def test_workflow_is_opt_in_and_pins_daily_schedule():
     workflow = (pipeline.ROOT / ".github/workflows/daily-forecasts.yml").read_text()
     assert "17 0 * * *" in workflow and "DAILY_FORECASTS_ENABLED" in workflow
     assert "publish:" in workflow and "default: false" in workflow
-    assert "contents: read" in workflow and "--retrain" in workflow
+    assert "contents: read" in workflow and "--require-completed-gdelt" in workflow
 
 
 def test_latest_bundle_ignores_only_missing_manifest_not_storage_failure():
