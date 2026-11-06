@@ -3,7 +3,7 @@ import { formatDate } from '../purchase-plan/dates';
 import { WarningIcon } from './TimingComparison';
 
 /** Keep related news limitations together without hiding either the date or estimated provenance. */
-export function NewsDataNotice({ sourceDates }: { sourceDates?: ReadyForecast['source_dates'] }) {
+export function NewsDataNotice({ sourceDates, affectsCentral = false }: { affectsCentral?: boolean; sourceDates?: ReadyForecast['source_dates'] }) {
   const older = sourceDates?.gdelt_fallback;
   const estimated = sourceDates?.gdelt_estimated;
   if (!older && !estimated) return null;
@@ -18,7 +18,7 @@ export function NewsDataNotice({ sourceDates }: { sourceDates?: ReadyForecast['s
     <WarningIcon />
     <div>
       <h2>{older && estimated ? 'Using older, estimated news data' : older ? 'Using the last available news data' : 'Using estimated news data'}</h2>
-      <p>{news}{separateEstimate}{estimated && ' These estimates affect the experimental price range, not the Ridge central estimate.'}{older && ' News older than seven days is excluded.'} Confirm a current supplier quote before buying.</p>
+      <p>{news}{separateEstimate}{estimated && (affectsCentral ? ' These estimated news inputs affect the model price and its range.' : ' These estimates affect the experimental price range, not the Ridge central estimate.')}{older && ' News older than seven days is excluded.'} Confirm a current supplier quote before buying.</p>
     </div>
   </section>;
 }

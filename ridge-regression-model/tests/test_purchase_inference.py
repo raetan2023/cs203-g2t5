@@ -89,13 +89,20 @@ def test_expired_targets_are_not_relabelled_as_today_plus_h(h, database_rows):
 
 def test_private_subprocess_contract_runs_real_model(database_rows, purchase_wide):
     root = Path(__file__).resolve().parents[1]
+    rows = list(database_rows)
+    for i, day in enumerate(pd.date_range('2026-05-20', '2026-10-25')):
+        for key, unit, value in [('GDELT_ARTICLE_COUNT', 'articles', 1000+i), ('GDELT_AVERAGE_TONE', 'tone', -2+(i % 5)/10)]:
+            rows.append({'series': key, 'source': 'GDELT', 'unit': unit, 'date': str(day.date()),
+                         'value': value, 'value_type': 'OBSERVED'})
     result = subprocess.run([sys.executable, '-m', 'src.purchase_inference'], cwd=root,
-        input=json.dumps({'horizon_days': 30, 'as_of_date': '2026-10-26', 'observations':database_rows}),
+        input=json.dumps({'horizon_days': 30, 'as_of_date': '2026-10-26', 'observations': rows}),
         text=True, capture_output=True, check=True, timeout=25)
     response = json.loads(result.stdout)
-    assert response['status'] == 'ready'
-    assert response['execution'] == 'src.predict.predict:standardscaler+ridgecv'
-    assert response['forecast'] == predict(30, '2026-10-26', wide=purchase_wide)['forecast']
+    assert response['status'] == 'ready', response
+    assert response['execution'] == 'src.decision_ridge:standardscaler+ridgecv+gdelt'
+    assert response['target_date'] == '2026-11-25'
+    assert response['source_dates']['gdelt'] == '2026-10-25'
+    assert response['evaluation']['training_rows'] >= 30
 
 
 def test_serving_adapter_requires_database_snapshot_instead_of_using_csv():

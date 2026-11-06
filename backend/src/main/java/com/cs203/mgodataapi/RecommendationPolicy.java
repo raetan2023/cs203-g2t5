@@ -88,6 +88,15 @@ public final class RecommendationPolicy {
             limitations.add("Weighted uncertainty bounds are a descriptive signal, not a calibrated confidence interval.");
             if (reference != null && signal.compareTo(reference.price()) < 0) best = nearest;
         }
+        // Current news-aware Ridge results may use dated observed references, as disclosed.
+        // The requested estimate-based policy uses the centre for timing, not range overlap.
+        boolean estimateDriven = candidates.stream().filter(Objects::nonNull)
+                .filter(p -> c.scenario_as_of_date().equals(p.scenario_as_of_date()))
+                .filter(p -> p.forecast() != null && "ready".equals(p.forecast().status()))
+                .map(p -> p.forecast().value())
+                .anyMatch(f -> f.model_version() != null && f.model_version().startsWith("ridge-decision-gdelt-")
+                        && reference != null && validForecast(f, reference, c));
+        if (estimateDriven) limitations.add("Timing uses the news-aware Ridge central estimate, including when the reference is dated. Wide ranges and quote age remain limitations, not automatic Monitor overrides.");
         String action, summary;
         BigDecimal chosen = null, difference = null, width = null;
         java.time.LocalDate target = null;
@@ -116,7 +125,7 @@ public final class RecommendationPolicy {
                 boolean overlaps = signalLow.compareTo(reference.price()) <= 0 && signalHigh.compareTo(reference.price()) >= 0;
                 boolean conflicting = signal.compareTo(reference.price()) < 0 ? signalHigh.compareTo(reference.price()) >= 0
                         : signalLow.compareTo(reference.price()) <= 0;
-                if (conflicting) {
+                if (conflicting && !estimateDriven) {
                     action = "MONITOR";
                     summary = overlaps ? "Monitor prices. The weighted uncertainty range overlaps today's price, so the buying direction is uncertain."
                             : "Monitor prices. The point signal and uncertainty range disagree on price direction.";
@@ -124,7 +133,7 @@ public final class RecommendationPolicy {
                     reasons.add("Review fresh prices before committing; do not wait beyond " + c.purchase_deadline() + ".");
                 }
             }
-            if (age > 7) {
+            if (age > 7 && !estimateDriven) {
                 action = "MONITOR";
                 summary = "Monitor and obtain a current supplier quote. The reference price is too old for timing advice.";
                 target = null;
