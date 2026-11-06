@@ -120,7 +120,7 @@ export function ClerkApp() {
     () => createApiPlanService({ getToken: getContextToken }), [getContextToken],
   );
   const createForecastService = useCallback(
-    () => createApiForecastService({ getToken: () => authState.getToken() }),
+    () => createApiForecastService({ getToken: () => authState.getToken(), path: '/api/v1/purchase-plans/forecast' }),
     [authState.getToken],
   );
   const createPurchaseForecastService = useCallback(
