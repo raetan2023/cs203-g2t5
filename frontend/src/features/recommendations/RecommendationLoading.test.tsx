@@ -21,9 +21,24 @@ const step = (n: number) => screen.getAllByRole('listitem')[n - 1];
 const tick = (steps: number) => { for (let i = 0; i < steps; i++) act(() => { vi.advanceTimersByTime(STEP_DWELL_MS); }); };
 const status = () => within(screen.getByText('Working out your recommendation').parentElement!).getByRole('status');
 
+const stops = (container: HTMLElement) => [...container.querySelectorAll<HTMLElement>('.rec-lc-label')]
+  .slice(1).map(label => Number(/calc\(var\(--rec-lc-start\) \+ ([\d.]+) /.exec(label.style.left)![1]));
+
 afterEach(() => { vi.useRealTimers(); });
 
 describe('recommendation loading', () => {
+  it('spaces the chart evenly, so a far deadline never crushes the forecasts into Today', () => {
+    const { container } = render(<RecommendationLoading entries={entries} today={TODAY} deadline="2026-07-06" onRetry={() => {}} />);
+    expect(stops(container)).toEqual([.25, .5, .75]);
+    expect((container.querySelector('.rec-lc-deadline') as HTMLElement).style.left).toContain('1.000');
+  });
+
+  it('keeps stops in date order when the deadline falls between forecasts', () => {
+    const { container } = render(<RecommendationLoading entries={entries} today={TODAY} deadline={DEADLINE} onRetry={() => {}} />);
+    expect(stops(container)).toEqual([.25, .75, 1]);
+    expect((container.querySelector('.rec-lc-deadline') as HTMLElement).style.left).toContain('0.500');
+  });
+
   it('finishes steps one at a time with details from the loaded forecasts, then waits on step 5', () => {
     vi.useFakeTimers();
     render(<RecommendationLoading entries={entries} today={TODAY} deadline={DEADLINE} onRetry={() => {}} />);

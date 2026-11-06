@@ -96,36 +96,38 @@ function useElapsed() {
   return [elapsed, () => { start.current = Date.now(); setElapsed(0); }] as const;
 }
 
-/** Today's quote, the deadline and each forecast range, drawn on a shared date/price scale as steps finish. */
+/**
+ * Today's quote, the deadline and each forecast range, drawn as steps finish. Dates are evenly spaced stops in date order,
+ * not a true time axis: with a far deadline, real spacing would crush Today and the forecasts together.
+ */
 function LoadingChart({ anchor, columns, today, deadline, done }: {
   anchor: ReadyForecast; columns: ReturnType<typeof buildColumns>; today: string; deadline: string; done: number;
 }) {
-  const t0 = Date.parse(today), dl = Date.parse(deadline);
-  const t1 = Math.max(dl, ...columns.map(c => Date.parse(c.date!)), t0 + 86_400_000);
+  const showDeadline = deadline > today;
+  const stops = [...new Set([today, ...columns.map(c => c.date!), ...(showDeadline ? [deadline] : [])])].sort();
   // The span is a CSS variable so narrow screens can leave room for the right-aligned "Today's price" label.
-  const frac = (t: number) => (t - t0) / (t1 - t0);
-  const x = (t: number) => `calc(6% + ${frac(t).toFixed(3)} * var(--rec-lc-span))`;
+  const frac = (date: string) => stops.length > 1 ? stops.indexOf(date) / (stops.length - 1) : 0;
+  const x = (date: string) => `calc(var(--rec-lc-start) + ${frac(date).toFixed(3)} * var(--rec-lc-span))`;
   const values = [anchor.anchor_price, ...columns.flatMap(c => [c.low, c.high])];
   const lo = Math.min(...values), hi = Math.max(...values), pad = (hi - lo) * 0.08 || anchor.anchor_price * 0.02;
   const y = (v: number) => 150 - (v - (lo - pad)) / (hi - lo + 2 * pad) * 130;
   const todayY = y(anchor.anchor_price);
-  const showDeadline = dl > t0;
 
   return <>
     <span className="rec-lc-price" data-on={done >= 4} style={{ top: todayY }} />
     <span className="rec-lc-price-label" data-on={done >= 4} style={{ top: todayY - 20 }}>Today’s price</span>
     {showDeadline && <>
-      <span className="rec-lc-deadline" data-on={done >= 3} style={{ left: x(dl) }} />
-      <span className={`rec-lc-deadline-label${frac(dl) > .6 ? ' rec-lc-deadline-label--left' : ''}`} data-on={done >= 3} style={{ left: x(dl) }}>Deadline · {dayDate(deadline)}</span>
+      <span className="rec-lc-deadline" data-on={done >= 3} style={{ left: x(deadline) }} />
+      <span className={`rec-lc-deadline-label${frac(deadline) > .6 ? ' rec-lc-deadline-label--left' : ''}`} data-on={done >= 3} style={{ left: x(deadline) }}>Deadline · {dayDate(deadline)}</span>
     </>}
     <span className="rec-lc-today" data-on={done >= 1} style={{ top: todayY }} />
-    <span className="rec-lc-label" data-on={done >= 1} style={{ left: '6%' }}>Today</span>
+    <span className="rec-lc-label" data-on={done >= 1} style={{ left: 'var(--rec-lc-start)' }}>Today</span>
     {columns.map((c, i) => {
       const late = done >= 3 && c.late, fits = done >= 4 && !c.late;
       return <span key={c.id}>
         <span className={`rec-lc-bar${late ? ' rec-lc-bar--late' : ''}${fits ? ' rec-lc-bar--fits' : ''}`} data-on={done >= 2}
-          style={{ left: x(Date.parse(c.date!)), top: y(c.high), height: Math.max(4, y(c.low) - y(c.high)), transitionDelay: `${i * 0.18}s` }} />
-        <span className="rec-lc-label" data-on={done >= 2} data-late={late} style={{ left: x(Date.parse(c.date!)), transitionDelay: `${i * 0.18}s` }}>{c.label}</span>
+          style={{ left: x(c.date!), top: y(c.high), height: Math.max(4, y(c.low) - y(c.high)), transitionDelay: `${i * 0.18}s` }} />
+        <span className="rec-lc-label" data-on={done >= 2} data-late={late} style={{ left: x(c.date!), transitionDelay: `${i * 0.18}s` }}>{c.id}<span className="rec-lc-unit"> days</span><span className="rec-lc-unit-short">d</span></span>
       </span>;
     })}
   </>;
