@@ -2,6 +2,8 @@
 
 **Updated:** 2026-10-28. Read [Start here](../handover.md#start-here) first.
 
+**Update, 2026-11-06:** the page owner rebuilt `/market-dashboard` from `assets/inspo/mkt-dashboard-page/Market dashboard – reworked-html/` on `revamp/market-dashboard`. That mock replaces `market-proposal.html` as the design, so the sections below are history. The forecast shows all three horizons at once, "How this forecast was made" sits on the page, and drivers, coverage and provenance moved to the PDF report. "Your plans" is not in this design. Layout check: `npm run test:market-layout`.
+
 **Backend update, 2026-10-29:** see [`plan-lifecycle-api.md`](../plan-lifecycle-api.md).
 New lifecycle statuses and previous-plan links are implemented, with shared
 migrations applied and lifecycle UI connected on `backend-plan-lifecycle`. For "Your plans", use the existing list's status and
