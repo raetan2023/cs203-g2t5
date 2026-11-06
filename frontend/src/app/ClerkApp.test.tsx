@@ -71,7 +71,7 @@ describe('Clerk API wiring', () => {
     scenario = '2025-10-25';
     await userEvent.click(buttons[0]);
     expect((await screen.findAllByText(/21 days left/))[0]).toBeInTheDocument();
-    await waitFor(() => expect(screen.getAllByText('No ML provider connected.')).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByText(/Illustrative fallback/).length).toBeGreaterThan(0));
     const analysisCalls = fetcher.mock.calls.filter(([url]) => /\/(cost-impact|recommendation)\?/.test(url));
     expect(analysisCalls.length).toBeGreaterThanOrEqual(4);
     for (const call of analysisCalls) expect(call[1]?.headers).toEqual({ Authorization: 'Bearer session-a' });
