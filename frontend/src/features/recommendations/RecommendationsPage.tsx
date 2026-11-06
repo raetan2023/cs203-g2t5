@@ -11,7 +11,8 @@ import { DataNotice } from './DataNotice';
 import { CalculationSteps } from './CalculationSteps';
 import { CompareBuyingDates, buildColumns, useHorizonComparison, type Column, type ColumnId, type Entry } from './TimingComparison';
 import { DataSources, forecastSource } from './PurchaseImpact';
-import { downloadReportPdf, type ReportSection } from './reportPdf';
+import { downloadReportPdf } from './reportPdf';
+import { buildRecommendationReport, reportFilename } from './recommendationReport';
 import { actionLabel, amount, change, changeRange, dayDate, perMt, readableDates, usd } from './format';
 import './recommendations.css';
 import type { Horizon, ReadyForecast } from '../forecast/apiService';
@@ -177,7 +178,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
   </div>;
   const forecastTile = viewingTile || (waitTarget && impactReady?.target_date === waitTarget ? undefined : impactTile);
   const refresh = connected && <button type="button" className="bb-button bb-button--secondary rec-refresh" onClick={onRefresh}><RefreshIcon />Refresh prices</button>;
-  const download = () => downloadReportPdf(`recommendation-report-mock-${plan.scenario_as_of_date}.pdf`, 'Recommendation report (mock)', reportSections(plan, guidance!, analysis!, buyNow, costDetail));
+  const download = () => downloadReportPdf(reportFilename(plan), buildRecommendationReport({ plan, guidance: guidance!, analysis: analysis!, columns, buyNow, costDetail, demo }));
 
   return <div className="rec-flow">
     <section className="rec-answer" aria-label="Recommendation" aria-busy={preparing || g.loading}>
@@ -252,25 +253,11 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
       </div>
       <div className="rec-report">
         <h3><DocumentIcon />Full report (PDF)</h3>
-        <p>A simple mock for now: the recommendation, its reasons, the assumptions and the model version. It isn’t sent to managers yet.</p>
+        <p>Download a planning copy with the recommended action, cost estimates, and supporting evidence. Manager approval is recorded separately.</p>
         <button type="button" className="bb-button bb-button--secondary" disabled={!guidance || !analysis} onClick={download}>Download report</button>
       </div>
     </section>
   </div>;
-}
-
-/** Plain text for the mock report, taken from the same analysis the page shows. */
-function reportSections(plan: PurchasePlan, guidance: CurrentRecommendation, analysis: PlanAnalysis, buyNow: number | undefined, costDetail: string | undefined): ReportSection[] {
-  const evidence = guidance.evidence;
-  const forecast = analysis.forecast.status === 'ready' ? analysis.forecast.value : undefined;
-  return [
-    { heading: 'Mock report', lines: ['This is a simple mock for review. It is not a formal record and is not sent to managers.'] },
-    { heading: 'Recommendation', lines: [actionLabel(guidance.action), readableDates(guidance.explanation)] },
-    { heading: 'Plan', lines: [`Quantity: ${amount(plan.quantity_mt)} MT`, `Deadline: ${dayDate(plan.purchase_deadline, true)}`, `Planning date: ${dayDate(plan.scenario_as_of_date, true)}`,
-      ...(buyNow != null ? [`Buy today: ${usd(buyNow)}`] : []), ...(costDetail ? [`Cost detail: ${costDetail}`] : [])] },
-    ...(evidence ? [{ heading: 'Reasons', lines: evidence.reasons.map(readableDates) }, { heading: 'Assumptions and limitations', lines: evidence.limitations.map(readableDates) }] : []),
-    { heading: 'Sources', lines: [...(evidence ? [`Policy: ${evidence.policy_version}`] : []), ...(forecast?.model_version ? [`Model: ${forecast.model_version}`] : []), ...(forecast?.run_id ? [`Run: ${forecast.run_id}`] : [])] },
-  ];
 }
 
 function tagline(guidance: CurrentRecommendation, plan: PurchasePlan) {
