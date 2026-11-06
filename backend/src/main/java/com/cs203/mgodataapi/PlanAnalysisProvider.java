@@ -25,7 +25,10 @@ public interface PlanAnalysisProvider {
             BigDecimal buy_now_cost_usd, BigDecimal alternative_cost_usd, BigDecimal alternative_minus_now_usd,
             Long reference_age_days, LocalDate supported_target_date, String horizon_description,
             java.util.List<String> reasons, java.util.List<String> limitations,
-            java.util.List<Allocation> allocations) {}
+            java.util.List<Allocation> allocations, BigDecimal signal_price, BigDecimal signal_low,
+            BigDecimal signal_high, java.util.List<SignalInput> signal_inputs) {}
+    /** One forecast in the weighted signal, so clients need not parse the reason text. */
+    record SignalInput(LocalDate target_date, BigDecimal weight, BigDecimal price) {}
     record Guidance(String recommendation_id, String action, String explanation, Evidence evidence) {
         public Guidance(String id, String action, String explanation) { this(id, action, explanation, null); }
     }

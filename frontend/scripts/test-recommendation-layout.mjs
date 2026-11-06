@@ -52,7 +52,7 @@ try {
   });
   await page.goto(new URL('/__recommendation-layout__', server.resolvedUrls.local[0]).href);
   await page.getByRole('heading', { name: 'Monitor', exact: true }).waitFor();
-  assert.equal(await page.getByRole('note', { name: 'News data limitations' }).count(), 1);
+  assert.equal(await page.getByRole('note', { name: 'Data freshness' }).count(), 1);
   for (const width of [1920, 1440, 1280, 1024, 768, 600, 390, 320]) {
     await page.setViewportSize({ width, height: 1100 });
     for (const expanded of [false, true]) {
@@ -64,21 +64,17 @@ try {
         };
         const back = document.querySelector('.rec-header > a').getBoundingClientRect();
         const notice = document.querySelector('.recommendations > .rec-notice').getBoundingClientRect();
-        return { backHeight: back.height, noticeGap: document.querySelector('.rec-layout').getBoundingClientRect().top - notice.bottom, scrollWidth: document.documentElement.scrollWidth, answer: rect('.rec-answer'), rail: rect('.rec-rail'), evidence: rect('.rec-evidence'),
-          overflow: [...document.querySelectorAll('.recommendations button, .rec-tile-value, .rec-detail-grid dd, .rec-col-values strong, .rec-rail-facts dd')].filter(el => el.getClientRects().length && (el.getBoundingClientRect().right > innerWidth + 1 || el.scrollWidth > el.clientWidth + 2)).map(el => el.textContent) };
+        return { backHeight: back.height, noticeGap: document.querySelector('.rec-flow').getBoundingClientRect().top - notice.bottom, scrollWidth: document.documentElement.scrollWidth, answer: rect('.rec-answer'), compare: rect('.rec-compare'), summary: rect('.rec-summary'), evidence: rect('.rec-evidence'),
+          overflow: [...document.querySelectorAll('.recommendations button, .rec-tile-value, .rec-detail-grid dd, .rec-col-values strong, .rec-summary-facts dd')].filter(el => el.getClientRects().length && (el.getBoundingClientRect().right > innerWidth + 1 || el.scrollWidth > el.clientWidth + 2)).map(el => el.textContent) };
       });
       assert.ok(layout.backHeight >= 44, 'back link has a comfortable hit target');
       assert.ok(layout.noticeGap >= 24, 'news notice is separated from the answer');
       assert.ok(layout.scrollWidth <= width, `page overflow at ${width}px, expanded=${expanded}`);
       assert.deepEqual(layout.overflow, [], `content overflow at ${width}px`);
-      if (width > 1050) {
-        assert.equal(layout.answer.y, layout.rail.y, 'desktop answer and decision rail share a row');
-        assert.ok(layout.rail.x >= layout.answer.right - 1, 'desktop rail does not overlap the answer');
-        assert.ok(layout.answer.y < 400, 'the recommendation is the first thing on the page');
-      } else {
-        assert.ok(layout.rail.y >= layout.answer.bottom - 1, 'narrow: decision rail follows the answer');
-        assert.ok(layout.evidence.y >= layout.rail.bottom - 1, 'narrow: evidence follows the decision rail');
-      }
+      if (width > 1050) assert.ok(layout.answer.y < 500, 'the recommendation is the first thing on the page');
+      assert.ok(layout.compare.y >= layout.answer.bottom - 1, 'the comparison follows the answer');
+      assert.ok(layout.evidence.y >= layout.compare.bottom - 1, 'the method follows the comparison');
+      assert.ok(layout.summary.y >= layout.evidence.bottom - 1, 'the decision closes the page');
       console.log('PASS ' + width + 'px / details ' + (expanded ? 'open' : 'closed'));
     }
     if (process.env.LAYOUT_SCREENSHOT_DIR && [1440, 390].includes(width)) {
@@ -87,10 +83,10 @@ try {
       await page.screenshot({ path: process.env.LAYOUT_SCREENSHOT_DIR + '/recommendation-' + width + '.png', fullPage: true });
     }
   }
-  assert.match(await page.locator('.rec-tile-value').nth(1).innerText(), /USD 11\.87bn–13\.72bn/);
+  assert.match(await page.locator('.rec-tile-value').nth(1).innerText(), /USD 11,874,658,922–13,715,504,613/);
   await page.getByRole('button', { name: '14 days', exact: true }).click();
   await page.waitForFunction(() => document.querySelector('.rec-col[aria-pressed="true"]')?.textContent.includes('14 days'));
-  assert.match(await page.locator('.rec-detail h2').innerText(), /Tue 10 Nov \(14 days\)/);
+  await page.getByText('If you buy Tue 10 Nov · 14-day forecast').waitFor();
   const late = page.getByRole('button', { name: '30 days', exact: true });
   assert.equal(await late.isDisabled(), false, 'late targets stay explorable');
   assert.match(await late.getAttribute('aria-describedby').then(ids => page.evaluate(ids => ids.split(' ').map(id => document.getElementById(id).textContent).join(' '), ids)), /After deadline/);
@@ -102,7 +98,7 @@ try {
   await page.keyboard.press('Enter');
   assert.equal(await page.getByText('Experimental; no guaranteed savings.', {exact: true}).isVisible(), true);
   assert.deepEqual(errors, []);
-  console.log('PASS column selection, deadline guard, single recommendation, disclosure and billion-dollar formatting');
+  console.log('PASS date selection, deadline guard, single recommendation, disclosure and very large totals');
 } finally {
   await browser?.close();
   await server.close();

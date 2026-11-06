@@ -27,6 +27,19 @@ describe('shared forecast state', () => {
     await waitFor(() => expect(service.read).toHaveBeenCalledTimes(3));
   });
 
+  it('keeps a good result on screen during a refresh, and only then replaces it', async () => {
+    let finish!: (value: Forecast) => void;
+    const read = vi.fn<ForecastService['read']>(async h => buildMockForecast(h) as ReadyForecast);
+    render(<ForecastProvider service={{ read }} scenarioDate="2026-10-26"><Consumer /></ForecastProvider>);
+    expect(await screen.findByText('success:7:')).toBeVisible();
+    read.mockReturnValueOnce(new Promise<Forecast>(resolve => { finish = resolve; }));
+    fireEvent.click(screen.getByText('Retry'));
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(2));
+    expect(screen.getByText('success:7:')).toBeVisible();
+    await act(async () => finish(unavailable('refreshed')));
+    expect(screen.getByText('success:7:refreshed')).toBeVisible();
+  });
+
   it('discards late responses from old horizons and old sessions, including retries', async () => {
     const resolvers: ((value: Forecast) => void)[] = [];
     const service: ForecastService = { read: vi.fn(() => new Promise<Forecast>(resolve => resolvers.push(resolve))) };

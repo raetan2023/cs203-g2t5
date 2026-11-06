@@ -9,7 +9,7 @@ import './preview.css';
 import { buildMockForecast } from '../features/forecast/mockService';
 import ForecastWidget from '../features/forecast/ForecastWidget';
 import type { ReadyForecast } from '../features/forecast/apiService';
-import { createScenarioForecastService, createScenarioRecommendationService, PREVIEW_BUYER, PREVIEW_MANAGER, previewDecisionPlans, scenarioPlan, SCENARIO_DATE, withPreviewApproval, type RecommendationScenario } from './recommendationScenarios';
+import { createScenarioForecastService, createScenarioRecommendationService, PREVIEW_BUYER, PREVIEW_MANAGER, previewDecisionPlans, scenarioDate as dateFor, scenarioPlan, SCENARIO_DATE, withPreviewApproval, type RecommendationScenario } from './recommendationScenarios';
 import type { PurchasePlanService } from '../features/purchase-plan/types';
 import type { OrganisationPermissions } from '../features/organisation/apiService';
 import type { MgoQuote } from '../features/home/marketQuote';
@@ -17,7 +17,7 @@ function PreviewMarketDashboard() { return <main><ForecastWidget /></main>; }
 
 const examples = {
   market: 'Market dashboard - synthetic forecast',
-  'rec-monitor': 'Recommendation - Monitor (8-day plan)', 'rec-buy': 'Recommendation - Buy now (33-day plan)', 'rec-wait': 'Recommendation - Wait (33-day plan)',
+  'rec-stale': 'Recommendation - Monitor, 11-day-old quote (888 MT)', 'rec-monitor': 'Recommendation - Monitor (8-day plan)', 'rec-buy': 'Recommendation - Buy now (33-day plan)', 'rec-wait': 'Recommendation - Wait (33-day plan)',
   'rec-awaiting': 'Approval - awaiting manager (buyer)', 'rec-review': 'Approval - manager review (manager)', 'rec-approved': 'Approval - approved (buyer)', 'rec-rejected': 'Approval - rejected (buyer)',
   'rec-withdrawn': 'Approval - withdrawn (buyer)', 'rec-purchased': 'Purchase - recorded (buyer)',
   'rec-admin': 'Recommendation - Wait, read-only (admin)', 'rec-admin-awaiting': 'Approval - awaiting manager (admin)',
@@ -33,7 +33,7 @@ const examples = {
 };
 type Example = keyof typeof examples;
 const publicExamples = ['login', 'signup', 'login-error', 'signup-error'];
-const recommendationScenarios: Partial<Record<Example, RecommendationScenario>> = { 'rec-monitor': 'monitor', 'rec-buy': 'buy', 'rec-wait': 'wait',
+const recommendationScenarios: Partial<Record<Example, RecommendationScenario>> = { 'rec-stale': 'stale', 'rec-monitor': 'monitor', 'rec-buy': 'buy', 'rec-wait': 'wait',
   'rec-awaiting': 'wait', 'rec-review': 'wait', 'rec-approved': 'wait', 'rec-rejected': 'wait', 'rec-withdrawn': 'wait', 'rec-purchased': 'wait',
   'rec-admin': 'wait', 'rec-admin-awaiting': 'wait' };
 const approvalStarts: Partial<Record<Example, 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased'>> = { 'rec-awaiting': 'submitted', 'rec-review': 'submitted', 'rec-approved': 'approved', 'rec-rejected': 'rejected', 'rec-withdrawn': 'withdrawn', 'rec-purchased': 'purchased', 'rec-admin-awaiting': 'submitted' };
@@ -70,7 +70,8 @@ export function PreviewApp() {
   function select(next: Example) {
     navigate(next === 'market' ? '/market-dashboard' : next.startsWith('rec-') ? `/purchase-plans/recommendation?plan_id=${RECOMMENDATION_DEMO_PLAN.plan_id}` : next.startsWith('signup') ? '/signup' : publicExamples.includes(next) ? '/login' : next.startsWith('home') || ['session-error', 'logout-error'].includes(next) ? '/home' : '/purchase-plans', true);
     setExample(next); setRevision(value => value + 1);
-    setScenarioDate(recommendationScenarios[next] || next === 'plans-decisions' ? SCENARIO_DATE : DEMO_SCENARIO_DATE);
+    const scenarioFor = recommendationScenarios[next];
+    setScenarioDate(scenarioFor ? dateFor(scenarioFor) : next === 'plans-decisions' ? SCENARIO_DATE : DEMO_SCENARIO_DATE);
   }
 
   return <>

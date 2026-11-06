@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ReadyForecast } from '../forecast/apiService';
 import { ForecastProvider } from '../forecast/ForecastContext';
@@ -99,6 +99,8 @@ it('shows progress while live forecasts back the request and swaps in the answer
   const answer = await screen.findByRole('region', { name: 'Recommendation' });
   expect(await within(answer).findByText('Working out your recommendation')).toBeVisible();
   expect(answer).toHaveAttribute('aria-busy', 'true');
+  // The loader starts before the request: the page first settles on the default date.
+  await waitFor(() => expect(service.read).toHaveBeenCalled());
   const body = await mock.read(plan, 7, 'synthetic-preview');
   if (body.forecast.status === 'ready') body.forecast.value.target_date = '2025-10-31';
   await act(async () => resolve(body));
