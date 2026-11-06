@@ -62,8 +62,12 @@ try {
       assert.equal(await page.locator('.purchase-plan').evaluate(el => getComputedStyle(el).animationName), 'bb-page-enter');
       await home();
     }
-    assert.equal(await page.getByRole('navigation').count(), 0);
-    assert.equal(await page.locator('.bb-header').count(), 0);
+    // The header sits over the photo link: this destination differs from the photo's, so a covered header fails here.
+    await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Decision history' }).click();
+    await page.waitForURL('**/purchase-plans/decisions');
+    await page.getByRole('link', { name: 'Bunker Buddy home' }).click();
+    await page.waitForURL('**/home');
+    assert.equal(await page.getByRole('button', { name: 'Sign out' }).isVisible(), true);
     await page.getByRole('link', { name: /Open market dashboard/ }).click();
     await page.getByRole('heading', { name: 'Synthetic market dashboard' }).waitFor();
     assert.match(page.url(), /\/market-dashboard$/);
@@ -83,9 +87,10 @@ try {
       await page.setViewportSize({ width, height: 1000 });
       await page.goto(new URL(`/__home-navigation__?role=${role}`, origin).href);
       await page.getByRole('heading', { level: 1 }).waitFor();
-      assert.equal(await page.getByRole('navigation').count(), 0);
-      assert.equal(await page.locator('.bb-header').count(), 0);
-      await page.getByRole('link', { name: 'Market dashboard', exact: true }).click();
+      assert.equal(await page.getByRole('navigation', { name: 'Main navigation' }).isVisible(), true);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      if (process.env.LAYOUT_SCREENSHOT_DIR) await page.screenshot({ path: `${process.env.LAYOUT_SCREENSHOT_DIR}/home-${role.replace('org:', '')}-${width}.png` });
+      await page.getByRole('main').getByRole('link', { name: 'Market dashboard', exact: true }).click();
       await page.getByRole('heading', { name: 'Synthetic market dashboard' }).waitFor();
       const nav = page.getByRole('navigation', { name: 'Main navigation' });
       assert.equal(await nav.getByRole('link', { name: 'Decision history' }).count(), role === 'org:officer' ? 1 : 0);
