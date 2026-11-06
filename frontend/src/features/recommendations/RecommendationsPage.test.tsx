@@ -7,14 +7,28 @@ import { RecommendationsPage } from './RecommendationsPage';
 import { createMockRecommendationService, RECOMMENDATION_DEMO_PLAN as plan } from './mockService';
 import { createMockPlanService } from '../purchase-plan/mockService';
 import type { PlanAnalysis } from '../purchase-plan/types';
+import { addCalendarDays } from '../purchase-plan/dates';
 
 // Match the plan's scenario; the shared dashboard fixture uses a different year.
 const buildMockForecast = (h: 7 | 14 | 30) => ({ ...baseForecast(h),
   anchor_quote_date: '2025-10-22', forecast_origin_date: '2025-10-22',
-  target_date: new Date(Date.parse('2025-10-22') + h * 86_400_000).toISOString().slice(0, 10) });
+  target_date: addCalendarDays(plan.scenario_as_of_date, h) });
 
 const plans = () => createMockPlanService({ initialPlan: plan, delayMs: 0 });
 const ready = () => createMockRecommendationService({ delayMs: 0 });
+const livePlan = { ...plan, purchase_deadline: '2025-11-05', days_remaining: 12 };
+// Connected fixtures must use the same date in publication, analysis and costs.
+function liveService() {
+  const read = async (context: PlanAnalysis['context'], horizon = 7) => {
+    const body = await ready().read(plan);
+    body.context = context;
+    const target = addCalendarDays(context.scenario_as_of_date, horizon);
+    if (body.forecast.status === 'ready') body.forecast.value.target_date = target;
+    if (body.cost_impact.status === 'ready') body.cost_impact.value.target_date = target;
+    return body;
+  };
+  return { read, readImpact: read };
+}
 // The decision rail repeats the action, so read the answer from the recommendation itself.
 const findInAnswer = async (text: string) => within(await screen.findByRole('region', { name: 'Recommendation' })).findByText(text);
 const getInAnswer = (text: string) => within(screen.getByRole('region', { name: 'Recommendation' })).getByText(text);
@@ -134,14 +148,14 @@ it('pins guidance and impact to the selected publication and clears both when it
   const forecasts = { read: vi.fn(async (h: 7 | 14 | 30) => current
     ? { ...buildMockForecast(h), run_id: 'published-run' } as ReadyForecast
     : { status: 'unavailable' as const, reason: 'missing_news', message: 'Previous day news unavailable' }) };
-  const service = ready();
+  const service = liveService();
   const guidance = vi.spyOn(service, 'read'), impact = vi.spyOn(service, 'readImpact');
   render(<ForecastProvider autoRefresh service={forecasts} scenarioDate={plan.scenario_as_of_date}>
-    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />
+    <RecommendationsPage planId={livePlan.plan_id} planService={createMockPlanService({ initialPlan: livePlan, delayMs: 0 })} service={service} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
   expect(impact).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run');
-  expect(await screen.findByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/Unavailable.*No estimate for 07 Nov 2025/);
+  expect(await screen.findByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/After deadline/);
   current = false;
   await act(async () => document.dispatchEvent(new Event('visibilitychange')));
   expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
@@ -155,13 +169,14 @@ it('uses an available horizon when the default has expired and labels estimated 
   const forecasts = { read: vi.fn(async (h: 7 | 14 | 30) => h === 7
     ? { status: 'unavailable' as const, reason: 'ridge_unavailable', message: 'The 7-day target has expired.' }
     : { ...buildMockForecast(h), run_id: 'estimated-run', source_dates: { ...buildMockForecast(h).source_dates, gdelt_estimated: '2025-10-25' } } as ReadyForecast) };
-  const service = ready();
+  const availablePlan = { ...livePlan, purchase_deadline: '2025-11-15', days_remaining: 22 };
+  const service = liveService();
   const guidance = vi.spyOn(service, 'read');
   render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
-    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />
+    <RecommendationsPage planId={livePlan.plan_id} planService={createMockPlanService({ initialPlan: availablePlan, delayMs: 0 })} service={service} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
   expect(await screen.findByRole('note', { name: 'News data limitations' })).toHaveTextContent('Using estimated news data');
-  await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 14, undefined));
+  await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 14, 'estimated-run'));
   expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
 });
 
@@ -172,7 +187,7 @@ it('labels experimental plan ranges without displaying confidence coverage claim
       mean_width: null, evaluation_scope: '50 historical pairs; no measured coverage.',
       limitations: 'Experimental news-adjusted range, not calibrated confidence. Price data is stale.' } } as ReadyForecast;
   render(<ForecastProvider service={{ read: async () => data }} scenarioDate={plan.scenario_as_of_date}>
-    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
+    <RecommendationsPage planId={livePlan.plan_id} planService={createMockPlanService({ initialPlan: livePlan, delayMs: 0 })} service={liveService()} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
   expect(await screen.findByRole('complementary', { name: 'Estimate limitations' })).toBeVisible();
   expect(screen.getByText('Last-quote fallback · Ridge unavailable')).toBeVisible();
@@ -183,13 +198,13 @@ it('labels experimental plan ranges without displaying confidence coverage claim
 });
 
 it('makes large experimental totals readable and describes both cost directions neutrally', async () => {
-  const largePlan = { ...plan, quantity_mt: 2000 };
+  const largePlan = { ...livePlan, quantity_mt: 2000 };
   const data = { ...buildMockForecast(7), run_id: 'large-range',
     interval: { ...buildMockForecast(7).interval, method: 'experimental_gdelt_scaled_quantiles',
       nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0 } } as ReadyForecast;
-  const body = await ready().read(plan);
+  const body = await liveService().read(largePlan);
   body.context = largePlan;
-  body.cost_impact = { status: 'ready', value: { currency: 'USD', target_date: '2025-10-29',
+  body.cost_impact = { status: 'ready', value: { currency: 'USD', target_date: '2025-10-31',
     reference_total: 2508000, forecast_total: { lower: 2225018.24, upper: 3233053.47 },
     difference_total: { lower: -282981.76, upper: 725053.47 }, central_total: 2508000 } };
   render(<ForecastProvider service={{ read: async () => data }} scenarioDate={plan.scenario_as_of_date}>
@@ -207,7 +222,7 @@ it('identifies a published Ridge result separately from the last-quote fallback'
   const data = { ...buildMockForecast(7), interval: { ...buildMockForecast(7).interval,
     method: 'gdelt_error_quantiles' } } as ReadyForecast;
   render(<ForecastProvider service={{ read: async () => data }} scenarioDate={plan.scenario_as_of_date}>
-    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
+    <RecommendationsPage planId={livePlan.plan_id} planService={createMockPlanService({ initialPlan: livePlan, delayMs: 0 })} service={liveService()} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
   expect(await screen.findByText('Ridge regression')).toBeVisible();
   expect(screen.queryByText('Last-quote fallback · Ridge unavailable')).not.toBeInTheDocument();
@@ -219,6 +234,7 @@ it('shows a current executed Ridge estimate when its target fits the deadline', 
   const currentPlan = { ...plan, purchase_deadline: '2025-10-31', days_remaining: 7 };
   const body = await ready().read(plan);
   body.context = currentPlan;
+  if (body.forecast.status === 'ready') body.forecast.value.target_date = '2025-10-31';
   const data = { ...buildMockForecast(7), target_date: '2025-10-31', model_version: `ridge-7d-sha256-${'a'.repeat(64)}`,
     interval: { ...buildMockForecast(7).interval, method: 'experimental_gdelt_scaled_quantiles',
       nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0 } } as ReadyForecast;
@@ -253,18 +269,16 @@ it('returns to a fitting horizon when a shared longer horizon exceeds the plan d
     return <button onClick={() => setHorizon(30)}>Select shared 30-day horizon</button>;
   }
   const forecasts = { read: vi.fn(async (h: 7 | 14 | 30) => buildMockForecast(h) as ReadyForecast) };
-  const service = ready();
+  const service = liveService();
   const impact = vi.spyOn(service, 'readImpact');
   render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
     <SelectLongHorizon />
-    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />
+    <RecommendationsPage planId={livePlan.plan_id} planService={createMockPlanService({ initialPlan: livePlan, delayMs: 0 })} service={service} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
   await screen.findByText('USD 67,000–70,000');
   fireEvent.click(screen.getByRole('button', { name: 'Select shared 30-day horizon' }));
   await waitFor(() => expect(forecasts.read).toHaveBeenCalledWith(30));
-  // The selected publication targets 29 Oct, not the comparison's requested 31 Oct.
-  await waitFor(() => expect(screen.getByRole('button', { name: '7 days' })).toBeDisabled());
-  expect(screen.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-pressed', 'true');
+  await waitFor(() => expect(screen.getByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true'));
   expect(impact).not.toHaveBeenCalledWith(expect.anything(), 30, expect.anything());
   expect(impact).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, buildMockForecast(7).run_id);
 });
@@ -292,4 +306,90 @@ it('shows the actual date when older news is used', async () => {
     <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
   expect(await screen.findByRole('note', { name: 'News data limitations' })).toHaveTextContent('23 Oct 2025');
+});
+
+it('excludes the old November targets from guidance, costs, approval and warnings for the 888 MT plan', async () => {
+  const currentPlan = { ...plan, quantity_mt: 888, scenario_as_of_date: '2026-11-06', purchase_deadline: '2026-11-26', days_remaining: 20 };
+  const forecasts = { read: async (h: 7 | 14 | 30) => h === 7
+    ? { status: 'unavailable' as const, reason: 'ridge_unavailable', message: 'The old target has passed.' }
+    : { ...baseForecast(h), run_id: 'old-quote', anchor_quote_date: '2026-10-26', anchor_price: 1351.5,
+      target_date: addCalendarDays('2026-10-26', h), model_version: `ridge-${h}d-sha256-${'a'.repeat(64)}`,
+      interval: { ...baseForecast(h).interval, method: 'experimental_gdelt_scaled_quantiles' } } as ReadyForecast };
+  const service = { read: vi.fn(), readImpact: vi.fn() };
+  const planService = { ...createMockPlanService({ initialPlan: currentPlan, getScenarioDate: () => currentPlan.scenario_as_of_date, delayMs: 0 }), submit: vi.fn() };
+  render(<ForecastProvider service={forecasts} scenarioDate={currentPlan.scenario_as_of_date}>
+    <RecommendationsPage canSubmit planId={currentPlan.plan_id} planService={planService} service={service} scenarioDate={currentPlan.scenario_as_of_date} />
+  </ForecastProvider>);
+  expect(await screen.findByText(/Older estimates are excluded from costs, recommendations and approval requests/)).toBeVisible();
+  expect(await findInAnswer('Recommendation unavailable')).toBeVisible();
+  expect(getInAnswer('USD 1,200,132')).toBeVisible();
+  expect(screen.queryByText(/If you buy Mon 09 Nov/)).not.toBeInTheDocument();
+  expect(screen.queryByText('Dated Ridge estimate')).not.toBeInTheDocument();
+  expect(screen.queryByText(/Cost detail included:/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Submit for approval' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '14 days' })).toBeDisabled();
+  expect(service.read).not.toHaveBeenCalled();
+  expect(service.readImpact).not.toHaveBeenCalled();
+});
+
+it('skips a ready but incorrectly dated default and chooses a matching 14-day forecast', async () => {
+  const currentPlan = { ...livePlan, purchase_deadline: '2025-11-15', days_remaining: 22 };
+  const forecasts = { read: async (h: 7 | 14 | 30) => ({ ...buildMockForecast(h), run_id: 'mixed-targets',
+    target_date: addCalendarDays(h === 7 ? '2025-10-22' : currentPlan.scenario_as_of_date, h) }) as ReadyForecast };
+  const service = liveService();
+  const read = vi.spyOn(service, 'read'), impact = vi.spyOn(service, 'readImpact');
+  render(<ForecastProvider service={forecasts} scenarioDate={currentPlan.scenario_as_of_date}>
+    <RecommendationsPage planId={currentPlan.plan_id} planService={createMockPlanService({ initialPlan: currentPlan, delayMs: 0 })} service={service} scenarioDate={currentPlan.scenario_as_of_date} />
+  </ForecastProvider>);
+  await waitFor(() => expect(read).toHaveBeenCalledWith(expect.anything(), 14, 'mixed-targets'));
+  expect(read.mock.calls.every(call => call[1] !== 7)).toBe(true);
+  expect(impact.mock.calls.every(call => call[1] !== 7)).toBe(true);
+  expect(screen.getByRole('button', { name: '7 days' })).toBeDisabled();
+  await waitFor(() => expect(screen.getByRole('button', { name: '14 days' })).toHaveAttribute('aria-pressed', 'true'));
+  expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
+});
+
+it('recovers after refresh when current target dates become available', async () => {
+  const today = '2026-11-06';
+  const currentPlan = { ...plan, scenario_as_of_date: today, purchase_deadline: '2026-11-26', days_remaining: 20 };
+  let current = false;
+  const forecasts = { read: async (h: 7 | 14 | 30) => ({ ...baseForecast(h), run_id: current ? 'fresh-run' : 'dated-run',
+    anchor_quote_date: current ? today : '2026-10-26', target_date: addCalendarDays(current ? today : '2026-10-26', h) }) as ReadyForecast };
+  const service = liveService();
+  const read = vi.spyOn(service, 'read');
+  const planService = createMockPlanService({ initialPlan: currentPlan, getScenarioDate: () => today, delayMs: 0 });
+  render(<ForecastProvider service={forecasts} scenarioDate={today}>
+    <RecommendationsPage planId={currentPlan.plan_id} planService={planService} service={service} scenarioDate={today} />
+  </ForecastProvider>);
+  await findInAnswer('Recommendation unavailable');
+  expect(read).not.toHaveBeenCalled();
+  current = true;
+  fireEvent.click(screen.getByRole('button', { name: 'Refresh prices' }));
+  await waitFor(() => expect(read).toHaveBeenCalledWith(expect.anything(), 7, 'fresh-run'));
+  await waitFor(() => expect(screen.getByRole('button', { name: '7 days' })).toBeEnabled());
+  expect(await screen.findByText('If you buy Fri 13 Nov')).toBeVisible();
+  expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
+});
+
+it('clears yesterday’s costs and advice when the planning day advances without new forecasts', async () => {
+  let today = '2026-11-06';
+  const currentPlan = { ...plan, scenario_as_of_date: today, purchase_deadline: '2026-11-26', days_remaining: 20 };
+  const forecasts = { read: async (h: 7 | 14 | 30) => ({ ...baseForecast(h), run_id: 'yesterday-run',
+    anchor_quote_date: '2026-11-06', target_date: addCalendarDays('2026-11-06', h) }) as ReadyForecast };
+  const service = liveService();
+  const read = vi.spyOn(service, 'read');
+  const planService = createMockPlanService({ initialPlan: currentPlan, getScenarioDate: () => today, delayMs: 0 });
+  const page = () => <ForecastProvider service={forecasts} scenarioDate={today}>
+    <RecommendationsPage planId={currentPlan.plan_id} planService={planService} service={service} scenarioDate={today} />
+  </ForecastProvider>;
+  const view = render(page());
+  expect(await screen.findByText('If you buy Fri 13 Nov')).toBeVisible();
+  read.mockClear();
+  today = '2026-11-07';
+  view.rerender(page());
+  expect(await screen.findByText(/An updated forecast for 14 Nov 2026/)).toBeVisible();
+  expect(await findInAnswer('Recommendation unavailable')).toBeVisible();
+  expect(screen.queryByText('If you buy Fri 13 Nov')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '14 days' })).toHaveTextContent('Sat 21 Nov');
+  expect(read).not.toHaveBeenCalled();
 });

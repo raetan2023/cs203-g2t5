@@ -124,4 +124,29 @@ class PlanAnalysisServiceTests {
                 new Forecast(changed.prices(), changed.target_date(), basis, "Bounds", "14 days", changed.central_estimate(), UUID.randomUUID(), "model-14"))));
         assertEquals(org.springframework.http.HttpStatus.CONFLICT, assertThrows(ApiException.class, () -> service.read(context, false, 7, run)).status());
     }
+
+    @Test void quoteAnchoredTargetsCannotSupplyCurrentHorizonCostsOrApproval() {
+        var today = LocalDate.parse("2026-11-06");
+        var quote = LocalDate.parse("2026-10-26");
+        var context = new PlanAnalysisService.Context(UUID.randomUUID(), new BigDecimal("888"), LocalDate.parse("2026-11-26"), today);
+        var provider = org.mockito.Mockito.mock(PlanAnalysisProvider.class);
+        org.mockito.Mockito.when(provider.provenance()).thenReturn("model");
+        UUID run = UUID.randomUUID();
+        for (int h : new int[] {7, 14, 30}) {
+            var f = new Forecast(new Range(new BigDecimal("950"), new BigDecimal("1680")), quote.plusDays(h), basis,
+                    "Experimental bounds", h + " days", new BigDecimal("1351.5"), run, "ridge-test");
+            org.mockito.Mockito.when(provider.prices(today, h)).thenReturn(new Prices(today,
+                    Result.ready(new Reference(new BigDecimal("1351.5"), quote, basis)), Result.ready(f)));
+        }
+        var service = new PlanAnalysisService(provider);
+        var impact = service.read(context, true, 14, null);
+        assertEquals("unsupported_horizon", ((Result<?>) impact.get("forecast")).reason());
+        assertTrue(((Result<?>) impact.get("forecast")).message().contains("2026-11-20"));
+        assertEquals("unavailable", ((Result<?>) impact.get("cost_impact")).status());
+        var guidance = (Guidance) ((Result<?>) service.read(context, false, 14, null).get("recommendation")).value();
+        assertEquals("MONITOR", guidance.action());
+        assertNull(guidance.evidence().supported_target_date());
+        assertEquals(org.springframework.http.HttpStatus.CONFLICT,
+                assertThrows(ApiException.class, () -> service.read(context, false, 14, run)).status());
+    }
 }

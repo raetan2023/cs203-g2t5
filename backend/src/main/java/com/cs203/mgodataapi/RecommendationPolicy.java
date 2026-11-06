@@ -116,14 +116,20 @@ public final class RecommendationPolicy {
                 boolean overlaps = signalLow.compareTo(reference.price()) <= 0 && signalHigh.compareTo(reference.price()) >= 0;
                 boolean conflicting = signal.compareTo(reference.price()) < 0 ? signalHigh.compareTo(reference.price()) >= 0
                         : signalLow.compareTo(reference.price()) <= 0;
-                if (age > 7 || conflicting) {
+                if (conflicting) {
                     action = "MONITOR";
-                    summary = age > 7 ? "Monitor and obtain a current supplier quote. The reference price is too old for timing advice."
-                            : overlaps ? "Monitor prices. The weighted uncertainty range overlaps today's price, so the buying direction is uncertain."
+                    summary = overlaps ? "Monitor prices. The weighted uncertainty range overlaps today's price, so the buying direction is uncertain."
                             : "Monitor prices. The point signal and uncertainty range disagree on price direction.";
                     if (best != null) summary += " The lower price signal suggests " + target + " as a date to reassess, with potential savings of $" + money(saving) + "/mt, not a confirmed buying date.";
                     reasons.add("Review fresh prices before committing; do not wait beyond " + c.purchase_deadline() + ".");
                 }
+            }
+            if (age > 7) {
+                action = "MONITOR";
+                summary = "Monitor and obtain a current supplier quote. The reference price is too old for timing advice.";
+                target = null;
+                chosen = null;
+                difference = null;
             }
         }
         if (age != null && age > 7) limitations.add("The reference observation is " + age + " days old. Check a current supplier quote.");

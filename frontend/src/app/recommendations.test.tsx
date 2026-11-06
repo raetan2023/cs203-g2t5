@@ -12,17 +12,19 @@ import type { Horizon, ReadyForecast } from '../features/forecast/apiService';
 describe('recommendations app integration', () => {
   it('shows fast results immediately, retains them while idle, and refreshes a changed publication on demand', async () => {
     window.history.replaceState(null, '', `/purchase-plans/recommendation?plan_id=${plan.plan_id}`);
+    const currentPlan = { ...plan, purchase_deadline: '2025-11-05', days_remaining: 12 };
     const analysis = await createMockRecommendationService({ delayMs: 0 }).read(plan);
     const auth = { ...createMockAuthService({ user: DEMO_USER, delayMs: 0 }), readSession: async () => DEMO_USER };
-    const planService = { ...createMockPlanService({ initialPlan: plan, delayMs: 0 }), read: vi.fn(async () => ({ plan })) };
+    const planService = { ...createMockPlanService({ initialPlan: currentPlan, delayMs: 0 }), read: vi.fn(async () => ({ plan: currentPlan })) };
     let publication = 'first-run';
     const forecasts = { read: vi.fn(async (h: Horizon) => ({ ...buildMockForecast(h), run_id: publication,
       anchor_quote_date: '2025-10-22', forecast_origin_date: '2025-10-22',
-      target_date: new Date(Date.parse('2025-10-22') + h * 86_400_000).toISOString().slice(0, 10),
+      target_date: new Date(Date.parse(plan.scenario_as_of_date) + h * 86_400_000).toISOString().slice(0, 10),
     }) as ReadyForecast) };
     const service = { read: vi.fn(async (context: PlanAnalysis['context'], _horizon?: number, runId?: string) => {
       const response = structuredClone(analysis);
       response.context = context;
+      if (response.forecast.status === 'ready') response.forecast.value.target_date = '2025-10-31';
       if (response.recommendation.status === 'ready') response.recommendation.value.explanation = `Guidance from ${runId}.`;
       return response;
     }) };

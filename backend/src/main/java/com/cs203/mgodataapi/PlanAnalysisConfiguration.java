@@ -17,13 +17,14 @@ public class PlanAnalysisConfiguration {
     PlanAnalysisProvider fixtureAnalysisProvider() {
         return new PlanAnalysisProvider() {
             public String provenance() { return "fixture"; }
-            public Prices prices(LocalDate date) {
+            public Prices prices(LocalDate date) { return prices(date, 7); }
+            public Prices prices(LocalDate date, int horizon) {
                 if (!date.equals(LocalDate.parse("2025-10-24"))) return unavailablePrices(date);
                 Basis basis = new Basis("Synthetic Singapore MGO fixture", "USD", "MT");
                 return new Prices(date, Result.ready(new Reference(new BigDecimal("700"), date, basis)),
                         Result.ready(new Forecast(new Range(new BigDecimal("680"), new BigDecimal("740")),
-                                LocalDate.parse("2025-10-30"), basis, "Synthetic test bounds; not a confidence interval.",
-                                "Fixed development fixture for 30 October 2025.", new BigDecimal("710"))));
+                                date.plusDays(horizon), basis, "Synthetic test bounds; not a confidence interval.",
+                                "Synthetic " + horizon + "-day development fixture.", new BigDecimal("710"))));
             }
             public Recommendation recommendation(PlanAnalysisService.Context context) {
                 return new Recommendation(context, noGuidance());

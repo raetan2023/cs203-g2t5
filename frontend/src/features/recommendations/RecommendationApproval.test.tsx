@@ -75,6 +75,18 @@ it('blocks missing evidence and shows stale-selection errors for refresh and ret
   expect(await screen.findByRole('alert')).toHaveTextContent('The forecast run changed.');
 });
 
+it('never submits a forecast targeting a different date from the requested horizon', async () => {
+  const api = service(), user = userEvent.setup();
+  const stale = analysis(14);
+  if (stale.forecast.status === 'ready') stale.forecast.value.target_date = '2025-11-05';
+  render(<RecommendationApproval analysis={stale} plan={draft} horizon={14} planService={api} onSubmitted={vi.fn()} />);
+  await user.click(screen.getByRole('button', { name: 'Accept' }));
+  expect(screen.getByText('An updated 14-day forecast for 07 Nov 2025 is required before submitting.')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Submit for approval' })).toBeDisabled();
+  expect(screen.queryByText(/Cost detail included:/)).not.toBeInTheDocument();
+  expect(api.submit).not.toHaveBeenCalled();
+});
+
 it('does not submit twice or publish a response after the selection component is unmounted', async () => {
   const api = service(), callback = vi.fn(), user = userEvent.setup();
   let finish!: (value: { plan: typeof submitted }) => void;

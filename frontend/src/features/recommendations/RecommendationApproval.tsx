@@ -1,7 +1,7 @@
 import BuyerDecisionLog from './BuyerDecisionLog';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppLink } from '../../app/router';
-import { formatDate } from '../purchase-plan/dates';
+import { addCalendarDays, formatDate } from '../purchase-plan/dates';
 import { requestError, type PlanAnalysis, type PurchasePlan, type PurchasePlanService, type SubmissionResponse } from '../purchase-plan/types';
 import type { Horizon } from '../forecast/apiService';
 import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
@@ -23,12 +23,13 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
   useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
   const guidance = analysis.recommendation.status === 'ready' ? analysis.recommendation.value : undefined;
   const forecast = analysis.forecast.status === 'ready' ? analysis.forecast.value : undefined;
+  const targetMatches = forecast?.target_date === addCalendarDays(plan.scenario_as_of_date, horizon);
   const decisionKey = `${plan.plan_id}:${guidance?.recommendation_id}:${forecast?.run_id}:${guidance?.action}`;
   const accepted = acceptance?.key === decisionKey && acceptance.service === planService;
   const referenceOnly = guidance?.action === 'BUY_NOW' && analysis.reference.status === 'ready'
     && analysis.cost_impact.status === 'unavailable' && analysis.cost_impact.reason === 'unsupported_horizon';
   const valid = accepted && plan.status === 'draft' && !!planService.submit && analysis.source === 'api' && analysis.provenance === 'model'
-    && !!guidance && !!forecast?.run_id && (analysis.cost_impact.status === 'ready' || referenceOnly)
+    && !!guidance && !!forecast?.run_id && targetMatches && (analysis.cost_impact.status === 'ready' || referenceOnly)
     && !!analysis.approval_fingerprint?.match(/^[a-f0-9]{64}$/);
 
   async function submit() {
@@ -58,7 +59,8 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
     </div> : <button className={valid ? 'bb-button rec-submit' : 'bb-button bb-button--secondary rec-submit'} disabled={!valid} onClick={() => setConfirm(true)}>Submit for approval</button>}
     {error && <p role="alert">{error} Your selection has not been confirmed. Refresh the page if the plan or forecast changed.</p>}
     {accepted && !valid && <p className="rec-approval-note">A saved draft and a current priced recommendation are required.</p>}
-    {referenceOnly ? <p className="rec-approval-note">Uses the observed reference price for buying now. No supported forecast cost is available within the deadline.</p>
+    {!targetMatches ? <p className="rec-approval-note">An updated {horizon}-day forecast for {formatDate(addCalendarDays(plan.scenario_as_of_date, horizon))} is required before submitting.</p>
+      : referenceOnly ? <p className="rec-approval-note">Uses the observed reference price for buying now. No supported forecast cost is available within the deadline.</p>
       : <p className="rec-approval-note">Cost detail included: <strong>{horizon}-day forecast</strong>{forecast ? ` · target ${formatDate(forecast.target_date)}` : ''}. Select an eligible date to change it.</p>}
     <p className="rec-approval-note">Every manager in your organisation receives the recommendation, its reasons and this cost detail.</p>
   </section>;
