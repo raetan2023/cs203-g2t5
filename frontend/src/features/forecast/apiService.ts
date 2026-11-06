@@ -63,8 +63,8 @@ export function parseForecast(payload: unknown, horizon: Horizon): Forecast {
   const source_dates = Object.fromEntries(Object.entries(sourceDates).map(([key, value]) => [key, value == null ? null : date(value)]));
   const executedRidge = experimental && text(v.model_version).includes('-sha256-');
   const availableDate = executedRidge ? date(v.as_of_date) : origin;
-  if (executedRidge && (origin !== anchor || target <= availableDate
-      || Math.round((Date.parse(target) - Date.parse(anchor)) / 86_400_000) !== horizon)) throw invalid();
+  if (executedRidge && (origin !== (text(v.model_version).startsWith('ridge-decision-gdelt-') ? availableDate : anchor) || target <= availableDate
+      || Math.round((Date.parse(target) - Date.parse(text(v.model_version).startsWith('ridge-decision-gdelt-') ? availableDate : anchor)) / 86_400_000) !== horizon)) throw invalid();
   if (Object.values(source_dates).some(value => value != null && value > availableDate)) throw invalid();
   if (!Array.isArray(v.top_drivers) || !Array.isArray(v.history)) throw invalid();
   return { status: 'ready', run_id: text(v.run_id), forecast_origin_date: origin, target_date: target,

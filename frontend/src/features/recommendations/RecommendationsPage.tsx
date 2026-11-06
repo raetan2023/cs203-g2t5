@@ -78,8 +78,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
       <h1 tabIndex={-1} ref={heading}>Purchase recommendation</h1>
       {plan && <p>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT · due {dayDate(plan.purchase_deadline, true)} · <strong>{remaining(plan.days_remaining)}</strong></p>}
     </header>
-    {referenceForecast?.synthetic && <p className="rec-source-label" role="note">Fallback estimate · Prices and timing use illustrative trend logic.</p>}
-    <NewsDataNotice sourceDates={referenceForecast?.source_dates} />
+    <NewsDataNotice affectsCentral={referenceForecast?.model_version.startsWith('ridge-decision-gdelt-')} sourceDates={referenceForecast?.source_dates} />
     {plan?.previous_plan_id && <PreviousPlanNote plan={plan} service={planService} />}
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current planning date.</p><button className="bb-button" onClick={reload}>Retry</button></section>
@@ -118,16 +117,16 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
             {preparing ? <CompareSkeleton /> : forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
               explored={shown?.id} recommended={recommended} onExplore={explore}
               knownMessage={!forecast ? (forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : undefined) : undefined}
-              badge={forecast?.model_version === 'illustrative-trend-fallback-v1' ? 'Fallback estimate' : !experimental && forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
+              badge={!experimental && forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
             {!preparing && shown && <ExploredDetail column={shown} quantity={plan.quantity_mt} today={scenarioDate} experimental={experimental}
-              source={shown.forecast ? (shown.forecast.model_version === 'illustrative-trend-fallback-v1' ? 'Fallback estimate' : executedRidge ? 'Executed Ridge · experimental bounds' : experimental ? 'Last-quote fallback · Ridge unavailable' : forecast?.interval.method === 'gdelt_error_quantiles' ? 'Ridge model, published' : 'Model forecast') : ''}
+              source={shown.forecast ? (executedRidge ? 'Executed Ridge · experimental bounds' : experimental ? 'Last-quote fallback · Ridge unavailable' : forecast?.interval.method === 'gdelt_error_quantiles' ? 'Ridge model, published' : 'Model forecast') : ''}
               sourceFrom={shown.forecast ? `from the ${formatDate(shown.forecast.anchor_quote_date)} quote` : undefined} />}
             {/* The limitations notice appears only when it carries a warning the detail above does not: a stale quote,
                 a target after the deadline, or no Ridge run. A fresh executed Ridge estimate is already labelled there. */}
             {experimental && !noHorizonFits && fitsSelected && (afterDeadline || quoteAge > 7 || !executedRidge) && <aside className="rec-notice" aria-label="Estimate limitations">
               <WarningIcon /><div>
               <h2>{plan.days_remaining < 0 ? 'Your purchase deadline has passed' : afterDeadline ? 'This estimate is after your purchase deadline' : executedRidge ? 'Dated Ridge estimate' : 'Timing guidance unavailable'}</h2>
-              <p>{afterDeadline ? 'Choose a shorter horizon if one fits your deadline. ' : ''}{quoteAge > 7 ? `The ${executedRidge ? 'model anchor' : 'latest price'} quote is ${quoteAge} days old (${formatDate(forecast!.anchor_quote_date)}). ` : executedRidge ? `The model targets ${formatDate(forecast!.target_date)} from its ${formatDate(forecast!.forecast_origin_date)} quote anchor. ` : 'No current Ridge forecast is available. '}{executedRidge && quoteAge > 7 ? `The ${forecastState.horizon}-day model targets ${formatDate(forecast!.target_date)} from that anchor. ` : ''}Compare this scenario with a current supplier quote before deciding when to buy.</p>
+              <p>{afterDeadline ? 'Choose a shorter horizon if one fits your deadline. ' : ''}{quoteAge > 7 ? `The ${executedRidge ? 'model anchor' : 'latest price'} quote is ${quoteAge} days old (${formatDate(forecast!.anchor_quote_date)}). ` : executedRidge ? `The model targets ${formatDate(forecast!.target_date)} from its ${formatDate(forecast!.forecast_origin_date)} decision date. ` : 'No current Ridge forecast is available. '}{executedRidge && quoteAge > 7 ? `The ${forecastState.horizon}-day model targets ${formatDate(forecast!.target_date)} from today. ` : ''}Compare this scenario with a current supplier quote before deciding when to buy.</p>
               <span className="rec-source-label">{executedRidge ? 'Executed Ridge · experimental bounds' : 'Last-quote fallback · Ridge unavailable'}</span>
               </div></aside>}
           </>;
@@ -199,7 +198,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
         {waitTarget ? <div className="rec-tile rec-tile--recommended">
           <span className="rec-tile-label">Buy on {dayDate(waitTarget)}</span>
           <strong className="rec-tile-value">{usd(evidence!.alternative_cost_usd!)}</strong>
-          <span className="rec-tile-note">{evidence!.alternative_minus_now_usd != null && `About ${change(evidence!.alternative_minus_now_usd)} than buying today · `}{published?.model_version === 'illustrative-trend-fallback-v1' ? 'illustrative trend estimate' : 'weighted forecast signal'}</span>
+          <span className="rec-tile-note">{evidence!.alternative_minus_now_usd != null && `About ${change(evidence!.alternative_minus_now_usd)} than buying today · `}weighted forecast signal</span>
         </div> : impactTile}
       </div>}
       {demo && <p className="rec-demo">Synthetic demo data · Illustrative guidance only.</p>}
@@ -233,7 +232,9 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, runId, 
             <li>Only forecasts that land on or before your deadline are used.</li>
             <li>The two eligible forecasts nearest your deadline are blended, weighted by how close each target date is to it. A single eligible forecast is used on its own.</li>
             <li>If the blended price is below today’s, the plan waits for that forecast’s date; otherwise it buys today.</li>
-            <li>If the blended range overlaps today’s price, or the quote is more than 7 days old, the advice is to monitor instead. Never wait past your deadline.</li>
+            <li>{published?.model_version.startsWith('ridge-decision-gdelt-')
+              ? 'Timing uses the central model estimates even when the reference quote is dated. Quote age and price ranges remain visible limitations. Never wait past your deadline.'
+              : 'If the blended range overlaps today’s price, or the quote is more than 7 days old, the advice is to monitor instead. Never wait past your deadline.'}</li>
           </ul>
           <h3>For this plan</h3>
           <ul>{evidence.reasons.map((reason, n) => <li key={n}>{readableDates(reason)}</li>)}</ul>

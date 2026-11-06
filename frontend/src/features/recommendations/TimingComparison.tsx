@@ -9,7 +9,7 @@ export type ColumnId = 'today' | Horizon;
 export interface Column {
   id: ColumnId; label: string; date?: string; low: number; mid: number; high: number;
   /** Observation date of the shared reference quote every column is anchored to. */
-  quote?: string; mockReference?: boolean; observed: boolean; late: boolean; past: boolean; message?: string; forecast?: ReadyForecast;
+  quote?: string; observed: boolean; late: boolean; past: boolean; message?: string; forecast?: ReadyForecast;
 }
 
 /** Read every horizon as a group; never combine forecasts from different snapshots. */
@@ -41,7 +41,7 @@ const changed = (): Entry[] => horizons.map(horizon => ({ horizon, message: 'Sou
 export function buildColumns(entries: Entry[], today: string, deadline: string): Column[] {
   const anchor = entries.find(e => e.forecast)?.forecast;
   const columns: Column[] = anchor ? [{ id: 'today', label: 'Today', date: today, low: anchor.anchor_price, mid: anchor.anchor_price,
-    high: anchor.anchor_price, quote: anchor.anchor_quote_date, mockReference: !!anchor.synthetic && !anchor.source_dates.mgo, observed: true, late: deadline < today, past: false }] : [];
+    high: anchor.anchor_price, quote: anchor.anchor_quote_date, observed: true, late: deadline < today, past: false }] : [];
   for (const e of entries) {
     const date = addCalendarDays(today, e.horizon);
     // Never move a dated model estimate to a different buying date.
@@ -77,7 +77,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
   const column = (c: Column) => {
     const available = c.observed || !!c.forecast;
     const status = !available ? 'Unavailable' : c.late ? 'After deadline' : c.past ? 'Past target'
-      : recommended.includes(c.id) ? 'Recommended' : c.observed ? (c.mockReference ? 'Mock reference' : 'Observed') : 'Eligible';
+      : recommended.includes(c.id) ? 'Recommended' : c.observed ? 'Observed' : 'Eligible';
     const key = `${id}-${c.id}`;
     return <button key={c.id} type="button" className={`rec-col${c.late ? ' rec-col--late' : ''}${status === 'Recommended' ? ' rec-col--recommended' : ''}`}
       aria-pressed={explored === c.id} aria-labelledby={`${key}-label`} aria-describedby={`${key}-status ${key}-values`}
@@ -93,7 +93,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
       </span>}
       <span id={`${key}-values`} className="rec-col-values">
         {available ? <><strong>{value(c.mid)}</strong><span>{c.observed
-          ? (c.mockReference ? 'Illustrative baseline · no observed quote available' : unit === 'total' ? `${amount(quantity)} MT × USD ${amount(c.mid)}/MT · Quote from ${dayDate(quoteDate!)}` : `Quote from ${dayDate(quoteDate!)}`)
+          ? (unit === 'total' ? `${amount(quantity)} MT × USD ${amount(c.mid)}/MT · Quote from ${dayDate(quoteDate!)}` : `Quote from ${dayDate(quoteDate!)}`)
           : `Range ${unit === 'total' ? `${compact(c.low * quantity)}–${compact(c.high * quantity)}` : `${amount(c.low)}–${amount(c.high)}/MT`}`}</span></>
           : <><strong>Unavailable</strong><span>Model status: {c.message}</span></>}
       </span>
@@ -125,7 +125,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
           {after.map(column)}
         </div>
         <p className="rec-footnote">Dates count from today, {formatDate(today)}. Bars show each forecast’s range; the tick is the central estimate.
-          {reference?.mockReference ? ' The dashed line is an illustrative baseline.' : quoteDate && ` The dashed line uses the observed quote from ${formatDate(quoteDate)}.`} A price is shown only when the forecast targets that exact date. Select a column to see its detail.</p>
+          {quoteDate && ` The dashed line uses the observed quote from ${formatDate(quoteDate)}.`} A price is shown only when the forecast targets that exact date. Select a column to see its detail.</p>
       </>}
   </section>;
 }
@@ -147,7 +147,7 @@ export function ExploredDetail({ column, quantity, today, source, sourceFrom, ex
       <div><dt>Price per MT</dt><dd>{column.observed ? usd(column.mid) : `${usd(column.low)}–${amount(column.high)}`}</dd></div>
     </dl>
     <div className="rec-detail-foot">
-      <span>{column.mockReference ? 'Illustrative reference: no observed quote available.' : column.observed ? `MGO quote observed ${formatDate(quote ?? today)} · ${calendarDays(quote ?? today, today)} days old` : source}</span>
+      <span>{column.observed ? `MGO quote observed ${formatDate(quote ?? today)} · ${calendarDays(quote ?? today, today)} days old` : source}</span>
       {!column.observed && sourceFrom && <span>{sourceFrom}</span>}
       {!column.observed && experimental && <span className="rec-warning-text"><WarningIcon />Experimental range: no measured confidence coverage.</span>}
       {column.late && <span>After your deadline, so it isn’t used in the recommendation. Totals are price × quantity, shown for comparison only.</span>}
