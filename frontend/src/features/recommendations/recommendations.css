@@ -276,11 +276,11 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
 .rec-loading-chart { position: relative; height: 190px; border-block: 1px solid var(--bb-border-subtle); background: var(--bb-surface-input); }
 .rec-loading-chart [data-on] { transition: opacity .6s var(--bb-ease-out); }
 .rec-loading-chart [data-on='false'] { opacity: 0; }
-.rec-lc-price { position: absolute; left: 6%; right: 6%; border-top: 1px dashed var(--bb-border-control); }
+.rec-lc-price { position: absolute; left: var(--rec-lc-start); right: 6%; border-top: 1px dashed var(--bb-border-control); }
 .rec-lc-price-label { position: absolute; right: 6%; font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); }
 .rec-lc-deadline { position: absolute; top: 12px; bottom: 36px; border-left: 2px dashed var(--rec-muted); }
 .rec-lc-deadline-label { position: absolute; top: 4px; transform: translateX(8px); font-size: var(--bb-text-xs); font-weight: 600; white-space: nowrap; }
-.rec-lc-today { position: absolute; left: 6%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--bb-action); }
+.rec-lc-today { position: absolute; left: var(--rec-lc-start); width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--bb-action); }
 .rec-lc-today[data-on='false'] { transform: scale(.4); }
 .rec-lc-today[data-on='true'] { transition: opacity .6s var(--bb-ease-out), transform .6s var(--bb-ease-out); }
 .rec-lc-label { position: absolute; bottom: 12px; transform: translateX(-50%); font-size: var(--bb-text-xs); color: var(--bb-text-secondary); white-space: nowrap; }
@@ -331,7 +331,8 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
 }
 
 /* Loading follow-ups: chart span per width, deadline label flips left near the end, design's dark disabled submit. */
-.rec-loading-chart { --rec-lc-span: 78%; }
+.rec-loading-chart { --rec-lc-start: 6%; --rec-lc-span: 78%; }
+.rec-lc-unit-short { display: none; }
 .rec-lc-deadline-label--left { transform: translateX(calc(-100% - 8px)); }
 .recommendations .rec-approval-pending .bb-button:disabled { opacity: 1; background: color-mix(in srgb, var(--bb-text) 9%, var(--bb-surface)); border-color: transparent; color: var(--rec-muted); }
 .rec-compare-skeleton { display: flex; flex-direction: column; gap: var(--bb-space-4); }
@@ -342,4 +343,10 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
   .rec-loading-chart { --rec-lc-span: 60%; }
   .rec-compare-skeleton-cols { grid-template-columns: minmax(0, 1fr); }
   .rec-compare-skeleton-cols .rec-shimmer { height: 96px; }
+}
+/* The smallest phones: short labels and a little more room, so the five stops stay apart and Today isn't clipped. */
+@media (max-width: 360px) {
+  .rec-loading-chart { --rec-lc-start: 9%; --rec-lc-span: 66%; }
+  .rec-lc-unit { display: none; }
+  .rec-lc-unit-short { display: inline; }
 }
