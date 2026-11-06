@@ -123,7 +123,50 @@ Repo files for deployment: `Dockerfile`, `.dockerignore`, `frontend/vercel.json`
 
 ## How to use it
 
-Every code change needs a new deploy: the image and the Vercel build are snapshots, so Azure and Vercel keep running the old code until you redeploy. Run all commands from the `cs203-g2t5` folder unless noted.
+Azure and Vercel serve snapshots of the last deployed code. Run the commands below from the `cs203-g2t5` folder unless noted.
+
+### Automatic deployments from main
+
+The **Test and deploy** GitHub Actions workflow runs on pull requests targeting
+`main` and on pushes to `main`. It tests and builds the frontend and backend
+and runs the Python model, importer and launcher tests. After all checks pass,
+an enabled production job builds the Vercel frontend with the project's
+production settings, pushes an Azure image tagged with the full commit SHA,
+and deploys the API. It verifies that the live API reports that exact SHA at
+`/health` before deploying the frontend. If the API fails its health check,
+the job restores the previous Azure image. A frontend deploy failure is
+reported separately and can be retried from **Actions → Test and deploy**.
+
+One-time setup:
+
+1. A GitHub repository admin creates a `production` environment and restricts
+   deployments to the `main` branch. Add the deployment credentials below as
+   environment secrets. The workflow deploys automatically unless the
+   environment is configured to require a reviewer.
+2. In Azure, create a user-assigned managed identity for GitHub Actions.
+   Add a federated credential with issuer `https://token.actions.githubusercontent.com`,
+   subject `repo:raetan2023@124945015/cs203-g2t5@1353439593:environment:production`
+   (GitHub's immutable subject format) and audience
+   `api://AzureADTokenExchange`. Assign **Website Contributor** on the
+   `bunker-buddy-api` app and **AcrPush** on `bunkerg2t5acr`. Record the
+   identity's client ID, tenant ID and subscription ID as `AZURE_CLIENT_ID`,
+   `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID`. The app continues to pull
+   images using its existing registry configuration.
+3. In Vercel, use a token with access to the existing `bunker-buddy` project.
+   Add it as `VERCEL_TOKEN` and copy `orgId` and `projectId` from the linked
+   project's `frontend/.vercel/project.json` to `VERCEL_ORG_ID` and
+   `VERCEL_PROJECT_ID`. Keep the existing production `VITE_*` variables in
+   Vercel. Confirm the project uses `main` as its production branch. The
+   repository's Vercel config turns off direct Git deployments from `main`
+   so only the tested workflow deploys production.
+4. Set the GitHub Actions repository variable `PRODUCTION_DEPLOY_ENABLED`
+   to `true` once the credentials and branch restriction are ready. Then
+   run **Test and deploy** on `main` to verify the first release. Future
+   pushes to `main` run the same pipeline automatically.
+
+See [Azure's GitHub Actions OIDC guide](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure-openid-connect)
+and [Vercel's GitHub Actions guide](https://vercel.com/kb/guide/how-can-i-use-github-actions-with-vercel)
+for the provider setup screens.
 
 ### One-time setup (per teammate)
 

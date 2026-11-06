@@ -40,6 +40,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "spring.datasource.username=placeholder",
         "spring.datasource.password=placeholder",
         "mgo.db.check-on-startup=false",
+        "APP_REVISION=test-revision",
         // A hosted dev origin, to prove they can be added without a second CORS class.
         "mgo.frontend-origins=http://127.0.0.1:5173,http://localhost:5173,https://example.app.github.dev"})
 @org.springframework.test.context.ActiveProfiles("test")
@@ -136,7 +137,8 @@ class MgoDataApiApplicationTests {
     @Test
     void homeHealthAndDocsArePublic() throws Exception {
         mvc.perform(get("/")).andExpect(status().isOk());
-        mvc.perform(get("/health")).andExpect(jsonPath("$.status").value("ok"));
+        mvc.perform(get("/health")).andExpect(jsonPath("$.status").value("ok"))
+                .andExpect(jsonPath("$.revision").value("test-revision"));
         mvc.perform(get("/openapi.json")).andExpect(status().isOk());
     }
 
