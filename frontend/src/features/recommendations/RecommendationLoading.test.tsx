@@ -10,7 +10,7 @@ import { RecommendationsPage } from './RecommendationsPage';
 import { createMockRecommendationService, RECOMMENDATION_DEMO_PLAN as plan } from './mockService';
 import type { Entry } from './TimingComparison';
 
-const TODAY = '2025-10-24', DEADLINE = '2025-10-30';
+const TODAY = '2025-10-22', DEADLINE = '2025-10-30';
 const ready = (horizon: 7 | 14 | 30, target: string, low: number, high: number) => ({ horizon, forecast: {
   ...buildMockForecast(horizon), anchor_quote_date: '2025-10-22', anchor_price: 700, target_date: target, low, high, forecast: (low + high) / 2,
 } as ReadyForecast });

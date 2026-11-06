@@ -141,7 +141,7 @@ it('pins guidance and impact to the selected publication and clears both when it
   </ForecastProvider>);
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
   expect(impact).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run');
-  expect(await screen.findByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/After deadline/);
+  expect(await screen.findByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/Unavailable.*No estimate for 07 Nov 2025/);
   current = false;
   await act(async () => document.dispatchEvent(new Event('visibilitychange')));
   expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
@@ -216,11 +216,15 @@ it('identifies a published Ridge result separately from the last-quote fallback'
 });
 
 it('shows a current executed Ridge estimate when its target fits the deadline', async () => {
-  const data = { ...buildMockForecast(7), model_version: `ridge-7d-sha256-${'a'.repeat(64)}`,
+  const currentPlan = { ...plan, purchase_deadline: '2025-10-31', days_remaining: 7 };
+  const body = await ready().read(plan);
+  body.context = currentPlan;
+  const data = { ...buildMockForecast(7), target_date: '2025-10-31', model_version: `ridge-7d-sha256-${'a'.repeat(64)}`,
     interval: { ...buildMockForecast(7).interval, method: 'experimental_gdelt_scaled_quantiles',
       nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0 } } as ReadyForecast;
   render(<ForecastProvider service={{ read: async () => data }} scenarioDate={plan.scenario_as_of_date}>
-    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
+    <RecommendationsPage planId={currentPlan.plan_id} planService={createMockPlanService({ initialPlan: currentPlan, delayMs: 0 })}
+      service={{ read: async () => body }} scenarioDate={currentPlan.scenario_as_of_date} />
   </ForecastProvider>);
   expect(await screen.findByText('Executed Ridge · experimental bounds')).toBeVisible();
   expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
@@ -232,7 +236,8 @@ it('blocks every horizon for a five-day deadline and shows only the observed ref
     target_date: '2026-11-02', anchor_price: 1000 } as ReadyForecast;
   const service = ready();
   const impact = vi.spyOn(service, 'readImpact'), guidance = vi.spyOn(service, 'read');
-  render(<ForecastProvider service={{ read: async () => data }} scenarioDate={shortPlan.scenario_as_of_date}>
+  render(<ForecastProvider service={{ read: async h => ({ ...data, horizon_days: h,
+    target_date: new Date(Date.parse(shortPlan.scenario_as_of_date) + h * 86_400_000).toISOString().slice(0, 10) }) }} scenarioDate={shortPlan.scenario_as_of_date}>
     <RecommendationsPage planId={shortPlan.plan_id} planService={createMockPlanService({ initialPlan: shortPlan, delayMs: 0, getScenarioDate: () => shortPlan.scenario_as_of_date })} service={service} scenarioDate={shortPlan.scenario_as_of_date} />
   </ForecastProvider>);
   expect(await screen.findByText('Your deadline is before the available forecasts')).toBeVisible();
@@ -257,7 +262,9 @@ it('returns to a fitting horizon when a shared longer horizon exceeds the plan d
   await screen.findByText('USD 67,000–70,000');
   fireEvent.click(screen.getByRole('button', { name: 'Select shared 30-day horizon' }));
   await waitFor(() => expect(forecasts.read).toHaveBeenCalledWith(30));
-  await waitFor(() => expect(screen.getByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true'));
+  // The selected publication targets 29 Oct, not the comparison's requested 31 Oct.
+  await waitFor(() => expect(screen.getByRole('button', { name: '7 days' })).toBeDisabled());
+  expect(screen.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-pressed', 'true');
   expect(impact).not.toHaveBeenCalledWith(expect.anything(), 30, expect.anything());
   expect(impact).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, buildMockForecast(7).run_id);
 });
