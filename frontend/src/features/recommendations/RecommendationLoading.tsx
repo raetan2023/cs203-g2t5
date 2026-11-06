@@ -28,7 +28,7 @@ export function RecommendationLoading({ entries, published, today, deadline, onR
   const anchor = entries?.find(e => e.forecast)?.forecast ?? published;
   const columns = entries && anchor ? buildColumns(entries, today, deadline).filter(c => c.forecast && !c.past) : [];
   const fitting = columns.filter(c => !c.late);
-  const available = entries?.filter(e => e.forecast).length ?? 0;
+  const available = columns.length;
   const steps: Step[] = LABELS.map(label => ({ label }));
   if (anchor) steps[0].detail = `${dayDate(anchor.anchor_quote_date)} · USD ${price(anchor.anchor_price)}/MT`;
   if (entries) {

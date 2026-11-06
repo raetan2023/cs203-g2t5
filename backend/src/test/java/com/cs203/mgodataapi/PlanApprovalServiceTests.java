@@ -24,6 +24,7 @@ class PlanApprovalServiceTests {
     PlanApprovalRequest choice;
     final UUID run = UUID.randomUUID();
     final java.util.concurrent.atomic.AtomicReference<BigDecimal> central = new java.util.concurrent.atomic.AtomicReference<>(new BigDecimal("1001"));
+    final java.util.concurrent.atomic.AtomicInteger targetOffset = new java.util.concurrent.atomic.AtomicInteger();
     final UUID owner = UUID.randomUUID(), id = UUID.randomUUID();
     final Instant now = Instant.parse("2026-10-27T08:00:00Z");
     final LocalDate today = LocalDate.parse("2026-10-27");
@@ -51,7 +52,7 @@ class PlanApprovalServiceTests {
             public Prices prices(LocalDate date, int horizon) {
                 var basis = new Basis("Singapore MGO", "USD", "MT");
                 return new Prices(date, Result.ready(new Reference(new BigDecimal("1000"), date, basis)),
-                    Result.ready(new Forecast(new Range(new BigDecimal("950"), new BigDecimal("1050")), date.plusDays(horizon), basis,
+                    Result.ready(new Forecast(new Range(new BigDecimal("950"), new BigDecimal("1050")), date.plusDays(horizon + targetOffset.get()), basis,
                         "Experimental range", horizon + " calendar days", central.get(), run, "ridge-test")));
             }
             public Recommendation recommendation(PlanAnalysisService.Context context) { throw new UnsupportedOperationException(); }
@@ -66,6 +67,14 @@ class PlanApprovalServiceTests {
         respond(choice, choice.run_id(), "accept", now);
     }
     PurchasePlan submit(UUID planId, UUID buyer, String org) { return approvals.submit(planId, buyer, org, choice); }
+
+    @Test void cannotSubmitAnAcceptedRunWhoseTargetNoLongerMatchesTheHorizon() {
+        targetOffset.set(-2);
+        assertEquals(org.springframework.http.HttpStatus.CONFLICT,
+                assertThrows(ApiException.class, () -> submit(id, owner, "org_a")).status());
+        assertEquals("draft", plans.findByIdAndUser(id, owner, "org_a").orElseThrow().status());
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM plan_approval_notifications", Integer.class));
+    }
 
     @Test void buyerDetailsStayInsideTheAuthorizedPlanOrganisation() {
         jdbc.execute("CREATE TABLE users (user_id UUID PRIMARY KEY, clerk_user_id TEXT, email TEXT)");

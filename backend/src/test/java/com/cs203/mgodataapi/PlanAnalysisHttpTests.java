@@ -60,7 +60,7 @@ class PlanAnalysisHttpTests {
         assertEquals("fixture", body.path("provenance").asText());
         assertEquals(70000, body.path("cost_impact").path("value").path("reference_total").asInt());
         assertEquals(-2000, body.path("cost_impact").path("value").path("difference_total").path("lower").asInt());
-        assertEquals("2025-10-30", body.path("cost_impact").path("value").path("target_date").asText());
+        assertEquals("2025-10-31", body.path("cost_impact").path("value").path("target_date").asText());
         assertEquals("unavailable", body.path("recommendation").path("status").asText());
         var recommendation = get(path("recommendation"), "owner-token");
         assertEquals(200, recommendation.statusCode());
