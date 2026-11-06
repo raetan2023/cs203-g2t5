@@ -28,7 +28,7 @@ try {
       const planService = createMockPlanService({initialPlan: plan, scenarioDate: today, delayMs: 0});
       const forecastAt = h => ({...buildMockForecast(h), run_id: 'layout-fixture', forecast: 1351.5, low: 1199.583, high: 1385.546,
         anchor_price: 1351.5, anchor_quote_date: '2026-10-26', forecast_origin_date: '2026-10-26',
-        target_date: new Date(Date.parse('2026-10-26') + h * 86400000).toISOString().slice(0,10),
+        target_date: new Date(Date.parse(today) + h * 86400000).toISOString().slice(0,10),
         source_dates: {...buildMockForecast(h).source_dates, gdelt_fallback: '2026-10-25', gdelt_estimated: '2026-10-25'},
         model_version: 'ridge-sha256-' + 'a'.repeat(64), interval: {...buildMockForecast(h).interval, method: 'experimental_gdelt_scaled_quantiles'}});
       const forecastService = {read: async h => forecastAt(h)};
@@ -90,7 +90,7 @@ try {
   assert.match(await page.locator('.rec-tile-value').nth(1).innerText(), /USD 11\.87bn–13\.72bn/);
   await page.getByRole('button', { name: '14 days', exact: true }).click();
   await page.waitForFunction(() => document.querySelector('.rec-col[aria-pressed="true"]')?.textContent.includes('14 days'));
-  assert.match(await page.locator('.rec-detail h2').innerText(), /Mon 09 Nov \(14 days\)/);
+  assert.match(await page.locator('.rec-detail h2').innerText(), /Tue 10 Nov \(14 days\)/);
   const late = page.getByRole('button', { name: '30 days', exact: true });
   assert.equal(await late.isDisabled(), false, 'late targets stay explorable');
   assert.match(await late.getAttribute('aria-describedby').then(ids => page.evaluate(ids => ids.split(' ').map(id => document.getElementById(id).textContent).join(' '), ids)), /After deadline/);

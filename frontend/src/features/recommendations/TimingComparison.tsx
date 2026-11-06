@@ -37,17 +37,20 @@ export function useHorizonComparison(service: ForecastService | undefined, today
 }
 const changed = (): Entry[] => horizons.map(horizon => ({ horizon, message: 'Source data changed. Refresh the comparison.' }));
 
-/** Today's observed price followed by each horizon, classified against the plan window. */
+/** Buying dates count from the planning day; a price is only valid for its actual target. */
 export function buildColumns(entries: Entry[], today: string, deadline: string): Column[] {
   const anchor = entries.find(e => e.forecast)?.forecast;
   const columns: Column[] = anchor ? [{ id: 'today', label: 'Today', date: today, low: anchor.anchor_price, mid: anchor.anchor_price,
     high: anchor.anchor_price, quote: anchor.anchor_quote_date, observed: true, late: deadline < today, past: false }] : [];
   for (const e of entries) {
-    const f = e.forecast;
-    // Unavailable horizons are placed by the target they would have had from the shared quote.
-    const date = f?.target_date ?? (anchor ? new Date(Date.parse(anchor.anchor_quote_date) + e.horizon * 86_400_000).toISOString().slice(0, 10) : undefined);
+    const date = new Date(Date.parse(`${today}T00:00:00Z`) + e.horizon * 86_400_000).toISOString().slice(0, 10);
+    // Never move a dated model estimate to a different buying date.
+    const f = e.forecast?.target_date === date ? e.forecast : undefined;
+    const message = e.forecast && !f
+      ? `No estimate for ${formatDate(date)}. The latest ${e.horizon}-day forecast targets ${formatDate(e.forecast.target_date)}. Updated forecast data is required.`
+      : e.message;
     columns.push({ id: e.horizon, label: `${e.horizon} days`, date, low: f?.low ?? 0, mid: f?.forecast ?? 0, high: f?.high ?? 0,
-      quote: anchor?.anchor_quote_date, observed: false, late: !!date && date > deadline, past: !!date && date <= today, message: e.message, forecast: f });
+      quote: anchor?.anchor_quote_date, observed: false, late: date > deadline, past: false, message, forecast: f });
   }
   return columns;
 }
@@ -90,7 +93,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
       </span>}
       <span id={`${key}-values`} className="rec-col-values">
         {available ? <><strong>{value(c.mid)}</strong><span>{c.observed
-          ? (unit === 'total' ? `${amount(quantity)} MT × USD ${amount(c.mid)}/MT` : `Quote from ${dayDate(quoteDate!)}`)
+          ? (unit === 'total' ? `${amount(quantity)} MT × USD ${amount(c.mid)}/MT · Quote from ${dayDate(quoteDate!)}` : `Quote from ${dayDate(quoteDate!)}`)
           : `Range ${unit === 'total' ? `${compact(c.low * quantity)}–${compact(c.high * quantity)}` : `${amount(c.low)}–${amount(c.high)}/MT`}`}</span></>
           : <><strong>Unavailable</strong><span>Model status: {c.message}</span></>}
       </span>
@@ -99,7 +102,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
   return <section className="rec-compare" aria-labelledby={`${id}-title`} aria-busy={!entries}>
     <div className="rec-section-head">
       <div><h2 id={`${id}-title`}>Compare buying dates</h2>
-        <p>Today’s observed price and the model’s 7, 14 and 30-day forecasts. Each is a separate estimate for its own date.</p></div>
+        <p>Compare buying today with 7, 14 and 30 days from today. Today’s reference uses the latest available observed quote.</p></div>
       {sharedMessage === undefined && <div className="rec-compare-tools">
         {badge && <span className="rec-badge">{badge}</span>}
         <div className="rec-toggle" role="group" aria-label="Show prices as">
@@ -121,8 +124,8 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
           </div>
           {after.map(column)}
         </div>
-        <p className="rec-footnote">Bars show each forecast’s range on a shared price scale; the tick is the central estimate and the dashed line is today’s price.
-          {quoteDate && ` Forecast dates count from the ${formatDate(quoteDate)} quote, not from today.`} Select a column to see its detail.</p>
+        <p className="rec-footnote">Dates count from today, {formatDate(today)}. Bars show each forecast’s range; the tick is the central estimate.
+          {quoteDate && ` The dashed line uses the observed quote from ${formatDate(quoteDate)}.`} A price is shown only when the forecast targets that exact date. Select a column to see its detail.</p>
       </>}
   </section>;
 }
