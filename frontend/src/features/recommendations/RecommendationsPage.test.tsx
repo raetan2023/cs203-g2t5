@@ -30,17 +30,17 @@ function liveService() {
   return { read, readImpact: read };
 }
 // The decision rail repeats the action, so read the answer from the recommendation itself.
-const findInAnswer = async (text: string) => within(await screen.findByRole('region', { name: 'Recommendation' })).findByText(text);
-const getInAnswer = (text: string) => within(screen.getByRole('region', { name: 'Recommendation' })).getByText(text);
+const findInAnswer = async (text: string | RegExp) => within(await screen.findByRole('region', { name: 'Recommendation' })).findByText(text);
+const getInAnswer = (text: string | RegExp) => within(screen.getByRole('region', { name: 'Recommendation' })).getByText(text);
 
 describe('recommendation page', () => {
   it('loads and retries recommendations independently without clearing a ready cost estimate', async () => {
     const service = createMockRecommendationService({ delayMs: 0, failOnce: true });
     const impactRead = vi.spyOn(service, 'readImpact');
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={service} scenarioDate={plan.scenario_as_of_date} />);
-    expect(await screen.findByText('USD 67,000–70,000')).toBeVisible();
+    expect(await screen.findByText('Range USD 67,000–70,000')).toBeVisible();
     fireEvent.click(await screen.findByRole('button', { name: 'Retry recommendation' }));
-    expect(screen.getByText('USD 67,000–70,000')).toBeVisible();
+    expect(screen.getByText('Range USD 67,000–70,000')).toBeVisible();
     expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
     expect(impactRead).toHaveBeenCalledOnce();
   });
@@ -52,7 +52,7 @@ describe('recommendation page', () => {
     expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
     fireEvent.click(await screen.findByRole('button', { name: 'Retry cost impact' }));
     expect(getInAnswer('Consider purchasing on 29 October')).toBeVisible();
-    expect(await screen.findByText('USD 67,000–70,000')).toBeVisible();
+    expect(await screen.findByText('Range USD 67,000–70,000')).toBeVisible();
     expect(recommendationRead).toHaveBeenCalledOnce();
   });
 
@@ -60,7 +60,7 @@ describe('recommendation page', () => {
     const stale = await ready().readImpact!({ ...plan, quantity_mt: 200 });
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={{ ...ready(), readImpact: async () => stale }} scenarioDate={plan.scenario_as_of_date} />);
     expect(await screen.findByRole('button', { name: 'Retry cost impact' })).toBeVisible();
-    expect(screen.queryByText('USD 67,000–70,000')).not.toBeInTheDocument();
+    expect(screen.queryByText('Range USD 67,000–70,000')).not.toBeInTheDocument();
   });
 
   it('shows supplied guidance and lets users expand and collapse forecast details', async () => {
@@ -73,7 +73,7 @@ describe('recommendation page', () => {
     expect(disclosure.closest('details')).toHaveAttribute('open');
     expect(await screen.findByText(/Price range: USD 670–700\/MT/)).toBeVisible();
     expect(screen.getByRole('link', { name: 'Back to purchase plans' })).toHaveAttribute('href', '/purchase-plans');
-    expect(screen.getByText('USD 67,000–70,000')).toBeVisible();
+    expect(screen.getByText('Range USD 67,000–70,000')).toBeVisible();
     expect(screen.getByText('USD 3,000 less to no change than today')).toBeVisible();
     fireEvent.click(disclosure);
     expect(disclosure.closest('details')).not.toHaveAttribute('open');
@@ -160,7 +160,7 @@ it('pins guidance and impact to the selected publication and clears both when it
   await act(async () => document.dispatchEvent(new Event('visibilitychange')));
   expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
   expect(screen.queryByText('Consider purchasing on 29 October')).not.toBeInTheDocument();
-  expect(screen.queryByText('USD 67,000–70,000')).not.toBeInTheDocument();
+  expect(screen.queryByText('Range USD 67,000–70,000')).not.toBeInTheDocument();
   expect(within(screen.getByRole('region', { name: 'Recommendation' })).getByText('Recommendation unavailable')).toBeVisible();
   expect(screen.queryByText('Loading recommendation…')).not.toBeInTheDocument();
 });
@@ -201,7 +201,7 @@ it('labels experimental plan ranges without displaying confidence coverage claim
 
 it('makes large experimental totals readable and describes both cost directions neutrally', async () => {
   const largePlan = { ...livePlan, quantity_mt: 2000 };
-  const data = { ...buildMockForecast(7), run_id: 'large-range',
+  const data = { ...buildMockForecast(7), run_id: 'large-range', low: 1112.5, high: 1616.5,
     interval: { ...buildMockForecast(7).interval, method: 'experimental_gdelt_scaled_quantiles',
       nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0 } } as ReadyForecast;
   const body = await liveService().read(largePlan);
@@ -214,7 +214,7 @@ it('makes large experimental totals readable and describes both cost directions 
       planService={createMockPlanService({ initialPlan: largePlan, delayMs: 0 })}
       service={{ read: async () => body, readImpact: async () => body }} />
   </ForecastProvider>);
-  expect(await screen.findByText('USD 2,225,018–3,233,053')).toBeVisible();
+  expect(await screen.findByText('Range USD 2.23m–3.23m')).toBeVisible();
   expect(screen.getByText('USD 283k less to USD 725k more than today')).toBeVisible();
   expect(screen.queryByText(/Central estimated cost:/)).not.toBeInTheDocument();
   expect(screen.queryByText('Potential savings')).not.toBeInTheDocument();
@@ -260,7 +260,7 @@ it('blocks every horizon for a five-day deadline and shows only the observed ref
   </ForecastProvider>);
   expect(await screen.findByText('Your deadline is before the available forecasts')).toBeVisible();
   for (const h of [7,14,30]) expect(await screen.findByRole('button', { name: `${h} days` })).toHaveAccessibleDescription(/After deadline/);
-  expect(getInAnswer('USD 84,444,000')).toBeVisible();
+  expect(getInAnswer('USD 84,444,000 for 84,444 MT')).toBeVisible();
   expect(impact).not.toHaveBeenCalled();
   expect(guidance).toHaveBeenCalled();
 });
@@ -277,7 +277,7 @@ it('returns to a fitting horizon when a shared longer horizon exceeds the plan d
     <SelectLongHorizon />
     <RecommendationsPage planId={livePlan.plan_id} planService={createMockPlanService({ initialPlan: livePlan, delayMs: 0 })} service={service} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
-  await screen.findByText('USD 67,000–70,000');
+  await screen.findByText('Range USD 123,000–132,000');
   fireEvent.click(screen.getByRole('button', { name: 'Select shared 30-day horizon' }));
   await waitFor(() => expect(forecasts.read).toHaveBeenCalledWith(30));
   await waitFor(() => expect(screen.getByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true'));
@@ -295,9 +295,10 @@ it('renders one final recommendation with positive savings and no urgency overri
       reasons: ['Cheapest eligible price.'], limitations: ['Experimental; no guaranteed savings.'], allocations: [] },
   } };
   render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={{read: async () => body}} scenarioDate={plan.scenario_as_of_date} />);
-  expect(await screen.findByText('Buy in 14 days.')).toBeVisible();
+  expect(await findInAnswer('and buy on Fri 07 Nov')).toBeVisible();
   expect(screen.getAllByRole('region', {name: 'Recommendation'})).toHaveLength(1);
-  expect(screen.getAllByText(/About USD 2,500 less than buying today/)[0]).toBeVisible();
+  expect(getInAnswer('Expected saving')).toBeVisible();
+  expect(getInAnswer('≈ USD 2,500')).toBeVisible();
   expect(screen.queryByLabelText('Urgency for this analysis')).not.toBeInTheDocument();
 });
 
@@ -353,8 +354,8 @@ it('uses each forecast on its real target date, defaults to the one nearest the 
   expect(await findInAnswer('Monitor')).toBeVisible();
   expect(service.read).toHaveBeenCalledWith(expect.anything(), 30, 'old-quote');
   expect(service.read.mock.calls.every(call => call[1] === 30)).toBe(true);
-  expect(getInAnswer('USD 1,200,132')).toBeVisible();
-  expect(getInAnswer('888 MT × USD 1,351.50/MT')).toBeVisible();
+  expect(getInAnswer('Latest quote · 26 Oct')).toBeVisible();
+  expect(getInAnswer('USD 1,200,132 for 888 MT')).toBeVisible();
   expect(getInAnswer('If you buy Wed 25 Nov · 30-day forecast')).toBeVisible();
   expect(screen.getByRole('button', { name: '7 days' })).toBeDisabled();
   expect(screen.getByRole('button', { name: '7 days' })).toHaveAccessibleDescription(/Passed/);
@@ -385,6 +386,89 @@ it('counts the news-aware model from today, even with an old quote', async () =>
   const notice = screen.getByRole('note', { name: 'Data freshness' });
   expect(notice).toHaveTextContent('(11 days old)');
   expect(notice).toHaveTextContent('which affect the model price and its range');
+});
+
+// Forecasts from today on a far deadline: 7, 14 and 30 days all fit, and the policy blends the last two.
+const farToday = '2026-11-07';
+const farPlan = { ...plan, status: 'draft' as const, quantity_mt: 6767, scenario_as_of_date: farToday, purchase_deadline: '2027-07-06', days_remaining: 241 };
+const farForecasts = (central: number) => ({ read: async (h: 7 | 14 | 30) => ({ ...baseForecast(h), run_id: 'far', anchor_quote_date: '2026-10-26', forecast_origin_date: farToday, anchor_price: 1351.5,
+  target_date: addCalendarDays(farToday, h), forecast: central, low: central - 100, high: central + 400, model_version: `ridge-decision-gdelt-${h}d-sha256-${'a'.repeat(64)}`,
+  interval: { ...baseForecast(h).interval, method: 'experimental_gdelt_scaled_quantiles' } }) as ReadyForecast });
+function farAnalysis(action: string, explanation: string, signal: number, target: string | null) {
+  const read = async (context: PlanAnalysis['context'], horizon = 30) => {
+    const body = await ready().read(plan);
+    const date = addCalendarDays(farToday, horizon);
+    if (body.forecast.status === 'ready') body.forecast.value.target_date = date;
+    if (body.cost_impact.status === 'ready') body.cost_impact.value.target_date = date;
+    return { ...body, context, recommendation: { status: 'ready' as const, value: { recommendation_id: 'far', action, explanation,
+      evidence: { policy_version: 'deadline-weighted-v1', urgency: 'NORMAL' as const, direction: 'DOWN', interval_width_fraction: .2, buy_now_cost_usd: 1351.5 * 6767,
+        alternative_cost_usd: target ? signal * 6767 : null, alternative_minus_now_usd: target ? (signal - 1351.5) * 6767 : null, reference_age_days: 12, supported_target_date: target,
+        horizon_description: 'Deadline comparison', reasons: ['Blended.'], limitations: ['Experimental.'], allocations: [], signal_price: signal, signal_low: signal - 100, signal_high: signal + 400,
+        signal_inputs: [{ target_date: addCalendarDays(farToday, 30), weight: .52, price: signal }, { target_date: addCalendarDays(farToday, 14), weight: .48, price: signal }] } } } };
+  };
+  return { read, readImpact: read };
+}
+const renderFar = (forecasts: ReturnType<typeof farForecasts>, service: ReturnType<typeof farAnalysis>) => render(<ForecastProvider service={forecasts} scenarioDate={farToday}>
+  <RecommendationsPage canSubmit planId={farPlan.plan_id} planService={createMockPlanService({ initialPlan: farPlan, getScenarioDate: () => farToday, delayMs: 0 })} service={service} scenarioDate={farToday} />
+</ForecastProvider>);
+
+it('leads a Wait with its date, the 30-day forecast and the saving, not the blended signal', async () => {
+  renderFar(farForecasts(1137.33), farAnalysis('WAIT', 'Buy in 30 days.', 1200, '2026-12-07'));
+  expect(await findInAnswer('and buy on Mon 07 Dec')).toBeVisible();
+  expect(getInAnswer('That still leaves 211 days before your 06 Jul 2027 deadline.')).toBeVisible();
+  expect(getInAnswer('Your buy date · Mon 07 Dec')).toBeVisible();
+  expect(getInAnswer('USD 7,696,312 forecast')).toBeVisible();
+  expect(getInAnswer('Range USD 7.02m–10.40m')).toBeVisible();
+  expect(getInAnswer('Expected saving')).toBeVisible();
+  expect(getInAnswer('≈ USD 1.45m')).toBeVisible();
+  expect(getInAnswer('$214.17/MT · 16% below the latest quote')).toBeVisible();
+  expect(getInAnswer(/According to Bunker Buddy’s 30-day MGO forecast \(Ridge regression\), based on the 26 Oct quote\./)).toBeVisible();
+  expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('USD 7,696,312')).toBeVisible();
+});
+
+it('keeps the hero on the recommendation when another date is selected, and moves only the cost detail', async () => {
+  renderFar(farForecasts(1137.33), farAnalysis('WAIT', 'Buy in 30 days.', 1200, '2026-12-07'));
+  await findInAnswer('and buy on Mon 07 Dec');
+  fireEvent.click(screen.getByRole('button', { name: '14 days' }));
+  expect(await within(screen.getByRole('region', { name: 'Decision' })).findByText('14-day forecast · Sat 21 Nov')).toBeVisible();
+  expect(getInAnswer('Your buy date · Mon 07 Dec')).toBeVisible();
+});
+
+it('leads a Buy now with today, what waiting would cost and the extra cost', async () => {
+  renderFar(farForecasts(1400), farAnalysis('BUY_NOW', 'Buy today.', 1400, null));
+  expect(await findInAnswer('Buy now')).toBeVisible();
+  expect(getInAnswer('Waiting is forecast to cost more. Your deadline is 06 Jul 2027, 241 days away.')).toBeVisible();
+  expect(getInAnswer('Your buy date · Today')).toBeVisible();
+  expect(getInAnswer('USD 9,145,601 for 6,767 MT · quote 26 Oct')).toBeVisible();
+  expect(getInAnswer('If you wait until Mon 07 Dec')).toBeVisible();
+  expect(getInAnswer('Extra cost if you wait')).toBeVisible();
+  expect(getInAnswer('≈ USD 328,200')).toBeVisible();
+  expect(getInAnswer('$48.50/MT · 4% above the latest quote')).toBeVisible();
+});
+
+it('stays neutral when the buy date’s own forecast disagrees with the blended signal', async () => {
+  renderFar(farForecasts(1400), farAnalysis('WAIT', 'Buy in 30 days.', 1300, '2026-12-07'));
+  expect(await findInAnswer('Against the latest quote')).toBeVisible();
+  expect(getInAnswer('≈ USD 328k more')).toBeVisible();
+  expect(screen.queryByText('Expected saving')).not.toBeInTheDocument();
+});
+
+it('shows only today’s box for a Buy now with no forecast before the deadline', async () => {
+  const shortPlan = { ...stalePlan, purchase_deadline: '2026-11-08', days_remaining: 2 };
+  const service = staleAnalysis();
+  const original = service.read.getMockImplementation()!;
+  const buyNow = async (context: PlanAnalysis['context'], horizon?: number) => {
+    const body = await original(context, horizon);
+    if (body.recommendation.status === 'ready') body.recommendation.value = { ...body.recommendation.value, action: 'BUY_NOW', explanation: 'Buy today.' };
+    return body;
+  };
+  render(<ForecastProvider service={staleForecasts} scenarioDate={staleToday}>
+    <RecommendationsPage planId={shortPlan.plan_id} planService={createMockPlanService({ initialPlan: shortPlan, getScenarioDate: () => staleToday, delayMs: 0 })} service={{ read: buyNow, readImpact: buyNow }} scenarioDate={staleToday} />
+  </ForecastProvider>);
+  expect(await findInAnswer(/No forecast lands before your deadline, so buying today is the only priced option/)).toBeVisible();
+  expect(getInAnswer('Your buy date · Today')).toBeVisible();
+  expect(screen.queryByText(/If you wait until/)).not.toBeInTheDocument();
+  expect(screen.queryByText('Extra cost if you wait')).not.toBeInTheDocument();
 });
 
 it('walks through the four calculation steps from the policy’s own signal', async () => {
@@ -419,7 +503,7 @@ it('shows a date after the deadline for comparison without making it the cost de
   </ForecastProvider>);
   await findInAnswer('Monitor');
   fireEvent.click(screen.getByRole('button', { name: '30 days' }));
-  expect(await findInAnswer('After your deadline, so it isn’t used in the recommendation.')).toBeVisible();
+  expect(await screen.findByText(/This date is after your deadline/)).toBeVisible();
   expect(service.read).not.toHaveBeenCalledWith(expect.anything(), 30, expect.anything());
   expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('14-day forecast · Mon 09 Nov')).toBeVisible();
 });
