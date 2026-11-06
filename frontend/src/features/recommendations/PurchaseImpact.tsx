@@ -7,9 +7,11 @@ import { amount, price, readableDates } from './format';
 export function forecastSource(published?: ReadyForecast) {
   const experimental = published?.interval.method === 'experimental_gdelt_scaled_quantiles';
   const executedRidge = experimental && !!published?.model_version.includes('-sha256-');
-  const label = published?.model_version.startsWith('ridge-decision-gdelt-') ? 'News-aware Ridge regression (executed)' : executedRidge ? 'Ridge regression (executed repository artifact)' : experimental ? 'Last observed quote (persistence)'
+  // The decision-day model counts from today, and news moves its central price as well as its range.
+  const newsAware = !!published?.model_version.startsWith('ridge-decision-gdelt-');
+  const label = newsAware ? 'News-aware Ridge regression (executed)' : executedRidge ? 'Ridge regression (executed repository artifact)' : experimental ? 'Last observed quote (persistence)'
     : published?.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression (published)' : published ? 'Published model forecast' : 'Source-supplied estimate';
-  return { experimental, executedRidge, label };
+  return { experimental, executedRidge, newsAware, label };
 }
 
 /** Fine print: data sources, calculation notes, assumptions and policy limitations, each said once. */

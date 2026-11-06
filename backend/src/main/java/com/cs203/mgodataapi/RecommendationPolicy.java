@@ -58,6 +58,7 @@ public final class RecommendationPolicy {
         }
         eligibleForecasts.sort(Comparator.comparing(Forecast::target_date).reversed());
         BigDecimal signal = null, signalLow = null, signalHigh = null;
+        var signalInputs = new ArrayList<SignalInput>();
         if (!eligibleForecasts.isEmpty()) {
             Forecast nearest = eligibleForecasts.get(0);
             signal = nearest.central_estimate();
@@ -74,12 +75,15 @@ public final class RecommendationPolicy {
                         .add(other.central_estimate().multiply(otherWeight));
                 signalLow = nearest.prices().lower().multiply(nearestWeight).add(other.prices().lower().multiply(otherWeight));
                 signalHigh = nearest.prices().upper().multiply(nearestWeight).add(other.prices().upper().multiply(otherWeight));
+                signalInputs.add(new SignalInput(nearest.target_date(), nearestWeight, nearest.central_estimate()));
+                signalInputs.add(new SignalInput(other.target_date(), otherWeight, other.central_estimate()));
                 reasons.add("Blended signal: " + percent(nearestWeight) + "% of the " + nearest.target_date()
                         + " forecast ($" + money(nearest.central_estimate()) + "/mt) + " + percent(otherWeight)
                         + "% of the " + other.target_date() + " forecast ($" + money(other.central_estimate())
                         + "/mt). Weights use inverse distance to the deadline.");
                 limitations.add("The blend is a timing signal, not a forecast for the recommended date or a split purchase schedule.");
             } else {
+                signalInputs.add(new SignalInput(nearest.target_date(), BigDecimal.ONE, nearest.central_estimate()));
                 reasons.add("Used the " + nearest.target_date() + " forecast at 100% weight: "
                         + (nearDistance == 0 ? "its target matches the deadline." : "it is the only eligible forecast."));
             }
@@ -144,7 +148,7 @@ public final class RecommendationPolicy {
         if (age != null && age > 7) limitations.add("The reference observation is " + age + " days old. Check a current supplier quote.");
         var evidence = new Evidence(VERSION, c.urgency(), signal == null || reference == null ? "UNAVAILABLE" : signal.compareTo(reference.price()) < 0 ? "DOWN" : signal.compareTo(reference.price()) > 0 ? "UP" : "FLAT", width, now, chosen, difference,
                 age, target, "One deadline-based comparison of today against the weighted eligible forecast signal.",
-                List.copyOf(reasons), List.copyOf(limitations), List.of());
+                List.copyOf(reasons), List.copyOf(limitations), List.of(), signal, signalLow, signalHigh, List.copyOf(signalInputs));
         String identity = c + ":" + evidence + ":" + action;
         return new Guidance(UUID.nameUUIDFromBytes(identity.getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString(), action, summary, evidence);
     }

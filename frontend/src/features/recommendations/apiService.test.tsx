@@ -85,7 +85,7 @@ describe('real analysis adapter', () => {
     expect(await screen.findByText('Policy not connected.')).toBeInTheDocument();
     await userEvent.click(await screen.findByRole('button', { name: 'Retry cost impact' }));
     expect((await screen.findAllByText('USD 70,000'))[0]).toBeInTheDocument();
-    expect(screen.getByText('USD 2,000 less to USD 4,000 more')).toBeInTheDocument();
+    expect(screen.getByText('USD 2,000 less to USD 4,000 more than today')).toBeInTheDocument();
     expect(screen.getByText(/Synthetic demo data/)).toBeInTheDocument();
     expect(fetcher.mock.calls.filter(([url]) => url.includes('/recommendation?'))).toHaveLength(1);
     expect(document.querySelector('details')).not.toHaveAttribute('open');

@@ -51,7 +51,7 @@ describe('recommendations app integration', () => {
       expect(forecasts.read).toHaveBeenCalledTimes(3);
       expect(planService.read).toHaveBeenCalledOnce();
 
-      await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Refresh prices' })));
+      await act(async () => fireEvent.click(screen.getAllByRole("button", { name: "Refresh prices" })[0]));
       expect(answer().getByText('Guidance from second-run.')).toBeVisible();
       expect(screen.queryByText('Guidance from first-run.')).not.toBeInTheDocument();
       expect(service.read).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'second-run');

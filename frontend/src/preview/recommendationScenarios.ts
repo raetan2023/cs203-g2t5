@@ -9,9 +9,14 @@ import type { OrganisationPermissions } from '../features/organisation/apiServic
  * Fixed preview data for the Monitor, Buy now and Wait mockups (docs/ui-revamp/assets/inspo/recommendations-page).
  * Guidance values were worked out by hand from RecommendationPolicy deadline-weighted-v1; nothing here runs a policy.
  */
-export type RecommendationScenario = 'monitor' | 'buy' | 'wait';
+export type RecommendationScenario = 'monitor' | 'buy' | 'wait' | 'stale';
 export const SCENARIO_DATE = '2026-10-28';
 const QUOTE_DATE = '2026-10-26', PRICE = 1352, QUANTITY = 47;
+/** Option A's state: the same quote eleven days on, so the 7-day date has passed and timing advice is off. */
+const STALE = { today: '2026-11-06', price: 1351.5, quantity: 888 };
+export const scenarioDate = (scenario: RecommendationScenario) => scenario === 'stale' ? STALE.today : SCENARIO_DATE;
+const scenarioPrice = (scenario: RecommendationScenario) => scenario === 'stale' ? STALE.price : PRICE;
+const scenarioQuantity = (scenario: RecommendationScenario) => scenario === 'stale' ? STALE.quantity : QUANTITY;
 const basis = { commodity: 'MGO', currency: 'USD', unit: 'MT' };
 const addDays = (date: string, days: number) => new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
 
@@ -26,6 +31,7 @@ const SCENARIOS: Record<RecommendationScenario, { deadline: string; prices: Reco
         'Eligible price signal: $1352.00/mt; weighted uncertainty range $1200.00–$1386.00/mt.',
         'Compared buying today at $1352.00/mt with 1 eligible forecasts. Up to two nearest eligible targets form the signal; uncertainty can require monitoring.',
         'Estimated savings: $0.00/mt; $0.00 for 47 MT.', 'Review fresh prices before committing; do not wait beyond 2026-11-05.'],
+      signal_price: 1352, signal_low: 1200, signal_high: 1386, signal_inputs: [{ target_date: '2026-11-02', weight: 1, price: 1352 }],
       blended: false }),
   },
   buy: {
@@ -38,6 +44,8 @@ const SCENARIOS: Record<RecommendationScenario, { deadline: string; prices: Reco
         'Eligible price signal: $1469.92/mt; weighted uncertainty range $1392.12–$1592.69/mt.',
         'Compared buying today at $1352.00/mt with 3 eligible forecasts. Up to two nearest eligible targets form the signal; uncertainty can require monitoring.',
         'Estimated savings: $0.00/mt; $0.00 for 47 MT.'],
+      signal_price: 1469.92, signal_low: 1392.12, signal_high: 1592.69,
+      signal_inputs: [{ target_date: '2026-11-25', weight: 0.8077, price: 1478 }, { target_date: '2026-11-09', weight: 0.1923, price: 1436 }],
       blended: true }),
   },
   wait: {
@@ -50,17 +58,35 @@ const SCENARIOS: Record<RecommendationScenario, { deadline: string; prices: Reco
         'Eligible price signal: $1248.65/mt; weighted uncertainty range $1191.54–$1305.77/mt.',
         'Compared buying today at $1352.00/mt with 3 eligible forecasts. Up to two nearest eligible targets form the signal; uncertainty can require monitoring.',
         'Estimated savings: $103.35/mt; $4857.27 for 47 MT.'],
+      signal_price: 1248.65, signal_low: 1191.54, signal_high: 1305.77,
+      signal_inputs: [{ target_date: '2026-11-25', weight: 0.8077, price: 1240 }, { target_date: '2026-11-09', weight: 0.1923, price: 1285 }],
+      blended: true }),
+  },
+  stale: {
+    deadline: '2026-11-26',
+    prices: { 7: [1000, 1351.5, 1700], 14: [952.58, 1351.5, 1683.54], 30: [980, 1351.5, 1835] },
+    guidance: guidance('stale', 'MONITOR', 'Monitor and obtain a current supplier quote. The reference price is too old for timing advice.', {
+      direction: 'FLAT', interval_width_fraction: 0.65, alternative_cost_usd: null, alternative_minus_now_usd: null, supported_target_date: null,
+      buy_now_cost_usd: STALE.price * STALE.quantity, reference_age_days: 11,
+      reasons: ['20 calendar days remain until the saved deadline 2026-11-26.',
+        'Blended signal: 94.44% of the 2026-11-25 forecast ($1351.50/mt) + 5.56% of the 2026-11-09 forecast ($1351.50/mt). Weights use inverse distance to the deadline.',
+        'Eligible price signal: $1351.50/mt; weighted uncertainty range $978.44–$1826.70/mt.',
+        'Compared buying today at $1351.50/mt with 2 eligible forecasts. Up to two nearest eligible targets form the signal; uncertainty can require monitoring.',
+        'Estimated savings: $0.00/mt; $0.00 for 888 MT.', 'Review fresh prices before committing; do not wait beyond 2026-11-26.'],
+      signal_price: 1351.5, signal_low: 978.44, signal_high: 1826.7,
+      signal_inputs: [{ target_date: '2026-11-25', weight: 0.9444, price: 1351.5 }, { target_date: '2026-11-09', weight: 0.0556, price: 1351.5 }],
       blended: true }),
   },
 };
 
 function guidance(name: string, action: string, explanation: string, e: {
-  direction: string; interval_width_fraction: number; alternative_cost_usd: number; alternative_minus_now_usd: number;
-  supported_target_date: string; reasons: string[]; blended: boolean;
+  direction: string; interval_width_fraction: number; alternative_cost_usd: number | null; alternative_minus_now_usd: number | null;
+  supported_target_date: string | null; reasons: string[]; blended: boolean; buy_now_cost_usd?: number; reference_age_days?: number;
+  signal_price: number; signal_low: number; signal_high: number; signal_inputs: { target_date: string; weight: number; price: number }[];
 }): CurrentRecommendation {
   const { blended, ...rest } = e;
   return { recommendation_id: `preview-${name}`, action, explanation, evidence: {
-    ...rest, policy_version: 'deadline-weighted-v1', urgency: 'NORMAL', buy_now_cost_usd: PRICE * QUANTITY, reference_age_days: 2,
+    policy_version: 'deadline-weighted-v1', urgency: 'NORMAL', buy_now_cost_usd: PRICE * QUANTITY, reference_age_days: 2, ...rest,
     horizon_description: 'One deadline-based comparison of today against the weighted eligible forecast signal.', allocations: [],
     limitations: ['Forecast savings are estimates, not guaranteed. Obtain a current supplier quote before buying.',
       'Reference prices are dated observations, not executable quotes. Costs exclude freight, fees and taxes.',
@@ -72,16 +98,21 @@ function guidance(name: string, action: string, explanation: string, e: {
 
 export function scenarioPlan(scenario: RecommendationScenario): PurchasePlan {
   const deadline = SCENARIOS[scenario].deadline;
-  return { plan_id: RECOMMENDATION_DEMO_PLAN.plan_id, status: 'draft', quantity_mt: QUANTITY, purchase_deadline: deadline,
-    scenario_as_of_date: SCENARIO_DATE, days_remaining: Math.round((Date.parse(deadline) - Date.parse(SCENARIO_DATE)) / 86_400_000) };
+  const today = scenarioDate(scenario);
+  return { plan_id: RECOMMENDATION_DEMO_PLAN.plan_id, status: 'draft', quantity_mt: scenarioQuantity(scenario), purchase_deadline: deadline,
+    scenario_as_of_date: today, days_remaining: Math.round((Date.parse(deadline) - Date.parse(today)) / 86_400_000) };
 }
 
 export function createScenarioForecastService(scenario: RecommendationScenario): ForecastService {
   return { async read(horizon) {
     const [low, forecast, high] = SCENARIOS[scenario].prices[horizon];
+    const stale = scenario === 'stale';
+    if (addDays(QUOTE_DATE, horizon) <= scenarioDate(scenario)) return { status: 'unavailable', reason: 'ridge_unavailable', message: 'Forecast target date has passed; a newer observed MGO quote is required.' };
     return { ...buildMockForecast(horizon), run_id: `preview-${scenario}`, forecast_origin_date: QUOTE_DATE, anchor_quote_date: QUOTE_DATE,
-      anchor_price: PRICE, target_date: addDays(QUOTE_DATE, horizon), forecast, low, high, model_version: `ridge-${horizon}d-sha256-preview00000000`,
-      source_dates: { mgo: QUOTE_DATE }, news_window_start: `${QUOTE_DATE}T00:00:00Z`, news_window_end: `${SCENARIO_DATE}T00:00:00Z`,
+      anchor_price: scenarioPrice(scenario), target_date: addDays(QUOTE_DATE, horizon), forecast, low, high, model_version: `ridge-${horizon}d-sha256-preview00000000`,
+      // The stale scenario shows the live page's data notice, so it isn't marked as synthetic demo data.
+      synthetic: !stale, source_dates: { mgo: QUOTE_DATE, ...(stale ? { gdelt_estimated: '2026-11-05' } : {}) },
+      news_window_start: `${QUOTE_DATE}T00:00:00Z`, news_window_end: `${scenarioDate(scenario)}T00:00:00Z`,
       interval: { method: 'experimental_gdelt_scaled_quantiles', nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0,
         baseline_coverage: null, baseline_mean_width: null, mean_width: null, evaluation_scope: 'Synthetic preview; not evaluated',
         limitations: 'Illustrative prices and ranges. No measured coverage or model performance.' } } as ReadyForecast;
@@ -94,13 +125,13 @@ export function createScenarioRecommendationService(scenario: RecommendationScen
     await new Promise(resolve => setTimeout(resolve, delayMs));
     const [low, central, high] = prices[horizon];
     const target = addDays(QUOTE_DATE, horizon);
-    const q = context.quantity_mt, reference = PRICE * q;
+    const unit = scenarioPrice(scenario), q = context.quantity_mt, reference = unit * q;
     // Shaped like model output so the buyer approval flow can be clicked through; the page still labels
     // these results synthetic because every preview forecast carries `synthetic: true`.
     return {
-      source: 'api', provenance: 'model', approval_fingerprint: (scenario === 'monitor' ? 'a' : scenario === 'buy' ? 'b' : 'c').repeat(56) + String(horizon).padStart(8, '0'),
+      source: 'api', provenance: 'model', approval_fingerprint: (scenario === 'monitor' ? 'a' : scenario === 'buy' ? 'b' : scenario === 'wait' ? 'c' : 'd').repeat(56) + String(horizon).padStart(8, '0'),
       context: { ...context, urgency: context.urgency ?? 'NORMAL' },
-      reference: { status: 'ready', value: { price: PRICE, observation_date: QUOTE_DATE, basis } },
+      reference: { status: 'ready', value: { price: unit, observation_date: QUOTE_DATE, basis } },
       forecast: { status: 'ready', value: { prices: { lower: low, upper: high }, central_estimate: central, target_date: target, basis,
         run_id: `preview-${scenario}`, model_version: `ridge-${horizon}d-sha256-preview00000000`,
         range_description: 'Synthetic preview range; no measured confidence coverage.' } },
