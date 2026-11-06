@@ -8,7 +8,7 @@ import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 /** A plan is "due soon" within this many days of its deadline (presentation rule, not stored). */
 export const DUE_SOON_DAYS = 7;
 
-export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, deleteRef, busy = false, canEdit = true, saved = false }: {
+export function PurchasePlanSummary({ plan, service, onEdit, onDelete, onCopy, copiedPlanId, editRef, deleteRef, busy = false, canEdit = true, saved = false }: {
   plan: PurchasePlan;
   /** Reads a decided plan's manager note; without it the card shows the status only. */
   service?: PurchasePlanService;
@@ -18,6 +18,10 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, 
   saved?: boolean;
   onEdit(): void;
   onDelete(): void;
+  /** Copies a rejected or withdrawn plan to a new draft. */
+  onCopy?(): void;
+  /** The draft already copied from this plan, so the card links to it instead of offering a second copy. */
+  copiedPlanId?: string;
   editRef?: RefObject<HTMLButtonElement | null>;
   /** Focus target for the plan's delete flow: the "more actions" button, since Delete lives in its menu. */
   deleteRef?: RefObject<HTMLButtonElement | null>;
@@ -25,20 +29,28 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, 
   const headingId = useId();
   const draft = !plan.status || plan.status === 'draft';
   const quantity = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt);
-  const final = !!plan.status && ['approved', 'rejected', 'withdrawn', 'purchased'].includes(plan.status);
+  const closed = !!plan.status && ['rejected', 'withdrawn', 'purchased'].includes(plan.status);
+  // An approved plan is still live for its officer until the purchase is recorded, so its deadline still shows.
+  const showDeadline = !closed && (canEdit || plan.status !== 'approved');
   const overdue = plan.days_remaining < 0;
   const days = Math.abs(plan.days_remaining);
   const unit = days === 1 ? 'day' : 'days';
-  const status = final ? 'finished' : overdue ? 'overdue' : days <= DUE_SOON_DAYS ? 'soon' : 'on-track';
+  const status = !showDeadline ? 'finished' : overdue ? 'overdue' : days <= DUE_SOON_DAYS ? 'soon' : 'on-track';
+  const timeLeft = overdue ? `${days} ${unit} overdue` : days === 0 ? 'Due today' : `${days} ${unit} left`;
+  const statusLabel = draft ? 'Draft' : plan.status === 'submitted' ? 'Awaiting approval' : plan.status!.charAt(0).toUpperCase() + plan.status!.slice(1);
+  const planHref = (planId: string) => `/purchase-plans/recommendation?plan_id=${encodeURIComponent(planId)}`;
+  const editOnly = canEdit && draft && overdue;
+  const copyable = canEdit && (plan.status === 'rejected' || plan.status === 'withdrawn') && (!!onCopy || !!copiedPlanId);
+  const openLabel = draft ? 'View recommendation' : plan.status === 'submitted' ? 'View submitted recommendation' : plan.status === 'approved' && canEdit ? 'Record purchase' : plan.status === 'purchased' ? 'View purchase record' : plan.status === 'withdrawn' ? 'View withdrawn request' : 'View decision';
 
   // Guide: docs/ui-revamp/assets/inspo/purchase-plans-page/image.png. Quantity leads; deadline and time left follow.
   return <section className={`pp-card pp-summary pp-summary--${status}${saved ? ' pp-summary--saved' : ''}`} aria-labelledby={headingId}>
     <div className="pp-summary-top">
-      <div className="pp-summary-badges">{!final && <span className={`pp-badge pp-badge--${status}`}>
+      <div className="pp-summary-badges">{showDeadline && <span className={`pp-badge pp-badge--${status}`}>
         <Icon name={overdue ? 'alert' : 'clock'} />{overdue ? 'Overdue' : status === 'soon' ? 'Due soon' : 'On track'}
       </span>}
-      {/* No pill for drafts (the normal, editable state); submitted / approved / rejected keep theirs. */}
-      {plan.status && !draft && <span className={`pp-plan-status pp-plan-status--${plan.status}`}>{plan.status === 'submitted' ? 'Submitted for approval' : plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</span>}
+      {/* The deadline badge says how urgent the plan is; this pill says where it is. */}
+      <span className={`pp-plan-status pp-plan-status--${plan.status ?? 'draft'}`}>{statusLabel}</span>
       </div>
       {canEdit && draft && <PlanMenu quantity={quantity} busy={busy} triggerRef={deleteRef} onDelete={onDelete} />}
     </div>
@@ -50,16 +62,19 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, editRef, 
       </span>{' '}
       <span className="pp-summary-due">Due <time dateTime={plan.purchase_deadline}>{formatDate(plan.purchase_deadline)}</time></span>
     </h3>
-    {!final && <p className="pp-countdown">
-      {overdue
-        ? <span className="pp-countdown-value">Overdue by {days} {unit}</span>
-        : <><span className="pp-countdown-value">{days} {unit}</span> {days === 0 ? 'left · due today' : 'left'}</>}
-    </p>}
-    {plan.previous_plan_id && <p><AppLink href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.previous_plan_id)}`}>View previous plan</AppLink></p>}
+    {showDeadline && <p className="pp-countdown">{timeLeft}</p>}
+    {plan.previous_plan_id && <p className="pp-summary-previous"><AppLink href={planHref(plan.previous_plan_id)}>View previous plan</AppLink></p>}
     <PlanDecisionNote plan={plan} service={service} canAct={canEdit} />
-    <div className="pp-actions">
-      {!busy && <AppLink className="pp-button pp-button--primary pp-summary-link" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>{draft ? 'View recommendation' : plan.status === 'submitted' ? 'View submitted recommendation' : plan.status === 'approved' && canEdit ? 'View decision / record purchase' : plan.status === 'purchased' ? 'View purchase record' : plan.status === 'withdrawn' ? 'View withdrawn request' : 'View decision'} &rarr;</AppLink>}
-      {canEdit && draft && <PlanButton ref={editRef} variant="secondary" disabled={busy} onClick={onEdit}>Edit</PlanButton>}
+    <div className={`pp-actions${editOnly ? ' pp-actions--end' : ''}`}>
+      {copyable
+        ? <>
+          {copiedPlanId
+            ? !busy && <AppLink className="pp-button pp-button--primary" href={planHref(copiedPlanId)}>View copied plan &rarr;</AppLink>
+            : <PlanButton aria-label={`Copy to new draft: ${quantity} MT plan`} disabled={busy} onClick={onCopy}>Copy to new draft</PlanButton>}
+          {!busy && <AppLink className="pp-button pp-button--secondary" href={planHref(plan.plan_id)}>{plan.status === 'withdrawn' ? 'View request' : 'View decision'}</AppLink>}
+        </>
+        : !busy && !editOnly && <AppLink className="pp-button pp-button--primary pp-summary-link" href={planHref(plan.plan_id)}>{openLabel} &rarr;</AppLink>}
+      {canEdit && draft && <PlanButton ref={editRef} variant="secondary" aria-label={`Edit ${quantity} MT plan`} disabled={busy} onClick={onEdit}>Edit</PlanButton>}
     </div>
   </section>;
 }

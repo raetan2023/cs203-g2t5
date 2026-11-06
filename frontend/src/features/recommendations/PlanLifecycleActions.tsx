@@ -7,8 +7,7 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
   plan: PurchasePlan; data: SubmissionResponse; service: PurchasePlanService; today: string;
   onChanged(plan: PurchasePlan): void; onReload(): void;
 }) {
-  const [action, setAction] = useState<'withdraw' | 'revise' | 'purchase'>();
-  const [reason, setReason] = useState('');
+  const [action, setAction] = useState<'revise' | 'purchase'>();
   const [draft, setDraft] = useState({ purchased_on: today, supplier: '', quantity_mt: String(plan.quantity_mt), price_usd_per_mt: '', note: '' });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [uncertain, setUncertain] = useState(false);
@@ -39,12 +38,10 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
       if (draft.note.trim().length > 2000) validation.note = 'Use at most 2000 characters.';
       input = { ...draft, supplier: draft.supplier.trim(), quantity_mt: Number(draft.quantity_mt), price_usd_per_mt: Number(draft.price_usd_per_mt), note: draft.note.trim() };
     }
-    if (action === 'withdraw' && reason.trim().length > 2000) validation.reason = 'Use at most 2000 characters.';
     focusInvalid.current = Object.keys(validation).length > 0; setErrors(validation); if (Object.keys(validation).length) return;
     lock.current = true; setBusy(true); setError('');
     try {
-      const saved = action === 'withdraw' ? await service.withdraw!(plan.plan_id, reason.trim())
-        : action === 'revise' ? await service.revise!(plan.plan_id) : await service.recordPurchase!(plan.plan_id, input!);
+      const saved = action === 'revise' ? await service.revise!(plan.plan_id) : await service.recordPurchase!(plan.plan_id, input!);
       if (!active.current) return;
       if (action === 'revise') navigate(`/purchase-plans?edit_plan_id=${encodeURIComponent(saved.plan.plan_id)}`);
       else { setAction(undefined); onChanged(saved.plan); }
@@ -55,24 +52,18 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
       setUncertain(e.status !== 422);
     } finally { lock.current = false; if (active.current) setBusy(false); }
   }
-  const offered = (plan.status === 'submitted' && !!service.withdraw) || (plan.status === 'approved' && !!service.recordPurchase)
+  const offered = (plan.status === 'approved' && !!service.recordPurchase)
     || ((plan.status === 'rejected' || plan.status === 'withdrawn') && !!service.revise);
   // A purchased plan has no next action: render nothing rather than an empty section (a blank band in the status card).
   if (!action && !offered && !error && !data.revision_plan_ids?.length && !(plan.status === 'approved' && plan.days_remaining < 0)) return null;
   return <section className="rec-lifecycle" aria-label="Next plan action">
     {plan.status === 'approved' && plan.days_remaining < 0 && <p role="status">This plan is overdue. You can still record a purchase made on or after approval.</p>}
     {!action ? <div className="rec-approval-actions">
-      {plan.status === 'submitted' && service.withdraw && <button className="bb-button bb-button--secondary" onClick={() => setAction('withdraw')}>Withdraw request</button>}
       {plan.status === 'approved' && service.recordPurchase && <button className="bb-button" onClick={() => setAction('purchase')}>Record purchase</button>}
       {(plan.status === 'rejected' || plan.status === 'withdrawn') && service.revise && <button className="bb-button" onClick={() => setAction('revise')}>Copy to new draft</button>}
     </div> : <form ref={form} noValidate aria-busy={busy} onSubmit={e => { e.preventDefault(); void confirm(); }}>
-      <h3>{action === 'purchase' ? 'Record actual purchase' : action === 'withdraw' ? 'Withdraw this request?' : 'Copy this plan to a new draft?'}</h3>
-      {action === 'withdraw' ? <div className="pp-field"><p>A withdrawn request cannot be approved. You can copy it to a new draft afterwards.</p>
-        <label htmlFor={`${id}-reason`}>Withdrawal reason (optional)</label>
-        <textarea autoFocus id={`${id}-reason`} rows={3} maxLength={2000} value={reason} disabled={busy || uncertain}
-          aria-invalid={!!errors.reason} aria-describedby={errors.reason ? `${id}-reason-error` : undefined} onChange={e => setReason(e.target.value)} />
-        {errors.reason && <p id={`${id}-reason-error`} className="pp-field-error">{errors.reason}</p>}</div>
-        : action === 'revise' ? <p>The original plan and its history stay saved. Review the copied quantity and deadline before submitting the new draft.</p>
+      <h3>{action === 'purchase' ? 'Record actual purchase' : 'Copy this plan to a new draft?'}</h3>
+      {action === 'revise' ? <p>The original plan and its history stay saved. Review the copied quantity and deadline before submitting the new draft.</p>
           : <><p>One purchase can be recorded per plan. This record cannot be edited. Confirm the invoice details before saving.</p>
             <div className="rec-purchase-fields">
               {field('purchased_on', 'Date bought (Singapore)', 'date', { min: approvedOn, max: today, autoFocus: true })}
@@ -83,7 +74,7 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
             </div>
             <p>The server calculates the actual total from the recorded quantity and price.</p></>}
       <div className="rec-approval-actions"><button type="button" className="bb-button bb-button--secondary" disabled={busy} onClick={() => { setAction(undefined); if (!uncertain) setError(''); setErrors({}); }}>Cancel</button>
-        <button className="bb-button" type="submit" disabled={busy || uncertain}>{busy ? 'Saving…' : action === 'purchase' ? 'Confirm purchase record' : action === 'withdraw' ? 'Confirm withdrawal' : 'Create linked draft'}</button></div>
+        <button className="bb-button" type="submit" disabled={busy || uncertain}>{busy ? 'Saving…' : action === 'purchase' ? 'Confirm purchase record' : 'Create linked draft'}</button></div>
     </form>}
     {error && <div role="alert"><p>{error}</p>{uncertain && <p>Reload the request to check its current state before trying again.</p>}
       <button className="bb-button bb-button--secondary" onClick={onReload} disabled={busy}>Reload request</button></div>}
