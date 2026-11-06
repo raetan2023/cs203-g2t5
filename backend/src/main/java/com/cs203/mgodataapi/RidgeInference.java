@@ -25,6 +25,7 @@ public class RidgeInference {
             List<PurchaseForecastRepository.ModelObservation> observations, String artifacts) {}
     private final Map<PredictionKey, FutureTask<JsonNode>> predictions = new LinkedHashMap<>();
     private static final int CACHE_LIMIT = 12;
+    private static final int PROCESS_TIMEOUT_SECONDS = 90;
     public RidgeInference(@Value("${mgo.ridge.root:../ridge-regression-model}") String root,
             @Value("${mgo.ridge.python:}") String python, JsonMapper mapper, PurchaseForecastRepository repository) {
         this.root = Path.of(root).toAbsolutePath().normalize();
@@ -97,13 +98,17 @@ public class RidgeInference {
         try {
             // Avoid filling a stdout pipe while the parent waits for process completion.
             output = Files.createTempFile("purchase-ridge-", ".json");
-            process = new ProcessBuilder(python, "-m", "src.purchase_inference")
+            var builder = new ProcessBuilder(python, "-m", "src.purchase_inference")
                     .directory(root.toFile()).redirectError(ProcessBuilder.Redirect.DISCARD)
-                    .redirectOutput(output.toFile()).start();
+                    .redirectOutput(output.toFile());
+            // Different horizons can run together on the single-core production host.
+            builder.environment().put("OPENBLAS_NUM_THREADS", "1");
+            builder.environment().put("OMP_NUM_THREADS", "1");
+            process = builder.start();
             try (var input = process.getOutputStream()) {
                 input.write(mapper.writeValueAsBytes(Map.of("horizon_days", horizon, "as_of_date", asOf.toString(), "observations", observations)));
             }
-            if (!process.waitFor(25, TimeUnit.SECONDS)) throw new IllegalStateException("Ridge inference timed out.");
+            if (!process.waitFor(PROCESS_TIMEOUT_SECONDS, TimeUnit.SECONDS)) throw new IllegalStateException("Ridge inference timed out.");
             if (process.exitValue() != 0) throw new IllegalStateException("Ridge inference failed; inspect model installation and inputs.");
             return mapper.readTree(Files.readAllBytes(output));
         } catch (InterruptedException error) {
