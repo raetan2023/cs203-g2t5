@@ -98,6 +98,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
             : guidance?.action === 'WAIT' ? columns.filter(c => c.date === target && c.id !== 'today').map(c => c.id) : [];
           const usable = (id?: ColumnId) => columns.find(c => c.id === id && (c.observed || c.forecast));
           const shown = usable(explored) ?? usable(recommended[0]) ?? usable(fitsSelected ? forecastState.horizon : 'today') ?? usable('today');
+          const displayedForecast = shown?.forecast ?? forecast;
           return <>
             {noHorizonFits && <section className="rec-card rec-deadline-notice" role="status" aria-label="Purchase deadline guidance">
               <h2>{plan.days_remaining < 0 ? 'Your purchase deadline has passed' : 'Your deadline is before the available forecasts'}</h2>
@@ -126,7 +127,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
             {experimental && !noHorizonFits && fitsSelected && (afterDeadline || quoteAge > 7 || !executedRidge) && <aside className="rec-notice" aria-label="Estimate limitations">
               <WarningIcon /><div>
               <h2>{plan.days_remaining < 0 ? 'Your purchase deadline has passed' : afterDeadline ? 'This estimate is after your purchase deadline' : executedRidge ? 'Dated Ridge estimate' : 'Timing guidance unavailable'}</h2>
-              <p>{afterDeadline ? 'Choose a shorter horizon if one fits your deadline. ' : ''}{quoteAge > 7 ? `The ${executedRidge ? 'model anchor' : 'latest price'} quote is ${quoteAge} days old (${formatDate(forecast!.anchor_quote_date)}). ` : executedRidge ? `The model targets ${formatDate(forecast!.target_date)} from its ${formatDate(forecast!.forecast_origin_date)} decision date. ` : 'No current Ridge forecast is available. '}{executedRidge && quoteAge > 7 ? `The ${forecastState.horizon}-day model targets ${formatDate(forecast!.target_date)} from today. ` : ''}Compare this scenario with a current supplier quote before deciding when to buy.</p>
+              <p>{afterDeadline ? 'Choose a shorter horizon if one fits your deadline. ' : ''}{quoteAge > 7 ? `The ${executedRidge ? 'model anchor' : 'latest price'} quote is ${quoteAge} days old (${formatDate(displayedForecast!.anchor_quote_date)}). ` : executedRidge ? `The model targets ${formatDate(displayedForecast!.target_date)} from its ${formatDate(displayedForecast!.forecast_origin_date)} decision date. ` : 'No current Ridge forecast is available. '}{executedRidge && quoteAge > 7 ? `The ${displayedForecast!.horizon_days}-day model targets ${formatDate(displayedForecast!.target_date)} from today. ` : ''}Compare this scenario with a current supplier quote before deciding when to buy.</p>
               <span className="rec-source-label">{executedRidge ? 'Executed Ridge · experimental bounds' : 'Last-quote fallback · Ridge unavailable'}</span>
               </div></aside>}
           </>;
