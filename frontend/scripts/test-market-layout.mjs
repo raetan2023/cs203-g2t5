@@ -44,9 +44,6 @@ try {
   }
 
   await page.setViewportSize({ width: 1440, height: 1100 });
-  const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Download report' }).click();
-  assert.equal((await download).suggestedFilename(), 'mgo-forecast-report-2026-11-06.pdf');
   await page.getByRole('button', { name: 'View recent values' }).click();
   assert.equal(await page.locator('.sm-history table tbody tr').count(), 7);
   await page.getByRole('button', { name: 'View all 16 categories' }).click();

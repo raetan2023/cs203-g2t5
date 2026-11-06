@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
-import { AppLink } from '../../app/router';
-import type { Horizon, ReadyForecast } from '../forecast/apiService';
+import type { Forecast, Horizon, ReadyForecast } from '../forecast/apiService';
 import { useForecastContext } from '../forecast/ForecastContext';
 import { deriveDirection } from '../forecast/utils';
 import { amount, dayDate, perMt } from '../recommendations/format';
-import { downloadReportPdf } from '../recommendations/reportPdf';
 import { ageLabel, daysOld } from './format';
-import { forecastReportSections, type HorizonResult } from './forecastReport';
+import { Symbol } from './StoredMarketPanel';
 
 const HORIZONS: Horizon[] = [7, 14, 30];
-const SCALE_STEP = 100;
+type HorizonResult = { horizon: Horizon; forecast?: Forecast; error?: string };
 
 /** All three horizons through the provider's shared reads, so a refresh or new run updates them together. */
 function useHorizonForecasts() {
@@ -28,32 +26,17 @@ function useHorizonForecasts() {
   return results;
 }
 
-const position = (value: number, scale: Scale) => (value - scale.low) / (scale.high - scale.low) * 100;
-type Scale = { low: number; high: number };
-
-/** One scale across every tile, rounded outwards, so the ranges can be compared by eye. */
-function sharedScale(forecasts: ReadyForecast[]): Scale {
-  const values = forecasts.flatMap(forecast => [forecast.low, forecast.high, forecast.anchor_price]);
-  const low = Math.floor(Math.min(...values) / SCALE_STEP) * SCALE_STEP;
-  const high = Math.ceil(Math.max(...values) / SCALE_STEP) * SCALE_STEP;
-  return { low, high: high > low ? high : low + SCALE_STEP };
-}
-
-function QuoteTile({ anchor, date, age, scale }: { anchor: number; date: string; age: number; scale: Scale }) {
+function QuoteTile({ anchor, date, age }: { anchor: number; date: string; age: number }) {
   return <li className="mf-tile">
     <div className="mf-tile-head"><strong>Latest quote</strong><span>{dayDate(date)}</span></div>
     <div className="mf-figure"><span className="mf-value">${perMt(anchor)}</span></div>
     <span className="mf-detail">Observed · {ageLabel(age)}</span>
-    <div className="mf-track" role="img" aria-label={`Latest quote USD ${perMt(anchor)} per tonne`}>
-      <span className="mf-dot" style={{ left: `${position(anchor, scale)}%` }} />
-    </div>
   </li>;
 }
 
-function HorizonTile({ forecast, scale }: { forecast: ReadyForecast; scale: Scale }) {
+function HorizonTile({ forecast }: { forecast: ReadyForecast }) {
   const direction = deriveDirection(forecast.forecast, forecast.anchor_price);
   const percent = Math.abs((forecast.forecast - forecast.anchor_price) / forecast.anchor_price * 100).toFixed(1);
-  const left = position(forecast.low, scale);
   return <li className="mf-tile">
     <div className="mf-tile-head"><strong>{forecast.horizon_days} days</strong><span>{dayDate(forecast.target_date)}</span></div>
     <div className="mf-figure">
@@ -64,10 +47,6 @@ function HorizonTile({ forecast, scale }: { forecast: ReadyForecast; scale: Scal
       </span>
     </div>
     <span className="mf-detail">Range ${amount(forecast.low)} – {amount(forecast.high)}</span>
-    <div className="mf-track" role="img" aria-label={`Range USD ${amount(forecast.low)} to ${amount(forecast.high)} per tonne, with the latest quote marked`}>
-      <span className={`mf-range mf-range-${forecast.horizon_days}`} style={{ left: `${left}%`, width: `${position(forecast.high, scale) - left}%` }} />
-      <span className="mf-quote-line" style={{ left: `${position(forecast.anchor_price, scale)}%` }} />
-    </div>
   </li>;
 }
 
@@ -111,16 +90,17 @@ function ForecastMessage({ title, detail, alert, retry }: { title: string; detai
   </div>;
 }
 
-export function MarketForecast({ today, canCreatePlan = false }: { today: string; canCreatePlan?: boolean }) {
+export function MarketForecast({ today }: { today: string }) {
   const { connected, retry } = useForecastContext();
   const results = useHorizonForecasts();
+  const [refreshing, setRefreshing] = useState(false);
+  useEffect(() => { setRefreshing(false); }, [results]);
   const forecasts = (results ?? []).flatMap(result => result.forecast?.status === 'ready' ? [result.forecast] : []);
   const first = forecasts[0];
-  const scale = first ? sharedScale(forecasts) : null;
   const age = first ? daysOld(first.anchor_quote_date, today) : 0;
   const failed = results?.find(result => result.forecast?.status !== 'ready');
   const lastRun = results?.flatMap(result => result.forecast?.status === 'unavailable' && result.forecast.last_successful_run ? [result.forecast.last_successful_run] : [])[0];
-  const download = () => downloadReportPdf(`mgo-forecast-report-${first!.forecast_origin_date}.pdf`, 'MGO forecast report', forecastReportSections(results!));
+  const refresh = () => { setRefreshing(true); retry(); };
 
   return <section className="sm-panel mf" aria-label="MGO price forecast">
     <div className="mf-header">
@@ -130,7 +110,9 @@ export function MarketForecast({ today, canCreatePlan = false }: { today: string
         {first ? <p>From the latest quote of USD {perMt(first.anchor_price)}/MT on {dayDate(first.anchor_quote_date)}. Each horizon is a separate estimate with its own range.</p>
           : <p>Experimental forecast from market and news signals. Purchasing outcomes are uncertain.</p>}
       </div>
-      {canCreatePlan && <AppLink className="bb-button" href="/purchase-plans">Create a purchase plan</AppLink>}
+      {first && <button type="button" className="bb-button bb-button--secondary sm-refresh" onClick={refresh} disabled={refreshing} aria-label="Refresh forecast" aria-busy={refreshing}>
+        <Symbol name="refresh" className={refreshing ? 'sm-spinning' : ''} />{refreshing ? 'Checking…' : 'Refresh forecast'}
+      </button>}
     </div>
 
     {!connected ? <ForecastMessage title="Forecast unavailable" detail="The forecast service is not connected." />
@@ -140,21 +122,16 @@ export function MarketForecast({ today, canCreatePlan = false }: { today: string
             lastRun && `Last successful forecast: ${dayDate(lastRun.origin_date, true)}. It is not shown as a current forecast.`].filter(Boolean).join(' ')} />
           : <>
             <ul className="mf-tiles" aria-label="Forecast by horizon">
-              <QuoteTile anchor={first.anchor_price} date={first.anchor_quote_date} age={age} scale={scale!} />
+              <QuoteTile anchor={first.anchor_price} date={first.anchor_quote_date} age={age} />
               {results.map(result => result.forecast?.status === 'ready'
-                ? <HorizonTile key={result.horizon} forecast={result.forecast} scale={scale!} />
+                ? <HorizonTile key={result.horizon} forecast={result.forecast} />
                 : <UnavailableTile key={result.horizon} result={result} />)}
             </ul>
             <div className="mf-footnote">
-              <span>Bars share one scale, USD {amount(scale!.low)}–{amount(scale!.high)}/MT; the line marks the latest quote. {first.interval.nominal_coverage == null ? 'Experimental ranges, coverage not measured.' : ''}</span>
-              <span>Ran {dayDate(first.forecast_origin_date)} · {first.model_version.startsWith('ridge-') ? 'Ridge regression' : first.model_version}{' · '}
-                <button type="button" className="sm-text-button" onClick={retry}>Refresh forecast</button></span>
+              {first.interval.nominal_coverage == null ? <span>Experimental ranges, coverage not measured.</span> : <span />}
+              <span>Ran {dayDate(first.forecast_origin_date)} · {first.model_version.startsWith('ridge-') ? 'Ridge regression' : first.model_version}</span>
             </div>
             <ForecastSteps forecasts={forecasts} age={age} />
-            <div className="mf-report">
-              <div><h3>Full report (PDF)</h3><p>Drivers, coverage, source dates and the model version for each horizon.</p></div>
-              <button type="button" className="bb-button bb-button--secondary" onClick={download}>Download report</button>
-            </div>
           </>}
   </section>;
 }
