@@ -110,7 +110,7 @@ export function createScenarioForecastService(scenario: RecommendationScenario):
     if (addDays(QUOTE_DATE, horizon) <= scenarioDate(scenario)) return { status: 'unavailable', reason: 'ridge_unavailable', message: 'Forecast target date has passed; a newer observed MGO quote is required.' };
     return { ...buildMockForecast(horizon), run_id: `preview-${scenario}`, forecast_origin_date: QUOTE_DATE, anchor_quote_date: QUOTE_DATE,
       anchor_price: scenarioPrice(scenario), target_date: addDays(QUOTE_DATE, horizon), forecast, low, high, model_version: `ridge-${horizon}d-sha256-preview00000000`,
-      // The stale scenario shows the live page's data notice, so it isn't marked as a synthetic fallback.
+      // The stale scenario shows the live page's data notice, so it isn't marked as synthetic demo data.
       synthetic: !stale, source_dates: { mgo: QUOTE_DATE, ...(stale ? { gdelt_estimated: '2026-11-05' } : {}) },
       news_window_start: `${QUOTE_DATE}T00:00:00Z`, news_window_end: `${scenarioDate(scenario)}T00:00:00Z`,
       interval: { method: 'experimental_gdelt_scaled_quantiles', nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0,

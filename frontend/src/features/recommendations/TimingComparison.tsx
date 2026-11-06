@@ -9,7 +9,7 @@ export type ColumnId = 'today' | Horizon;
 export interface Column {
   id: ColumnId; label: string; date?: string; low: number; mid: number; high: number;
   /** Observation date of the shared reference quote every column is anchored to. */
-  quote?: string; mockReference?: boolean; observed: boolean; late: boolean; past: boolean; message?: string; forecast?: ReadyForecast;
+  quote?: string; observed: boolean; late: boolean; past: boolean; message?: string; forecast?: ReadyForecast;
 }
 
 /** Read every horizon as a group; never combine forecasts from different snapshots. */
@@ -41,13 +41,13 @@ export function useHorizonComparison(service: ForecastService | undefined, today
 const PASSED = 'This forecast date has passed. A newer quote is needed to show it.';
 const changed = (): Entry[] => horizons.map(horizon => ({ horizon, message: 'Source data changed. Refresh the comparison.' }));
 
-/** Forecast dates count from the shared quote, so each price sits on its real target date. Passed targets have no price. */
+/** Each price sits on its real target date. A model counts from its own origin: today, or an older quote. Passed targets have no price. */
 export function buildColumns(entries: Entry[], today: string, deadline: string): Column[] {
   const anchor = entries.find(e => e.forecast)?.forecast;
   const columns: Column[] = anchor ? [{ id: 'today', label: 'Today', date: today, low: anchor.anchor_price, mid: anchor.anchor_price,
-    high: anchor.anchor_price, quote: anchor.anchor_quote_date, mockReference: !!anchor.synthetic && !anchor.source_dates.mgo, observed: true, late: deadline < today, past: false }] : [];
+    high: anchor.anchor_price, quote: anchor.anchor_quote_date, observed: true, late: deadline < today, past: false }] : [];
   for (const e of entries) {
-    const date = e.forecast?.target_date ?? addCalendarDays(anchor?.anchor_quote_date ?? today, e.horizon);
+    const date = e.forecast?.target_date ?? addCalendarDays(anchor?.forecast_origin_date ?? today, e.horizon);
     const past = !!anchor && date <= today;
     const f = past ? undefined : e.forecast;
     columns.push({ id: e.horizon, label: `${e.horizon} days`, date, low: f?.low ?? 0, mid: f?.forecast ?? 0, high: f?.high ?? 0,
@@ -70,6 +70,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
   const top = (value: number) => `${((1 - (value - (lo - pad)) / (hi - lo + 2 * pad)) * 100).toFixed(2)}%`;
   const reference = columns.find(c => c.observed);
   const quoteDate = entries?.find(e => e.forecast)?.forecast?.anchor_quote_date;
+  const origin = entries?.find(e => e.forecast)?.forecast?.forecast_origin_date;
   const before = columns.filter(c => !c.late), after = columns.filter(c => c.late);
   const value = (n: number) => unit === 'total' ? total(n * quantity) : `${usd(n)}/MT`;
   // Every horizon failing for one reason is a single fact; say it once instead of on three empty cards.
@@ -79,7 +80,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
     const available = c.observed || !!c.forecast;
     const pressed = selected === c.id;
     const status = c.past ? 'Passed' : !available ? 'Unavailable' : c.late ? 'After deadline'
-      : recommended.includes(c.id) ? 'Recommended' : c.observed ? (c.mockReference ? 'Mock reference' : 'Observed') : pressed ? 'Selected' : 'Eligible';
+      : recommended.includes(c.id) ? 'Recommended' : c.observed ? 'Observed' : pressed ? 'Selected' : 'Eligible';
     const key = `${id}-${c.id}`;
     const toDeadline = c.date && !c.observed && !c.late ? calendarDays(c.date, deadline) : undefined;
     const content = <>
@@ -96,7 +97,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
       </span> : <span className="rec-col-plot rec-col-plot--empty">{c.past ? c.message : `Model status: ${c.message}`}</span>}
       <span id={`${key}-values`} className="rec-col-values">
         {available ? <><strong>{value(c.mid)}</strong><span>{c.observed
-          ? (c.mockReference ? 'Illustrative baseline · no observed quote available' : unit === 'total' ? `${amount(quantity)} MT × USD ${perMt(c.mid)}/MT` : 'Latest observed quote')
+          ? (unit === 'total' ? `${amount(quantity)} MT × USD ${perMt(c.mid)}/MT` : 'Latest observed quote')
           : `Range ${unit === 'total' ? compactRange(c.low * quantity, c.high * quantity) : `${amount(c.low)}–${amount(c.high)}/MT`}`}</span></>
           : <><strong aria-hidden="true">—</strong><span>Unavailable</span></>}
       </span>
@@ -136,8 +137,8 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
           </div>}
           {after.map(column)}
         </div>
-        <p className="rec-footnote">Bars show each forecast’s range on a shared scale; the tick is the central estimate and the dashed line is {reference?.mockReference ? 'an illustrative baseline' : 'today’s price'}.
-          {quoteDate && ` Forecast dates count from the ${formatDate(quoteDate)} quote${quoteDate === today ? '' : ', not from today'}.`}</p>
+        <p className="rec-footnote">Bars show each forecast’s range on a shared scale; the tick is the central estimate and the dashed line is today’s price.
+          {origin && (origin === today ? ' Forecast dates count from today.' : ` Forecast dates count from the ${formatDate(origin)} quote, not from today.`)}</p>
       </>}
   </section>;
 }

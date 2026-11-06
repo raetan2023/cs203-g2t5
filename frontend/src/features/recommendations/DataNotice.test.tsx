@@ -33,10 +33,11 @@ it('says so when the central price is only the last quote', () => {
   expect(note()).toHaveTextContent('No current Ridge forecast is available');
 });
 
-it('labels a fallback estimate and a missing quote', () => {
-  render(<DataNotice forecast={forecast({ synthetic: true, source_dates: {} })} today="2026-11-06" />);
-  expect(note()).toHaveTextContent('Fallback estimate: prices and timing use illustrative trend logic');
-  expect(note()).toHaveTextContent('No observed MGO quote could be loaded');
+it('says estimated news moves the price when the news-aware model produced it', () => {
+  render(<DataNotice forecast={forecast({ model_version: `ridge-decision-gdelt-14d-sha256-${'a'.repeat(64)}`,
+    source_dates: { mgo: '2026-10-26', gdelt_estimated: '2026-11-05' } })} today="2026-11-06" />);
+  expect(note()).toHaveTextContent('which affect the model price and its range');
+  expect(note()).not.toHaveTextContent('don’t move the central price');
 });
 
 it('is a quiet line, with no warning, when the data is current', () => {

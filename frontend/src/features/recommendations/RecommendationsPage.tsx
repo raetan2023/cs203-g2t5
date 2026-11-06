@@ -51,10 +51,10 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
   const upcoming = (f?: ReadyForecast) => f && f.target_date > scenarioDate ? f : undefined;
   const forecast = upcoming(selectedForecast);
   const referenceForecast = selectedForecast ?? comparison.entries?.find(entry => entry.forecast)?.forecast;
-  const { experimental, executedRidge } = forecastSource(forecast);
-  // Horizons count from the quote, so a forecast is judged on its own target date.
+  const { experimental, executedRidge, newsAware } = forecastSource(forecast);
+  // Each model has its own origin date, so a forecast is judged on its own target date.
   const targetFor = (h: Horizon) => entryFor(h)?.forecast?.target_date ?? (selectedForecast?.horizon_days === h ? selectedForecast.target_date
-    : addCalendarDays(referenceForecast?.anchor_quote_date ?? scenarioDate, h));
+    : addCalendarDays(referenceForecast?.forecast_origin_date ?? scenarioDate, h));
   const horizons = [7, 14, 30] as const;
   const fittingHorizons = plan ? horizons.filter(h => (!comparison.entries || upcoming(entryFor(h)?.forecast))
     && targetFor(h) <= plan.purchase_deadline && targetFor(h) > scenarioDate) : [];
@@ -121,7 +121,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
             {preparing ? <CompareSkeleton /> : forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
               selected={explored ?? (fitsSelected ? forecastState.horizon : undefined)} recommended={recommended} onSelect={select}
               knownMessage={!forecast ? (forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : undefined) : undefined}
-              badge={forecast?.model_version === 'illustrative-trend-fallback-v1' ? 'Fallback estimate' : executedRidge ? 'Executed Ridge · experimental bounds' : experimental ? 'Last-quote fallback · Ridge unavailable'
+              badge={newsAware ? 'News-aware Ridge · experimental bounds' : executedRidge ? 'Executed Ridge · experimental bounds' : experimental ? 'Last-quote fallback · Ridge unavailable'
                 : forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
           </>;
         }}
@@ -204,7 +204,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
         {waitTarget && <div className="rec-tile rec-tile--recommended">
           <span className="rec-tile-label">Buy on {dayDate(waitTarget)}</span>
           <strong className="rec-tile-value">{usd(evidence!.alternative_cost_usd!)}</strong>
-          <span className="rec-tile-note">{evidence!.alternative_minus_now_usd != null && `About ${change(evidence!.alternative_minus_now_usd)} than buying today · `}{published?.model_version === 'illustrative-trend-fallback-v1' ? 'illustrative trend estimate' : 'weighted forecast signal'}</span>
+          <span className="rec-tile-note">{evidence!.alternative_minus_now_usd != null && `About ${change(evidence!.alternative_minus_now_usd)} than buying today · `}weighted forecast signal</span>
         </div>}
         {forecastTile}
       </div>}
@@ -223,7 +223,9 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
               <li>Only forecasts that land on or before your deadline are used.</li>
               <li>The two eligible forecasts nearest your deadline are blended, weighted by how close each target date is to it. A single eligible forecast is used on its own.</li>
               <li>If the blended price is below today’s, the plan waits for that forecast’s date; otherwise it buys today.</li>
-              <li>If the blended range overlaps today’s price, or the quote is more than 7 days old, the advice is to monitor instead. Never wait past your deadline.</li>
+              <li>{forecastSource(published).newsAware
+                ? 'Timing uses the central model estimates even when the reference quote is dated. Quote age and price ranges remain visible limitations. Never wait past your deadline.'
+                : 'If the blended range overlaps today’s price, or the quote is more than 7 days old, the advice is to monitor instead. Never wait past your deadline.'}</li>
             </ul>
             <h3>For this plan</h3>
             <ul>{evidence.reasons.map((reason, n) => <li key={n}>{readableDates(reason)}</li>)}</ul>
