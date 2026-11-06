@@ -6,12 +6,12 @@ import { createMockPlanService } from './mockService';
 import { DEMO_PLAN, DEMO_SCENARIO_DATE } from './fixtures';
 import type { PlanStatus } from './types';
 
-it('counts only drafts and submitted plans as active and filters finished records', async () => {
+it('counts only drafts and submitted plans as active and filters finished records for read-only viewers', async () => {
   window.history.replaceState(null, '', '/purchase-plans');
   const statuses: PlanStatus[] = ['draft', 'submitted', 'approved', 'rejected', 'withdrawn', 'purchased'];
   const service = createMockPlanService({ delayMs: 0, initialPlans: statuses.map((status, i) => ({ ...DEMO_PLAN, plan_id: `p${i}`, status })) });
   const user = userEvent.setup();
-  render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} />);
+  render(<PurchasePlanPage service={service} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} />);
   const summary = await screen.findByRole('region', { name: 'Plan summary' });
   expect(within(summary).getByText('Active plans').parentElement).toHaveTextContent('Active plans2');
   await user.click(screen.getByRole('button', { name: 'Finished' }));
@@ -37,7 +37,7 @@ it('gives admins status filters and read-only plan cards even with an edit URL',
   }
   await user.click(screen.getByRole('button', { name: 'All' }));
   expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(4);
-  for (const name of ['Create plan', 'Edit', 'Delete', 'Approve', 'Reject', 'Record purchase']) {
+  for (const name of ['Create plan', /^Edit/, 'Delete', 'Approve', 'Reject', 'Record purchase']) {
     expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
   }
 });
