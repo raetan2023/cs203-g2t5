@@ -1,4 +1,4 @@
-import type { ForecastService, ReadyForecast } from '../forecast/apiService';
+import type { Forecast, ForecastService, ReadyForecast } from '../forecast/apiService';
 import type { PlanAnalysis, PlanResultContext } from '../purchase-plan/types';
 import { addCalendarDays, calendarDays } from '../purchase-plan/dates';
 import type { RecommendationService } from './service';
@@ -14,14 +14,22 @@ async function bounded<T>(work: Promise<T>): Promise<T> {
 
 /** Explicit illustrative estimates, scoped to this signed-in session and planning date. */
 export function createPurchaseFallback(source: ForecastService, analysis: RecommendationService | undefined, today: string) {
-  let pending: Promise<ReadyForecast[]> | undefined;
-  let latest: ReadyForecast[] | undefined;
-  async function snapshot() {
+  let pending: Promise<Forecast[]> | undefined;
+  let latest: Forecast[] | undefined;
+  async function snapshot(): Promise<Forecast[]> {
     if (pending) return pending;
-    pending = (async () => {
+    pending = (async (): Promise<Forecast[]> => {
       const results = await Promise.allSettled(horizons.map(h => bounded(source.read(h))));
       for (const result of results) if (result.status === 'rejected' && authFailure(result.reason)) throw result.reason;
       const ready = results.flatMap(r => r.status === 'fulfilled' && r.value.status === 'ready' ? [r.value] : []);
+      const upcoming = (f: Forecast): f is ReadyForecast => f.status === 'ready' && f.target_date > today;
+      // A real forecast keeps its own target date, and a passed horizon stays unavailable beside it.
+      // Illustrative estimates are only for when no real forecast is left.
+      if (ready.some(upcoming)) {
+        latest = results.map(r => r.status === 'fulfilled' && upcoming(r.value) ? r.value
+          : { status: 'unavailable', reason: 'target_passed', message: r.status === 'fulfilled' && r.value.status === 'unavailable' ? r.value.message : 'This forecast date has passed.' });
+        return latest;
+      }
       const anchor = ready[0];
       const price = anchor?.anchor_price ?? 1351.5;
       const quote = anchor?.anchor_quote_date ?? today;
@@ -32,35 +40,32 @@ export function createPurchaseFallback(source: ForecastService, analysis: Recomm
       // A flat/missing trend uses an explicitly mock mild decline so the demo remains usable.
       const trend = observedTrend === 0 ? -0.001 : Math.max(-0.002, Math.min(0.002, observedTrend));
       const run = `illustrative-${today}-${price}-${quote}-${trend}`;
-      latest = horizons.map((h, i) => {
-        const result = results[i];
-        if (result.status === 'fulfilled' && result.value.status === 'ready' && result.value.target_date === addCalendarDays(today, h)) return result.value;
+      const sources: ReadyForecast['source_dates'] = anchor ? { mgo: quote } : {};
+      latest = horizons.map(h => {
         const central = price * (1 + trend) ** h, spread = .08 * Math.sqrt(h / 7);
         return { status: 'ready', run_id: run, forecast_origin_date: today, target_date: addCalendarDays(today, h),
           anchor_quote_date: quote, anchor_price: price, forecast: central, low: central * (1 - spread), high: central * (1 + spread),
           unit: 'USD/metric tonne', horizon_days: h, synthetic: true, model_version: 'illustrative-trend-fallback-v1',
           published_at: `${today}T00:00:00Z`, news_window_start: `${addCalendarDays(today, -1)}T00:00:00Z`, news_window_end: `${today}T00:00:00Z`,
-          source_dates: anchor ? { mgo: quote } : {}, history, top_drivers: [], evidence: 'unevaluated', mae_skill_vs_persistence: null,
+          source_dates: sources, history, top_drivers: [], evidence: 'unevaluated', mae_skill_vs_persistence: null,
           interval: { method: 'illustrative_fallback', nominal_coverage: null, empirical_coverage: null, evaluation_rows: 0,
             baseline_coverage: null, baseline_mean_width: null, mean_width: null, evaluation_scope: 'Not evaluated',
             limitations: anchor ? 'Illustrative trend estimate from a dated quote; not Ridge output. Flat trends use a mock decline. Ranges are illustrative.'
               : 'Mock baseline USD 1,351.50/MT: no observed quote could be loaded. Prices and ranges are illustrative.' } } satisfies ReadyForecast;
       });
-      // One comparison identity for a group containing fallback estimates.
-      if (latest.some(f => f.model_version === 'illustrative-trend-fallback-v1')) latest = latest.map(f => ({ ...f, run_id: run }));
       return latest;
     })();
     try { return await pending; } finally { pending = undefined; }
   }
-  const forecasts: ForecastService = { read: async h => (await snapshot()).find(f => f.horizon_days === h)! };
+  const forecasts: ForecastService = { read: async h => (await snapshot())[horizons.indexOf(h)] };
   async function read(context: PlanResultContext, h: number = 7, runId?: string, impact = false): Promise<PlanAnalysis> {
-    const group = latest ?? await snapshot();
+    const group = (latest ?? await snapshot()).filter((f): f is ReadyForecast => f.status === 'ready');
     if (!group.some(f => f.model_version === 'illustrative-trend-fallback-v1')) {
       try {
         const operation = impact ? analysis?.readImpact : analysis?.read;
         if (operation) {
           const result = await bounded(operation.call(analysis, context, h, runId));
-          if (result.forecast.status === 'ready' && result.forecast.value.target_date === addCalendarDays(today, h)
+          if (result.forecast.status === 'ready' && result.forecast.value.target_date > today
             && (impact ? result.cost_impact.status === 'ready' : result.recommendation.status === 'ready')) return result;
         }
       } catch (error) { if (authFailure(error)) throw error; }

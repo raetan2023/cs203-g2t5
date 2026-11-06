@@ -3,7 +3,10 @@ import type { PlanAnalysis, PlanResultContext } from '../purchase-plan/types';
 import { PlanError } from '../purchase-plan/types';
 import { sameContext, type RecommendationService } from './service';
 
-/** Independent request state for guidance and cost impact. No result cache. */
+/**
+ * Independent request state for guidance and cost impact. No result cache.
+ * `held` is the last good answer for these same saved inputs, for display while another horizon or refresh loads.
+ */
 export function useAnalysis(service: RecommendationService | undefined, context: PlanResultContext, kind: 'read' | 'readImpact', horizonDays?: number, runId?: string) {
   const [attempt, setAttempt] = useState(0);
   const scope = useMemo(() => ({}), [service, context.plan_id, context.quantity_mt, context.purchase_deadline, context.scenario_as_of_date, context.urgency, kind, attempt, horizonDays, runId]);
@@ -25,5 +28,9 @@ export function useAnalysis(service: RecommendationService | undefined, context:
     return () => { current = false; };
   }, [scope, operation]);
   const active = result?.scope === scope ? result : undefined;
-  return { analysis: active?.analysis, error: active?.error, message: active?.message, changed: active?.changed, loading: !!operation && !active, connected: !!operation, retry: () => setAttempt(value => value + 1) };
+  const inputs = `${context.plan_id}:${context.quantity_mt}:${context.purchase_deadline}:${context.scenario_as_of_date}:${context.urgency}`;
+  const last = useRef<{ inputs: string; service?: RecommendationService; analysis: PlanAnalysis }>(undefined);
+  if (active?.analysis) last.current = { inputs, service, analysis: active.analysis };
+  const held = operation && last.current?.inputs === inputs && last.current.service === service ? last.current.analysis : undefined;
+  return { analysis: active?.analysis, held, error: active?.error, message: active?.message, changed: active?.changed, loading: !!operation && !active, connected: !!operation, retry: () => setAttempt(value => value + 1) };
 }

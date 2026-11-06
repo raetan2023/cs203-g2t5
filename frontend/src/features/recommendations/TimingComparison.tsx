@@ -1,7 +1,7 @@
 import { useEffect, useId, useState, type CSSProperties } from 'react';
 import type { Forecast, ForecastService, Horizon, ReadyForecast } from '../forecast/apiService';
 import { addCalendarDays, calendarDays, formatDate } from '../purchase-plan/dates';
-import { amount, change, changeRange, compact, dayDate, total, totalRange, usd } from './format';
+import { amount, compactRange, dayDate, perMt, total, usd } from './format';
 
 const horizons = [7, 14, 30] as const;
 export type Entry = { horizon: Horizon; forecast?: ReadyForecast; message?: string };
@@ -31,34 +31,35 @@ export function useHorizonComparison(service: ForecastService | undefined, today
     });
     return () => { active = false; };
   }, [service, today, revision, attempt]);
-  const current = service && result?.service === service && result.today === today && result.revision === revision && result.attempt === attempt ? result.entries : undefined;
-  const entries = current && selectedRun && current.some(e => e.forecast && e.forecast.run_id !== selectedRun) ? changed() : current;
+  // A refresh keeps the last comparison on screen until the new one lands.
+  const held = service && result?.service === service && result.today === today ? result.entries : undefined;
+  const fresh = held && result?.revision === revision && result?.attempt === attempt;
+  const mixed = held && selectedRun && held.some(e => e.forecast && e.forecast.run_id !== selectedRun);
+  const entries = mixed ? (fresh ? changed() : undefined) : held;
   return { entries, retry: () => setAttempt(n => n + 1) };
 }
+const PASSED = 'This forecast date has passed. A newer quote is needed to show it.';
 const changed = (): Entry[] => horizons.map(horizon => ({ horizon, message: 'Source data changed. Refresh the comparison.' }));
 
-/** Buying dates count from the planning day; a price is only valid for its actual target. */
+/** Forecast dates count from the shared quote, so each price sits on its real target date. Passed targets have no price. */
 export function buildColumns(entries: Entry[], today: string, deadline: string): Column[] {
   const anchor = entries.find(e => e.forecast)?.forecast;
   const columns: Column[] = anchor ? [{ id: 'today', label: 'Today', date: today, low: anchor.anchor_price, mid: anchor.anchor_price,
     high: anchor.anchor_price, quote: anchor.anchor_quote_date, mockReference: !!anchor.synthetic && !anchor.source_dates.mgo, observed: true, late: deadline < today, past: false }] : [];
   for (const e of entries) {
-    const date = addCalendarDays(today, e.horizon);
-    // Never move a dated model estimate to a different buying date.
-    const f = e.forecast?.target_date === date ? e.forecast : undefined;
-    const message = e.forecast && !f
-      ? `No estimate for ${formatDate(date)}. The latest ${e.horizon}-day forecast targets ${formatDate(e.forecast.target_date)}. Updated forecast data is required.`
-      : e.message;
+    const date = e.forecast?.target_date ?? addCalendarDays(anchor?.anchor_quote_date ?? today, e.horizon);
+    const past = !!anchor && date <= today;
+    const f = past ? undefined : e.forecast;
     columns.push({ id: e.horizon, label: `${e.horizon} days`, date, low: f?.low ?? 0, mid: f?.forecast ?? 0, high: f?.high ?? 0,
-      quote: anchor?.anchor_quote_date, observed: false, late: date > deadline, past: false, message, forecast: f });
+      quote: anchor?.anchor_quote_date, observed: false, late: !past && date > deadline, past, message: past ? PASSED : e.message, forecast: f });
   }
   return columns;
 }
 
-export function CompareBuyingDates({ entries, quantity, today, deadline, explored, recommended, badge, knownMessage, onExplore }: {
-  entries?: Entry[]; quantity: number; today: string; deadline: string; explored?: ColumnId; recommended: ColumnId[];
+export function CompareBuyingDates({ entries, quantity, today, deadline, selected, recommended, badge, knownMessage, onSelect }: {
+  entries?: Entry[]; quantity: number; today: string; deadline: string; selected?: Horizon; recommended: ColumnId[];
   /** A forecast failure the page already shows, so the comparison need not repeat it. */
-  badge?: string; knownMessage?: string; onExplore(id: ColumnId): void;
+  badge?: string; knownMessage?: string; onSelect(id: Horizon): void;
 }) {
   const id = useId();
   const [unit, setUnit] = useState<'total' | 'mt'>('total');
@@ -76,33 +77,42 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
   const sharedMessage = messages?.size === 1 ? [...messages][0] : undefined;
   const column = (c: Column) => {
     const available = c.observed || !!c.forecast;
-    const status = !available ? 'Unavailable' : c.late ? 'After deadline' : c.past ? 'Past target'
-      : recommended.includes(c.id) ? 'Recommended' : c.observed ? (c.mockReference ? 'Mock reference' : 'Observed') : 'Eligible';
+    const pressed = selected === c.id;
+    const status = c.past ? 'Passed' : !available ? 'Unavailable' : c.late ? 'After deadline'
+      : recommended.includes(c.id) ? 'Recommended' : c.observed ? (c.mockReference ? 'Mock reference' : 'Observed') : pressed ? 'Selected' : 'Eligible';
     const key = `${id}-${c.id}`;
-    return <button key={c.id} type="button" className={`rec-col${c.late ? ' rec-col--late' : ''}${status === 'Recommended' ? ' rec-col--recommended' : ''}`}
-      aria-pressed={explored === c.id} aria-labelledby={`${key}-label`} aria-describedby={`${key}-status ${key}-values`}
-      disabled={!available} onClick={() => onExplore(c.id)}>
+    const toDeadline = c.date && !c.observed && !c.late ? calendarDays(c.date, deadline) : undefined;
+    const content = <>
       <span className="rec-col-head">
-        <span><span id={`${key}-label`} className="rec-col-label">{c.label}</span>{c.date && <span className="rec-col-date">{dayDate(c.date)}</span>}</span>
-        <span id={`${key}-status`} className="rec-chip">{status}</span>
+        <span><span id={`${key}-label`} className="rec-col-label">{c.label}</span>
+          <span className="rec-col-date">{c.observed ? `Quote from ${dayDate(quoteDate ?? today)}` : c.date && dayDate(c.date)}
+            {available && toDeadline !== undefined && toDeadline <= 7 && ` · ${toDeadline === 0 ? 'on your deadline' : `${toDeadline} ${toDeadline === 1 ? 'day' : 'days'} before deadline`}`}</span></span>
+        <span className="rec-col-chips"><span id={`${key}-status`} className="rec-chip">{status}</span>{pressed && status !== 'Selected' && <span className="rec-chip">Selected</span>}</span>
       </span>
-      {available && <span className="rec-col-plot" aria-hidden="true">
+      {available ? <span className="rec-col-plot" aria-hidden="true">
         {reference && <span className="rec-col-reference" style={{ top: top(reference.mid) }} />}
         {c.observed ? <span className="rec-col-dot" style={{ top: top(c.mid) }} />
           : <><span className="rec-col-bar" style={{ top: top(c.high), bottom: `calc(100% - ${top(c.low)})` }} /><span className="rec-col-tick" style={{ top: top(c.mid) }} /></>}
-      </span>}
+      </span> : <span className="rec-col-plot rec-col-plot--empty">{c.past ? c.message : `Model status: ${c.message}`}</span>}
       <span id={`${key}-values`} className="rec-col-values">
         {available ? <><strong>{value(c.mid)}</strong><span>{c.observed
-          ? (c.mockReference ? 'Illustrative baseline · no observed quote available' : unit === 'total' ? `${amount(quantity)} MT × USD ${amount(c.mid)}/MT · Quote from ${dayDate(quoteDate!)}` : `Quote from ${dayDate(quoteDate!)}`)
-          : `Range ${unit === 'total' ? `${compact(c.low * quantity)}–${compact(c.high * quantity)}` : `${amount(c.low)}–${amount(c.high)}/MT`}`}</span></>
-          : <><strong>Unavailable</strong><span>Model status: {c.message}</span></>}
+          ? (c.mockReference ? 'Illustrative baseline · no observed quote available' : unit === 'total' ? `${amount(quantity)} MT × USD ${perMt(c.mid)}/MT` : 'Latest observed quote')
+          : `Range ${unit === 'total' ? compactRange(c.low * quantity, c.high * quantity) : `${amount(c.low)}–${amount(c.high)}/MT`}`}</span></>
+          : <><strong aria-hidden="true">—</strong><span>Unavailable</span></>}
       </span>
-    </button>;
+    </>;
+    const className = `rec-col${c.late ? ' rec-col--late' : ''}${status === 'Recommended' ? ' rec-col--recommended' : ''}`;
+    // Today is the fixed baseline, not a choice: only forecast dates can be selected.
+    if (c.id === 'today') return <div key={c.id} role="group" className={className} aria-labelledby={`${key}-label`} aria-describedby={`${key}-status ${key}-values`}>{content}</div>;
+    const horizon = c.id;
+    return <button key={c.id} type="button" className={className}
+      aria-pressed={pressed} aria-labelledby={`${key}-label`} aria-describedby={`${key}-status ${key}-values`}
+      disabled={!available} onClick={() => onSelect(horizon)}>{content}</button>;
   };
   return <section className="rec-compare" aria-labelledby={`${id}-title`} aria-busy={!entries}>
     <div className="rec-section-head">
       <div><h2 id={`${id}-title`}>Compare buying dates</h2>
-        <p>Compare buying today with 7, 14 and 30 days from today. Today’s reference uses the latest available observed quote.</p></div>
+        <p>Today’s price and the 7, 14 and 30-day forecasts. Selecting a date updates the forecast figures in the card above.</p></div>
       {sharedMessage === undefined && <div className="rec-compare-tools">
         {badge && <span className="rec-badge">{badge}</span>}
         <div className="rec-toggle" role="group" aria-label="Show prices as">
@@ -116,43 +126,19 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
         <WarningIcon />No 7, 14 or 30-day forecast is available{sharedMessage === knownMessage ? ', for the reason shown above.' : <>. Model status: {sharedMessage}</>}
       </p>
       : <>
-        {/* repeat(0, …) is invalid CSS, so the late group is only added when it has columns. */}
-        <div className="rec-columns" style={{ '--rec-columns': `repeat(${before.length}, minmax(0, 1fr)) 72px${after.length ? ` repeat(${after.length}, minmax(0, 1fr))` : ''}` } as CSSProperties}>
+        {/* The deadline only needs a marker when it separates dates. repeat(0, …) is invalid CSS, so empty groups are left out. */}
+        <div className="rec-columns" style={{ '--rec-columns': after.length
+          ? `${before.length ? `repeat(${before.length}, minmax(0, 1fr)) ` : ''}72px repeat(${after.length}, minmax(0, 1fr))`
+          : `repeat(${before.length}, minmax(0, 1fr))` } as CSSProperties}>
           {before.map(column)}
-          <div className="rec-deadline-mark" aria-label={`Purchase deadline ${formatDate(deadline)}`}>
+          {after.length > 0 && <div className="rec-deadline-mark" aria-label={`Purchase deadline ${formatDate(deadline)}`}>
             <span>Deadline</span><span>{dayDate(deadline)}</span><i aria-hidden="true" />
-          </div>
+          </div>}
           {after.map(column)}
         </div>
-        <p className="rec-footnote">Dates count from today, {formatDate(today)}. Bars show each forecast’s range; the tick is the central estimate.
-          {reference?.mockReference ? ' The dashed line is an illustrative baseline.' : quoteDate && ` The dashed line uses the observed quote from ${formatDate(quoteDate)}.`} A price is shown only when the forecast targets that exact date. Select a column to see its detail.</p>
+        <p className="rec-footnote">Bars show each forecast’s range on a shared scale; the tick is the central estimate and the dashed line is {reference?.mockReference ? 'an illustrative baseline' : 'today’s price'}.
+          {quoteDate && ` Forecast dates count from the ${formatDate(quoteDate)} quote${quoteDate === today ? '' : ', not from today'}.`}</p>
       </>}
-  </section>;
-}
-
-/** What one explored date could cost; reads the same forecasts as the columns. */
-export function ExploredDetail({ column, quantity, today, source, sourceFrom, experimental }: {
-  column: Column; quantity: number; today: string; source: string; sourceFrom?: string; experimental: boolean;
-}) {
-  const quote = column.quote;
-  const reference = column.observed ? column.mid : column.forecast?.anchor_price;
-  return <section className="rec-detail" aria-label="Explored date">
-    <div className="rec-section-head"><div>
-      <h2>{column.observed ? 'If you buy today' : `If you buy on ${dayDate(column.date!)} (${column.label})`}</h2>
-      <p>Exploring a date shows what it could cost. It doesn’t change the recommendation.</p>
-    </div></div>
-    <dl className="rec-detail-grid">
-      <div><dt>{`Estimated total · ${amount(quantity)} MT`}</dt><dd>{column.observed ? total(column.mid * quantity) : totalRange(column.low * quantity, column.high * quantity)}</dd></div>
-      <div><dt>Compared with buying today</dt><dd>{column.observed || reference == null ? <span className="rec-na" aria-label="Not applicable: this is the reference price">—</span> : changeRange((column.low - reference) * quantity, (column.high - reference) * quantity)}</dd></div>
-      <div><dt>Price per MT</dt><dd>{column.observed ? usd(column.mid) : `${usd(column.low)}–${amount(column.high)}`}</dd></div>
-    </dl>
-    <div className="rec-detail-foot">
-      <span>{column.mockReference ? 'Illustrative reference: no observed quote available.' : column.observed ? `MGO quote observed ${formatDate(quote ?? today)} · ${calendarDays(quote ?? today, today)} days old` : source}</span>
-      {!column.observed && sourceFrom && <span>{sourceFrom}</span>}
-      {!column.observed && experimental && <span className="rec-warning-text"><WarningIcon />Experimental range: no measured confidence coverage.</span>}
-      {column.late && <span>After your deadline, so it isn’t used in the recommendation. Totals are price × quantity, shown for comparison only.</span>}
-      {!column.observed && column.forecast && column.mid !== reference && <span>Central estimate {usd(column.mid)}/MT · {change((column.mid - reference!) * quantity)} than today in total.</span>}
-    </div>
   </section>;
 }
 
