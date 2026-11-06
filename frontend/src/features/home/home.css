@@ -1,6 +1,7 @@
 /* Home: full-bleed harbour photo with the shell header laid over it, then the latest GDELT headlines
    (design: docs/ui-revamp/assets/inspo/home-page/news/image.png). */
 .bb-app--home { position: relative; }
+.bb-app--home .bb-header { position: absolute; inset: 0 0 auto; z-index: 2; background: transparent; border-bottom-color: transparent; }
 .bb-app--home #app-content { max-width: none; }
 
 .bb-home { background: var(--bb-canvas); color: var(--bb-text); }
