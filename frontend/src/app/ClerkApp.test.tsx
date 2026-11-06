@@ -60,8 +60,8 @@ describe('Clerk API wiring', () => {
     vi.stubGlobal('fetch', fetcher);
     render(<ClerkApp />);
     const buttons = await screen.findAllByRole('button', { name: 'Reload saved plan' }, { timeout: 5000 });
-    // Checking access/date on tab return must not restart the purchase prediction pipeline.
-    const purchaseCalls = () => fetcher.mock.calls.filter(([url]) => url.includes('/purchase-plans/forecast?') || /\/(cost-impact|recommendation)\?/.test(url)).length;
+    // Dashboard refreshes its shared model endpoint on tab return; plan analysis stays cached.
+    const purchaseCalls = () => fetcher.mock.calls.filter(([url]) => /\/(cost-impact|recommendation)\?/.test(url)).length;
     const beforeTabReturn = purchaseCalls();
     const configCalls = fetcher.mock.calls.filter(([url]) => url.endsWith('/config')).length;
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
@@ -78,7 +78,7 @@ describe('Clerk API wiring', () => {
     expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(3);
     expect(screen.queryByText('Synthetic preview')).toBeNull();
     expect(fetcher.mock.calls.some(([url]) => url.includes('/api/v1/purchase-plans/forecast?'))).toBe(true);
-    expect(fetcher.mock.calls.some(([url]) => url.includes('/api/v1/forecast?'))).toBe(true);
+    expect(fetcher.mock.calls.some(([url]) => url.includes('/api/v1/forecast?'))).toBe(false);
     await userEvent.click(screen.getByRole('button', { name: '14 days' }));
     await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes('/cost-impact?') && new URL(url, 'http://localhost').searchParams.get('horizon_days') === '14'
       && new URL(url, 'http://localhost').searchParams.get('run_id') === 'synthetic-preview')).toBe(true));
