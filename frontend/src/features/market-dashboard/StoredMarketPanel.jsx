@@ -15,6 +15,8 @@ const shortDate = value => new Date(`${value}T00:00:00`).toLocaleDateString('en-
 const fuelName = label => label.replace(/^Bunker sales:\s*/i, '').toLowerCase()
   .replace(/\b\w/g, char => char.toUpperCase()).replace(/\b(Lng|Mgo|Mdo|B100)\b/g, word => word.toUpperCase());
 const order = ['SGP_MGO_OBSERVED', 'SGP_GASOIL_FUT', 'BRENT_CRUDE', 'DUBAI_CRUDE', 'USD_INDEX'];
+// An unlisted series sorts after every listed one, so it can never displace MGO.
+const orderOf = key => { const index = order.indexOf(key); return index < 0 ? order.length : index; };
 
 function Symbol({ name, ...props }) {
   const shapes = {
@@ -57,7 +59,7 @@ export default function StoredMarketPanel() {
   const [search, setSearch] = useState('');
   const [showAllSales, setShowAllSales] = useState(false);
   const series = data?.series || [];
-  const prices = series.filter(s => s.category === 'prices').sort((a, b) => order.indexOf(a.ticker.seriesKey) - order.indexOf(b.ticker.seriesKey));
+  const prices = series.filter(s => s.category === 'prices').sort((a, b) => orderOf(a.ticker.seriesKey) - orderOf(b.ticker.seriesKey));
   const sales = series.filter(s => s.category === 'sales').sort((a, b) => b.ticker.value - a.ticker.value || a.ticker.label.localeCompare(b.ticker.label));
   const news = series.filter(s => s.category === 'news');
   // This menu is for documented price/index histories, not monthly sales or news.

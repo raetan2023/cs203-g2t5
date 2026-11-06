@@ -136,6 +136,16 @@ describe('stored market dashboard', () => {
     expect(screen.getByRole('region', { name: 'GDELT daily aggregates' })).toBeInTheDocument();
   });
 
+  it('keeps MGO first and puts an unlisted price series last', async () => {
+    serve([series('UNKNOWN_PRICE', 'Undocumented price', 'prices', 5, 'USD', '2026-10-14'),
+      series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-10-14'),
+      series('SGP_MGO_OBSERVED', 'Singapore MGO', 'prices', 1351.5, 'USD/MT', '2026-10-14')]);
+    render(<StoredMarketPanel />);
+    const region = await screen.findByRole('region', { name: 'Stored prices and index' });
+    expect(within(region).getAllByRole('heading').map(heading => heading.textContent))
+      .toEqual(['Singapore MGO', 'Brent crude', 'Undocumented price']);
+  });
+
   it('omits the history chart when no supported series has multiple valid dates', async () => {
     const item = series('BRENT_CRUDE', 'Brent crude', 'prices', 120, 'USD/barrel', '2026-10-14');
     item.history = [{ date: '2026-10-14', value: 120 }, { date: '2026-10-14', value: 121 },
