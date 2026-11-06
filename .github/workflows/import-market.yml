@@ -49,18 +49,24 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           SOURCE: ${{ inputs.source || 'all' }}
+          DAILY_GDELT_ENABLED: ${{ vars.DAILY_FORECASTS_ENABLED }}
           # New switches: old Brent-only switches never authorize writes to other sources.
           APPLY_IMPORT: ${{ (github.event_name == 'schedule' && vars.MARKET_DAILY_IMPORT_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.apply) || (github.event_name == 'push' && github.ref == 'refs/heads/market-data-integration' && vars.MARKET_TEST_IMPORT_ENABLED == 'true') }}
         shell: bash
         run: |
           set -euo pipefail
-          args=(--source "$SOURCE" --mode snapshot --check-supabase)
+          sources=("$SOURCE")
+          if [[ "$GITHUB_EVENT_NAME" == "schedule" && "$DAILY_GDELT_ENABLED" == "true" ]]; then
+            # The dedicated workflow handles scheduled GDELT writes when enabled.
+            sources=(brent mgo_singapore gasoil_singapore dubai_crude usd_index bunker_sales)
+          fi
+          args=(--source "${sources[@]}" --mode snapshot --check-supabase)
           if [[ "$APPLY_IMPORT" == "true" ]]; then args+=(--apply); fi
-          python data-ingestion/import_market.py "${args[@]}"
           {
             echo '### Market data synchronization'
-            echo "- Sources: $SOURCE"
+            echo "- Sources: ${sources[*]}"
             echo "- Database writes enabled: $APPLY_IMPORT"
-            echo '- See the logs for per-series units, record counts and latest dates.'
+            echo '- See the logs for per-series dates and provenance, or the source that failed validation.'
             echo '- Snapshot synchronization does not establish real-time source collection.'
           } >> "$GITHUB_STEP_SUMMARY"
+          python data-ingestion/import_market.py "${args[@]}"
