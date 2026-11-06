@@ -5,15 +5,14 @@ import { ForecastProvider } from '../forecast/ForecastContext';
 import type { Forecast, ForecastService, Horizon } from '../forecast/apiService';
 import { marketForecast } from '../../preview/marketScenarios';
 import { MarketForecast } from './MarketForecast';
-import { forecastReportSections } from './forecastReport';
 
 const TODAY = '2026-11-06';
 const reader = (read: (horizon: Horizon) => Promise<Forecast>): ForecastService => ({ read: vi.fn(read) });
 const ready = reader(async horizon => marketForecast(horizon));
-const show = (service?: ForecastService, canCreatePlan = false) => render(<ForecastProvider service={service} scenarioDate={TODAY}><MarketForecast today={TODAY} canCreatePlan={canCreatePlan} /></ForecastProvider>);
+const show = (service?: ForecastService) => render(<ForecastProvider service={service} scenarioDate={TODAY}><MarketForecast today={TODAY} /></ForecastProvider>);
 
 describe('market forecast', () => {
-  it('shows the latest quote and all three horizons on one shared scale', async () => {
+  it('shows the latest quote and all three horizons, without range bars', async () => {
     show(ready);
     const tiles = within(await screen.findByRole('list', { name: 'Forecast by horizon' })).getAllByRole('listitem');
     expect(tiles).toHaveLength(4);
@@ -24,12 +23,13 @@ describe('market forecast', () => {
     expect(tiles[1]).toHaveTextContent('↓ 1.0%');
     expect(tiles[1]).toHaveTextContent('Range $1,240 – 1,436');
     expect(tiles[3]).toHaveTextContent('Sun 06 Dec');
-    expect(screen.getByText(/Bars share one scale, USD 900–1,900\/MT/)).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Bars share one scale/)).not.toBeInTheDocument();
     expect(screen.getByText(/coverage not measured/)).toBeInTheDocument();
     expect(screen.queryByText(/today’s quote/i)).not.toBeInTheDocument();
   });
 
-  it('explains the forecast in four steps, with the rest behind the report', async () => {
+  it('explains the forecast in four steps, with no report or plan link', async () => {
     show(ready);
     const steps = await screen.findByRole('region', { name: 'How this forecast was made' });
     expect(within(steps).getAllByRole('listitem')).toHaveLength(4);
@@ -37,19 +37,24 @@ describe('market forecast', () => {
     expect(steps).toHaveTextContent('Includes estimated news figures');
     expect(steps).toHaveTextContent('Ridge regression');
     expect(steps).toHaveTextContent('Experimental range');
-    expect(screen.getByRole('button', { name: 'Download report' })).toBeEnabled();
-    expect(screen.queryByText(/hsfo|High-sulphur/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Download report' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /purchase plan/i })).not.toBeInTheDocument();
   });
 
-  it('offers the plan link only to people who can create plans', async () => {
-    show(ready, true);
-    expect(await screen.findByRole('link', { name: 'Create a purchase plan' })).toHaveAttribute('href', '/purchase-plans');
-  });
-
-  it('hides the plan link from read-only roles', async () => {
-    show(ready);
-    await screen.findByRole('region', { name: 'How this forecast was made' });
-    expect(screen.queryByRole('link', { name: 'Create a purchase plan' })).not.toBeInTheDocument();
+  it('refreshes every horizon from the header button and shows it is working', async () => {
+    const pending: (() => void)[] = [];
+    const service = reader(async horizon => marketForecast(horizon));
+    show(service);
+    const button = await screen.findByRole('button', { name: 'Refresh forecast' });
+    const before = vi.mocked(service.read).mock.calls.length;
+    vi.mocked(service.read).mockImplementation(horizon => new Promise(resolve => { pending.push(() => resolve(marketForecast(horizon))); }));
+    await userEvent.click(button);
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    await waitFor(() => expect(vi.mocked(service.read).mock.calls.length).toBe(before + 3));
+    pending.forEach(finish => finish());
+    await waitFor(() => expect(button).toBeEnabled());
+    expect(button).toHaveAttribute('aria-busy', 'false');
   });
 
   it('keeps the other horizons when one is unavailable', async () => {
@@ -80,32 +85,5 @@ describe('market forecast', () => {
   it('says when the service is not connected', () => {
     show();
     expect(screen.getByRole('status')).toHaveTextContent('The forecast service is not connected.');
-  });
-});
-
-describe('forecast report', () => {
-  const results = ([7, 14, 30] as Horizon[]).map(horizon => ({ horizon, forecast: marketForecast(horizon) }));
-  const text = (sections: ReturnType<typeof forecastReportSections>) => sections.flatMap(section => [section.heading, ...section.lines]).join('\n');
-
-  it('carries the detail the page leaves out', () => {
-    const report = text(forecastReportSections(results));
-    expect(report).toContain('Latest MGO quote: USD 1,351.50/MT');
-    expect(report).toContain('7-day drivers');
-    expect(report).toContain('High-sulphur fuel oil (prev day): pushing the forecast down');
-    expect(report).toContain('Where it comes from');
-    expect(report).toContain('Run: market-preview.');
-    expect(report).toContain('Recent MGO quotes');
-  });
-
-  it('never states a target coverage for an experimental range', () => {
-    const report = text(forecastReportSections(results));
-    expect(report).toContain('Experimental range: coverage not stated.');
-    expect(report).not.toContain('Target coverage');
-  });
-
-  it('keeps an unavailable horizon in the report with its reason', () => {
-    const report = text(forecastReportSections([results[0], { horizon: 14, forecast: { status: 'unavailable', reason: 'x', message: 'No 14-day value.' } }]));
-    expect(report).toContain('14 days: unavailable. No 14-day value.');
-    expect(report).not.toContain('14-day drivers');
   });
 });
