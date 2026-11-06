@@ -1,6 +1,6 @@
 """Import the seven numeric API datasets. Preview by default; --apply writes to Supabase."""
 import argparse
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 import json
 from pathlib import Path
@@ -20,6 +20,44 @@ SOURCES = {
     "bunker_sales": (None, "data.gov.sg / MPA", {"thousand tonnes (as published)", "thousand tonnes"}, None),
     "gdelt": (None, "GDELT", {"articles"}, None),
 }
+GDELT_KEYS = {"GDELT_ARTICLE_COUNT", "GDELT_AVERAGE_TONE"}
+
+
+def completed_gdelt(payload, today):
+    """Keep paired, completed days and require a pair within the app's freshness window."""
+    groups = normalize(payload, "gdelt")
+    dates = [{row["observation_date"] for row in group["rows"]} for group in groups]
+    paired = set.intersection(*dates) if len(dates) == 2 else set()
+    paired = {day for day in paired if day < today.isoformat()}
+    earliest = (today - timedelta(days=7)).isoformat()
+    if not paired or max(paired) < earliest:
+        raise ValueError("MGO API has no completed UTC day with both GDELT count and tone in the last 7 days")
+    for group in groups:
+        group["rows"] = [row for row in group["rows"] if row["observation_date"] in paired]
+    return groups
+
+
+def protect_observed_gdelt(groups, url, headers):
+    """Skip an estimated pair if either stored value for that date is observed."""
+    estimates = sorted({row["observation_date"] for group in groups
+                        if group["metadata"]["series_key"] in GDELT_KEYS
+                        for row in group["rows"] if row["value_type"] == "ESTIMATED"})
+    observed = set()
+    for offset in range(0, len(estimates), 100):
+        query = urlencode({
+            "select": "observation_date,market_series!inner(series_key)",
+            "market_series.series_key": "in.(" + ",".join(sorted(GDELT_KEYS)) + ")",
+            "observation_date": "in.(" + ",".join(estimates[offset:offset + 100]) + ")",
+            "value_type": "eq.OBSERVED",
+        })
+        rows = db.request_json(f"{url}/rest/v1/market_observations?{query}", headers=headers)
+        observed.update(row["observation_date"] for row in rows)
+    if observed:
+        print(f"Preserving existing observed GDELT data for {len(observed)} date(s)")
+        for group in groups:
+            if group["metadata"]["series_key"] in GDELT_KEYS:
+                group["rows"] = [row for row in group["rows"]
+                                 if row["value_type"] != "ESTIMATED" or row["observation_date"] not in observed]
 
 
 def numeric(value):
@@ -69,7 +107,9 @@ def normalize(payload, source_id):
         row_source = row.get("source")
         metadata = row.get("metadata", {})
         estimated = metadata.get("imputed") is True or metadata.get("data_status") == "estimated"
-        if estimated and not (source_id == "gdelt" and row_source == "Derived from GDELT"
+        estimated_gdelt_source = row_source == "Derived from GDELT" or (
+            row_source == "ChatGPT web search" and metadata.get("imputation_method") == "chat_web_search")
+        if estimated and not (source_id == "gdelt" and estimated_gdelt_source
                               and metadata.get("imputed") is True and metadata.get("data_status") == "estimated"):
             raise ValueError("Estimated inputs require explicitly labelled GDELT provenance")
         value_type = "ESTIMATED" if estimated else "OBSERVED"
@@ -113,7 +153,8 @@ def normalize(payload, source_id):
             for _, group in sorted(grouped.items())]
 
 
-def run(source_ids, mode="snapshot", input_dir=None, apply=False, check=False, limit=25000):
+def run(source_ids, mode="snapshot", input_dir=None, apply=False, check=False, limit=25000,
+        *, require_completed_gdelt=False):
     prepared, reports = [], []
     failures = []
     # Fetch and validate ALL selected responses before the first database write.
@@ -121,7 +162,8 @@ def run(source_ids, mode="snapshot", input_dir=None, apply=False, check=False, l
         try:
             payload = json.loads((Path(input_dir) / f"{source_id}.json").read_text()) if input_dir else db.request_json(
                 f"{db.DEFAULT_API}/api/v1/data/{source_id}?" + urlencode({"mode": mode, "limit": limit}))
-            groups = normalize(payload, source_id)
+            groups = (completed_gdelt(payload, datetime.now(timezone.utc).date())
+                      if source_id == "gdelt" and require_completed_gdelt else normalize(payload, source_id))
             served = payload.get("meta", {}).get("served_from", "unknown")
             if len(payload["data"]) >= limit and not input_dir:
                 raise ValueError("Response limit reached; use dated source windows before applying full history")
@@ -129,7 +171,8 @@ def run(source_ids, mode="snapshot", input_dir=None, apply=False, check=False, l
             reports.append({"source": source_id, "served_from": served, "series": [
                 {"key": group["metadata"]["series_key"], "unit": group["metadata"]["unit"],
                  "rows": len(group["rows"]), "first": group["rows"][0]["observation_date"],
-                 "latest": group["rows"][-1]["observation_date"]} for group in groups]})
+                 "latest": group["rows"][-1]["observation_date"],
+                 "latest_value_type": group["rows"][-1]["value_type"]} for group in groups]})
         except (ValueError, RuntimeError, OSError, KeyError, TypeError) as error:
             failures.append({"source": source_id, "error": str(error)})
     print(json.dumps({"action": "APPLY" if apply else "PREVIEW: no writes", "sources": reports,
@@ -140,8 +183,11 @@ def run(source_ids, mode="snapshot", input_dir=None, apply=False, check=False, l
         url, headers = db.check_supabase()
         print("Supabase schema/access check passed")
     if apply:
+        protect_observed_gdelt(prepared, url, headers)
         print("Writing selected series; earlier batches may remain if a later write fails.")
         for group in prepared:
+            if not group["rows"]:
+                continue
             print("Series:", group["metadata"]["series_key"])
             db.write_series(group["metadata"], group["rows"], url, headers)
     return prepared
@@ -153,11 +199,14 @@ if __name__ == "__main__":
     parser.add_argument("--mode", choices=["snapshot", "live", "auto"], default="snapshot")
     parser.add_argument("--input-dir", type=Path)
     parser.add_argument("--check-supabase", action="store_true")
+    parser.add_argument("--require-completed-gdelt", action="store_true",
+                        help="Import only paired, completed GDELT UTC days; require a pair within 7 days")
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
     try:
         run(list(SOURCES) if "all" in args.source else list(dict.fromkeys(args.source)),
-            args.mode, args.input_dir, args.apply, args.check_supabase)
+            args.mode, args.input_dir, args.apply, args.check_supabase,
+            require_completed_gdelt=args.require_completed_gdelt)
     except (ValueError, RuntimeError, OSError, KeyError, TypeError) as error:
         print(f"Import stopped: {error}. Rerun safely after resolving the cause.", file=sys.stderr)
         sys.exit(1)
