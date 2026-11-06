@@ -121,6 +121,17 @@ class PurchaseForecastServiceTests {
         assertEquals("stale_reference", assertInstanceOf(Unavailable.class, service.read(7)).reason());
     }
     @Test void guidanceAndCostsReadTheSameDataAndRejectAChangedNewsRun() {
+        // A same-day observed quote makes the executed quote-origin horizons current.
+        var predictions = new java.util.HashMap<Integer, tools.jackson.databind.JsonNode>();
+        for (int h : new int[] {7, 14, 30}) {
+            var prediction = ((tools.jackson.databind.node.ObjectNode) ridge.predict(h, origin)).deepCopy();
+            prediction.put("anchor_quote_date", origin.toString());
+            prediction.put("anchor_price", 850);
+            prediction.put("target_date", origin.plusDays(h).toString());
+            predictions.put(h, prediction);
+        }
+        rows.add(row("SGP_MGO_OBSERVED", origin, 850));
+        when(ridge.predict(anyInt(), eq(origin))).thenAnswer(call -> predictions.get(call.<Integer>getArgument(0)).deepCopy());
         var forecastService = mock(ForecastService.class);
         when(forecastService.today()).thenReturn(origin);
         var provider = new PublishedForecastAnalysisProvider(forecastService, service);

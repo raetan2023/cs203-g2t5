@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, type CSSProperties } from 'react';
 import type { Forecast, ForecastService, Horizon, ReadyForecast } from '../forecast/apiService';
-import { calendarDays, formatDate } from '../purchase-plan/dates';
+import { addCalendarDays, calendarDays, formatDate } from '../purchase-plan/dates';
 import { amount, change, changeRange, compact, dayDate, total, totalRange, usd } from './format';
 
 const horizons = [7, 14, 30] as const;
@@ -43,7 +43,7 @@ export function buildColumns(entries: Entry[], today: string, deadline: string):
   const columns: Column[] = anchor ? [{ id: 'today', label: 'Today', date: today, low: anchor.anchor_price, mid: anchor.anchor_price,
     high: anchor.anchor_price, quote: anchor.anchor_quote_date, observed: true, late: deadline < today, past: false }] : [];
   for (const e of entries) {
-    const date = new Date(Date.parse(`${today}T00:00:00Z`) + e.horizon * 86_400_000).toISOString().slice(0, 10);
+    const date = addCalendarDays(today, e.horizon);
     // Never move a dated model estimate to a different buying date.
     const f = e.forecast?.target_date === date ? e.forecast : undefined;
     const message = e.forecast && !f
