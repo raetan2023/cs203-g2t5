@@ -163,8 +163,8 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
                 {saved && <span>Model {saved.model_version} · run {saved.run_id}</span>}
               </div>
             </section>}
-          {analysis && <details className="rec-fine"><summary>How this recommendation was calculated</summary>
-            <div className="rec-fine-body"><EvidenceView analysis={analysis} /></div></details>}
+          {analysis && <details className="rec-fine"><summary>Why this recommendation</summary>
+            <div className="rec-fine-body"><EvidenceView analysis={analysis} plan={plan} /></div></details>}
         </div>
       </div>}
   </main>;

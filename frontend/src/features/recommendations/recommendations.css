@@ -170,6 +170,8 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
 .rec-fine-body { padding: var(--bb-space-1) 0 var(--bb-space-4); display: flex; flex-direction: column; gap: var(--bb-space-3); overflow-wrap: anywhere; }
 .rec-fine-body ul { margin: 0; padding-left: var(--bb-space-5); display: flex; flex-direction: column; gap: var(--bb-space-2); color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 21px; }
 .recommendations .rec-fine-body h3 { font: var(--bb-type-body-strong); margin-top: var(--bb-space-2); }
+.rec-explain { display: flex; flex-direction: column; gap: var(--bb-space-3); }
+.rec-fine-body ol { margin: 0; padding-left: var(--bb-space-5); display: flex; flex-direction: column; gap: var(--bb-space-2); color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 21px; }
 .rec-sources { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--bb-space-5); }
 .rec-sources dt { font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); margin-bottom: var(--bb-space-1); }
 .rec-sources dd { font-size: var(--bb-text-md); font-weight: 500; }
