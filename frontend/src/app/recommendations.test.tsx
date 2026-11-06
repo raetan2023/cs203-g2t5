@@ -70,7 +70,7 @@ describe('recommendations app integration', () => {
     expect(await within(await screen.findByRole('region', { name: 'Recommendation' })).findByText('Consider purchasing on 29 October')).toBeVisible();
     expect(document.title).toContain('Purchase estimate');
     fireEvent.click(screen.getByRole('link', { name: 'Back to purchase plans' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    fireEvent.click(await screen.findByRole('button', { name: /^Edit / }));
     fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '200' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     fireEvent.click(await screen.findByRole('link', { name: 'View recommendation →' }));

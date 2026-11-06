@@ -14,7 +14,7 @@ JavaScript consumers (`colors`, plus `chart` for Recharts props) and `theme.test
 - Radius: cards 12px, controls 6px, `--bb-radius-pill`, circular brand mark.
 - Buttons: 44px tall. Primary is a cream fill, secondary a transparent outline.
 - Spacing scale: 4, 8, 12, 16, 20, 24, 32, 48, 64 (`--bb-space-1` to `-6`, `-8`, `-12`, `-16`). 48 separates page sections. Values under 4 are hairline adjustments.
-- Status: `--bb-success-*` for On track, Approved, Purchased, Buy now. `--bb-warning-*` for Due soon, Awaiting approval, Monitor, stale data. `--bb-error-*` for Overdue, Rejected, errors. `--bb-info-*` for Wait and neutral notices. `--bb-neutral-surface` with secondary text for Draft and Withdrawn. Chips have no border: status text on its surface, at 12px.
+- Status: `--bb-success-*` for Approved, Purchased, Buy now. `--bb-warning-*` for Due soon, Monitor, stale data. `--bb-error-*` for Overdue, Rejected, errors. `--bb-info-*` for Wait and neutral notices. `--bb-neutral-surface` with secondary text for On track, Draft, Awaiting approval and Withdrawn, so colour only marks what needs attention. Chips have no border: status text on its surface, at 12px.
 - Price direction: `--bb-price-up` is dearer and shares the danger colour, `--bb-price-down` is cheaper and shares the success colour, so green and red mean good or bad for the buyer. Never colour alone: always pair with an arrow, sign or word.
 - Chart presentation: grid = subtle border, axis = secondary text, series 1 = action beige, cursor = control border. Recharts reads them from `theme.ts` because SVG attributes do not resolve CSS variables.
 - Navigation: top bar on every page, no sidebar.
