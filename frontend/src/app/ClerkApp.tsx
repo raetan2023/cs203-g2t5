@@ -151,7 +151,7 @@ export function ClerkApp() {
     return <StatusPage message="Loading application data..." />;
   }
 
-  return <App purchaseFallback
+  return <App
     key={contextKey}
     organisationControl={organisationReady ? <OrganisationControl name={organisationState.organization!.name} role={roleLabel!} /> : undefined}
     organisationName={organisationReady ? organisationState.organization!.name : undefined}

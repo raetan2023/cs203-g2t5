@@ -16,17 +16,21 @@ public class PurchaseForecastRepository {
         }
     }
     public record ModelObservation(String series, String source, String source_url, String unit,
-                                   String currency, LocalDate date, BigDecimal value) {}
+                                   String currency, LocalDate date, BigDecimal value, String value_type) {
+        public ModelObservation(String series, String source, String source_url, String unit, String currency, LocalDate date, BigDecimal value) {
+            this(series, source, source_url, unit, currency, date, value, "OBSERVED");
+        }
+    }
     public List<ModelObservation> modelObservations(LocalDate asOf) {
         return jdbc.query("""
-            SELECT s.series_key, s.source_name, s.source_url, s.unit, s.currency_code, o.observation_date, o.value
+            SELECT s.series_key, s.source_name, s.source_url, s.unit, s.currency_code, o.observation_date, o.value, o.value_type
             FROM public.market_observations o JOIN public.market_series s USING (series_id)
-            WHERE s.series_key IN ('SGP_MGO_OBSERVED','SGP_GASOIL_FUT','BRENT_CRUDE','DUBAI_CRUDE','USD_INDEX')
-              AND o.value_type = 'OBSERVED' AND o.observation_date <= ?
+            WHERE s.series_key IN ('SGP_MGO_OBSERVED','SGP_GASOIL_FUT','BRENT_CRUDE','DUBAI_CRUDE','USD_INDEX','GDELT_ARTICLE_COUNT','GDELT_AVERAGE_TONE')
+              AND (o.value_type = 'OBSERVED' OR (s.series_key IN ('GDELT_ARTICLE_COUNT','GDELT_AVERAGE_TONE') AND o.value_type = 'ESTIMATED')) AND o.observation_date <= ?
             ORDER BY s.series_key, o.observation_date
             """, (row, n) -> new ModelObservation(row.getString("series_key"), row.getString("source_name"),
                 row.getString("source_url"), row.getString("unit"), row.getString("currency_code"),
-                row.getObject("observation_date", LocalDate.class), row.getBigDecimal("value")), asOf);
+                row.getObject("observation_date", LocalDate.class), row.getBigDecimal("value"), row.getString("value_type")), asOf);
     }
     private final JdbcTemplate jdbc;
     public PurchaseForecastRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
