@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:layout": "node scripts/test-plan-layout.mjs",
     "test:recommendation-layout": "node scripts/test-recommendation-layout.mjs",
+    "test:market-layout": "node scripts/test-market-layout.mjs",
     "test:home-navigation": "node scripts/test-home-navigation.mjs"
   },
   "dependencies": {

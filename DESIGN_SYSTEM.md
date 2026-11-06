@@ -61,7 +61,7 @@ owning phase decides them (see `docs/UI_REVAMP_PLAN.md` §4.1 and §6).
 
 | Token | Decided in | Notes |
 | --- | --- | --- |
-| `price-up-surface`, `price-down-surface` | Phase 5 (recommendations) | Text values were set provisionally on 2026-11-04 (see below); surfaces remain undecided |
+| `price-up-surface`, `price-down-surface` | Market dashboard, 2026-11-06 | Whole-card tints for the market price cards, with matching `-border` and `-chip` tokens. Text values were set provisionally on 2026-11-04 (see below) |
 | `success-text` / `success-surface` | Phase 4 (purchase plans) | May stay neutral text plus a check icon |
 | `chart-series-2..n`, `chart-forecast`, `chart-band` | Day 4 dataviz | Solid actual vs dashed forecast; confidence bands subdued and labelled |
 
