@@ -36,10 +36,8 @@
   - `Home — analyst-html/HomeAnalyst.dc.html`
   - `Home — admin-html/HomeAdmin.dc.html`
   - `HANDOFF.md`: the decisions and the backend check. `home-page-pics/`: the candidate photos for the time-of-day question.
-- **Brief:** [`CREATIVE_BRIEF.md`](../ui-revamp/CREATIVE_BRIEF.md) §3.2 "Home". Its ship-map idea came before the role-aware design; where they differ, `HANDOFF.md` wins.
 - **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `home-welcome.png`, `home-loading.png`, `Shared Navigation.png`.
-- **Screenshots before the revamp:** `docs/ui-revamp/before/home-*.png` (ready and loading, desktop and mobile).
-- **What's built now:** no screenshots of the role-aware Home are committed yet. Run the preview (see [Start here](../handover.md#test-and-preview)), then Demo controls → "Home - buyer / manager / analyst / admin / price unavailable". `docs/ui-revamp/phase2/home-*.png` shows the earlier plain Home after the beige theme pass.
+- **What's built now:** no screenshots of the role-aware Home are committed yet. Run the preview (see [Start here](../handover.md#test-and-preview)), then Demo controls → "Home - buyer / manager / analyst / admin / price unavailable".
 - **Patterns to reuse:**
   - the page: `features/home/HomePage.tsx`, `home.css`
   - the price card's data: `features/home/marketQuote.ts`

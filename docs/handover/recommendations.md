@@ -30,8 +30,8 @@ plans. Real signed-in buyer/manager verification remains.
 | #38 `feature/rec-decision-views` | wireframe | Approval states on the request page and decision notes on plan cards |
 | #39 `docs/post-decision-handoff` | wireframe | The design below for everything after the decision |
 
-- **Design decisions:** `docs/ui-revamp/critique-rec/TASTE_REVIEW.md` (duplicates D1–D6 and R1) and `REC_REVIEW_2.md` (element inventory and restructure). The owner's rule: keep all information unless it duplicates something else on screen, and keep three evidence blocks.
-- **Not built:** the **Split** layout. The mockup exists, but the policy never returns SPLIT. The post-decision features below are now implemented on the lifecycle branch.
+- **Design decisions:** the owner's rule is to keep all information unless it duplicates something else on screen, and keep three evidence blocks.
+- **Not built:** the **Split** layout. The policy never returns SPLIT. The post-decision features below are now implemented on the lifecycle branch.
 
 ## Where your agent should continue
 
@@ -59,11 +59,9 @@ plans. Real signed-in buyer/manager verification remains.
 
 There are no mockups for the after-the-decision screens yet. Match the pages already shipped:
 
-- **Revamp mockup:** [`docs/ui-revamp/assets/inspo/recommendations-page/`](../ui-revamp/assets/inspo/recommendations-page/), one Claude Design export per answer (Buy now, Wait, Monitor, Split). It sets the request page layout: answer card, sticky side rail, fine print. For the plan cards and list, use `docs/ui-revamp/assets/inspo/purchase-plans-page/image.png`.
-- **Brief:** [`CREATIVE_BRIEF.md`](../ui-revamp/CREATIVE_BRIEF.md) §3.4 "Recommendations": the content inventory (no financial detail may be dropped) and the answer-first structure.
+- **Revamp mockup:** [`docs/ui-revamp/assets/inspo/recommendations-page/`](../ui-revamp/assets/inspo/recommendations-page/), with the Claude Design exports of the reworked page (`Option A`, `A2`). It sets the request page layout: answer card, sticky side rail, fine print. For the plan cards and list, use `docs/ui-revamp/assets/inspo/purchase-plans-page/image.png`.
 - **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `Purchase recommendation · *.png` (loading, couldn't load, unavailable, updating), `recommendation*.png`.
-- **Screenshots before the revamp:** `docs/ui-revamp/before/rec-*.png` (every state, desktop and mobile).
-- **What's built now:** [`docs/ui-revamp/critique-rec/decision-views/`](../ui-revamp/critique-rec/decision-views/) (approval states and plan cards) and [`critique-rec/revamp-v1/`](../ui-revamp/critique-rec/revamp-v1/) (recommendation page). `critique-rec/TASTE_REVIEW.md` lists the duplicates the owner decided on. `critique-rec/REC_REVIEW_2.md` has the element inventory, with `after-main-ready-1440*.png`. `revamp-v1/NOTES.md` says what v1 built and why Split isn't. The other screenshots at the top of `critique-rec/` (ready, loading, error, empty, missing, unavailable, unsupported) are the page before v1.
+- **What's built now:** run the preview (see [Start here](../handover.md#test-and-preview)).
 - **Patterns to reuse:**
   - forms: `PurchasePlanForm.tsx`
   - confirm-before-acting buttons: `RecommendationApproval.tsx` and `ManagerDecisionForm.tsx`

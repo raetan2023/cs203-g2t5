@@ -64,7 +64,6 @@ Everything is in [`docs/ui-revamp/market-proposal/`](../ui-revamp/market-proposa
 | `market-proposal.html` | The design, working, with sample data. Add `?state=loading`, `read-error`, `empty`, `missing`, `forecast-unavailable`, `forecast-error`, `no-plans`, `no-plan-access`, … to see each state. |
 | `PARITY.md` | Every behaviour of the current page, and where it lives in the new design. **The rule: nothing in it may be lost.** |
 | `MISSING.md` | What the proposal still lacks, page-specific |
-| `TASTE_REVIEW.md` + `taste-review/` | Taste's review and screenshots. Now 0 FAIL, 2 WARN: the beige text, which is the accepted brand, and the uneven card rows. |
 | `snapshot.mjs` | With the backend running, swaps the sample data for the real stored read |
 
 ## Design inspiration
@@ -72,10 +71,9 @@ Everything is in [`docs/ui-revamp/market-proposal/`](../ui-revamp/market-proposa
 - **Revamp mockup:** [`docs/ui-revamp/assets/inspo/mkt-dashboard-page/`](../ui-revamp/assets/inspo/mkt-dashboard-page/)
   - `Market overview (redesign)-html/Market.dc.html`: the Claude Design export the spec's layout comes from. Its data is hard-coded, and `PARITY.md` lists where the spec departs from it.
   - `image.png`: a third-party finance dashboard, for mood only (dark cards, large figures). None of its content applies.
-- **Brief:** [`CREATIVE_BRIEF.md`](../ui-revamp/CREATIVE_BRIEF.md) §3.5 "Market dashboard": visibility, colour and news. Its green-up / red-down line is superseded (see [Decided](#decided-2026-10-28)).
 - **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `market-dashboard.png`, `market-dashboard-loading.png`, `market-dashboard-failed.png`.
 - **Screenshots before the revamp:** none are committed. Open `/market-dashboard` on the running app.
-- **What's built now:** the spec itself, [`market-proposal.html`](../ui-revamp/market-proposal/market-proposal.html), and its screenshots at 1440, 768 and 390 px in [`taste-review/`](../ui-revamp/market-proposal/taste-review/).
+- **What's built now:** the spec itself, [`market-proposal.html`](../ui-revamp/market-proposal/market-proposal.html).
 - **Patterns to reuse:**
   - data: `useDatabaseMarket` and `ForecastProvider` stay as they are
   - today's panels: `features/market-dashboard/StoredMarketPanel.jsx`, `features/forecast/ForecastWidget`
@@ -84,7 +82,7 @@ Everything is in [`docs/ui-revamp/market-proposal/`](../ui-revamp/market-proposa
 ## Decided (2026-10-28)
 
 - **Colour means what's good for a buyer.** Green = the change makes fuel cheaper. Red (`#f2849e`) = dearer. Grey = no direct effect (the USD index) or no change. Always pair the colour with an arrow and a sign.
-  - This supersedes the old green = up / red = down rule. CREATIVE_BRIEF §3.5 now says the same.
+  - This supersedes the old green = up / red = down rule.
 - **MGO comes first.** It's the chart's default series and the largest figure, and the title line states its price and the forecast range.
 - **Two range controls stay, labelled by direction:** **Past 15 · 30 · 60 days** for the chart's history, and **Next 7 · 14 · 30 days** for the forecast.
   - The market forecast's horizon is **not** shared with the purchase estimate, which has its own forecast provider (`/api/v1/purchase-plans/forecast`).
@@ -105,7 +103,7 @@ Everything is in [`docs/ui-revamp/market-proposal/`](../ui-revamp/market-proposa
    - The evidence badge and skill line never render in production: `parseForecast` drops `evidence`, `mae_skill_vs_persistence` and `synthetic`.
    - `StoredMarketPanel` sorts an unlisted price series *before* MGO.
    - Unused files to delete (check nothing imports them first): `TickerCards.jsx`, `MGOChart.jsx`, `IndicatorsTable.jsx`, `useMarketDashboard.js` (hard-coded prices), `BrentMarketPanel.jsx` + `brent-market.css`, `dashboard.css`.
-6. **Remaining polish from taste** (`TASTE_REVIEW.md`):
+6. **Remaining polish from taste:**
    - Uneven card rows.
    - Captions explaining the colours and the units; put that meaning in tooltips and accessible text instead.
    - A forecast range bar that always fills its track.

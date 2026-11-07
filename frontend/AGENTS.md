@@ -10,6 +10,5 @@ Choose tools for the task; optional skills and MCPs are not installation require
 
 ## UI revamp branch
 
-On `feature/ui-revamp-wireframe`, read `docs/ui-revamp/UI_REVAMP_PLAN.md` and, before merging or comparing with `main`,
-`docs/ui-revamp/SYNC_WITH_MAIN.md`. `main` owns behaviour; the revamp owns presentation (tokens in `src/styles/`).
+`main` owns behaviour; the revamp owns presentation (tokens in `src/styles/`).
 New UI should use the `--bb-*` tokens, not new hex colours.

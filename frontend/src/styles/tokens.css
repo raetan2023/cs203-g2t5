@@ -1,6 +1,6 @@
 /*
  * Bunker Buddy design tokens: the single source of values for the wireframe theme.
- * Spec: DESIGN_SYSTEM.md (repo root). Plan: docs/UI_REVAMP_PLAN.md Â§4.
+ * Spec: DESIGN_SYSTEM.md (repo root).
  * Custom properties only; no selectors other than :root. Dark theme only.
  * Colour values are mirrored in theme.ts for Clerk and Recharts; theme.test.ts keeps them in sync.
  *
