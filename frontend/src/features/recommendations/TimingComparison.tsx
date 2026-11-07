@@ -113,7 +113,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
   return <section className="rec-compare" aria-labelledby={`${id}-title`} aria-busy={!entries}>
     <div className="rec-section-head">
       <div><h2 id={`${id}-title`}>Compare buying dates</h2>
-        <p>Today’s price and the 7, 14 and 30-day forecasts. Selecting a date updates the forecast figures in the card above.</p></div>
+        <p>Today’s price and the 7, 14 and 30-day forecasts. Selecting a date changes the cost detail sent for approval.</p></div>
       {sharedMessage === undefined && <div className="rec-compare-tools">
         {badge && <span className="rec-badge">{badge}</span>}
         <div className="rec-toggle" role="group" aria-label="Show prices as">
@@ -137,6 +137,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
           </div>}
           {after.map(column)}
         </div>
+        {columns.some(c => c.id === selected && c.late) && <p className="rec-footnote">This date is after your deadline, so it isn’t used in the recommendation or sent for approval.</p>}
         <p className="rec-footnote">Bars show each forecast’s range on a shared scale; the tick is the central estimate and the dashed line is today’s price.
           {origin && (origin === today ? ' Forecast dates count from today.' : ` Forecast dates count from the ${formatDate(origin)} quote, not from today.`)}</p>
       </>}
