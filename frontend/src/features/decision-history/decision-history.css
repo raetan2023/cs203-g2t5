@@ -1,0 +1,120 @@
+/* Decision history: summary tiles, a status filter, then one card per submitted plan. Tokens only.
+   Owns its own classes (dh-*) so it never depends on the recommendation page's stylesheet. */
+.dh {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--bb-page-max);
+  margin: 0 auto;
+  padding: var(--bb-space-8) var(--bb-page-pad) var(--bb-space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bb-space-8);
+  color: var(--bb-text);
+  font: var(--bb-type-body);
+  color-scheme: dark;
+}
+.dh *, .dh *::before, .dh *::after { box-sizing: border-box; }
+.dh h1, .dh h2, .dh p, .dh ol, .dh blockquote { margin: 0; }
+.dh h1 { font: var(--bb-type-title); text-wrap: balance; }
+.dh p { text-wrap: pretty; }
+.dh a { color: var(--bb-action); text-decoration: none; }
+.dh a:hover { color: var(--bb-action-hover); text-decoration: underline; }
+.dh :focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.dh-muted { color: var(--bb-text-tertiary); }
+.dh-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Header */
+.dh-header { display: flex; flex-direction: column; gap: var(--bb-space-2); }
+.dh-header p { color: var(--bb-text-secondary); max-width: 64ch; }
+.dh-back { display: inline-flex; align-items: center; gap: var(--bb-space-1); align-self: flex-start; color: var(--bb-text-secondary); font: var(--bb-type-label); min-height: 24px; }
+.dh-back:hover { color: var(--bb-text); }
+
+/* Summary tiles sit on the canvas: numbers first, label above, one-line note under. */
+.dh-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--bb-space-4); }
+.dh-tile { display: flex; flex-direction: column; gap: var(--bb-space-1); padding: var(--bb-space-4) var(--bb-space-5); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); min-width: 0; }
+.dh-tile-label { font: var(--bb-type-label); color: var(--bb-text-secondary); }
+.dh-tile-value { font: var(--bb-type-figure); color: var(--bb-text); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dh-tile--good .dh-tile-value { color: var(--bb-price-down); }
+.dh-tile--bad .dh-tile-value { color: var(--bb-price-up); }
+.dh-tile-value--pending { display: block; height: 30px; width: 3ch; border-radius: var(--bb-radius-control); background: var(--bb-surface-input); }
+.dh-tile-note { font-size: var(--bb-text-xs); line-height: 16px; color: var(--bb-text-tertiary); }
+
+/* Filter row: tabs on the left, search on the right. Both are 44px tall. */
+.dh-controls { display: flex; flex-wrap: wrap; gap: var(--bb-space-3); align-items: flex-end; justify-content: space-between; }
+.dh-tabs { display: flex; flex-wrap: wrap; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); overflow: hidden; background: transparent; }
+.dh-tabs [role=tab] { display: inline-flex; align-items: center; gap: var(--bb-space-2); min-height: 44px; padding: 0 var(--bb-space-4); border: 0; background: transparent; color: var(--bb-text-secondary); font: var(--bb-type-body); cursor: pointer; transition: background var(--bb-motion-fast) var(--bb-ease-out), color var(--bb-motion-fast) var(--bb-ease-out); }
+.dh-tabs [role=tab]:hover { background: var(--bb-surface-hover); color: var(--bb-text); }
+.dh-tabs [role=tab][aria-selected=true] { background: var(--bb-surface-overlay); color: var(--bb-text); font: var(--bb-type-body-strong); }
+.dh-tabs [role=tab]:focus-visible { outline-offset: -3px; }
+.dh-tab-count { font: var(--bb-type-label); color: var(--bb-text-tertiary); font-variant-numeric: tabular-nums; }
+.dh-tabs [role=tab][aria-selected=true] .dh-tab-count { color: var(--bb-text-secondary); }
+.dh-search { display: flex; flex-direction: column; gap: var(--bb-space-1); }
+.dh-search label { font: var(--bb-type-label); color: var(--bb-text-secondary); }
+.dh-search input { min-height: 44px; width: 240px; max-width: 100%; padding: 0 var(--bb-space-3); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); background: var(--bb-surface-input); color: var(--bb-text); font: var(--bb-type-body); }
+.dh-search input::placeholder { color: var(--bb-text-tertiary); }
+.dh-search input:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 0; border-color: var(--bb-focus); }
+
+/* Cards: one per plan. Approved cards get the brighter border because they are the ones to act on. */
+.dh-list { display: flex; flex-direction: column; gap: var(--bb-space-4); }
+.dh-card { display: flex; flex-direction: column; gap: var(--bb-space-4); padding: var(--bb-space-6); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); }
+.dh-card--approved { border-color: var(--bb-border-control); }
+.dh-card-row { display: flex; flex-wrap: wrap; gap: var(--bb-space-4) var(--bb-space-8); align-items: flex-start; }
+.dh-card-what { flex: 1 1 240px; display: flex; flex-direction: column; gap: var(--bb-space-1); min-width: 0; }
+.dh-card-said { flex: 2 1 300px; display: flex; flex-direction: column; gap: var(--bb-space-1); min-width: 0; }
+.dh-card-status { flex: 1 1 220px; display: flex; flex-direction: column; gap: var(--bb-space-2); align-items: flex-start; min-width: 0; }
+.dh-action { display: flex; align-items: center; gap: var(--bb-space-2); font: var(--bb-type-heading); font-size: 22px; line-height: 28px; color: var(--bb-text); }
+.dh-action svg { flex: none; color: var(--bb-action); }
+.dh-plan { color: var(--bb-text-secondary); }
+.dh-label { font: var(--bb-type-label); color: var(--bb-text-tertiary); }
+.dh-card-said p { color: var(--bb-text); }
+.dh-numbers { color: var(--bb-text-secondary); font-variant-numeric: tabular-nums; }
+.dh-meta { font-size: var(--bb-text-xs); line-height: 16px; color: var(--bb-text-tertiary); }
+.dh-comment { color: var(--bb-text-secondary); font-style: italic; }
+
+/* Status pills: colour is paired with words, never alone. Draft and Withdrawn use neutral with secondary text. */
+.dh-pill { display: inline-flex; align-items: center; min-height: 24px; padding: 0 var(--bb-space-3); border-radius: var(--bb-radius-pill); font: var(--bb-type-label); border: 1px solid transparent; }
+.dh-pill--pending { background: var(--bb-warning-surface); color: var(--bb-warning-text); border-color: var(--bb-warning-border); }
+.dh-pill--approved { background: var(--bb-success-surface); color: var(--bb-success-text); border-color: var(--bb-success-border); }
+.dh-pill--rejected { background: var(--bb-error-surface); color: var(--bb-error-text); border-color: var(--bb-error-border); }
+.dh-pill--withdrawn, .dh-pill--completed { background: var(--bb-neutral-surface); color: var(--bb-text-secondary); border-color: var(--bb-border-subtle); }
+.dh-chip { align-self: flex-start; display: inline-flex; align-items: center; min-height: 24px; padding: 0 var(--bb-space-3); border-radius: var(--bb-radius-control); font: var(--bb-type-label); font-variant-numeric: tabular-nums; }
+.dh-chip--good { background: var(--bb-price-down-chip); color: var(--bb-price-down); }
+.dh-chip--bad { background: var(--bb-price-up-chip); color: var(--bb-price-up); }
+
+/* Progress: four equal steps, done steps carry the beige bar. */
+.dh-progress { list-style: none; padding: var(--bb-space-4) 0 0; border-top: 1px solid var(--bb-border-subtle); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--bb-space-3); }
+.dh-step { display: flex; flex-direction: column; gap: var(--bb-space-1); min-width: 0; }
+.dh-step-bar { height: 4px; border-radius: 2px; background: var(--bb-border-subtle); }
+.dh-step--done .dh-step-bar { background: var(--bb-action); }
+.dh-step-label { font: var(--bb-type-label); color: var(--bb-text-secondary); }
+.dh-step--done .dh-step-label { color: var(--bb-text); }
+.dh-step-detail { font-size: var(--bb-text-xs); line-height: 16px; color: var(--bb-text-tertiary); overflow-wrap: anywhere; }
+
+.dh-card-foot { display: flex; flex-wrap: wrap; gap: var(--bb-space-2) var(--bb-space-5); align-items: center; padding-top: var(--bb-space-3); border-top: 1px solid var(--bb-border-subtle); font: var(--bb-type-label); }
+.dh-card-foot a { font: var(--bb-type-body-strong); min-height: 24px; display: inline-flex; align-items: center; }
+
+/* Notices (error, empty, no match) are the only cards that centre their text. */
+.dh-card--notice { align-items: flex-start; gap: var(--bb-space-3); }
+.dh-card--notice h2 { font: var(--bb-type-heading); }
+.dh-card--notice p { color: var(--bb-text-secondary); }
+.dh-card--notice[role=alert] { border-color: var(--bb-error-border); }
+
+/* Loading: three quiet placeholders, static by design (shared loading indicators do not animate). */
+.dh-card--skeleton { gap: var(--bb-space-3); }
+.dh-card--skeleton > div { height: 16px; border-radius: var(--bb-radius-control); background: var(--bb-surface-input); }
+.dh-card--skeleton > div:nth-child(1) { width: 32%; height: 24px; }
+.dh-card--skeleton > div:nth-child(2) { width: 70%; }
+.dh-card--skeleton > div:nth-child(3) { width: 45%; }
+
+@media (max-width: 900px) {
+  .dh-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dh-progress { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .dh { padding-top: var(--bb-space-6); gap: var(--bb-space-6); }
+  .dh-tiles { grid-template-columns: 1fr; }
+  .dh-card { padding: var(--bb-space-5) var(--bb-space-4); }
+  .dh-search, .dh-search input { width: 100%; }
+  .dh-tabs { width: 100%; }
+  .dh-tabs [role=tab] { flex: 1 1 auto; justify-content: center; padding: 0 var(--bb-space-3); }
+}
