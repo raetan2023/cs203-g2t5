@@ -9,13 +9,13 @@
 ## Where we left off
 
 - **What the page is now.** One card per plan the officer has submitted, newest first: the action the advice gave
-  (Buy now, Wait with its buy date, Monitor, Split purchase), the tonnage and deadline, what the recommendation said
-  with the buy-today total and the forecast range, the manager's decision with their name, and once a purchase is
+  (Buy now, Wait with its buy date, Monitor, Split purchase), the tonnage and deadline, three figures side by side
+  (buying today, the forecast for the buy date, the expected change), the manager's decision with their name, and once a purchase is
   recorded, what was paid against buying at submission time ("Advice saved ≈ USD x"). Approved plans show a four-step
   progress rail: Submitted, Approved, Buy date, Outcome. Rejected cards quote the manager's comment. Withdrawn plans
   appear under All with a grey pill. Drafts never appear: they belong on Purchase plans.
-- **Summary tiles:** awaiting approval, approved and not yet bought, completed, and the sum saved on completed buys
-  (shown as "—" until a purchase is recorded; negative when the buys cost more than buying at submission).
+- **Removed on 2026-11-07 at the owner's request:** the four summary tiles, the recommendation's sentence and the
+  "Sent to every manager" line.
 - **Filter and search:** status tabs (All, Pending approval, Approved, Rejected, Completed; arrow keys move between them)
   and a search box that matches the tonnage or the deadline in any form the page prints them.
 - **Data:** `planService.list()` then `readSubmission(planId)` for each submitted plan. The submission read returns the
@@ -58,6 +58,6 @@ Paste into your agent:
 - `docs/ui-revamp/assets/inspo/decision-history-page/Decision history – reworked-html/Decisions.dc.html` (the mock the
   page was built from; untracked in the main checkout on purpose).
 - Departures from the mock: no PDF link, no reminder line, totals over a million shorten to "1.2m" like the
-  recommendation page, the four summary tiles the mock left empty now hold the counts and the saving, withdrawn plans
+  recommendation page, no summary tiles, no "What it said" sentence or "Sent to every manager" line, withdrawn plans
   are shown, and completed cards compare the price paid with buying at submission rather than with the market price on
   the buy date.

@@ -35,7 +35,7 @@ try {
       const boxes = [...document.querySelectorAll('.dh-card')].map(card => card.getBoundingClientRect());
       return {
         scrollWidth: document.documentElement.scrollWidth,
-        overflow: [...document.querySelectorAll('.dh-tile-value, .dh-action, .dh-pill, .dh-chip, .dh-tabs [role=tab]')].filter(clipped).map(element => element.textContent),
+        overflow: [...document.querySelectorAll('.dh-figure dd, .dh-action, .dh-pill, .dh-chip, .dh-tabs [role=tab]')].filter(clipped).map(element => element.textContent),
         order: boxes.map(box => [box.top, box.bottom]),
         smallTargets: [...document.querySelectorAll('.dh-tabs [role=tab], .dh-search input, .dh .bb-button')].filter(element => element.getBoundingClientRect().height < 44).map(element => element.textContent),
       };
