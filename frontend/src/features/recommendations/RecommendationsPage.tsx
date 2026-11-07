@@ -10,10 +10,12 @@ import { RecommendationLoading } from './RecommendationLoading';
 import { DataNotice } from './DataNotice';
 import { CalculationSteps } from './CalculationSteps';
 import { CompareBuyingDates, buildColumns, useHorizonComparison, type Column, type ColumnId, type Entry } from './TimingComparison';
-import { DataSources, forecastSource } from './PurchaseImpact';
+import { forecastSource } from './PurchaseImpact';
+import { KeyAssumptions } from './KeyAssumptions';
 import { downloadReportPdf } from './reportPdf';
 import { buildRecommendationReport, reportFilename } from './recommendationReport';
-import { actionLabel, amount, change, changeRange, dayDate, perMt, readableDates, usd } from './format';
+import { HeroFigures, verdictNote, type HeroPoint } from './RecommendationHero';
+import { actionLabel, amount, dayDate, readableDates, usd } from './format';
 import './recommendations.css';
 import type { Horizon, ReadyForecast } from '../forecast/apiService';
 import { useForecastContext } from '../forecast/ForecastContext';
@@ -156,29 +158,29 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
   // With live forecasts, show step-by-step progress until the answer (or an error) replaces it.
   const preparing = connected && !held && (showGuidance ? g.loading : guidanceWaiting === 'loading');
   const demo = !!published?.synthetic || [analysis, i.analysis].some(a => a && (a.source === 'mock' || a.provenance === 'fixture'));
-  const forecastName = horizonDays ? ` · ${horizonDays}-day forecast` : '';
   const costDetail = runId && horizonDays && targetDate ? `${horizonDays}-day forecast · ${dayDate(targetDate)}` : undefined;
-  const viewing = columns.find(column => column.id === explored && column.forecast);
+  // The hero is fixed to the recommendation: a Wait shows its own date's forecast, a Buy now the date it passes up,
+  // and only Monitor follows the selected date. Selection otherwise just sets the cost detail.
+  const pointOf = (column?: Column): HeroPoint | undefined => column?.forecast
+    ? { date: column.date!, name: column.label.replace(' days', '-day'), mid: column.mid, low: column.low, high: column.high } : undefined;
+  const impactPoint: HeroPoint | undefined = impactReady && impactForecast
+    ? { date: impactReady.target_date!, name: horizonDays ? `${horizonDays}-day` : undefined, mid: impactForecast.central_estimate, low: impactForecast.prices.lower, high: impactForecast.prices.upper } : undefined;
+  const signalPoint: HeroPoint | undefined = waitTarget ? { date: waitTarget, mid: evidence!.alternative_cost_usd! / plan.quantity_mt } : undefined;
+  const point = guidance?.action === 'WAIT' ? pointOf(columns.find(column => column.date === waitTarget)) ?? signalPoint ?? impactPoint
+    : guidance?.action === 'BUY_NOW' ? pointOf(columns.filter(column => column.forecast && !column.late).at(-1)) ?? impactPoint
+    : pointOf(columns.find(column => column.id === (explored ?? horizonDays))) ?? impactPoint;
+  const quote = buyNow == null ? undefined : buyNow / plan.quantity_mt;
+  const reference = (analysis ?? i.analysis)?.reference;
+  const quoteDate = published?.anchor_quote_date ?? (reference?.status === 'ready' ? reference.value.observation_date : undefined);
+  const note = guidance && verdictNote(guidance.action, plan.purchase_deadline, plan.days_remaining, waitTarget, quote, point);
 
   const impactTile = showImpact ? <div className="rec-tile" aria-busy={i.loading}>
     {i.loading ? <div role="status"><span className="rec-tile-label">Estimated cost</span><div className="rec-skeleton" /><p>Loading cost impact for {amount(plan.quantity_mt)} MT…</p></div>
       : i.error ? <div role="alert"><span className="rec-tile-label">Cost estimate unavailable</span><p>{i.message ?? 'Couldn’t load cost impact. Your plan remains saved.'}</p><button className="bb-button bb-button--secondary" onClick={i.changed ? reload : i.retry}>{i.changed ? 'Reload saved plan' : 'Retry cost impact'}</button></div>
-      : impactReady ? <>
-        <span className="rec-tile-label">If you buy {dayDate(impactReady.target_date!)}{forecastName}</span>
-        <strong className="rec-tile-value">USD {amount(impactReady.forecast_total.lower)}–{amount(impactReady.forecast_total.upper)}</strong>
-        <span className="rec-tile-note">{changeRange(impactReady.difference_total.lower, impactReady.difference_total.upper)} than today</span>
-        <span className="rec-tile-note">{impactForecast!.basis.currency} {perMt(impactForecast!.prices.lower)}–{perMt(impactForecast!.prices.upper)}/{impactForecast!.basis.unit}</span>
-      </> : <p className="rec-tile-note">{i.analysis?.cost_impact.status === 'unavailable' ? i.analysis.cost_impact.message : 'Cost impact is unavailable for this forecast date.'}</p>}
+      : <p className="rec-tile-note">{i.analysis?.cost_impact.status === 'unavailable' ? i.analysis.cost_impact.message : 'Cost impact is unavailable for this forecast date.'}</p>}
   </div> : impactNote && <div className="rec-tile rec-tile--note"><p className="rec-tile-note">{impactNote}</p></div>;
-  const viewingTile = viewing && <div className="rec-tile">
-    <span className="rec-tile-label">If you buy {dayDate(viewing.date!)} · {viewing.label.replace(' days', '-day')} forecast</span>
-    <strong className="rec-tile-value">USD {amount(viewing.low * plan.quantity_mt)}–{amount(viewing.high * plan.quantity_mt)}</strong>
-    {viewing.forecast && <span className="rec-tile-note">{changeRange((viewing.low - viewing.forecast.anchor_price) * plan.quantity_mt, (viewing.high - viewing.forecast.anchor_price) * plan.quantity_mt)} than today</span>}
-    <span className="rec-tile-note">After your deadline, so it isn’t used in the recommendation.</span>
-  </div>;
-  const forecastTile = viewingTile || (waitTarget && impactReady?.target_date === waitTarget ? undefined : impactTile);
   const refresh = connected && <button type="button" className="bb-button bb-button--secondary rec-refresh" onClick={onRefresh}><RefreshIcon />Refresh prices</button>;
-  const download = () => downloadReportPdf(reportFilename(plan), buildRecommendationReport({ plan, guidance: guidance!, analysis: analysis!, columns, buyNow, costDetail, demo }));
+  const download = () => downloadReportPdf(reportFilename(plan), buildRecommendationReport({ plan, guidance: guidance!, analysis: analysis!, columns, buyNow, waitCost: waitTarget && point?.mid != null ? point.mid * plan.quantity_mt : undefined, costDetail, demo }));
 
   return <div className="rec-flow">
     <section className="rec-answer" aria-label="Recommendation" aria-busy={preparing || g.loading}>
@@ -189,26 +191,21 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
       : g.loading && !held ? <div role="status"><span className="rec-kicker">Recommended action</span><h2>Loading recommendation…</h2><p>The recommendation is loading for your selected saved purchase plan and current planning date.</p><div className="rec-skeleton" aria-hidden="true" /></div>
       : g.error ? <div role="alert"><span className="rec-kicker">Recommended action</span><h2>Couldn’t load analysis</h2><p>{g.message ?? 'We couldn’t load the recommendation for this plan and current date. Your plan remains saved.'}</p><button className="bb-button bb-button--secondary" onClick={g.changed ? reload : g.retry}>{g.changed ? 'Reload saved plan' : 'Retry recommendation'}</button></div>
       : !g.connected ? <div><span className="rec-kicker">Recommended action</span><h2>No recommendation available</h2><p>The recommendations service is not connected yet. Your purchase plan remains saved.</p></div>
-      : guidance ? <div className={`rec-verdict${actionLabel(guidance.action).length > 16 ? ' rec-verdict--long' : ''}`}>
-        <span className="rec-verdict-icon" aria-hidden="true"><ActionIcon action={guidance.action} /></span>
-        <div><span className="rec-kicker">Recommended action</span><h2>{actionLabel(guidance.action)}</h2>
+      : guidance ? <div className={`rec-hero${actionLabel(guidance.action).length > 16 ? ' rec-hero--long' : ''}`}>
+        <span className="rec-kicker">Recommended action</span>
+        <div className="rec-hero-line">
+          <span className="rec-hero-action"><span className="rec-verdict-icon" aria-hidden="true"><ActionIcon action={guidance.action} /></span><h2>{actionLabel(guidance.action)}</h2></span>
+          {waitTarget && <span className="rec-hero-date">and buy on {dayDate(waitTarget)}</span>}
+        </div>
+        {note ? <p className="rec-reason">{note}</p> : <>
           {tagline(guidance, plan) && <p className="rec-tagline">{tagline(guidance, plan)}</p>}
-          <p className="rec-reason">{readableDates(guidance.explanation)}</p></div>
+          <p className="rec-reason">{readableDates(guidance.explanation)}</p>
+        </>}
       </div>
       : analysis && <div><span className="rec-kicker">Recommended action</span><h2>No recommendation available</h2><p>{analysis.recommendation.status === 'unavailable' ? analysis.recommendation.message : 'Current forecast evidence is unavailable. Refresh evidence before making a timing decision.'}</p><p>Your purchase plan remains saved.</p></div>}
-      {!preparing && (buyNow != null || waitTarget || forecastTile) && <div className="rec-tiles">
-        {buyNow != null && <div className={`rec-tile${guidance?.action === 'BUY_NOW' ? ' rec-tile--recommended' : ''}`}>
-          <span className="rec-tile-label">{waitTarget ? 'If you buy today' : 'Buy today'}</span>
-          <strong className="rec-tile-value">{usd(buyNow)}</strong>
-          <span className="rec-tile-note">{amount(plan.quantity_mt)} MT × USD {perMt(buyNow / plan.quantity_mt)}/MT</span>
-        </div>}
-        {waitTarget && <div className="rec-tile rec-tile--recommended">
-          <span className="rec-tile-label">Buy on {dayDate(waitTarget)}</span>
-          <strong className="rec-tile-value">{usd(evidence!.alternative_cost_usd!)}</strong>
-          <span className="rec-tile-note">{evidence!.alternative_minus_now_usd != null && `About ${change(evidence!.alternative_minus_now_usd)} than buying today · `}weighted forecast signal</span>
-        </div>}
-        {forecastTile}
-      </div>}
+      {!preparing && <HeroFigures action={guidance?.action} quote={quote} quoteDate={quoteDate} quantity={plan.quantity_mt} point={point} published={published} pending={impactTile || undefined} />}
+      {/* The forecast figures can be ready when the cost analysis isn't; its reason still has to show. */}
+      {!preparing && point && showImpact && !i.loading && !impactReady && impactTile}
       {demo && <p className="rec-demo">Synthetic demo data · Illustrative guidance only.</p>}
     </section>
 
@@ -216,24 +213,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
 
     {!preparing && (evidence || impactReady) && <div className="rec-evidence">
       {evidence && <CalculationSteps evidence={evidence} action={guidance!.action} columns={columns} deadline={plan.purchase_deadline} quantity={plan.quantity_mt} />}
-      <div className="rec-fine-group">
-        {evidence && <details className="rec-fine">
-          <summary>Full method and reasons</summary>
-          <div className="rec-fine-body">
-            <ul>
-              <li>Only forecasts that land on or before your deadline are used.</li>
-              <li>The two eligible forecasts nearest your deadline are blended, weighted by how close each target date is to it. A single eligible forecast is used on its own.</li>
-              <li>If the blended price is below today’s, the plan waits for that forecast’s date; otherwise it buys today.</li>
-              <li>{forecastSource(published).newsAware
-                ? 'Timing uses the central model estimates even when the reference quote is dated. Quote age and price ranges remain visible limitations. Never wait past your deadline.'
-                : 'If the blended range overlaps today’s price, or the quote is more than 7 days old, the advice is to monitor instead. Never wait past your deadline.'}</li>
-            </ul>
-            <h3>For this plan</h3>
-            <ul>{evidence.reasons.map((reason, n) => <li key={n}>{readableDates(reason)}</li>)}</ul>
-          </div>
-        </details>}
-        <DataSources impact={impactReady ? i.analysis : undefined} guidance={currentAnalysis ? analysis : undefined} published={published} />
-      </div>
+      <KeyAssumptions evidence={evidence} reference={reference} published={published} today={plan.scenario_as_of_date} />
     </div>}
 
     <section className="rec-summary" aria-label={readOnly ? 'Recommendation summary' : 'Decision'}>
@@ -243,7 +223,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
         <dl className="rec-summary-facts">
           <div><dt>Plan</dt><dd>{plan.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT</dd></div>
           <div><dt>Deadline</dt><dd>{dayDate(plan.purchase_deadline)} · {remaining(plan.days_remaining)}</dd></div>
-          {waitTarget ? <div><dt>Buy on {dayDate(waitTarget)}</dt><dd>{usd(evidence!.alternative_cost_usd!)}</dd></div>
+          {waitTarget ? <div><dt>Buy on {dayDate(waitTarget)}</dt><dd>{usd((point?.mid ?? 0) * plan.quantity_mt)}</dd></div>
             : buyNow != null && <div><dt>Buy today</dt><dd>{usd(buyNow)}</dd></div>}
           {costDetail && <div><dt>Cost detail</dt><dd>{costDetail}</dd></div>}
         </dl>
@@ -253,7 +233,13 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
       </div>
       <div className="rec-report">
         <h3><DocumentIcon />Full report (PDF)</h3>
-        <p>Download a planning copy with the recommended action, cost estimates, and supporting evidence. Manager approval is recorded separately.</p>
+        <p>Everything behind this recommendation, for your records:</p>
+        <ul>
+          <li>Full method and decision rules</li>
+          <li>All assumptions and limitations</li>
+          <li>Data sources and timestamps</li>
+          <li>Model version and evaluation</li>
+        </ul>
         <button type="button" className="bb-button bb-button--secondary" disabled={!guidance || !analysis} onClick={download}>Download report</button>
       </div>
     </section>

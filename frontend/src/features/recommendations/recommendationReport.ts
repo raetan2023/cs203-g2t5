@@ -10,6 +10,8 @@ export interface ReportInput {
   /** The buying-date comparison the page shows: today plus each forecast horizon. */
   columns: Column[];
   buyNow?: number;
+  /** The buy date's own forecast cost, matching the page. Falls back to the policy's blended signal. */
+  waitCost?: number;
   costDetail?: string;
   demo: boolean;
   generatedAt?: Date;
@@ -47,7 +49,7 @@ function tagline({ guidance, plan }: ReportInput) {
   return undefined;
 }
 
-function metrics({ plan, guidance, analysis, buyNow }: ReportInput): Extract<ReportBlock, { kind: 'metrics' }>['items'] {
+function metrics({ plan, guidance, analysis, buyNow, waitCost }: ReportInput): Extract<ReportBlock, { kind: 'metrics' }>['items'] {
   const evidence = guidance.evidence;
   const reference = analysis.reference.status === 'ready' ? analysis.reference.value : undefined;
   const forecast = analysis.forecast.status === 'ready' ? analysis.forecast.value : undefined;
@@ -59,8 +61,10 @@ function metrics({ plan, guidance, analysis, buyNow }: ReportInput): Extract<Rep
     note: `USD ${perMt(buyNow / plan.quantity_mt)}/MT${reference ? ` · quote ${dayDate(reference.observation_date)}` : ''}` });
   const target = evidence?.supported_target_date;
   if (guidance.action === 'WAIT' && target && evidence?.alternative_cost_usd != null) {
-    items.push({ label: `Est. cost on ${dayDate(target).slice(4)}`, value: usd(evidence.alternative_cost_usd), tone: 'wait',
-      note: evidence.alternative_minus_now_usd != null ? `About ${change(evidence.alternative_minus_now_usd)} than today` : 'Based on the forecast' });
+    const cost = waitCost ?? evidence.alternative_cost_usd;
+    const difference = buyNow != null ? cost - buyNow : evidence.alternative_minus_now_usd;
+    items.push({ label: `Est. cost on ${dayDate(target).slice(4)}`, value: usd(cost), tone: 'wait',
+      note: difference != null ? `About ${change(difference)} than today` : 'Based on the forecast' });
   } else if (forecast) {
     items.push({ label: `Forecast · ${dayDate(forecast.target_date)}`, value: usdRange(forecast.prices.lower * plan.quantity_mt, forecast.prices.upper * plan.quantity_mt),
       note: `USD ${perMt(forecast.prices.lower)}–${perMt(forecast.prices.upper)}/MT` });
