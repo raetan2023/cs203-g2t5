@@ -8,6 +8,8 @@
 
 # Build output (never commit compiled classes)
 target/
+historical-market-dashboard/frontend/dist/
+backend/error.log
 
 # Raw design-inspiration source clips are kept local only (see docs/ui-revamp)
 docs/ui-revamp/assets/inspo/**/*.mp4
