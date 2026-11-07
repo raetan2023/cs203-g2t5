@@ -60,7 +60,7 @@ What is really missing is everything **after** step 5 (section 3).
 | M6 | **Organisation switcher and date** | frontend | Both are static in the proposal. The real switcher is `organisationControl` (Clerk). The date chip should show the backend's Singapore date (`/api/v1/config`), not the browser's. |
 | M7 | **Navigation drawer** | design | The menu button opens nothing. The drawer exists in `AppShell` (Home, Purchase plans, Market dashboard, Sign out, and a disabled market link when not connected). Draw it in the new style. |
 | M8 | **Real data** | — | Six of 16 sales categories, sample histories, a sample forecast. Run `snapshot.mjs` with the backend up. |
-| M9 | **Taste round-1 fixes** | design | ~~Orange "pressure" hue (palette FAIL)~~ fixed 2026-10-28, two ragged rows, the explanatory captions, the always-full range bar, near-sparkline news charts. See TASTE_REVIEW.md. |
+| M9 | **Taste round-1 fixes** | design | ~~Orange "pressure" hue (palette FAIL)~~ fixed 2026-10-28, two ragged rows, the explanatory captions, the always-full range bar, near-sparkline news charts. |
 | M10 | **States not drawn yet** | design | Refresh failing while data is shown on a phone. A series with exactly one observation. Very long fuel or series names. A forecast whose target falls beyond a plan's deadline. Overdue plans (logic exists, not reviewed visually). |
 
 ## 3. Everything after the manager decides
