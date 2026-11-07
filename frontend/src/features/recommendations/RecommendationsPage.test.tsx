@@ -63,20 +63,21 @@ describe('recommendation page', () => {
     expect(screen.queryByText('Range USD 67,000–70,000')).not.toBeInTheDocument();
   });
 
-  it('shows supplied guidance and lets users expand and collapse forecast details', async () => {
+  it('shows supplied guidance with the key assumptions and their source underneath', async () => {
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />);
     expect(await findInAnswer('Consider purchasing on 29 October')).toBeVisible();
     expect(screen.getAllByText(/Synthetic demo data/).length).toBeGreaterThan(0);
-    const disclosure = await screen.findByText('Assumptions and data sources');
-    expect(disclosure.closest('details')).not.toHaveAttribute('open');
-    fireEvent.click(disclosure);
-    expect(disclosure.closest('details')).toHaveAttribute('open');
-    expect(await screen.findByText(/Price range: USD 670–700\/MT/)).toBeVisible();
+    const assumptions = await screen.findByRole('region', { name: 'Key assumptions and limitations' });
+    expect(within(assumptions).getByText('Forecast savings are estimates, not guaranteed. Get a current supplier quote before buying.')).toBeVisible();
+    expect(within(assumptions).getByText('Prices are dated observations (latest 24 Oct, today), not executable quotes. Costs exclude freight, fees and taxes.')).toBeVisible();
+    expect(within(assumptions).getByText('Full method, data sources and model details are in the report.')).toBeVisible();
+    expect(within(assumptions).getByText(/^Source: .*MGO quote 24 Oct 2025/)).toBeVisible();
+    expect(screen.queryByText('Assumptions and data sources')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to purchase plans' })).toHaveAttribute('href', '/purchase-plans');
     expect(screen.getByText('Range USD 67,000–70,000')).toBeVisible();
     expect(screen.getByText('USD 3,000 less to no change than today')).toBeVisible();
-    fireEvent.click(disclosure);
-    expect(disclosure.closest('details')).not.toHaveAttribute('open');
+    const report = screen.getByText('Full report (PDF)').closest<HTMLElement>('.rec-report')!;
+    expect(within(report).getByText('All assumptions and limitations')).toBeVisible();
   });
 
   it('links to plan entry and does not request analysis without a saved plan', async () => {
@@ -89,8 +90,9 @@ describe('recommendation page', () => {
   it('retains forecasts when recommendations are unavailable', async () => {
     render(<RecommendationsPage planId={plan.plan_id} planService={plans()} service={createMockRecommendationService({ delayMs: 0, example: 'unavailable' })} scenarioDate={plan.scenario_as_of_date} />);
     expect(await screen.findByText('No recommendation available')).toBeVisible();
-    fireEvent.click(await screen.findByText('Assumptions and data sources'));
-    expect(await screen.findByText(/Price range: USD 670–700\/MT/)).toBeVisible();
+    const assumptions = await screen.findByRole('region', { name: 'Key assumptions and limitations' });
+    expect(within(assumptions).getByText(/Prices are dated observations \(latest 24 Oct, today\)/)).toBeVisible();
+    expect(within(assumptions).queryByText(/policy/)).not.toBeInTheDocument();
   });
 
   it('retries failed reads without replacing them with mock success', async () => {
@@ -195,8 +197,8 @@ it('labels experimental plan ranges without displaying confidence coverage claim
   expect(notice).toHaveTextContent('its coverage hasn’t been measured');
   expect(await screen.findByText('Last-quote fallback · Ridge unavailable')).toBeVisible();
   expect(screen.queryByText(/Target coverage:/)).not.toBeInTheDocument();
-  fireEvent.click(await screen.findByText('Assumptions and data sources'));
-  expect(screen.getByText('Last observed quote (persistence)')).toBeVisible();
+  expect(screen.getByText(/^Source: last observed quote · MGO quote/)).toBeVisible();
+  expect(screen.getByText('Price ranges are experimental, not calibrated confidence intervals.')).toBeVisible();
 });
 
 it('makes large experimental totals readable and describes both cost directions neutrally', async () => {
@@ -228,8 +230,7 @@ it('identifies a published Ridge result separately from the last-quote fallback'
   </ForecastProvider>);
   expect(await screen.findByText('Ridge regression')).toBeVisible();
   expect(screen.queryByText('Last-quote fallback · Ridge unavailable')).not.toBeInTheDocument();
-  fireEvent.click(await screen.findByText('Assumptions and data sources'));
-  expect(screen.getByText('Ridge regression (published)')).toBeVisible();
+  expect(screen.getByText(/^Source: published Ridge regression · MGO quote/)).toBeVisible();
 });
 
 it('shows a current executed Ridge estimate when its target fits the deadline', async () => {
@@ -514,7 +515,7 @@ it('downloads a planning PDF from the page’s data', async () => {
   const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
   renderStale(staleAnalysis());
   await findInAnswer('Monitor');
-  expect(screen.getByText(/Manager approval is recorded separately/)).toBeVisible();
+  expect(screen.getByText('Everything behind this recommendation, for your records:')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Download report' }));
   expect(click).toHaveBeenCalledOnce();
   const report = createObjectURL.mock.calls[0][0];

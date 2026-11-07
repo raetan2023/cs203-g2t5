@@ -10,7 +10,8 @@ import { RecommendationLoading } from './RecommendationLoading';
 import { DataNotice } from './DataNotice';
 import { CalculationSteps } from './CalculationSteps';
 import { CompareBuyingDates, buildColumns, useHorizonComparison, type Column, type ColumnId, type Entry } from './TimingComparison';
-import { DataSources, forecastSource } from './PurchaseImpact';
+import { forecastSource } from './PurchaseImpact';
+import { KeyAssumptions } from './KeyAssumptions';
 import { downloadReportPdf } from './reportPdf';
 import { buildRecommendationReport, reportFilename } from './recommendationReport';
 import { HeroFigures, verdictNote, type HeroPoint } from './RecommendationHero';
@@ -212,27 +213,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
 
     {!preparing && (evidence || impactReady) && <div className="rec-evidence">
       {evidence && <CalculationSteps evidence={evidence} action={guidance!.action} columns={columns} deadline={plan.purchase_deadline} quantity={plan.quantity_mt} />}
-      <div className="rec-fine-group">
-        {evidence && <details className="rec-fine">
-          <summary>Full method and reasons</summary>
-          <div className="rec-fine-body">
-            <ul>
-              <li>Only forecasts that land on or before your deadline are used.</li>
-              <li>The two eligible forecasts nearest your deadline are blended, weighted by how close each target date is to it. A single eligible forecast is used on its own.</li>
-              <li>If the blended price is below today’s, the plan waits for that forecast’s date; otherwise it buys today.</li>
-              <li>{forecastSource(published).newsAware
-                ? 'Timing uses the central model estimates even when the reference quote is dated. Quote age and price ranges remain visible limitations. Never wait past your deadline.'
-                : 'If the blended range overlaps today’s price, or the quote is more than 7 days old, the advice is to monitor instead. Never wait past your deadline.'}</li>
-            </ul>
-            <h3>For this plan</h3>
-            <ul>
-              {note && <li>{readableDates(guidance!.explanation)}</li>}
-              {evidence.reasons.map((reason, n) => <li key={n}>{readableDates(reason)}</li>)}
-            </ul>
-          </div>
-        </details>}
-        <DataSources impact={impactReady ? i.analysis : undefined} guidance={currentAnalysis ? analysis : undefined} published={published} />
-      </div>
+      <KeyAssumptions evidence={evidence} reference={reference} published={published} today={plan.scenario_as_of_date} />
     </div>}
 
     <section className="rec-summary" aria-label={readOnly ? 'Recommendation summary' : 'Decision'}>
@@ -252,7 +233,13 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
       </div>
       <div className="rec-report">
         <h3><DocumentIcon />Full report (PDF)</h3>
-        <p>Download a planning copy with the recommended action, cost estimates, and supporting evidence. Manager approval is recorded separately.</p>
+        <p>Everything behind this recommendation, for your records:</p>
+        <ul>
+          <li>Full method and decision rules</li>
+          <li>All assumptions and limitations</li>
+          <li>Data sources and timestamps</li>
+          <li>Model version and evaluation</li>
+        </ul>
         <button type="button" className="bb-button bb-button--secondary" disabled={!guidance || !analysis} onClick={download}>Download report</button>
       </div>
     </section>
