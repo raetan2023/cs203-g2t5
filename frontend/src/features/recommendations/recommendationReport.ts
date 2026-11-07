@@ -2,6 +2,7 @@ import type { CurrentRecommendation, PlanAnalysis, PurchasePlan, Urgency } from 
 import type { Column } from './TimingComparison';
 import type { Cell, ReportBlock, ReportDocument, Tone } from './reportPdf';
 import { actionLabel, amount, change, dayDate, perMt, readableDates, usd } from './format';
+import { forecastSource } from './PurchaseImpact';
 
 export interface ReportInput {
   plan: PurchasePlan & { urgency?: Urgency };
@@ -224,6 +225,60 @@ export function plainLimitations({ guidance, analysis }: Pick<ReportInput, 'guid
   return items;
 }
 
+/** The full method and data sources behind the plain-language sections above. */
+function methodBlocks({ guidance, analysis, columns }: ReportInput): ReportBlock[] {
+  const evidence = guidance.evidence;
+  const forecast = analysis.forecast.status === 'ready' ? analysis.forecast.value : undefined;
+  const reference = analysis.reference.status === 'ready' ? analysis.reference.value : undefined;
+  const cost = analysis.cost_impact.status === 'ready' ? analysis.cost_impact.value : undefined;
+  const target = evidence?.supported_target_date ?? forecast?.target_date;
+  const forecasts = columns.filter(c => c.id !== 'today' && c.forecast);
+  const published = (forecasts.find(c => c.date === target) ?? forecasts.at(-1))?.forecast;
+  const { label, newsAware } = forecastSource(published?.interval ? published : undefined);
+  const notes = forecast?.range_description ?? '';
+
+  const method = [
+    'Only forecasts that land on or before your deadline are used.',
+    'The two forecasts nearest your deadline are blended, and the closer one counts more. A forecast that lands on the deadline, or the only one before it, is used on its own.',
+    'If the blended price is below today’s, the plan waits until that forecast’s date; otherwise it buys today.',
+    newsAware ? 'Timing follows the model’s central estimate even when the latest price is dated. Price age and ranges are reported as limitations instead.'
+      : 'If the price range overlaps today’s price, or the latest price is more than 7 days old, the advice is to monitor instead.',
+    'The plan never waits past your deadline.',
+  ];
+
+  const rows: Cell[][] = [];
+  if (published?.interval || forecast) rows.push(['Price model', label]);
+  const version = published?.model_version ?? forecast?.model_version;
+  if (version) {
+    const [name, sha] = version.split('-sha256-');
+    rows.push(['Model version', { text: name, sub: sha ? `SHA-256 ${sha.slice(0, 12)}…` : undefined }]);
+  }
+  if (published?.forecast_origin_date) rows.push(['Forecast run', { text: `${published.horizon_days} days from ${dayDate(published.forecast_origin_date, true)}`,
+    sub: published.published_at ? `Published ${stamp(new Date(published.published_at))}` : undefined }]);
+  if (reference) rows.push(['Market price source', { text: `${reference.basis.commodity} quote, ${dayDate(reference.observation_date, true)}`,
+    sub: `${reference.basis.currency} ${perMt(reference.price)} per ${reference.basis.unit}` }]);
+  const newsDate = published?.source_dates?.gdelt ?? published?.source_dates?.gdelt_estimated;
+  if (newsDate) rows.push(['News data used', { text: `GDELT, ${dayDate(newsDate, true)} (UTC day)`,
+    sub: published?.source_dates?.gdelt_estimated || /Estimated GDELT inputs/i.test(notes) ? 'Includes estimated values, not only observed news' : undefined }]);
+  if (forecast) {
+    rows.push(['Estimate date', dayDate(forecast.target_date, true)]);
+    if (forecast.central_estimate != null) rows.push(['Model central estimate', `${forecast.basis.currency} ${perMt(forecast.central_estimate)} per ${forecast.basis.unit}`]);
+    rows.push(['Price range', `${forecast.basis.currency} ${perMt(forecast.prices.lower)} to ${perMt(forecast.prices.upper)} per ${forecast.basis.unit}`]);
+  }
+  if (cost?.forecast_total) rows.push(['Full cost range', `USD ${amount(cost.forecast_total.lower)} to USD ${amount(cost.forecast_total.upper)}`]);
+  const tested = /evaluation: (\d+) rows; MAE ([\d.]+) USD\/MT versus persistence ([\d.]+)/i.exec(notes);
+  if (tested) rows.push(['Model testing', { text: `Tested on ${tested[1]} past dates`,
+    sub: `Average error USD ${perMt(Number(tested[2]))}/MT, against USD ${perMt(Number(tested[3]))}/MT for simply using the last price` }]);
+  else if (published?.evidence) rows.push(['Model testing', published.evidence === 'supported' ? 'Shown to beat using the last price' : 'Not yet shown to beat using the last price']);
+  if (evidence) rows.push(['Decision rule', { text: evidence.policy_version, sub: evidence.horizon_description ?? undefined }]);
+
+  return [
+    { kind: 'section', heading: 'How the recommendation is made' }, { kind: 'list', items: method },
+    ...(rows.length ? [{ kind: 'section', heading: 'Data sources and model' } as ReportBlock, { kind: 'table', rows } as ReportBlock] : []),
+    ...(notes ? [{ kind: 'paragraph', text: `Technical model notes: ${readableDates(notes)}` } as ReportBlock] : []),
+  ];
+}
+
 export function buildRecommendationReport(input: ReportInput): ReportDocument {
   const { plan, guidance, analysis, costDetail, demo } = input;
   const generatedAt = input.generatedAt ?? new Date();
@@ -266,7 +321,7 @@ export function buildRecommendationReport(input: ReportInput): ReportDocument {
   );
 
   blocks.push({ kind: 'section', heading: 'Why this recommendation' }, { kind: 'list', numbered: true, items: plainReasons(input) },
-    { kind: 'section', heading: 'Things to keep in mind' }, { kind: 'list', items: plainLimitations(input) });
+    { kind: 'section', heading: 'Things to keep in mind' }, { kind: 'list', items: plainLimitations(input) }, ...methodBlocks(input));
 
   return {
     title: 'Purchase Recommendation',
