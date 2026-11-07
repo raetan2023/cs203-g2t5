@@ -11,7 +11,8 @@
     "test:layout": "node scripts/test-plan-layout.mjs",
     "test:recommendation-layout": "node scripts/test-recommendation-layout.mjs",
     "test:market-layout": "node scripts/test-market-layout.mjs",
-    "test:home-navigation": "node scripts/test-home-navigation.mjs"
+    "test:home-navigation": "node scripts/test-home-navigation.mjs",
+    "test:decision-history-layout": "node scripts/test-decision-history-layout.mjs"
   },
   "dependencies": {
     "@clerk/react": "^6.17.2",
