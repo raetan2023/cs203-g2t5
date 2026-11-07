@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { RecommendationApproval, SUBMIT_LABEL, SubmittedRecommendationView } from './RecommendationApproval';
@@ -124,22 +124,20 @@ it('does not submit twice or publish a response after the selection component is
   expect(api.submit).toHaveBeenCalledTimes(1); expect(callback).not.toHaveBeenCalled();
 });
 
-it('keeps one plan recommendation while selecting the forecast cost detail for approval', async () => {
+it('submits the recommendation with the cost detail it set; the buyer cannot pick another window', async () => {
   const api = service(), user = userEvent.setup();
   const recommendations = { read: vi.fn(async (context: PlanResultContext, h: Horizon = 7) => analysis(h, context)) };
   render(<ForecastProvider service={{ read: async h => forecast(h) }} scenarioDate={DEMO_SCENARIO_DATE}>
     <RecommendationsPage canSubmit planId={draft.plan_id} planService={api} service={recommendations} scenarioDate={DEMO_SCENARIO_DATE} />
   </ForecastProvider>);
-  // A disabled placeholder holds the button's place while the recommendation loads.
   expect(await screen.findByText('One recommendation for this plan.')).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: /^14 days$/ }));
-  // The answer stays on screen while the new date's figures load.
-  expect(screen.getByText('One recommendation for this plan.')).toBeVisible();
-  await waitFor(() => expect(screen.getByText(/^14-day forecast · /)).toBeVisible());
+  expect(screen.queryByRole('button', { name: /days$/ })).not.toBeInTheDocument();
+  const detail = await screen.findByText(/^(7|14|30)-day forecast · /);
+  const horizon = Number(detail.textContent!.match(/^(\d+)/)![1]);
   await waitFor(() => expect(submitButton()).toBeEnabled());
   await user.click(submitButton());
   await user.click(screen.getByRole('button', { name: 'Confirm submission' }));
-  await waitFor(() => expect(api.submit).toHaveBeenCalledWith(draft.plan_id, expect.objectContaining({ horizon_days: 14, recommendation_id: 'plan-rec' })));
+  await waitFor(() => expect(api.submit).toHaveBeenCalledWith(draft.plan_id, expect.objectContaining({ horizon_days: horizon, recommendation_id: 'plan-rec' })));
   expect(await screen.findByRole('heading', { name: 'Submitted recommendation' })).toBeVisible();
   expect(api.readSubmission).toHaveBeenCalledWith(draft.plan_id);
 });

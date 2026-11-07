@@ -157,7 +157,7 @@ it('pins guidance and impact to the selected publication and clears both when it
   </ForecastProvider>);
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run'));
   expect(impact).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, 'published-run');
-  expect(await screen.findByRole('button', { name: '14 days' })).toHaveAccessibleDescription(/After deadline/);
+  expect(await screen.findByRole('group', { name: '14 days' })).toHaveAccessibleDescription(/After deadline/);
   current = false;
   await act(async () => document.dispatchEvent(new Event('visibilitychange')));
   expect(await screen.findByText('Previous day news unavailable')).toBeVisible();
@@ -260,7 +260,7 @@ it('blocks every horizon for a five-day deadline and shows only the observed ref
     <RecommendationsPage planId={shortPlan.plan_id} planService={createMockPlanService({ initialPlan: shortPlan, delayMs: 0, getScenarioDate: () => shortPlan.scenario_as_of_date })} service={service} scenarioDate={shortPlan.scenario_as_of_date} />
   </ForecastProvider>);
   expect(await screen.findByText('Your deadline is before the available forecasts')).toBeVisible();
-  for (const h of [7,14,30]) expect(await screen.findByRole('button', { name: `${h} days` })).toHaveAccessibleDescription(/After deadline/);
+  for (const h of [7,14,30]) expect(await screen.findByRole('group', { name: `${h} days` })).toHaveAccessibleDescription(/After deadline/);
   expect(getInAnswer('USD 84,444,000 for 84,444 MT')).toBeVisible();
   expect(impact).not.toHaveBeenCalled();
   expect(guidance).toHaveBeenCalled();
@@ -281,9 +281,8 @@ it('returns to a fitting horizon when a shared longer horizon exceeds the plan d
   await screen.findByText('Range USD 123,000–132,000');
   fireEvent.click(screen.getByRole('button', { name: 'Select shared 30-day horizon' }));
   await waitFor(() => expect(forecasts.read).toHaveBeenCalledWith(30));
-  await waitFor(() => expect(screen.getByRole('button', { name: '7 days' })).toHaveAttribute('aria-pressed', 'true'));
+  await waitFor(() => expect(impact).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, buildMockForecast(7).run_id));
   expect(impact).not.toHaveBeenCalledWith(expect.anything(), 30, expect.anything());
-  expect(impact).toHaveBeenLastCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 7, buildMockForecast(7).run_id);
 });
 
 it('renders one final recommendation with positive savings and no urgency override', async () => {
@@ -358,9 +357,9 @@ it('uses each forecast on its real target date, defaults to the one nearest the 
   expect(getInAnswer('Latest quote · 26 Oct')).toBeVisible();
   expect(getInAnswer('USD 1,200,132 for 888 MT')).toBeVisible();
   expect(getInAnswer('If you buy Wed 25 Nov · 30-day forecast')).toBeVisible();
-  expect(screen.getByRole('button', { name: '7 days' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: '7 days' })).toHaveAccessibleDescription(/Passed/);
-  expect(screen.getByRole('button', { name: '30 days' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-col--unavailable');
+  expect(screen.getByRole('group', { name: '7 days' })).toHaveAccessibleDescription(/Passed/);
+  expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('30-day forecast · Wed 25 Nov')).toBeVisible();
   expect(screen.getByRole('note', { name: 'Data freshness' })).toHaveTextContent('Prices use the MGO quote from Mon 26 Oct (11 days old).');
   await waitFor(() => expect(screen.getByRole('button', { name: 'Accept and submit for approval' })).toBeEnabled());
 });
@@ -378,11 +377,11 @@ it('counts the news-aware model from today, even with an old quote', async () =>
   </ForecastProvider>);
   await waitFor(() => expect(read).toHaveBeenCalledWith(expect.anything(), 14, 'news-aware'));
   expect(await screen.findByText('News-aware Ridge · experimental bounds')).toBeVisible();
-  const seven = screen.getByRole('button', { name: '7 days' });
+  const seven = screen.getByRole('group', { name: '7 days' });
   expect(seven).toHaveAccessibleDescription(/Unavailable/);
   expect(seven).not.toHaveAccessibleDescription(/Passed/);
-  expect(screen.getByRole('button', { name: '14 days' })).toHaveTextContent('Fri 20 Nov');
-  expect(screen.getByRole('button', { name: '30 days' })).toHaveAccessibleDescription(/After deadline/);
+  expect(screen.getByRole('group', { name: '14 days' })).toHaveTextContent('Fri 20 Nov');
+  expect(screen.getByRole('group', { name: '30 days' })).toHaveAccessibleDescription(/After deadline/);
   expect(screen.getByText(/Forecast dates count from today\./)).toBeVisible();
   const notice = screen.getByRole('note', { name: 'Data freshness' });
   expect(notice).toHaveTextContent('(11 days old)');
@@ -427,12 +426,14 @@ it('leads a Wait with its date, the 30-day forecast and the saving, not the blen
   expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('USD 7,696,312')).toBeVisible();
 });
 
-it('keeps the hero on the recommendation when another date is selected, and moves only the cost detail', async () => {
+it('offers no other window: the cost detail is the recommended date and the other dates are not buttons', async () => {
   renderFar(farForecasts(1137.33), farAnalysis('WAIT', 'Buy in 30 days.', 1200, '2026-12-07'));
   await findInAnswer('and buy on Mon 07 Dec');
-  fireEvent.click(screen.getByRole('button', { name: '14 days' }));
-  expect(await within(screen.getByRole('region', { name: 'Decision' })).findByText('14-day forecast · Sat 21 Nov')).toBeVisible();
-  expect(getInAnswer('Your buy date · Mon 07 Dec')).toBeVisible();
+  expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('30-day forecast · Mon 07 Dec')).toBeVisible();
+  expect(screen.queryByRole('button', { name: /days$/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('group', { name: '30 days' })).toHaveAccessibleDescription(/Recommended/);
+  expect(screen.getByRole('group', { name: '14 days' })).not.toHaveAccessibleDescription(/Eligible|Selected/);
+  expect(screen.queryByText('Observed')).not.toBeInTheDocument();
 });
 
 it('leads a Buy now with today, what waiting would cost and the extra cost', async () => {
@@ -483,19 +484,6 @@ it('walks through the four calculation steps from the policy’s own signal', as
   expect(within(steps).getByText('The range overlaps today’s price and the quote is over 7 days old.')).toBeVisible();
 });
 
-it('keeps the answer on screen when another date is selected and moves the cost detail with it', async () => {
-  const service = staleAnalysis();
-  renderStale(service);
-  await findInAnswer('Monitor');
-  fireEvent.click(screen.getByRole('button', { name: '14 days' }));
-  expect(getInAnswer('Monitor')).toBeVisible();
-  expect(screen.queryByText('Working out your recommendation')).not.toBeInTheDocument();
-  expect(await findInAnswer('If you buy Mon 09 Nov · 14-day forecast')).toBeVisible();
-  const decision = screen.getByRole('region', { name: 'Decision' });
-  expect(within(decision).getByText('14-day forecast · Mon 09 Nov')).toBeVisible();
-  expect(service.read).toHaveBeenLastCalledWith(expect.anything(), 14, 'old-quote');
-});
-
 it('shows a date after the deadline for comparison without making it the cost detail', async () => {
   const shortPlan = { ...stalePlan, purchase_deadline: '2026-11-20', days_remaining: 14 };
   const service = staleAnalysis();
@@ -503,8 +491,7 @@ it('shows a date after the deadline for comparison without making it the cost de
     <RecommendationsPage canSubmit planId={shortPlan.plan_id} planService={createMockPlanService({ initialPlan: shortPlan, getScenarioDate: () => staleToday, delayMs: 0 })} service={service} scenarioDate={staleToday} />
   </ForecastProvider>);
   await findInAnswer('Monitor');
-  fireEvent.click(screen.getByRole('button', { name: '30 days' }));
-  expect(await screen.findByText(/This date is after your deadline/)).toBeVisible();
+  expect(screen.getByRole('group', { name: '30 days' })).toHaveAccessibleDescription(/After deadline/);
   expect(service.read).not.toHaveBeenCalledWith(expect.anything(), 30, expect.anything());
   expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('14-day forecast · Mon 09 Nov')).toBeVisible();
 });
@@ -556,8 +543,7 @@ it('skips a default whose target has passed and chooses a forecast still to come
   await waitFor(() => expect(read).toHaveBeenCalledWith(expect.anything(), 14, 'mixed-targets'));
   expect(read.mock.calls.every(call => call[1] !== 7)).toBe(true);
   expect(impact.mock.calls.every(call => call[1] !== 7)).toBe(true);
-  expect(screen.getByRole('button', { name: '7 days' })).toBeDisabled();
-  await waitFor(() => expect(screen.getByRole('button', { name: '14 days' })).toHaveAttribute('aria-pressed', 'true'));
+  expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-col--unavailable');
   expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
 });
 
@@ -573,12 +559,12 @@ it('recovers after refresh when a newer quote moves the forecast dates', async (
   render(<ForecastProvider service={forecasts} scenarioDate={today}>
     <RecommendationsPage planId={currentPlan.plan_id} planService={planService} service={service} scenarioDate={today} />
   </ForecastProvider>);
-  await screen.findByRole('button', { name: '7 days' });
-  expect(screen.getByRole('button', { name: '7 days' })).toBeDisabled();
+  await screen.findByRole('group', { name: '7 days' });
+  expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-col--unavailable');
   current = true;
   fireEvent.click(screen.getAllByRole('button', { name: 'Refresh prices' })[0]);
   await waitFor(() => expect(read).toHaveBeenCalledWith(expect.anything(), 7, 'fresh-run'));
-  await waitFor(() => expect(screen.getByRole('button', { name: '7 days' })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole('group', { name: '7 days' })).not.toHaveClass('rec-col--unavailable'));
   expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
 });
 
@@ -599,5 +585,5 @@ it('rereads costs and advice when the planning day advances without new forecast
   today = '2026-11-07';
   view.rerender(page());
   await waitFor(() => expect(read).toHaveBeenCalledWith(expect.objectContaining({ scenario_as_of_date: '2026-11-07' }), 14, 'yesterday-run'));
-  expect(screen.getByRole('button', { name: '14 days' })).toHaveTextContent('Fri 20 Nov');
+  expect(screen.getByRole('group', { name: '14 days' })).toHaveTextContent('Fri 20 Nov');
 });
