@@ -21,19 +21,17 @@ Nothing is required. If someone picks up the optional "sail on success":
 
 1. Branch from `feature/ui-revamp-wireframe`.
 2. Delay Clerk's redirect just long enough for the animation, without changing auth (`ClerkAuthPage.tsx`, `useAuthFormSignals.ts`).
-3. Keep reduced motion still. Run `npm test` and check the screens in `docs/ui-revamp/login-ship/` still match.
+3. Keep reduced motion still. Run `npm test` and check the sign-in page in the preview (see [Start here](../handover.md#test-and-preview)).
 
 > **Prompt for your agent:** Read `docs/handover.md` (Start here) and `docs/handover/login.md`. On a branch off `feature/ui-revamp-wireframe`, make the ship in `features/auth/ReactiveShip.tsx` play its sail animation after a successful sign-in, before Clerk redirects. Don't change authentication behaviour. Respect `prefers-reduced-motion`. Run `npm test` and `npm run build` in `frontend/`.
 
 ## Design inspiration
 
 - **Revamp mockup:** [`docs/ui-revamp/assets/inspo/sign-in-page/`](../ui-revamp/assets/inspo/sign-in-page/)
-  - `Login — hybrid, reactive ship-html/SignInHybrid.dc.html`: the design that was built.
+  - `Sign in — source 2, video warmed to match-html/`: the design now live.
   - `sign-in-inspo.html` and `instr.txt`: the earlier night-ship scene and its animation brief.
-- **Brief:** [`CREATIVE_BRIEF.md`](../ui-revamp/CREATIVE_BRIEF.md) §3.1 "Sign-up / sign-in": what was built, the scene options, motion rules.
 - **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `login-screen.png`, `signup-screen.png`, `forgot-password.png`.
-- **Screenshots before the revamp:** `docs/ui-revamp/before/login-*.png`, `signup-*.png`; the wireframe ship it replaced is in `docs/ui-revamp/reference/wireframe-login-*.png`.
-- **What's built now:** [`docs/ui-revamp/login-ship/`](../ui-revamp/login-ship/) (typing, sign-up, error, keyboard, 1024 and 1440 px) and [`docs/ui-revamp/login-port/`](../ui-revamp/login-port/) (Clerk's form in the card).
+- **What's built now:** run the preview (see [Start here](../handover.md#test-and-preview)).
 - **Patterns to reuse:**
   - the scene and its form reactions: `features/auth/ReactiveShip.tsx`, `useAuthFormSignals.ts`
   - the page frame: `features/auth/AuthLayout.tsx`

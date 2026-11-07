@@ -103,7 +103,7 @@ Legend: ✅ kept · ⚠️ kept but changed · ❌ missing · ➕ new.
 
 **Update 2026-10-28:** decision 1 is made (buyer meaning; the dearer colour is now red `#f2849e`, not orange). Decisions 2 and 3 are handed over in [`docs/handover/market-dashboard.md`](../../handover/market-dashboard.md).
 
-1. **Colour meaning.** CREATIVE_BRIEF §3.5 says green = up, red = down. The mock and this proposal use buyer meaning instead: green lowers cost, orange raises it, and the USD index stays grey. Taste supports buyer meaning, but fails the beige + orange pairing as an "assistant palette". Either way the pressure hue needs to change.
+1. **Colour meaning.** The original brief said green = up, red = down. The mock and this proposal use buyer meaning instead: green lowers cost, orange raises it, and the USD index stays grey. Taste supports buyer meaning, but fails the beige + orange pairing as an "assistant palette". Either way the pressure hue needs to change.
 2. **Plans on the market page.** This is a cross-feature block. It needs the plan list plus one recommendation read per plan, or it shows only deadlines and links.
 3. **Forecast horizons.** One picker (proposal, the current behaviour) vs all three at once (mock, three reads). Either
    way, this is the market forecast; a plan's estimate uses the purchase-plan forecast and its own horizon choice.
