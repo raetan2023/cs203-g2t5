@@ -84,12 +84,11 @@ try {
     }
   }
   assert.match(await page.locator('.rec-box').nth(1).innerText(), /Range USD 11\.87bn–13\.72bn/);
-  await page.getByRole('button', { name: '14 days', exact: true }).click();
-  await page.waitForFunction(() => document.querySelector('.rec-col[aria-pressed="true"]')?.textContent.includes('14 days'));
   await page.getByText('If you buy Tue 10 Nov · 14-day forecast').waitFor();
-  const late = page.getByRole('button', { name: '30 days', exact: true });
-  assert.equal(await late.isDisabled(), false, 'late targets stay explorable');
+  assert.equal(await page.getByRole('button', { name: /days$/ }).count(), 0, 'dates are not selectable');
+  const late = page.getByRole('group', { name: '30 days', exact: true });
   assert.match(await late.getAttribute('aria-describedby').then(ids => page.evaluate(ids => ids.split(' ').map(id => document.getElementById(id).textContent).join(' '), ids)), /After deadline/);
+  assert.equal(await page.getByText('Eligible', { exact: true }).count() + await page.getByText('Observed', { exact: true }).count() + await page.getByText('Selected', { exact: true }).count(), 0, 'no eligible, observed or selected chips');
   assert.equal(await page.getByLabel('Urgency for this analysis', {exact: true}).count(), 0);
   assert.equal(await page.getByRole('region', {name: 'Recommendation', exact: true}).count(), 1);
   await page.getByRole('heading', {name: 'Monitor', exact: true}).waitFor();

@@ -56,10 +56,11 @@ export function buildColumns(entries: Entry[], today: string, deadline: string):
   return columns;
 }
 
-export function CompareBuyingDates({ entries, quantity, today, deadline, selected, recommended, badge, knownMessage, onSelect }: {
-  entries?: Entry[]; quantity: number; today: string; deadline: string; selected?: Horizon; recommended: ColumnId[];
+/** Today and the three forecast dates, read-only: the buyer can't pick a window, the recommendation sets it. */
+export function CompareBuyingDates({ entries, quantity, today, deadline, recommended, badge, knownMessage }: {
+  entries?: Entry[]; quantity: number; today: string; deadline: string; recommended: ColumnId[];
   /** A forecast failure the page already shows, so the comparison need not repeat it. */
-  badge?: string; knownMessage?: string; onSelect(id: Horizon): void;
+  badge?: string; knownMessage?: string;
 }) {
   const id = useId();
   const [unit, setUnit] = useState<'total' | 'mt'>('total');
@@ -78,9 +79,8 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
   const sharedMessage = messages?.size === 1 ? [...messages][0] : undefined;
   const column = (c: Column) => {
     const available = c.observed || !!c.forecast;
-    const pressed = selected === c.id;
-    const status = c.past ? 'Passed' : !available ? 'Unavailable' : c.late ? 'After deadline'
-      : recommended.includes(c.id) ? 'Recommended' : c.observed ? 'Observed' : pressed ? 'Selected' : 'Eligible';
+    // Only exceptions get a chip; an ordinary eligible date is just a date.
+    const status = c.past ? 'Passed' : !available ? 'Unavailable' : c.late ? 'After deadline' : recommended.includes(c.id) ? 'Recommended' : undefined;
     const key = `${id}-${c.id}`;
     const toDeadline = c.date && !c.observed && !c.late ? calendarDays(c.date, deadline) : undefined;
     const content = <>
@@ -88,7 +88,7 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
         <span><span id={`${key}-label`} className="rec-col-label">{c.label}</span>
           <span className="rec-col-date">{c.observed ? `Quote from ${dayDate(quoteDate ?? today)}` : c.date && dayDate(c.date)}
             {available && toDeadline !== undefined && toDeadline <= 7 && ` · ${toDeadline === 0 ? 'on your deadline' : `${toDeadline} ${toDeadline === 1 ? 'day' : 'days'} before deadline`}`}</span></span>
-        <span className="rec-col-chips"><span id={`${key}-status`} className="rec-chip">{status}</span>{pressed && status !== 'Selected' && <span className="rec-chip">Selected</span>}</span>
+        {status && <span className="rec-col-chips"><span id={`${key}-status`} className="rec-chip">{status}</span></span>}
       </span>
       {available ? <span className="rec-col-plot" aria-hidden="true">
         {reference && <span className="rec-col-reference" style={{ top: top(reference.mid) }} />}
@@ -102,18 +102,13 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
           : <><strong aria-hidden="true">—</strong><span>Unavailable</span></>}
       </span>
     </>;
-    const className = `rec-col${c.late ? ' rec-col--late' : ''}${status === 'Recommended' ? ' rec-col--recommended' : ''}`;
-    // Today is the fixed baseline, not a choice: only forecast dates can be selected.
-    if (c.id === 'today') return <div key={c.id} role="group" className={className} aria-labelledby={`${key}-label`} aria-describedby={`${key}-status ${key}-values`}>{content}</div>;
-    const horizon = c.id;
-    return <button key={c.id} type="button" className={className}
-      aria-pressed={pressed} aria-labelledby={`${key}-label`} aria-describedby={`${key}-status ${key}-values`}
-      disabled={!available} onClick={() => onSelect(horizon)}>{content}</button>;
+    const className = `rec-col${c.late ? ' rec-col--late' : ''}${status === 'Recommended' ? ' rec-col--recommended' : ''}${available ? '' : ' rec-col--unavailable'}`;
+    return <div key={c.id} role="group" className={className} aria-labelledby={`${key}-label`} aria-describedby={`${status ? `${key}-status ` : ''}${key}-values`}>{content}</div>;
   };
   return <section className="rec-compare" aria-labelledby={`${id}-title`} aria-busy={!entries}>
     <div className="rec-section-head">
       <div><h2 id={`${id}-title`}>Compare buying dates</h2>
-        <p>Today’s price and the 7, 14 and 30-day forecasts. Selecting a date changes the cost detail sent for approval.</p></div>
+        <p>Today’s price and the 7, 14 and 30-day forecasts.</p></div>
       {sharedMessage === undefined && <div className="rec-compare-tools">
         {badge && <span className="rec-badge">{badge}</span>}
         <div className="rec-toggle" role="group" aria-label="Show prices as">
@@ -137,7 +132,6 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, selecte
           </div>}
           {after.map(column)}
         </div>
-        {columns.some(c => c.id === selected && c.late) && <p className="rec-footnote">This date is after your deadline, so it isn’t used in the recommendation or sent for approval.</p>}
         <p className="rec-footnote">Bars show each forecast’s range on a shared scale; the tick is the central estimate and the dashed line is today’s price.
           {origin && (origin === today ? ' Forecast dates count from today.' : ` Forecast dates count from the ${formatDate(origin)} quote, not from today.`)}</p>
       </>}
