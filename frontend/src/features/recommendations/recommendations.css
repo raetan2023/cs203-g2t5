@@ -122,14 +122,12 @@
 
 .rec-columns { display: grid; grid-template-columns: var(--rec-columns); gap: var(--bb-space-3); }
 .rec-col { display: flex; flex-direction: column; gap: var(--bb-space-4); min-width: 0; padding: var(--bb-space-4); text-align: left; font: inherit; color: var(--bb-text); background: transparent; border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); transition: border-color var(--bb-motion-fast); }
-button.rec-col { cursor: pointer; }
-button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
 /* Selection is a 2px accent border (padding gives back the pixel), not a ring drawn with a shadow. */
-.rec-col[aria-pressed=true] { border-color: var(--bb-action); border-width: 2px; padding: 15px; }
 /* Dates after the deadline sit one tone step back on the canvas colour: flat, no stripes. */
 .rec-col--late { color: var(--bb-text-secondary); }
+.rec-col--recommended { border-color: var(--bb-action); border-width: 2px; padding: 15px; }
 /* The reason a date is unavailable has to stay readable, so this card opts out of the shared disabled fade. */
-.recommendations .rec-col:disabled { opacity: 1; cursor: not-allowed; border-style: dashed; border-color: var(--bb-border-subtle); color: var(--bb-text-secondary); }
+.rec-col--unavailable { border-style: dashed; border-color: var(--bb-border-subtle); color: var(--bb-text-secondary); }
 /* Fixed header height keeps every plot, and so the dashed today line, at the same height when a chip wraps. */
 .rec-col-head { display: flex; flex-direction: column; gap: var(--bb-space-2); min-height: 88px; }
 .rec-col-head > span:first-child { display: flex; flex-direction: column; gap: 2px; }
@@ -148,7 +146,7 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
 .rec-col-tick { position: absolute; left: 50%; width: 28px; height: 2px; margin: -1px 0 0 -14px; background: var(--bb-text); }
 .rec-col--late .rec-col-bar { background: var(--bb-border-control); }
 .rec-col--late .rec-col-tick { background: var(--bb-text-secondary); }
-.rec-col--recommended .rec-col-bar, .rec-col--recommended .rec-col-dot, .rec-col[aria-pressed=true] .rec-col-bar, .rec-col[aria-pressed=true] .rec-col-dot { background: var(--bb-action); }
+.rec-col--recommended .rec-col-bar, .rec-col--recommended .rec-col-dot { background: var(--bb-action); }
 .rec-col-values { display: flex; flex-direction: column; gap: 2px; }
 .rec-col-values strong { font: var(--bb-type-heading); overflow-wrap: anywhere; }
 .rec-col-values span { font-size: var(--bb-text-xs); color: var(--bb-text-secondary); overflow-wrap: anywhere; }
@@ -273,7 +271,7 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
   /* Columns stack; the deadline marker becomes a labelled rule between eligible and late dates. */
   .rec-columns { grid-template-columns: minmax(0, 1fr); }
   .rec-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(72px, 40%); grid-template-areas: 'head plot' 'values plot'; gap: var(--bb-space-2) var(--bb-space-3); padding: var(--bb-space-4) var(--bb-space-4); }
-  .rec-col[aria-pressed=true] { padding: 15px; }
+  .rec-col--recommended { padding: 15px; }
   .rec-col-head { grid-area: head; min-height: 0; }
   .rec-col-plot { grid-area: plot; height: 96px; }
   .rec-col-plot--empty { height: auto; }
