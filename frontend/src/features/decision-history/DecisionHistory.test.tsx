@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { PurchasePlan } from '../purchase-plan/types';
 import { PlanError } from '../purchase-plan/types';
 import { DecisionHistory } from './DecisionHistory';
-import { buildCard, expectedSavingText, filterCards, savedOf, tilesOf, titleOf } from './model';
+import { buildCard, expectedFigure, filterCards, savedOf, titleOf } from './model';
 import {
   APPROVED_PLAN as APPROVED, COMPLETED_PLAN as DONE, createDecisionFixtureService as service, DECISION_FIXTURE_TODAY as TODAY,
   DRAFT_PLAN as DRAFT, PENDING_PLAN as PENDING, REJECTED_PLAN as REJECTED, SUBMISSION_FIXTURES as submissions, WITHDRAWN_PLAN as WITHDRAWN,
@@ -16,37 +16,32 @@ const card = (name: RegExp | string) => screen.getByRole('article', { name });
 
 describe('decision history page', () => {
   it('shows one card per submitted plan, newest first, and never a draft', async () => {
-    const { container } = render(<DecisionHistory planService={service([DRAFT, DONE, PENDING, REJECTED, APPROVED, WITHDRAWN])} organisationName="MPP" today={TODAY} />);
+    const { container } = render(<DecisionHistory planService={service([DRAFT, DONE, PENDING, REJECTED, APPROVED, WITHDRAWN])} today={TODAY} />);
     await screen.findByRole('tabpanel');
     const titles = [...container.querySelectorAll<HTMLElement>('.dh-action')].map(el => el.textContent);
     expect(titles).toEqual(['Monitor', 'Wait, buy Sun 06 Dec', 'Buy now', 'Wait, buy Sun 06 Dec', 'Buy now']);
     expect(screen.queryByText('999 MT', { exact: false })).toBeNull();
-  });
-
-  it('counts the summary tiles and sums what completed buys saved', async () => {
-    render(<DecisionHistory planService={service([DONE, PENDING, REJECTED, APPROVED, WITHDRAWN])} today={TODAY} />);
-    await screen.findByRole('tabpanel');
-    const tiles = within(screen.getByRole('region', { name: 'Summary' }));
-    expect(tiles.getByText('Awaiting approval').nextElementSibling).toHaveTextContent('1');
-    expect(tiles.getByText('Approved, not yet bought').nextElementSibling).toHaveTextContent('1');
-    expect(tiles.getByText('Completed').nextElementSibling).toHaveTextContent('1');
-    expect(tiles.getByText('Saved on completed buys').nextElementSibling).toHaveTextContent('USD 51,500');
+    expect(screen.queryByRole('region', { name: 'Summary' })).toBeNull();
   });
 
   it('tells each stage its own story: pending, approved with progress, rejected with the comment, completed with the saving', async () => {
-    render(<DecisionHistory planService={service([PENDING, APPROVED, REJECTED, DONE])} organisationName="MPP" today={TODAY} />);
+    render(<DecisionHistory planService={service([PENDING, APPROVED, REJECTED, DONE])} today={TODAY} />);
     await screen.findByRole('tabpanel');
 
     const pending = within(card(/^Monitor/));
     expect(pending.getByText('Waiting for a manager')).toBeVisible();
-    expect(pending.getByText('Get a current supplier quote first.')).toBeVisible();
-    expect(pending.getByText(/Buying today: USD 1\.2m at \$1,351\.50\/MT/)).toBeVisible();
-    expect(pending.getByText('Sent to every manager in MPP')).toBeVisible();
+    expect(pending.queryByText('Get a current supplier quote first.')).toBeNull();
+    const buying = pending.getByText('Buying today').nextElementSibling;
+    expect(buying).toHaveTextContent('USD 1.2m');
+    expect(buying).toHaveTextContent('at $1,351.50/MT');
+    expect(pending.getByText('Forecast for Sun 06 Dec').nextElementSibling).toHaveTextContent('$1,300.00–1,400.00/MT');
+    expect(pending.getByText('Expected change').nextElementSibling).toHaveTextContent('USD 45,732 less to USD 43,068 more');
+    expect(pending.queryByText(/Sent to every manager/)).toBeNull();
     expect(pending.getByRole('link', { name: 'View recommendation' })).toHaveAttribute('href', '/purchase-plans/recommendation?plan_id=p1');
 
     const approved = within(card(/^Wait, buy/));
     expect(approved.getByText('Approved by Alex Tan')).toBeVisible();
-    expect(approved.getByText(/Expected saving ≈ USD 1\.16m–1\.70m/)).toBeVisible();
+    expect(approved.getByText('Expected saving').nextElementSibling).toHaveTextContent('≈ USD 1.16m–1.70m');
     const steps = within(approved.getByRole('list', { name: 'Progress' })).getAllByRole('listitem');
     expect(steps.map(s => s.textContent)).toEqual([
       'SubmittedThu 05 Nov', 'ApprovedFri 06 Nov · Alex Tan', 'Buy dateSun 06 Dec · in 30 days', 'OutcomeMeasured once you record the purchase',
@@ -134,14 +129,13 @@ describe('decision history model', () => {
   });
 
   it('words an expected saving by its sign', () => {
-    expect(expectedSavingText({ lower: 100_000, upper: 1_450_000 })).toBe('Expected saving ≈ USD 0.10m–1.45m');
-    expect(expectedSavingText({ lower: -20_000, upper: 30_000 })).toBe('Expected change: USD 30,000 less to USD 20,000 more');
-    expect(expectedSavingText({ lower: -50_000, upper: -10_000 })).toBe('Expected to cost USD 10,000–50,000 more');
+    expect(expectedFigure({ lower: 100_000, upper: 1_450_000 })).toEqual({ label: 'Expected saving', value: '≈ USD 0.10m–1.45m' });
+    expect(expectedFigure({ lower: -20_000, upper: 30_000 })).toEqual({ label: 'Expected change', value: 'USD 30,000 less to USD 20,000 more' });
+    expect(expectedFigure({ lower: -50_000, upper: -10_000 })).toEqual({ label: 'Expected extra cost', value: '≈ USD 10,000–50,000' });
   });
 
-  it('builds tiles from cards and filters by stage and text', () => {
+  it('filters cards by stage and text', () => {
     const cards = [buildCard(PENDING, 'pending', submissions.p1), buildCard(DONE, 'completed', submissions.p4), buildCard(APPROVED, 'approved', submissions.p2)];
-    expect(tilesOf(cards)).toEqual({ pending: 1, approved: 1, completed: 1, saved: 51_500 });
     expect(filterCards(cards, 'completed', '')).toHaveLength(1);
     expect(filterCards(cards, 'all', '888')).toHaveLength(1);
     expect(filterCards(cards, 'all', '2027')).toHaveLength(1);

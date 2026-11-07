@@ -1,4 +1,4 @@
-/* Decision history: summary tiles, a status filter, then one card per submitted plan. Tokens only.
+/* Decision history: a status filter, then one card per submitted plan. Tokens only.
    Owns its own classes (dh-*) so it never depends on the recommendation page's stylesheet. */
 .dh {
   box-sizing: border-box;
@@ -14,7 +14,7 @@
   color-scheme: dark;
 }
 .dh *, .dh *::before, .dh *::after { box-sizing: border-box; }
-.dh h1, .dh h2, .dh p, .dh ol, .dh blockquote { margin: 0; }
+.dh h1, .dh h2, .dh p, .dh ol, .dh dl, .dh dd, .dh blockquote { margin: 0; }
 .dh h1 { font: var(--bb-type-title); text-wrap: balance; }
 .dh p { text-wrap: pretty; }
 .dh a { color: var(--bb-action); text-decoration: none; }
@@ -29,15 +29,6 @@
 .dh-back { display: inline-flex; align-items: center; gap: var(--bb-space-1); align-self: flex-start; color: var(--bb-text-secondary); font: var(--bb-type-label); min-height: 24px; }
 .dh-back:hover { color: var(--bb-text); }
 
-/* Summary tiles sit on the canvas: numbers first, label above, one-line note under. */
-.dh-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--bb-space-4); }
-.dh-tile { display: flex; flex-direction: column; gap: var(--bb-space-1); padding: var(--bb-space-4) var(--bb-space-5); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); min-width: 0; }
-.dh-tile-label { font: var(--bb-type-label); color: var(--bb-text-secondary); }
-.dh-tile-value { font: var(--bb-type-figure); color: var(--bb-text); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.dh-tile--good .dh-tile-value { color: var(--bb-price-down); }
-.dh-tile--bad .dh-tile-value { color: var(--bb-price-up); }
-.dh-tile-value--pending { display: block; height: 30px; width: 3ch; border-radius: var(--bb-radius-control); background: var(--bb-surface-input); }
-.dh-tile-note { font-size: var(--bb-text-xs); line-height: 16px; color: var(--bb-text-tertiary); }
 
 /* Filter row: tabs on the left, search on the right. Both are 44px tall. */
 .dh-controls { display: flex; flex-wrap: wrap; gap: var(--bb-space-3); align-items: flex-end; justify-content: space-between; }
@@ -60,14 +51,24 @@
 .dh-card--approved { border-color: var(--bb-border-control); }
 .dh-card-row { display: flex; flex-wrap: wrap; gap: var(--bb-space-4) var(--bb-space-8); align-items: flex-start; }
 .dh-card-what { flex: 1 1 240px; display: flex; flex-direction: column; gap: var(--bb-space-1); min-width: 0; }
-.dh-card-said { flex: 2 1 300px; display: flex; flex-direction: column; gap: var(--bb-space-1); min-width: 0; }
+.dh-card-body { flex: 2 1 300px; display: flex; flex-direction: column; gap: var(--bb-space-1); min-width: 0; container-type: inline-size; }
 .dh-card-status { flex: 1 1 220px; display: flex; flex-direction: column; gap: var(--bb-space-2); align-items: flex-start; min-width: 0; }
 .dh-action { display: flex; align-items: center; gap: var(--bb-space-2); font: var(--bb-type-heading); font-size: 22px; line-height: 28px; color: var(--bb-text); }
 .dh-action svg { flex: none; color: var(--bb-action); }
 .dh-plan { color: var(--bb-text-secondary); }
 .dh-label { font: var(--bb-type-label); color: var(--bb-text-tertiary); }
-.dh-card-said p { color: var(--bb-text); }
-.dh-numbers { color: var(--bb-text-secondary); font-variant-numeric: tabular-nums; }
+.dh-card-body p { color: var(--bb-text); }
+/* The advice in figures: side-by-side columns with a hairline between them, stacked when the column is too narrow. */
+.dh-figures { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--bb-space-3) var(--bb-space-6); }
+.dh-figure { position: relative; display: flex; flex-direction: column; gap: var(--bb-space-1); min-width: 0; }
+.dh-figure + .dh-figure::before { content: ""; position: absolute; inset: 0 auto 0 calc(var(--bb-space-3) * -1); width: 1px; background: var(--bb-border-subtle); }
+.dh-figure dt { font: var(--bb-type-label); color: var(--bb-text-tertiary); }
+.dh-figure dd { font: var(--bb-type-body-strong); color: var(--bb-text); font-variant-numeric: tabular-nums; }
+.dh-figure-note { display: block; font: var(--bb-type-label); color: var(--bb-text-secondary); }
+@container (max-width: 440px) {
+  .dh-figures { grid-auto-flow: row; }
+  .dh-figure + .dh-figure::before { display: none; }
+}
 .dh-meta { font-size: var(--bb-text-xs); line-height: 16px; color: var(--bb-text-tertiary); }
 .dh-comment { color: var(--bb-text-secondary); font-style: italic; }
 
@@ -107,12 +108,10 @@
 .dh-card--skeleton > div:nth-child(3) { width: 45%; }
 
 @media (max-width: 900px) {
-  .dh-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dh-progress { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
   .dh { padding-top: var(--bb-space-6); gap: var(--bb-space-6); }
-  .dh-tiles { grid-template-columns: 1fr; }
   .dh-card { padding: var(--bb-space-5) var(--bb-space-4); }
   .dh-search, .dh-search input { width: 100%; }
   .dh-tabs { width: 100%; }
