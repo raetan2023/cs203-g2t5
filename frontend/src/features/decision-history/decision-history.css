@@ -69,7 +69,7 @@
 .dh-card-said p { color: var(--bb-text); }
 .dh-numbers { color: var(--bb-text-secondary); font-variant-numeric: tabular-nums; }
 .dh-meta { font-size: var(--bb-text-xs); line-height: 16px; color: var(--bb-text-tertiary); }
-.dh-comment { padding-left: var(--bb-space-3); border-left: 2px solid var(--bb-border-subtle); color: var(--bb-text-secondary); font-style: italic; }
+.dh-comment { color: var(--bb-text-secondary); font-style: italic; }
 
 /* Status pills: colour is paired with words, never alone. Draft and Withdrawn use neutral with secondary text. */
 .dh-pill { display: inline-flex; align-items: center; min-height: 24px; padding: 0 var(--bb-space-3); border-radius: var(--bb-radius-pill); font: var(--bb-type-label); border: 1px solid transparent; }
