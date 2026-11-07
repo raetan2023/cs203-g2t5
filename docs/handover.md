@@ -15,6 +15,7 @@ it supersedes the older backend-missing/branch instructions below for this work.
 | [Purchase plans](handover/purchase-plans.md) | Done | Done | — | Small follow-ups after the new statuses exist |
 | [Recommendations](handover/recommendations.md) | Post-decision actions implemented on `backend-plan-lifecycle` | Implemented on `backend-plan-lifecycle`; shared migrations applied | **Recommendations teammate** | Check real-account journey; agree later product decisions |
 | [Market dashboard](handover/market-dashboard.md) | **Spec done** (HTML proposal); live page unchanged | Small additions | **Market dashboard teammate** | Build the spec in React; decide "Your plans" |
+| [Decision history](handover/decision-history.md) | **Rebuilt** on `revamp/decisions` (2026-11-07) | Uses existing plan and submission endpoints | Page owner | Check against real data; PDF after the recommendations revamp merges |
 
 Every page file has these sections:
 1. **Where we left off:** what's built, with the PRs and decisions.
