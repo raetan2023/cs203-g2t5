@@ -103,14 +103,15 @@ it('says a stale price once, tied to the timing caveat', () => {
   expect(caveats.filter(c => c.includes('11 days old'))).toEqual(['The latest market price is 11 days old, and the timing advice still relies on it. Get a current supplier quote before deciding.']);
 });
 
-it('adds the full method, data sources and model notes', () => {
-  const withNotes = buildRecommendationReport({ plan, guidance, columns, buyNow: 612720, demo: false,
+it('adds the full method, data sources and the system’s calculation record', () => {
+  const withNotes = buildRecommendationReport({ plan, guidance: { ...guidance, evidence: { ...evidence, reasons: ['34 calendar days remain until the saved deadline 2026-12-10.'] } }, columns, buyNow: 612720, demo: false,
     analysis: { ...analysis, forecast: { status: 'ready', value: { target_date: '2026-12-06', central_estimate: 671, prices: { lower: 640, upper: 712.3 }, model_version: 'ridge-decision-gdelt-v1-sha256-f9e80931764b2c1d',
       basis: { commodity: 'MGO', currency: 'USD', unit: 'MT' }, range_description: 'Chronological central-price evaluation: 7 rows; MAE 173.514 USD/MT versus persistence 42.142 USD/MT.' } } } as unknown as PlanAnalysis });
   const headings = withNotes.blocks.filter(b => b.kind === 'section').map(b => (b as { heading: string }).heading);
-  expect(headings.slice(-2)).toEqual(['How the recommendation is made', 'Data sources and model']);
+  expect(headings.slice(-3)).toEqual(['How the recommendation is made', 'Data sources and model', 'Calculation record']);
   const all = JSON.stringify(withNotes);
   expect(all).toContain('SHA-256 f9e80931764b…');
   expect(all).toContain('Average error USD 173.51/MT, against USD 42.14/MT for simply using the last price');
+  expect(all).toContain('34 calendar days remain until the saved deadline 10 Dec 2026.');
   expect(all).toContain('Technical model notes: Chronological central-price evaluation');
 });

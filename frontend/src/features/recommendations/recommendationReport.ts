@@ -225,7 +225,7 @@ export function plainLimitations({ guidance, analysis }: Pick<ReportInput, 'guid
   return items;
 }
 
-/** The full method and data sources behind the plain-language sections above. */
+/** The full method, data sources and system record behind the plain-language sections above. */
 function methodBlocks({ guidance, analysis, columns }: ReportInput): ReportBlock[] {
   const evidence = guidance.evidence;
   const forecast = analysis.forecast.status === 'ready' ? analysis.forecast.value : undefined;
@@ -272,9 +272,11 @@ function methodBlocks({ guidance, analysis, columns }: ReportInput): ReportBlock
   else if (published?.evidence) rows.push(['Model testing', published.evidence === 'supported' ? 'Shown to beat using the last price' : 'Not yet shown to beat using the last price']);
   if (evidence) rows.push(['Decision rule', { text: evidence.policy_version, sub: evidence.horizon_description ?? undefined }]);
 
+  const record = [...(evidence?.reasons ?? []), ...(evidence?.limitations ?? [])].map(readableDates);
   return [
     { kind: 'section', heading: 'How the recommendation is made' }, { kind: 'list', items: method },
     ...(rows.length ? [{ kind: 'section', heading: 'Data sources and model' } as ReportBlock, { kind: 'table', rows } as ReportBlock] : []),
+    ...(record.length ? [{ kind: 'section', heading: 'Calculation record' } as ReportBlock, { kind: 'list', items: record } as ReportBlock] : []),
     ...(notes ? [{ kind: 'paragraph', text: `Technical model notes: ${readableDates(notes)}` } as ReportBlock] : []),
   ];
 }
