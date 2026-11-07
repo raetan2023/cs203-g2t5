@@ -31,9 +31,6 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
   const [result, setResult] = useState<{ scope: object; plan: PurchasePlan | null; error?: boolean }>();
   const requests = useRef<{ scope: object; promise: ReturnType<PurchasePlanService['read']> } | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
-  // `picked` is the eligible date chosen as the cost detail. `explored` is a date after the deadline, viewed for comparison only.
-  const [picked, setPicked] = useState<Horizon>();
-  const [explored, setExplored] = useState<Horizon>();
   useEffect(() => { heading.current?.focus(); }, []);
   useEffect(() => {
     let current = true;
@@ -64,10 +61,9 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
   const noHorizonFits = !!plan && !!forecast && forecastState.connected && fittingHorizons.length === 0;
   const outdatedForecast = !!referenceForecast && !forecast;
   const fitsSelected = fittingHorizons.includes(forecastState.horizon);
-  // The date nearest the deadline leads by default: it carries the most weight, and it is the date a Wait targets.
-  // One expired or unavailable horizon must not hide the other usable forecasts.
-  const preferred = !comparison.entries ? undefined : picked && fittingHorizons.includes(picked) ? picked
-    : fittingHorizons.at(-1) ?? comparison.entries.find(entry => upcoming(entry.forecast))?.horizon;
+  // The buyer doesn't choose a window. The date nearest the deadline is the cost detail: it carries the most weight,
+  // and it is the date a Wait targets. One expired or unavailable horizon must not hide the other usable forecasts.
+  const preferred = !comparison.entries ? undefined : fittingHorizons.at(-1) ?? comparison.entries.find(entry => upcoming(entry.forecast))?.horizon;
   useEffect(() => {
     if (plan && preferred && preferred !== forecastState.horizon) forecastState.setHorizon(preferred);
   }, [plan, preferred, forecastState.horizon, forecastState.setHorizon]);
@@ -76,10 +72,6 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
   if (plan?.status && plan.status !== 'draft') return <SubmittedRecommendationView key={`${plan.plan_id}:${plan.status}:${attempt}`} canDecide={canDecide} canAct={canSubmit} today={scenarioDate}
     onChanged={saved => setResult({ scope, plan: saved })} onReload={reload} plan={plan} planService={planService} />;
   const refreshPrices = () => { forecastState.retry(); comparison.retry(); };
-  // Selecting an eligible date chooses the cost detail sent for approval; later dates are view-only.
-  const select = (h: Horizon) => {
-    if (fittingHorizons.includes(h)) { setExplored(undefined); setPicked(h); forecastState.setHorizon(h); } else setExplored(h);
-  };
   const columns = plan && comparison.entries ? buildColumns(comparison.entries, scenarioDate, plan.purchase_deadline) : [];
 
   return <main className="recommendations">
@@ -93,7 +85,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
     {!active ? <section className="rec-card" role="status"><h2>{result ? 'Updating analysis…' : 'Loading purchase plan…'}</h2><p>{result ? 'The plan or current date changed. Previous guidance and cost estimates have been cleared.' : 'Loading your saved purchase plan.'}</p><div className="rec-skeleton" aria-hidden="true" /></section>
       : active.error ? <section className="rec-card rec-error" role="alert"><h2>Couldn’t load analysis</h2><p>Your saved plan could not be loaded for the current planning date.</p><button className="bb-button" onClick={reload}>Retry</button></section>
       : !plan ? <section className="rec-card rec-empty"><h2>No saved purchase plan</h2><p>Choose a saved purchase plan from your plans, or create a new one.</p><AppLink className="bb-button" href="/purchase-plans">Create purchase plan</AppLink></section>
-      : <PlanDecision plan={plan} planService={planService} service={service} reload={reload} published={referenceForecast} entries={comparison.entries} columns={columns} explored={explored} connected={forecastState.connected} onRefresh={refreshPrices} readOnly={!canSubmit}
+      : <PlanDecision plan={plan} planService={planService} service={service} reload={reload} published={referenceForecast} entries={comparison.entries} columns={columns} connected={forecastState.connected} onRefresh={refreshPrices} readOnly={!canSubmit}
         horizonDays={forecastState.connected ? forecastState.horizon : undefined} targetDate={forecast?.target_date} runId={fitsSelected ? forecast?.run_id : undefined}
         requireEvidence={forecastState.connected && !forecast}
         showGuidance={!forecastState.connected || (!!forecast && settled)}
@@ -122,7 +114,7 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
               <button className="bb-button" onClick={forecastState.retry}>Retry price estimate</button>
             </section>}
             {preparing ? <CompareSkeleton /> : forecastState.service && <CompareBuyingDates entries={comparison.entries} quantity={plan.quantity_mt} today={scenarioDate} deadline={plan.purchase_deadline}
-              selected={explored ?? (fitsSelected ? forecastState.horizon : undefined)} recommended={recommended} onSelect={select}
+              recommended={recommended}
               knownMessage={!forecast ? (forecastState.status === 'error' ? forecastState.error : forecastState.data?.status === 'unavailable' ? forecastState.data.message : undefined) : undefined}
               badge={newsAware ? 'News-aware Ridge · experimental bounds' : executedRidge ? 'Executed Ridge · experimental bounds' : experimental ? 'Last-quote fallback · Ridge unavailable'
                 : forecast ? (forecast.interval.method === 'gdelt_error_quantiles' ? 'Ridge regression' : 'Published model forecast') : undefined} />}
@@ -135,10 +127,10 @@ export function RecommendationsPage({ planService, service, scenarioDate, refres
 type Approval = { planService: PurchasePlanService; horizon: Horizon; onSubmitted(plan: PurchasePlan): void };
 
 /** Answer, comparison, method, then the decision; guidance and cost impact load and retry independently. */
-function PlanDecision({ plan, planService, service, reload, horizonDays, targetDate, runId, requireEvidence, approval, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, columns, explored, connected, onRefresh, readOnly = false, children }: {
+function PlanDecision({ plan, planService, service, reload, horizonDays, targetDate, runId, requireEvidence, approval, showGuidance, guidanceWaiting, showImpact, impactNote, published, entries, columns, connected, onRefresh, readOnly = false, children }: {
   plan: PurchasePlan & { urgency?: Urgency }; planService: PurchasePlanService; service?: RecommendationService; reload(): void; horizonDays?: number; targetDate?: string; runId?: string;
   requireEvidence: boolean; approval?: Approval; showGuidance: boolean; guidanceWaiting: 'loading' | 'error'; showImpact: boolean; impactNote?: string;
-  published?: ReadyForecast; entries?: Entry[]; columns: Column[]; explored?: Horizon; connected: boolean; onRefresh(): void; readOnly?: boolean; children(guidance: CurrentRecommendation | undefined, preparing: boolean): ReactNode;
+  published?: ReadyForecast; entries?: Entry[]; columns: Column[]; connected: boolean; onRefresh(): void; readOnly?: boolean; children(guidance: CurrentRecommendation | undefined, preparing: boolean): ReactNode;
 }) {
   const g = useAnalysis(showGuidance ? service : undefined, plan, 'read', horizonDays, runId);
   const i = useAnalysis(showImpact ? service : undefined, plan, 'readImpact', horizonDays, runId);
@@ -160,7 +152,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
   const demo = !!published?.synthetic || [analysis, i.analysis].some(a => a && (a.source === 'mock' || a.provenance === 'fixture'));
   const costDetail = runId && horizonDays && targetDate ? `${horizonDays}-day forecast · ${dayDate(targetDate)}` : undefined;
   // The hero is fixed to the recommendation: a Wait shows its own date's forecast, a Buy now the date it passes up,
-  // and only Monitor follows the selected date. Selection otherwise just sets the cost detail.
+  // and Monitor the cost-detail date.
   const pointOf = (column?: Column): HeroPoint | undefined => column?.forecast
     ? { date: column.date!, name: column.label.replace(' days', '-day'), mid: column.mid, low: column.low, high: column.high } : undefined;
   const impactPoint: HeroPoint | undefined = impactReady && impactForecast
@@ -168,7 +160,7 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
   const signalPoint: HeroPoint | undefined = waitTarget ? { date: waitTarget, mid: evidence!.alternative_cost_usd! / plan.quantity_mt } : undefined;
   const point = guidance?.action === 'WAIT' ? pointOf(columns.find(column => column.date === waitTarget)) ?? signalPoint ?? impactPoint
     : guidance?.action === 'BUY_NOW' ? pointOf(columns.filter(column => column.forecast && !column.late).at(-1)) ?? impactPoint
-    : pointOf(columns.find(column => column.id === (explored ?? horizonDays))) ?? impactPoint;
+    : pointOf(columns.find(column => column.id === horizonDays)) ?? impactPoint;
   const quote = buyNow == null ? undefined : buyNow / plan.quantity_mt;
   const reference = (analysis ?? i.analysis)?.reference;
   const quoteDate = published?.anchor_quote_date ?? (reference?.status === 'ready' ? reference.value.observation_date : undefined);
