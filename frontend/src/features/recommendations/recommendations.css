@@ -104,7 +104,8 @@
 .recommendations .rec-summary .rec-approval [role=alert] { color: var(--bb-error-text); }
 .rec-report { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: var(--bb-space-3); padding: var(--bb-space-5); background: var(--bb-canvas); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-control); }
 .recommendations .rec-report h3 { display: flex; align-items: center; gap: var(--bb-space-2); font: var(--bb-type-heading); }
-.recommendations .rec-report p { flex: 1; font-size: var(--bb-text-xs); line-height: 18px; color: var(--bb-text-secondary); }
+.recommendations .rec-report p { font-size: var(--bb-text-xs); line-height: 18px; color: var(--bb-text-secondary); }
+.rec-report ul { flex: 1; margin: 0; padding-left: var(--bb-space-5); display: flex; flex-direction: column; gap: var(--bb-space-2); font-size: var(--bb-text-xs); line-height: 18px; color: var(--bb-text-secondary); }
 
 .rec-section-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--bb-space-3); }
 .rec-section-head > div:first-child { flex: 1 1 320px; min-width: 0; }
@@ -185,8 +186,7 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
 .rec-skeleton--block { width: 100%; height: 240px; margin: 0; border-radius: var(--bb-radius-card); }
 
 .rec-fine { border-top: 1px solid var(--bb-border-subtle); }
-.rec-evidence > .rec-fine + .rec-fine { margin-top: calc(-1 * var(--bb-space-12)); }
-.rec-evidence > .rec-fine:last-child, .rec-fine-group > .rec-fine:last-child { border-bottom: 1px solid var(--bb-border-subtle); }
+.rec-evidence > .rec-fine:last-child { border-bottom: 1px solid var(--bb-border-subtle); }
 .rec-fine summary { display: flex; align-items: center; justify-content: space-between; min-height: 48px; cursor: pointer; font-size: var(--bb-text-md); font-weight: 500; list-style: none; }
 .rec-fine summary::-webkit-details-marker { display: none; }
 .rec-fine summary::after { content: ''; width: 7px; height: 7px; margin-right: var(--bb-space-1); border-right: 2px solid var(--bb-text-secondary); border-bottom: 2px solid var(--bb-text-secondary); transform: rotate(45deg); transition: transform var(--bb-motion-fast); }
@@ -196,12 +196,11 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
 .recommendations .rec-fine-body h3 { font: var(--bb-type-body-strong); margin-top: var(--bb-space-2); }
 .rec-explain { display: flex; flex-direction: column; gap: var(--bb-space-3); }
 .rec-fine-body ol { margin: 0; padding-left: var(--bb-space-5); display: flex; flex-direction: column; gap: var(--bb-space-2); color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 21px; }
-.rec-sources { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--bb-space-5); }
-.rec-sources dt { font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); margin-bottom: var(--bb-space-1); }
-.rec-sources dd { font-size: var(--bb-text-md); font-weight: 500; }
-.recommendations .rec-method p, .recommendations p.rec-method { font-size: var(--bb-text-md); max-width: 76ch; }
-.recommendations .rec-method h3 { margin: 0 0 var(--bb-space-1); }
-.recommendations .rec-source-note { font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); }
+.recommendations .rec-source-note { font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); overflow-wrap: anywhere; }
+/* Key assumptions: a short read before the decision; the full method is in the report. */
+.rec-assumptions { display: flex; flex-direction: column; gap: var(--bb-space-4); padding-top: var(--bb-space-8); border-top: 1px solid var(--bb-border-subtle); }
+.recommendations .rec-assumptions .rec-assumptions-pointer { margin: 0; flex: 0 1 auto; font-size: var(--bb-text-xs); line-height: 16px; color: var(--bb-text-secondary); }
+.rec-assumptions ul { margin: 0; padding-left: var(--bb-space-5); display: flex; flex-direction: column; gap: var(--bb-space-2); font: var(--bb-type-body); overflow-wrap: anywhere; }
 
 /* Submitted recommendation view (shares the page shell). */
 .recommendations .rec-context { font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); }
@@ -258,7 +257,6 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
   .rec-calc-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--bb-space-5) var(--bb-space-3); }
   .rec-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'answer' 'rail' 'evidence'; grid-template-rows: none; }
   .rec-rail { position: static; }
-  .rec-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
   .rec-answer, .rec-summary { padding: var(--bb-space-5); }
@@ -283,7 +281,7 @@ button.rec-col:hover:not(:disabled) { background: var(--bb-surface); }
   .rec-deadline-mark { flex-direction: row; justify-content: flex-start; padding: var(--bb-space-1) 0; }
   .rec-deadline-mark i { order: -1; flex: 0 0 24px; width: 24px; margin: 0; border-left: 0; border-top: 2px dashed var(--bb-text-secondary); }
   .rec-detail-grid { grid-template-columns: minmax(0, 1fr); gap: var(--bb-space-4); }
-  .rec-sources, .rec-evidence-grid { grid-template-columns: minmax(0, 1fr); }
+  .rec-evidence-grid { grid-template-columns: minmax(0, 1fr); }
   .rec-compare-tools { width: 100%; flex-wrap: wrap; justify-content: space-between; }
   .rec-approval-row .rec-refresh { flex: 1 1 100%; }
 }

@@ -93,10 +93,8 @@ try {
   assert.equal(await page.getByLabel('Urgency for this analysis', {exact: true}).count(), 0);
   assert.equal(await page.getByRole('region', {name: 'Recommendation', exact: true}).count(), 1);
   await page.getByRole('heading', {name: 'Monitor', exact: true}).waitFor();
-  await page.locator('.rec-fine').evaluateAll(elements => elements.forEach(el => { el.open = false; }));
-  await page.getByText('Assumptions and data sources', {exact: true}).focus();
-  await page.keyboard.press('Enter');
-  assert.equal(await page.getByText('Experimental; no guaranteed savings.', {exact: true}).isVisible(), true);
+  assert.equal(await page.getByText('Experimental; no guaranteed savings.', {exact: true}).isVisible(), true, 'uncovered backend caveats are shown as written');
+  assert.equal(await page.getByText('Full method, data sources and model details are in the report.', {exact: true}).isVisible(), true);
   assert.deepEqual(errors, []);
   console.log('PASS date selection, deadline guard, single recommendation, disclosure and very large totals');
 } finally {
