@@ -88,7 +88,7 @@ describe('real analysis adapter', () => {
     expect(screen.getByText('USD 2,000 less to USD 4,000 more than today')).toBeInTheDocument();
     expect(screen.getByText(/Synthetic demo data/)).toBeInTheDocument();
     expect(fetcher.mock.calls.filter(([url]) => url.includes('/recommendation?'))).toHaveLength(1);
-    expect(document.querySelector('details')).not.toHaveAttribute('open');
+    expect(screen.getByRole('region', { name: 'Key assumptions and limitations' })).toHaveTextContent('Forecast savings are estimates, not guaranteed.');
   });
 
   it.each([
