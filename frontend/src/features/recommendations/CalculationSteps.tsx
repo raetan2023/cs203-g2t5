@@ -38,8 +38,8 @@ export function CalculationSteps({ evidence, action, columns, deadline, quantity
       <li><span className="rec-calc-label">2 · Blended signal</span>
         <strong>USD {perMt(signal)}/MT</strong><span>{blend}</span></li>
       <li><span className="rec-calc-label">3 · Against today</span>
-        <strong>{difference < 0 ? 'Expected saving' : 'No expected saving'}</strong>
-        <span>Today is USD {perMt(today)}/MT, so waiting {difference === 0 ? 'saves USD 0' : `could cost about ${change(difference)}`}.</span></li>
+        <strong>{difference < 0 ? 'Signal below today' : 'No expected saving'}</strong>
+        <span>Today is USD {perMt(today)}/MT, so the blended signal {difference === 0 ? 'shows no saving' : `comes to about ${change(difference)} in total`}.</span></li>
       <li className="rec-calc-result"><span className="rec-calc-label">4 · Result</span>
         <strong>{actionLabel(action)}</strong><span>{result(action, evidence, low <= today && high >= today)}</span></li>
     </ol>
