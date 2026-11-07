@@ -14,5 +14,5 @@ const service = createDecisionFixtureService(
 );
 
 createRoot(document.getElementById('root')!).render(<StrictMode>
-  <DecisionHistory planService={service} organisationName="MPP" today={DECISION_FIXTURE_TODAY} />
+  <DecisionHistory planService={service} today={DECISION_FIXTURE_TODAY} />
 </StrictMode>);

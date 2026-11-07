@@ -3,7 +3,7 @@ import { AppLink } from '../../app/router';
 import type { PurchasePlan, PurchasePlanService, SubmissionResponse } from '../purchase-plan/types';
 import { amount, dayDate, perMt } from '../recommendations/format';
 import {
-  buildCard, dateTime, expectedSavingText, filterCards, FILTERS, pricePerMt, relativeDays, sortCards, stageOf, STAGE_LABEL, tilesOf, usdCompact,
+  buildCard, dateTime, expectedFigure, filterCards, FILTERS, pricePerMt, relativeDays, sortCards, stageOf, STAGE_LABEL, usdCompact,
   type DecisionCard, type Filter, type Stage,
 } from './model';
 import './decision-history.css';
@@ -16,10 +16,10 @@ const errorText = (error: unknown, fallback: string) => {
 };
 
 /**
- * Every plan the officer has submitted, newest first: what the advice said, what the manager decided and,
+ * Every plan the officer has submitted, newest first: what the advice was, what the manager decided and,
  * once bought, how the purchase compared with buying at submission time. Drafts stay on Purchase plans.
  */
-export function DecisionHistory({ planService, organisationName, today }: { planService: PurchasePlanService; organisationName?: string; today: string }) {
+export function DecisionHistory({ planService, today }: { planService: PurchasePlanService; today: string }) {
   const [loaded, setLoaded] = useState<Loaded>({ state: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [filter, setFilter] = useState<Filter>('all');
@@ -42,7 +42,6 @@ export function DecisionHistory({ planService, organisationName, today }: { plan
   }, [planService, attempt]);
 
   const cards = loaded.state === 'ready' ? loaded.cards : [];
-  const tiles = useMemo(() => tilesOf(cards), [cards]);
   const shown = useMemo(() => filterCards(cards, filter, query), [cards, filter, query]);
   const counts = useMemo(() => Object.fromEntries(FILTERS.map(f => [f.id, filterCards(cards, f.id, '').length])) as Record<Filter, number>, [cards]);
   const panelId = useId();
@@ -53,17 +52,9 @@ export function DecisionHistory({ planService, organisationName, today }: { plan
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>Purchase plans
       </AppLink>
       <h1>Decision history</h1>
-      <p>Every plan you have sent for approval: what the advice said, what your manager decided and how the purchase turned out.</p>
+      <p>Every plan you have sent for approval: what the advice was, what your manager decided and how the purchase turned out.</p>
     </header>
 
-    <section className="dh-tiles" aria-label="Summary">
-      <Tile label="Awaiting approval" value={loaded.state === 'ready' ? String(tiles.pending) : null} note={tiles.pending === 1 ? 'plan with a manager' : 'plans with a manager'} />
-      <Tile label="Approved, not yet bought" value={loaded.state === 'ready' ? String(tiles.approved) : null} note={tiles.approved === 1 ? 'plan to act on' : 'plans to act on'} />
-      <Tile label="Completed" value={loaded.state === 'ready' ? String(tiles.completed) : null} note={tiles.completed === 1 ? 'purchase recorded' : 'purchases recorded'} />
-      <Tile label="Saved on completed buys" tone={tiles.saved == null ? undefined : tiles.saved >= 0 ? 'good' : 'bad'}
-        value={loaded.state !== 'ready' ? null : tiles.saved == null ? '—' : `${tiles.saved < 0 ? '−' : ''}${usdCompact(Math.abs(tiles.saved))}`}
-        note={tiles.saved == null ? 'Measured once a purchase is recorded' : tiles.saved >= 0 ? 'against buying at submission time' : 'more than buying at submission time'} />
-    </section>
 
     <div className="dh-controls">
       <FilterTabs filter={filter} counts={counts} onChange={setFilter} panelId={panelId} />
@@ -92,7 +83,7 @@ export function DecisionHistory({ planService, organisationName, today }: { plan
           <button type="button" className="bb-button bb-button--secondary" onClick={() => { setQuery(''); setFilter('all'); }}>Show all plans</button>
         </section>
       : <section className="dh-list" id={panelId} role="tabpanel" aria-label="Decisions">
-          {shown.map(card => <Card key={card.plan.plan_id} card={card} organisationName={organisationName} today={today} />)}
+          {shown.map(card => <Card key={card.plan.plan_id} card={card} today={today} />)}
         </section>}
   </main>;
 }
@@ -107,13 +98,6 @@ async function detail(service: PurchasePlanService, plan: PurchasePlan, stage: S
   }
 }
 
-function Tile({ label, value, note, tone }: { label: string; value: string | null; note: string; tone?: 'good' | 'bad' }) {
-  return <div className={`dh-tile${tone ? ` dh-tile--${tone}` : ''}`}>
-    <span className="dh-tile-label">{label}</span>
-    {value === null ? <span className="dh-tile-value dh-tile-value--pending" aria-hidden="true" /> : <strong className="dh-tile-value">{value}</strong>}
-    <span className="dh-tile-note">{note}</span>
-  </div>;
-}
 
 function FilterTabs({ filter, counts, onChange, panelId }: { filter: Filter; counts: Record<Filter, number>; onChange: (f: Filter) => void; panelId: string }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -143,14 +127,16 @@ const ActionIcon = ({ action }: { action: string | null }) => action && ICONS[ac
   ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICONS[action]}</svg>
   : null;
 
-function Card({ card, organisationName, today }: { card: DecisionCard; organisationName?: string; today: string }) {
+function Card({ card, today }: { card: DecisionCard; today: string }) {
   const { plan, stage, decision, purchase } = card;
   const headingId = `dh-${plan.plan_id}`;
   const href = `/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`;
   const pill = stage === 'approved' && decision ? `Approved by ${decision.manager_label}`
     : stage === 'rejected' && decision ? `Rejected by ${decision.manager_label}` : STAGE_LABEL[stage];
   const submitted = plan.submitted_at ? `Submitted ${dateTime(plan.submitted_at)}` : null;
-  const expected = card.expectedSaving ? expectedSavingText(card.expectedSaving) : null;
+  const buyingToday = card.referenceTotal != null && card.referencePrice != null;
+  const forecast = card.forecastPrices != null && card.buyDate != null;
+  const expected = card.expectedSaving ? expectedFigure(card.expectedSaving) : null;
 
   return <article className={`dh-card dh-card--${stage}`} aria-labelledby={headingId}>
     <div className="dh-card-row">
@@ -159,7 +145,7 @@ function Card({ card, organisationName, today }: { card: DecisionCard; organisat
         <span className="dh-plan">{amount(plan.quantity_mt)} MT · due {dayDate(plan.purchase_deadline, true)}</span>
       </div>
 
-      {stage === 'completed' && purchase ? <div className="dh-card-said">
+      {stage === 'completed' && purchase ? <div className="dh-card-body">
           <span className="dh-label">Outcome</span>
           <p>Bought {amount(purchase.quantity_mt)} MT at {pricePerMt(purchase.price_usd_per_mt)} on {dayDate(purchase.purchased_on, true)}.
             {card.referencePrice != null && <> At submission, buying today was {pricePerMt(card.referencePrice)}.</>}</p>
@@ -167,16 +153,14 @@ function Card({ card, organisationName, today }: { card: DecisionCard; organisat
             {card.saved >= 0 ? `Advice saved ≈ ${usdCompact(card.saved)}` : `Cost ≈ ${usdCompact(-card.saved)} more than buying at submission`}
           </span>}
         </div>
-        : <div className="dh-card-said">
-          <span className="dh-label">What it said</span>
+        : <div className="dh-card-body">
           {card.detailError ? <p className="dh-muted">{card.detailError}</p>
-            : card.said ? <p>{card.said}</p>
-            : <p className="dh-muted">The submitted recommendation is not available.</p>}
-          {(card.referenceTotal != null || expected) && <p className="dh-numbers">
-            {card.referenceTotal != null && card.referencePrice != null && <>Buying today: {usdCompact(card.referenceTotal)} at {pricePerMt(card.referencePrice)}.</>}
-            {card.forecastPrices && card.buyDate && <> Forecast ${perMt(card.forecastPrices.lower)}–{perMt(card.forecastPrices.upper)}/MT for {dayDate(card.buyDate)}.</>}
-            {expected && <> {expected}.</>}
-          </p>}
+            : !buyingToday && !forecast && !expected ? <p className="dh-muted">The submitted recommendation is not available.</p>
+            : <dl className="dh-figures">
+              {buyingToday && <Figure label="Buying today" value={usdCompact(card.referenceTotal!)} note={`at ${pricePerMt(card.referencePrice!)}`} />}
+              {forecast && <Figure label={`Forecast for ${dayDate(card.buyDate!)}`} value={`$${perMt(card.forecastPrices!.lower)}–${perMt(card.forecastPrices!.upper)}/MT`} />}
+              {expected && <Figure label={expected.label} value={expected.value} />}
+            </dl>}
         </div>}
 
       <div className="dh-card-status">
@@ -199,10 +183,16 @@ function Card({ card, organisationName, today }: { card: DecisionCard; organisat
 
     <footer className="dh-card-foot">
       <AppLink href={href}>{stage === 'completed' ? 'View purchase record' : 'View recommendation'}</AppLink>
-      {stage === 'pending' && <span className="dh-muted">Sent to every manager{organisationName ? ` in ${organisationName}` : ''}</span>}
       {stage === 'rejected' && <span className="dh-muted">You can copy this plan into a new draft from the recommendation page</span>}
     </footer>
   </article>;
+}
+
+function Figure({ label, value, note }: { label: string; value: string; note?: string }) {
+  return <div className="dh-figure">
+    <dt>{label}</dt>
+    <dd>{value}{note && <span className="dh-figure-note">{note}</span>}</dd>
+  </div>;
 }
 
 function Step({ label, detail, done = false }: { label: string; detail: string; done?: boolean }) {

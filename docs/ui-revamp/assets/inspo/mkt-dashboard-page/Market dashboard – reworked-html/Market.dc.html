@@ -1,0 +1,217 @@
+<!doctype html>
+<meta charset="utf-8"><style data-dc-design-system-vars>@layer{:root{--ground:#0c0d0e;--surface-card:#1a1b1c;--surface-border:#2d2c29;--surface-input:#2c3443;--beige:#eadfc9;--on-accent:#0c0d0e;--ink:#f0e6d2;--ink-soft:#c5bba7;--ink-muted:#b5ac9b;--hero-water:#080a0c;--hero-haze:#2a241b;--hero-light:#eadfc9;--space-1:4px;--space-2:8px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;--radius-sm:6px;--radius-md:8px;--radius-lg:12px;--font-sans:system-ui, -apple-system, "Segoe UI", sans-serif;--text-display:300 64px/70px var(--font-sans);--text-title:400 32px/40px var(--font-sans);--text-lead:400 18px/32px var(--font-sans);--text-body:400 14px/20px var(--font-sans);--text-label:600 13px/18px var(--font-sans);}}</style>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Market overview</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#0c0d0e}
+a{color:#eadfc9}a:hover{color:#f0e6d2}
+</style>
+</helmet>
+<div style="background: #0c0d0e; color: #f0e6d2; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; min-height: 100vh;">
+
+<header style="border-bottom: 1px solid #2d2c29; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <div style="width: 36px; height: 36px; border-radius: 50%; background: #f0e6d2; display: flex; align-items: center; justify-content: center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0c0d0e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"></circle><path d="M12 7v14"></path><path d="M5 13a7 7 0 0 0 14 0"></path><path d="M8 11h8"></path></svg>
+    </div>
+    <span style="font-size: 20px; font-weight: 600;">Bunker Buddy</span>
+  </div>
+  <nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto;">
+    <a href="#" style="padding: 10px 14px; color: #c5bba7; text-decoration: none; font-size: 14px;">Purchase plans</a>
+    <a href="#" style="padding: 10px 14px; color: #c5bba7; text-decoration: none; font-size: 14px;">Decision history</a>
+    <a href="#" style="padding: 10px 14px; border: 1px solid #2d2c29; border-radius: 6px; color: #f0e6d2; text-decoration: none; font-size: 14px; font-weight: 600;">Market dashboard</a>
+  </nav>
+  <div style="display: flex; align-items: center; gap: 16px; font-size: 13px; color: #c5bba7;">
+    <span>MPP</span>
+    <span style="padding: 6px 10px; border: 1px solid #2d2c29; border-radius: 8px; color: #eadfc9;">Procurement Officer</span>
+    <a href="#" style="color: #c5bba7; text-decoration: none;">Sign out</a>
+  </div>
+</header>
+
+<main style="max-width: 1360px; margin: 0 auto; padding: 40px 24px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px;">
+
+  <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <h1 style="margin: 0; font-size: 44px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em;">Market overview</h1>
+      <p style="margin: 0; font-size: 14px; color: #b5ac9b;">Last refreshed 4:25 pm · Observed prices, not a live feed</p>
+    </div>
+    <button type="button" style="min-height: 44px; padding: 0 18px; border-radius: 6px; border: 1px solid #5c574d; background: transparent; color: #f0e6d2; font: 600 14px system-ui, sans-serif; display: flex; align-items: center; gap: 8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0e6d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7"></path><path d="M20 4v5h-5"></path></svg>
+      Refresh market data
+    </button>
+  </div>
+
+  <section aria-label="Prices" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px;">
+    <div style="background: #1a1b1c; border: 1px solid #eadfc9; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 12px; font-weight: 700; padding: 3px 7px; border: 1px solid #eadfc9; border-radius: 6px;">MGO</span><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: #3a2f1c; color: #e8c47a;">11 days old</span></div>
+      <span style="font-size: 15px; color: #e3d6bd;">Singapore MGO</span>
+      <span style="font-size: 32px; line-height: 38px; font-weight: 700;">$1,351.50</span>
+      <span style="font-size: 13px; color: #b5ac9b;">USD/MT</span>
+      <span style="align-self: flex-start; font-size: 13px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #2d2c29; color: #e3d6bd;">— 0.00%</span>
+      <div style="border-top: 1px solid #2d2c29; padding-top: 10px; margin-top: auto; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #b5ac9b;"><span>26 Oct 2026</span><span>The Maritime Exec.</span></div>
+    </div>
+
+    <div style="background: #241717; border: 1px solid #5a2e2a; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 12px; font-weight: 700; padding: 3px 7px; border: 1px solid #5c574d; border-radius: 6px;">GO</span></div>
+      <span style="font-size: 15px; color: #e3d6bd;">Singapore gasoil futures</span>
+      <span style="font-size: 32px; line-height: 38px; font-weight: 700;">173.02</span>
+      <span style="font-size: 13px; color: #b5ac9b;">USD/barrel</span>
+      <span style="align-self: flex-start; font-size: 13px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #3d2220; color: #f2a097;">↑ +0.05%</span>      <div style="border-top: 1px solid #3d2a27; padding-top: 10px; margin-top: auto; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #b5ac9b;"><span>30 Oct 2026</span><span>Investing.com</span></div>
+    </div>
+
+    <div style="background: #142019; border: 1px solid #2a4a35; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 12px; font-weight: 700; padding: 3px 7px; border: 1px solid #5c574d; border-radius: 6px;">BRN</span></div>
+      <span style="font-size: 15px; color: #e3d6bd;">Brent crude</span>
+      <span style="font-size: 32px; line-height: 38px; font-weight: 700;">$123.10</span>
+      <span style="font-size: 13px; color: #b5ac9b;">USD/barrel</span>
+      <span style="align-self: flex-start; font-size: 13px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #1d3325; color: #8fd8a6;">↓ −3.92%</span>
+      <div style="border-top: 1px solid #23382a; padding-top: 10px; margin-top: auto; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #b5ac9b;"><span>27 Oct 2026</span><span>FRED</span></div>
+    </div>
+
+    <div style="background: #241717; border: 1px solid #5a2e2a; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 12px; font-weight: 700; padding: 3px 7px; border: 1px solid #5c574d; border-radius: 6px;">DXB</span></div>
+      <span style="font-size: 15px; color: #e3d6bd;">Dubai crude futures</span>
+      <span style="font-size: 32px; line-height: 38px; font-weight: 700;">110.73</span>
+      <span style="font-size: 13px; color: #b5ac9b;">USD/barrel</span>
+      <span style="align-self: flex-start; font-size: 13px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #3d2220; color: #f2a097;">↑ +0.24%</span>      <div style="border-top: 1px solid #3d2a27; padding-top: 10px; margin-top: auto; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #b5ac9b;"><span>30 Oct 2026</span><span>Investing.com</span></div>
+    </div>
+
+    <div style="background: #142019; border: 1px solid #2a4a35; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 12px; font-weight: 700; padding: 3px 7px; border: 1px solid #5c574d; border-radius: 6px;">FX</span></div>
+      <span style="font-size: 15px; color: #e3d6bd;">Broad USD index</span>
+      <span style="font-size: 32px; line-height: 38px; font-weight: 700;">121.67</span>
+      <span style="font-size: 13px; color: #b5ac9b;">index</span>
+      <span style="align-self: flex-start; font-size: 13px; font-weight: 600; padding: 4px 8px; border-radius: 6px; background: #1d3325; color: #8fd8a6;">↓ −0.06%</span>
+      <div style="border-top: 1px solid #23382a; padding-top: 10px; margin-top: auto; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #b5ac9b;"><span>30 Oct 2026</span><span>FRED</span></div>
+    </div>
+  </section>
+
+  <section aria-label="MGO price forecast" style="background: #1a1b1c; border: 1px solid #2d2c29; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between;">
+      <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 420px;">
+        <div style="display: flex; gap: 10px; align-items: center;"><h2 style="margin: 0; font-size: 20px; font-weight: 600;">MGO price forecast</h2><span style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: #2d2c29; color: #e3d6bd;">Updated today</span></div>
+        <p style="margin: 0; font-size: 14px; line-height: 21px; color: #b5ac9b;">From today's quote of USD 1,351.50/MT. Each horizon is a separate estimate with its own range.</p>
+      </div>
+      <a href="#" style="min-height: 44px; padding: 0 18px; border-radius: 6px; background: #eadfc9; color: #0c0d0e; font: 600 14px system-ui, sans-serif; text-decoration: none; display: flex; align-items: center;">Use in a purchase plan</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;">
+      <div style="border: 1px solid #2d2c29; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="font-weight: 600;">Today</span><span style="color: #b5ac9b;">Fri 06 Nov</span></div>
+        <span style="font-size: 26px; font-weight: 700;">$1,351.50</span>
+        <span style="font-size: 13px; color: #b5ac9b;">Observed quote</span>
+        <div style="position: relative; height: 10px; margin-top: 8px; border-radius: 5px; background: #2d2c29;"><div style="position: absolute; left: 45%; top: -2px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #b5ac9b;"></div></div>
+      </div>
+      <div style="border: 1px solid #2d2c29; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="font-weight: 600;">7 days</span><span style="color: #b5ac9b;">Fri 13 Nov</span></div>
+        <div style="display: flex; gap: 8px; align-items: baseline;"><span style="font-size: 26px; font-weight: 700;">$1,338.00</span><span style="font-size: 13px; font-weight: 600; color: #8fd8a6;">↓ 1.0%</span></div>
+        <span style="font-size: 13px; color: #b5ac9b;">Range $1,240 – 1,436</span>
+        <div style="position: relative; height: 10px; margin-top: 8px; border-radius: 5px; background: #2d2c29;"><div style="position: absolute; left: 34%; width: 19.6%; top: 0; height: 10px; border-radius: 5px; background: #eadfc9;"></div><div style="position: absolute; left: 45%; top: -3px; width: 1px; height: 16px; background: #f0e6d2;"></div></div>
+      </div>
+      <div style="border: 1px solid #2d2c29; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="font-weight: 600;">14 days</span><span style="color: #b5ac9b;">Fri 20 Nov</span></div>
+        <div style="display: flex; gap: 8px; align-items: baseline;"><span style="font-size: 26px; font-weight: 700;">$1,351.50</span><span style="font-size: 13px; font-weight: 600; color: #c5bba7;">— 0.0%</span></div>
+        <span style="font-size: 13px; color: #b5ac9b;">Range $953 – 1,684</span>
+        <div style="position: relative; height: 10px; margin-top: 8px; border-radius: 5px; background: #2d2c29;"><div style="position: absolute; left: 5.3%; width: 73.1%; top: 0; height: 10px; border-radius: 5px; background: #b5ac9b;"></div><div style="position: absolute; left: 45%; top: -3px; width: 1px; height: 16px; background: #f0e6d2;"></div></div>
+      </div>
+      <div style="border: 1px solid #2d2c29; border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="font-weight: 600;">30 days</span><span style="color: #b5ac9b;">Sun 06 Dec</span></div>
+        <div style="display: flex; gap: 8px; align-items: baseline;"><span style="font-size: 26px; font-weight: 700;">$1,351.50</span><span style="font-size: 13px; font-weight: 600; color: #c5bba7;">— 0.0%</span></div>
+        <span style="font-size: 13px; color: #b5ac9b;">Range $985 – 1,835</span>
+        <div style="position: relative; height: 10px; margin-top: 8px; border-radius: 5px; background: #2d2c29;"><div style="position: absolute; left: 8.5%; width: 85%; top: 0; height: 10px; border-radius: 5px; background: #8f887a;"></div><div style="position: absolute; left: 45%; top: -3px; width: 1px; height: 16px; background: #f0e6d2;"></div></div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 13px; color: #b5ac9b; border-top: 1px solid #2d2c29; padding-top: 14px;">
+      <span>Bars share one scale, USD 900–1,900/MT; the line marks today's price. Experimental ranges, coverage not measured.</span>
+      <span>Ran 06 Nov, 4:25 pm · Ridge regression</span>
+    </div>
+  </section>
+
+  <section aria-label="Market history" style="background: #1a1b1c; border: 1px solid #2d2c29; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center;">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <h2 style="margin: 0; font-size: 20px; font-weight: 600;">Market history</h2>
+        <div style="display: flex; gap: 10px; align-items: baseline;"><span style="font-size: 28px; font-weight: 700;">$123.10</span><span style="font-size: 13px; color: #b5ac9b;">USD/barrel</span><span style="font-size: 13px; font-weight: 600; color: #8fd8a6;">↓ −3.92%</span></div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <label style="position: absolute; width: 1px; height: 1px; overflow: hidden;" for="series">Series</label>
+        <select id="series" style="min-height: 44px; padding: 0 12px; min-width: 220px; border-radius: 6px; border: 1px solid #5c574d; background: #1a1b1c; color: #f0e6d2; font: 400 15px system-ui, sans-serif;"><option>Brent crude</option></select>
+        <div role="group" aria-label="Range" style="display: flex; border: 1px solid #2d2c29; border-radius: 6px; overflow: hidden;">
+          <button type="button" style="min-height: 44px; padding: 0 14px; background: transparent; color: #c5bba7; border: 0; font: 400 14px system-ui, sans-serif;">15 days</button>
+          <button type="button" style="min-height: 44px; padding: 0 14px; background: transparent; color: #c5bba7; border: 0; font: 400 14px system-ui, sans-serif;">30 days</button>
+          <button type="button" style="min-height: 44px; padding: 0 14px; background: #2d2c29; color: #f0e6d2; border: 0; font: 600 14px system-ui, sans-serif;">60 days</button>
+        </div>
+      </div>
+    </div>
+    <svg viewBox="0 0 1240 300" style="width: 100%; height: auto;" role="img" aria-label="Brent crude, 1 Sept to 27 Oct 2026, rising from 96 to a peak near 135 in early October, ending at 123.10">
+      <g stroke="#2d2c29" stroke-dasharray="4 4"><line x1="50" y1="20" x2="1240" y2="20"></line><line x1="50" y1="80" x2="1240" y2="80"></line><line x1="50" y1="140" x2="1240" y2="140"></line><line x1="50" y1="200" x2="1240" y2="200"></line><line x1="50" y1="260" x2="1240" y2="260"></line></g>
+      <g fill="#b5ac9b" font-size="12" font-family="system-ui, sans-serif"><text x="0" y="24">144</text><text x="0" y="84">132</text><text x="0" y="144">120</text><text x="0" y="204">108</text><text x="8" y="264">96</text>
+      <text x="60" y="292">1 Sept</text><text x="350" y="292">15 Sept</text><text x="660" y="292">1 Oct</text><text x="940" y="292">14 Oct</text><text x="1190" y="292">27 Oct</text></g>
+      <polyline fill="none" stroke="#eadfc9" stroke-width="2.5" stroke-linejoin="round" points="60,260 89.5,250 119,230 148.5,220 178,207.5 207.5,200 237,185 266.5,135 296,150 325.5,135 355,85 384.5,100 414,135 443.5,142.5 473,160 502.5,165 532,152.5 561.5,135 591,160 620.5,140 650,170 679.5,160 709,165 738.5,65 768,115 797.5,115 827,110 856.5,90 886,90 915.5,90 945,112.5 974.5,107.5 1004,110 1033.5,145 1063,147.5 1092.5,165 1122,155 1151.5,115 1181,100 1210.5,100 1240,124.5"></polyline>
+    </svg>
+    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 13px; color: #b5ac9b; border-top: 1px solid #2d2c29; padding-top: 14px;"><span>41 observations · 1 Sept – 27 Oct 2026</span><a href="#" style="font-weight: 600;">View recent values</a></div>
+  </section>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+    <section aria-label="Singapore bunker sales" style="flex: 999 1 640px; min-width: 0; background: #1a1b1c; border: 1px solid #2d2c29; border-radius: 12px; overflow: hidden;">
+      <div style="padding: 28px 32px 18px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 600;">Singapore bunker sales</h2>
+          <p style="margin: 0; font-size: 13px; color: #b5ac9b;">September 2026 · monthly, as published</p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <label for="fuel" style="font-size: 12px; color: #b5ac9b;">Find a fuel category</label>
+          <input id="fuel" type="search" placeholder="e.g. Marine Gas Oil" style="min-height: 44px; width: 240px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid #5c574d; background: #141516; color: #f0e6d2; font: 400 14px system-ui, sans-serif;">
+        </div>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <thead><tr style="background: #141516; color: #b5ac9b; font-size: 13px;"><th scope="col" style="text-align: left; padding: 12px 32px; font-weight: 600;">Fuel category</th><th scope="col" style="text-align: right; padding: 12px 32px; font-weight: 600;">Sales · thousand tonnes</th></tr></thead>
+        <tbody>
+          <tr style="border-top: 1px solid #2d2c29;"><td style="padding: 16px 32px;"><div style="display: flex; flex-direction: column; gap: 8px;"><span>Low Sulphur Fuel Oil</span><div style="height: 4px; width: 200px; background: #2d2c29; border-radius: 2px;"><div style="height: 4px; width: 200px; background: #b5ac9b; border-radius: 2px;"></div></div></div></td><td style="padding: 16px 32px; text-align: right; font-weight: 600;">2,218.11</td></tr>
+          <tr style="border-top: 1px solid #2d2c29;"><td style="padding: 16px 32px;"><div style="display: flex; flex-direction: column; gap: 8px;"><span>Marine Fuel Oil</span><div style="height: 4px; width: 200px; background: #2d2c29; border-radius: 2px;"><div style="height: 4px; width: 180px; background: #b5ac9b; border-radius: 2px;"></div></div></div></td><td style="padding: 16px 32px; text-align: right; font-weight: 600;">1,993.20</td></tr>
+          <tr style="border-top: 1px solid #2d2c29; background: #23221f;"><td style="padding: 16px 32px;"><div style="display: flex; flex-direction: column; gap: 8px;"><span style="display: flex; gap: 8px; align-items: center;">Low Sulphur Marine Gas Oil <span style="font-size: 11px; font-weight: 700; padding: 2px 6px; border: 1px solid #eadfc9; border-radius: 6px; color: #eadfc9;">MGO</span></span><div style="height: 4px; width: 200px; background: #2d2c29; border-radius: 2px;"><div style="height: 4px; width: 34px; background: #eadfc9; border-radius: 2px;"></div></div></div></td><td style="padding: 16px 32px; text-align: right; font-weight: 600;">378.84</td></tr>
+          <tr style="border-top: 1px solid #2d2c29;"><td style="padding: 16px 32px;"><div style="display: flex; flex-direction: column; gap: 8px;"><span>Bio Blended Low Sulphur Fuel Oil</span><div style="height: 4px; width: 200px; background: #2d2c29; border-radius: 2px;"><div style="height: 4px; width: 7px; background: #b5ac9b; border-radius: 2px;"></div></div></div></td><td style="padding: 16px 32px; text-align: right; font-weight: 600;">76.20</td></tr>
+          <tr style="border-top: 1px solid #2d2c29;"><td style="padding: 16px 32px;"><div style="display: flex; flex-direction: column; gap: 8px;"><span>LNG</span><div style="height: 4px; width: 200px; background: #2d2c29; border-radius: 2px;"><div style="height: 4px; width: 5px; background: #b5ac9b; border-radius: 2px;"></div></div></div></td><td style="padding: 16px 32px; text-align: right; font-weight: 600;">51.51</td></tr>
+          <tr style="border-top: 1px solid #2d2c29; background: #23221f;"><td style="padding: 16px 32px;"><div style="display: flex; flex-direction: column; gap: 8px;"><span style="display: flex; gap: 8px; align-items: center;">Bio Blended Marine Gas Oil <span style="font-size: 11px; font-weight: 700; padding: 2px 6px; border: 1px solid #eadfc9; border-radius: 6px; color: #eadfc9;">MGO</span></span><div style="height: 4px; width: 200px; background: #2d2c29; border-radius: 2px;"><div style="height: 4px; width: 2px; background: #eadfc9; border-radius: 2px;"></div></div></div></td><td style="padding: 16px 32px; text-align: right; font-weight: 600;">4.33</td></tr>
+        </tbody>
+      </table>
+      <div style="border-top: 1px solid #2d2c29; padding: 16px 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 13px;"><a href="#" style="font-weight: 600;">View all 16 categories</a><span style="color: #b5ac9b;">Categories aren't summed</span></div>
+    </section>
+
+    <section aria-label="Market pulse" style="flex: 1 1 320px; background: #1a1b1c; border: 1px solid #2d2c29; border-radius: 12px; padding: 28px 32px; display: flex; flex-direction: column; gap: 22px;">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <h2 style="margin: 0; font-size: 20px; font-weight: 600;">Market pulse</h2>
+        <p style="margin: 0; font-size: 13px; color: #b5ac9b;">Oil and shipping news · 27 Oct 2026 · GDELT</p>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; color: #b5ac9b;">Matched articles</span><span style="font-size: 32px; font-weight: 700;">187</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 13px; color: #b5ac9b;">Average tone</span><span style="font-size: 32px; font-weight: 700;">−1.19</span><span style="font-size: 12px; color: #b5ac9b;">Negative</span></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="position: relative; height: 6px; border-radius: 3px; background: #2d2c29;"><div style="position: absolute; left: 50%; top: -3px; width: 1px; height: 12px; background: #5c574d;"></div><div style="position: absolute; left: 44%; top: -4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #eadfc9;"></div></div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #b5ac9b;"><span>Negative</span><span>Neutral</span><span>Positive</span></div>
+      </div>
+      <p style="margin: 0; font-size: 13px; line-height: 19px; color: #b5ac9b; border-top: 1px solid #2d2c29; padding-top: 16px;">Context, not a price signal. Tone measures news language, not price direction.</p>
+    </section>
+  </div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2340}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

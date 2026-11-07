@@ -1,6 +1,6 @@
 import type { ApprovalDecision, NumericRange, PlanAnalysis, PurchasePlan, PurchaseRecord, PurchaseComparison, SubmissionResponse } from '../purchase-plan/types';
 import { calendarDays, formatDate } from '../purchase-plan/dates';
-import { actionLabel, amount, changeRange, compact, compactRange, dayDate, perMt, readableDates } from '../recommendations/format';
+import { actionLabel, amount, changeRange, compact, compactRange, dayDate, perMt } from '../recommendations/format';
 
 /** Where a submitted plan is in its life. Drafts never appear here: they belong on Purchase plans. */
 export type Stage = 'pending' | 'approved' | 'rejected' | 'withdrawn' | 'completed';
@@ -14,8 +14,6 @@ export interface DecisionCard {
   title: string;
   /** The date the advice pointed at, when it named one. */
   buyDate: string | null;
-  /** What the recommendation said, in the backend's words with readable dates. */
-  said: string | null;
   /** Buying today, as the submission saw it. */
   referencePrice: number | null;
   referenceTotal: number | null;
@@ -32,7 +30,6 @@ export interface DecisionCard {
   detailError: string | null;
 }
 
-export interface Tiles { pending: number; approved: number; completed: number; saved: number | null }
 
 export const STAGE_LABEL: Record<Stage, string> = {
   pending: 'Waiting for a manager', approved: 'Approved', rejected: 'Rejected', withdrawn: 'Withdrawn', completed: 'Completed',
@@ -99,7 +96,6 @@ export function buildCard(plan: PurchasePlan, stage: Stage, response: Submission
   const referenceTotal = impact?.reference_total ?? guidance?.evidence?.buy_now_cost_usd ?? (reference ? reference.price * plan.quantity_mt : null);
   return {
     plan, stage, action, title: titleOf(action, buyDate), buyDate,
-    said: guidance ? readableDates(guidance.explanation) : null,
     referencePrice: reference?.price ?? null,
     referenceTotal,
     forecastPrices: forecast?.prices ?? null,
@@ -118,16 +114,6 @@ export function sortCards(cards: DecisionCard[]): DecisionCard[] {
   return [...cards].sort((a, b) => key(b) - key(a));
 }
 
-export function tilesOf(cards: DecisionCard[]): Tiles {
-  const completed = cards.filter(c => c.stage === 'completed');
-  const measured = completed.filter(c => c.saved != null);
-  return {
-    pending: cards.filter(c => c.stage === 'pending').length,
-    approved: cards.filter(c => c.stage === 'approved').length,
-    completed: completed.length,
-    saved: measured.length ? measured.reduce((sum, c) => sum + (c.saved as number), 0) : null,
-  };
-}
 
 /** The search box matches the tonnage or the deadline, in any of the forms the page prints them. */
 export function matches(card: DecisionCard, query: string): boolean {
@@ -167,8 +153,8 @@ export function relativeDays(from: string, to: string): string {
 }
 
 /** Positive is a saving. Wording never implies the forecast was certain. */
-export function expectedSavingText(range: NumericRange): string | null {
-  if (range.upper <= 0) return `Expected to cost ${usdRange({ lower: -range.upper, upper: -range.lower })} more`;
-  if (range.lower <= 0) return `Expected change: ${changeRange(-range.upper, -range.lower)}`;
-  return `Expected saving ≈ ${usdRange(range)}`;
+export function expectedFigure(range: NumericRange): { label: string; value: string } {
+  if (range.upper <= 0) return { label: 'Expected extra cost', value: `≈ ${usdRange({ lower: -range.upper, upper: -range.lower })}` };
+  if (range.lower <= 0) return { label: 'Expected change', value: changeRange(-range.upper, -range.lower) };
+  return { label: 'Expected saving', value: `≈ ${usdRange(range)}` };
 }

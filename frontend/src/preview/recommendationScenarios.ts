@@ -6,7 +6,7 @@ import type { ApprovalDecision, CurrentRecommendation, PlanAnalysis, PlanResultC
 import type { OrganisationPermissions } from '../features/organisation/apiService';
 
 /**
- * Fixed preview data for the Monitor, Buy now and Wait mockups (docs/ui-revamp/assets/inspo/recommendations-page).
+ * Fixed preview data for the Monitor, Buy now and Wait mockups.
  * Guidance values were worked out by hand from RecommendationPolicy deadline-weighted-v1; nothing here runs a policy.
  */
 export type RecommendationScenario = 'monitor' | 'buy' | 'wait' | 'stale';

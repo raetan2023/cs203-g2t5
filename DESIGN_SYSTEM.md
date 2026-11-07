@@ -57,7 +57,7 @@ an allegedly approved token. Validate actual composited contrast before rollout.
 ### Pending tokens (names reserved, values not decided)
 
 These are placeholders for the revamp. Do not give them values in code until the
-owning phase decides them (see `docs/UI_REVAMP_PLAN.md` §4.1 and §6).
+owning phase decides them.
 
 | Token | Decided in | Notes |
 | --- | --- | --- |

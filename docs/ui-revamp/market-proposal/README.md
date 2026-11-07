@@ -9,7 +9,6 @@ current screen's behaviour.
   `market-snapshot.js` (git-ignored) from `/api/v1/market/stored`, and the page then shows the real stored data:
   all 16 sales categories and the real histories.
 - `PARITY.md`: current logic vs the mock vs this proposal, the bugs found, and the decisions for the owner.
-- `TASTE_REVIEW.md` + `taste-review/`: round-1 taste review and its screenshots.
 - `MISSING.md`: what this proposal and the end-to-end buyer flow still lack (submission, decisions, recording the
   purchase), and why the history window and the forecast horizon are separate controls.
 
