@@ -15,7 +15,7 @@ Clerk remains the source of truth, and requests are still authorised from the ve
 
 - When a member loads the app (`GET /api/v1/organisation`).
 - When Clerk sends a membership or user event to `POST /api/v1/webhooks/clerk`.
-- When an admin clicks **Sync members from Clerk** (`POST /api/v1/admin/members/sync`), which copies the full member list. Use it once after go-live, and any time events may have been missed.
+- When an admin clicks the refresh icon in Team reporting (`POST /api/v1/admin/members/sync`), which copies the full member list from Clerk. Use it once after go-live, and to see a role change straight away.
 
 ## Assignment rules
 
@@ -43,7 +43,7 @@ Requests without a valid Svix signature are rejected. Neither value belongs in g
    3. `20261108_pm_assignments.sql`
 3. Merge and deploy the assignments change.
 4. Set up the Clerk webhook and the two Azure app settings above.
-5. As an admin, open `/admin`, click **Sync members from Clerk**, and assign a PM to every PO.
+5. As an admin, open `/admin`, click the refresh icon in Team reporting, and assign a PM to every PO.
 6. Merge and deploy the enforcement change, then check it with a real PM and PO.
 
 `20261108_users_clerk_id_required.sql` stops without changing anything if any user has no Clerk ID.
