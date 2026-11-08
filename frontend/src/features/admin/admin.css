@@ -43,12 +43,22 @@
 
 .bb-admin-team { margin-bottom: var(--bb-space-6); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); }
 .bb-admin-team-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--bb-space-6); }
-.bb-admin-team-heading .bb-button { flex-shrink: 0; }
+.bb-admin-team-heading .bb-admin-team-status { margin: var(--bb-space-1) 0 var(--bb-space-2); font-size: var(--bb-text-md); font-weight: 600; }
+.bb-admin-team-heading .bb-admin-team-status--required { color: var(--bb-error-text); }
+.bb-admin-team-heading .bb-admin-team-status--complete { color: var(--bb-success-text); }
+.bb-admin-team-refresh { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 44px; height: 44px; color: var(--bb-text); background: transparent; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); cursor: pointer; }
+.bb-admin-team-refresh:hover:not(:disabled) { background: var(--bb-surface-hover); }
+.bb-admin-team-refresh:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.bb-admin-team-refresh:disabled { color: var(--bb-text-disabled); cursor: default; }
+.bb-admin-team-refresh.is-refreshing svg { animation: bb-admin-team-spin 0.9s linear infinite; }
+@keyframes bb-admin-team-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bb-admin-team-refresh.is-refreshing svg { animation: none; } }
 .bb-admin-team-body { padding: var(--bb-space-5) var(--bb-space-6); }
 .bb-admin-team-note, .bb-admin-team-message { margin: 0 0 var(--bb-space-4); font-size: var(--bb-text-md); line-height: 1.6; color: var(--bb-text-secondary); }
 .bb-admin-team-note:last-child { margin-bottom: 0; }
 .bb-admin-team-message--success { color: var(--bb-success-text); }
 .bb-admin-team-message--error { color: var(--bb-error-text); }
+.bb-admin-team-actions { display: flex; justify-content: flex-end; gap: var(--bb-space-3); margin-top: var(--bb-space-4); }
 .bb-admin-team-list { list-style: none; margin: 0; padding: 0; }
 .bb-admin-team-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--bb-space-4); padding: var(--bb-space-3) 0; border-bottom: 1px solid var(--bb-border-subtle); }
 .bb-admin-team-list li:last-child { border-bottom: 0; }
@@ -60,6 +70,7 @@
 .bb-admin-team-choice select:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
 @media(max-width:640px) {
   .bb-admin-team-heading { flex-direction: column; gap: var(--bb-space-4); }
+  .bb-admin-team-refresh { align-self: flex-end; }
   .bb-admin-team-body { padding: var(--bb-space-4); }
   .bb-admin-team-list li, .bb-admin-team-choice { flex-direction: column; align-items: stretch; gap: var(--bb-space-2); }
   .bb-admin-team-choice select { width: 100%; }
