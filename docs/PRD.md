@@ -76,7 +76,7 @@ Proposed initial rules, not yet confirmed:
 
 #### Authentication and password ownership
 
-Clerk is the authentication provider for the MVP and owns login, passwords, and password resets. The application does not store passwords. The four-table database retains an internal UUID `users.user_id` and a unique text `users.clerk_user_id`; purchase plans reference the UUID. No separate profile table is required. Display names can come from Clerk.
+Clerk is the authentication provider for the MVP and owns login, passwords, and password resets. The application does not store passwords. The database retains an internal UUID `users.user_id` and a unique text `users.clerk_user_id`; purchase plans reference the UUID. No separate profile table is required. Display names can come from Clerk. Organisation roles and PM assignments are described in [PM and PO assignment](pm-po-assignment.md).
 
 The frontend sends its Clerk login token to Spring Boot. The backend must verify it, resolve the authenticated Clerk ID to the application UUID, and enforce ownership for every private operation. This integration is pending: the current temporary `X-User-Id` header does not authenticate a person. The schema keeps RLS enabled with no client-facing policies; database access is intended through the trusted backend with appropriate server-only privileges. Supabase remains a PostgreSQL hosting option, not the authentication provider.
 ## 4. Scope and priorities

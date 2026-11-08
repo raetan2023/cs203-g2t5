@@ -224,6 +224,7 @@ describe('Verified organisation permissions', () => {
     clerk.auth.orgRole = role;
     const fetcher = vi.fn(async (url: string) => {
       if (url.endsWith('/organisation')) return accessReply();
+      if (url.endsWith('/admin/pm-assignments')) return reply({ officers: [], managers: [] });
       if (url.endsWith('/config')) return reply({ scenario_as_of_date: '2025-10-24' });
       if (url.endsWith('/purchase-plans')) return reply({ plans: [ANALYSIS_DEMO_PLAN] });
       if (url.endsWith('/market/stored')) return reply({ storage: 'supabase', missing: [], series: [{ category: 'prices',
@@ -244,11 +245,14 @@ describe('Verified organisation permissions', () => {
     const view = render(<ClerkApp />);
     expect(await screen.findByText('Embedded organisation profile')).toBeVisible();
     expect(screen.getByRole('heading', { level: 1, name: 'Bunker Buddy' })).toBeVisible();
-    expect(fetcher.mock.calls.some(([url]) => url.includes('/admin/'))).toBe(false);
+    expect(await screen.findByRole('heading', { name: 'Team reporting' })).toBeVisible();
+    await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.endsWith('/admin/pm-assignments'))).toBe(true));
+    expect(fetcher.mock.calls.some(([url]) => url.includes('/admin/') && !url.endsWith('/admin/pm-assignments'))).toBe(false);
     clerk.auth.orgRole = 'org:officer';
     view.rerender(<ClerkApp />);
     expect(await screen.findByRole('heading', { name: 'Admin access required' })).toBeVisible();
     expect(screen.queryByText('Embedded organisation profile')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Team reporting' })).not.toBeInTheDocument();
   });
   it('opens Clerk organisation settings from an admin Home and shows the latest stored MGO quote', async () => {
     const fetcher = backend('org:admin');

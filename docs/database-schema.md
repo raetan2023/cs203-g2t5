@@ -8,12 +8,21 @@ See the [HTML diagrams and schema notes](mgo_forecasting_database_schema.html) a
 
 | Table | Fields | Rules |
 | --- | --- | --- |
-| `USERS` | `user_id` UUID PK; `clerk_user_id` text unique; `email` string unique | Clerk account mapping uses the text ID (e.g. `user_abc123`); purchase plans retain the internal UUID owner. Clerk ID is nullable during migration/backfill. Provisioning and ownership integration remain pending; no local password storage. |
+| `USERS` | `user_id` UUID PK; `clerk_user_id` text unique, required; `email` string unique, nullable | Clerk account mapping uses the text ID (e.g. `user_abc123`); purchase plans retain the internal UUID owner. Email can be empty because Clerk accounts may not have one. No local password storage. |
 | `PURCHASE_PLANS` | `plan_id` UUID PK; `user_id` UUID FK unique; `quantity_mt` numeric; `purchase_deadline` date; `scenario_as_of_date` date | Required owner and inputs; quantity > 0. At most one plan per user. Users can create, view, edit, and delete their own plan. Urgency is derived from the scenario date and deadline; thresholds/calendar rules remain TBC. |
 | `MARKET_SERIES` | `series_id` UUID PK; `series_key` string unique; `source_name`, `source_url`, `currency_code`, `unit`, `price_definition`, `contract_description` strings | Series key and source name required. Monetary series use USD. Currency is null for non-monetary indicators. Unverified unit/price/contract metadata remains null and is displayed as TBC, rather than guessed. Contract description need not apply to non-futures series. |
 | `MARKET_OBSERVATIONS` | `observation_id` UUID PK; `series_id` UUID FK; `observation_date` date; `value` numeric; `value_type` string; `availability_timestamp` timestamp | Series, date, value, and value type required. Composite unique key `(series_id, observation_date)`. Value type distinguishes observed, estimated, and imputed values. Availability may be null when unknown; observation date does not establish publication time. |
 
 The observation key assumes one value per series per date. Different price measures or contracts need distinct series keys. If source revisions or intraday data are later required, revisit this key. Use decimal numeric types for prices, quantities, and costs; precision/scale remains an implementation decision. Timestamp fields should be timezone-aware when implemented.
+
+### Organisation members and PM assignments
+
+| Table | Fields | Rules |
+| --- | --- | --- |
+| `ORGANISATION_MEMBERS` | `user_id` UUID FK; `clerk_org_id` text; `role` text; `updated_at` timestamp | Primary key `(user_id, clerk_org_id)`. Role is `org:officer`, `org:manager` or `org:admin`. A copy of Clerk's membership; authorisation still uses the verified token. |
+| `PM_ASSIGNMENTS` | `po_user_id` UUID; `clerk_org_id` text; `pm_user_id` UUID; `assigned_by_user_id` UUID FK nullable; `assigned_at` timestamp | Primary key `(po_user_id, clerk_org_id)`, so a PO has one PM per organisation. PO and PM must be different people and members of that organisation; leaving removes the assignment. |
+
+See [PM and PO assignment](pm-po-assignment.md). The 8 November 2026 migrations for these tables are in `backend/migrations`.
 
 ### Gasoil CSV import
 
