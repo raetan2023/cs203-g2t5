@@ -103,7 +103,7 @@ No secret is stored in git or in the image: the backend reads its settings from 
 | `SUPABASE_DB_PASSWORD` | From `backend/.env` | Database password |
 | `CLERK_ISSUER_URI` | From `backend/.env` | Verifies Clerk sign-in tokens |
 | `CLERK_WEBHOOK_SECRET` | Signing secret (`whsec_…`) from the Clerk webhook endpoint | Verifies Clerk membership and user events |
-| `CLERK_SECRET_KEY` | Clerk dashboard, API keys | Lets the admin **Sync members from Clerk** button read the member list |
+| `CLERK_SECRET_KEY` | Clerk dashboard, API keys | Lets the Team reporting refresh icon read the member list |
 | `FRONTEND_ORIGINS` | `https://bunker-buddy-nine.vercel.app,http://127.0.0.1:5173,http://localhost:5173` | CORS: which sites may call the API |
 | `PORT`, `WEBSITES_PORT` | `8000` | Port Spring Boot listens on and Azure forwards to |
 | `WEBSITES_CONTAINER_START_TIME_LIMIT` | `600` | Seconds Azure waits for startup (B1 takes ~150 s) |
