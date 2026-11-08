@@ -1,6 +1,7 @@
 -- =====================================================================
 -- MGO forecasting DB — current sprint schema
--- Tables: users, purchase_plans, market_series, market_observations
+-- Tables: users, organisation_members, pm_assignments, purchase_plans,
+--         market_series, market_observations
 -- Source: mgo_forecasting_database_schema.html (current-sprint diagram)
 -- =====================================================================
 
@@ -12,9 +13,45 @@ create extension if not exists "pgcrypto";  -- for gen_random_uuid()
 -- ---------------------------------------------------------------------
 create table if not exists public.users (
   user_id uuid primary key default gen_random_uuid(),
-  clerk_user_id text unique, -- nullable during verified account backfill; never a UUID
-  email   text not null unique
+  clerk_user_id text not null unique, -- never a UUID
+  email   text unique                 -- Clerk accounts may have no email
 );
+
+-- ---------------------------------------------------------------------
+-- ORGANISATION_MEMBERS
+-- Copy of each person's Clerk role in each organisation.
+-- ---------------------------------------------------------------------
+create table if not exists public.organisation_members (
+  user_id      uuid not null references public.users (user_id) on delete cascade,
+  clerk_org_id text not null check (clerk_org_id ~ '^org_[A-Za-z0-9]+$'),
+  role         text not null check (role in ('org:officer', 'org:manager', 'org:admin')),
+  updated_at   timestamptz not null default now(),
+  primary key (user_id, clerk_org_id)
+);
+
+create index if not exists organisation_members_org_role_idx
+  on public.organisation_members (clerk_org_id, role);
+
+-- ---------------------------------------------------------------------
+-- PM_ASSIGNMENTS
+-- One PM per PO in an organisation. Both must be members of it.
+-- ---------------------------------------------------------------------
+create table if not exists public.pm_assignments (
+  po_user_id          uuid not null,
+  clerk_org_id        text not null,
+  pm_user_id          uuid not null,
+  assigned_by_user_id uuid references public.users (user_id) on delete set null,
+  assigned_at         timestamptz not null default now(),
+  primary key (po_user_id, clerk_org_id),
+  constraint pm_assignments_not_self check (po_user_id <> pm_user_id),
+  constraint pm_assignments_po_member foreign key (po_user_id, clerk_org_id)
+    references public.organisation_members (user_id, clerk_org_id) on delete cascade,
+  constraint pm_assignments_pm_member foreign key (pm_user_id, clerk_org_id)
+    references public.organisation_members (user_id, clerk_org_id) on delete cascade
+);
+
+create index if not exists pm_assignments_pm_idx
+  on public.pm_assignments (clerk_org_id, pm_user_id);
 
 -- ---------------------------------------------------------------------
 -- PURCHASE_PLANS
@@ -68,6 +105,8 @@ create index if not exists idx_market_observations_series_date
 -- =====================================================================
 
 alter table public.users enable row level security;
+alter table public.organisation_members enable row level security;
+alter table public.pm_assignments enable row level security;
 alter table public.purchase_plans enable row level security;
 alter table public.market_series enable row level security;
 alter table public.market_observations enable row level security;

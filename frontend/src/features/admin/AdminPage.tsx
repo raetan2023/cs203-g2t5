@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { AppLink } from '../../app/router';
 import './admin.css';
 
-export function AdminPage({ organisationName, management, onManageOrganisation }: {
-  organisationName?: string; management?: ReactNode; onManageOrganisation?: () => void;
+export function AdminPage({ organisationName, management, teamReporting, onManageOrganisation }: {
+  organisationName?: string; management?: ReactNode; teamReporting?: ReactNode; onManageOrganisation?: () => void;
 }) {
   return <main className="bb-admin">
     <AppLink className="bb-admin-back" href="/home">← Back to Home</AppLink>
@@ -18,6 +18,7 @@ export function AdminPage({ organisationName, management, onManageOrganisation }
       <div><h2 id="admin-plan-access">Purchase plan oversight</h2><p>View pending approvals, approved plans, rejected plans and saved manager comments.</p></div>
       <AppLink className="bb-button bb-button--secondary" href="/purchase-plans">View purchase plans</AppLink>
     </section>
+    {teamReporting}
     <section className="bb-admin-workspace" aria-labelledby="admin-workspace">
       <div className="bb-admin-section-heading"><h2 id="admin-workspace">People and settings</h2>
         <p>Use Members to invite colleagues and assign roles. Use General to update organisation details.</p>
