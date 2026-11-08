@@ -17,9 +17,11 @@ Organisation admins can manage members and view their organisation’s plans.
 4. Create Bunker Buddy and assign your signed-in test account as creator/admin.
 5. Use the same development application's publishable key in `frontend/.env.local`.
 
-Invitations can be configured and tested later. This stage does not need a Clerk
-secret key, a signup webhook, or user-level `app_role` metadata. It uses the active
+Invitations can be configured and tested later. Sign-in and role checks do not need
+a Clerk secret key, a webhook, or user-level `app_role` metadata. They use the active
 organisation and membership role exposed by Clerk's `useAuth` and `useOrganization`.
+Keeping the member list current for PM assignments does need both; see
+[PM and PO assignment](pm-po-assignment.md).
 
 ## What users see
 

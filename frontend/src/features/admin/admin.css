@@ -40,3 +40,27 @@
 .bb-admin-plan-access p { margin: 0; color: var(--bb-text-secondary); line-height: 1.6; font-size: var(--bb-text-md); }
 .bb-admin-plan-access a { flex-shrink: 0; text-decoration: none; }
 @media(max-width:640px) { .bb-admin-plan-access { flex-direction: column; align-items: flex-start; padding: var(--bb-space-5) var(--bb-space-4); gap: var(--bb-space-4); } }
+
+.bb-admin-team { margin-bottom: var(--bb-space-6); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); }
+.bb-admin-team-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--bb-space-6); }
+.bb-admin-team-heading .bb-button { flex-shrink: 0; }
+.bb-admin-team-body { padding: var(--bb-space-5) var(--bb-space-6); }
+.bb-admin-team-note, .bb-admin-team-message { margin: 0 0 var(--bb-space-4); font-size: var(--bb-text-md); line-height: 1.6; color: var(--bb-text-secondary); }
+.bb-admin-team-note:last-child { margin-bottom: 0; }
+.bb-admin-team-message--success { color: var(--bb-success-text); }
+.bb-admin-team-message--error { color: var(--bb-error-text); }
+.bb-admin-team-list { list-style: none; margin: 0; padding: 0; }
+.bb-admin-team-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--bb-space-4); padding: var(--bb-space-3) 0; border-bottom: 1px solid var(--bb-border-subtle); }
+.bb-admin-team-list li:last-child { border-bottom: 0; }
+.bb-admin-team-list label { min-width: 0; overflow-wrap: anywhere; font-size: var(--bb-text-md); }
+.bb-admin-team-choice { display: flex; align-items: center; gap: var(--bb-space-3); min-width: 0; }
+.bb-admin-team-warning { flex-shrink: 0; font-size: var(--bb-text-xs); color: var(--bb-warning-text); }
+.bb-admin-team-choice select { width: 280px; max-width: 100%; padding: var(--bb-space-2) var(--bb-space-3); color: var(--bb-text); background: var(--bb-surface-input); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font: inherit; font-size: var(--bb-text-md); }
+.bb-admin-team-choice select:disabled { color: var(--bb-text-disabled); }
+.bb-admin-team-choice select:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+@media(max-width:640px) {
+  .bb-admin-team-heading { flex-direction: column; gap: var(--bb-space-4); }
+  .bb-admin-team-body { padding: var(--bb-space-4); }
+  .bb-admin-team-list li, .bb-admin-team-choice { flex-direction: column; align-items: stretch; gap: var(--bb-space-2); }
+  .bb-admin-team-choice select { width: 100%; }
+}
