@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserAccounts {
 
+    private static final String FIND = "select user_id from users where clerk_user_id = ?";
+
     private final JdbcTemplate jdbc;
 
     public UserAccounts(JdbcTemplate jdbc) {
@@ -27,11 +29,18 @@ public class UserAccounts {
      * @param email optional; the session token carries one only when configured to
      */
     public UUID resolve(String subject, String email) {
-        // Two first requests can arrive together, so let the unique constraint decide the
+        // Two first requests can arrive together, so let the unique constraints decide the
         // winner rather than checking first and inserting after.
         jdbc.update("""
                 insert into users (clerk_user_id, email) values (?, ?)
-                on conflict (clerk_user_id) do nothing""", subject, email);
-        return jdbc.queryForObject("select user_id from users where clerk_user_id = ?", UUID.class, subject);
+                on conflict do nothing""", subject, email);
+        var found = jdbc.queryForList(FIND, UUID.class, subject);
+        if (!found.isEmpty()) return found.get(0);
+        // The email belongs to another record, such as this person's deleted account.
+        // Their new account still needs a record, so create it without the email.
+        jdbc.update("""
+                insert into users (clerk_user_id, email) values (?, null)
+                on conflict (clerk_user_id) do nothing""", subject);
+        return jdbc.queryForObject(FIND, UUID.class, subject);
     }
 }
