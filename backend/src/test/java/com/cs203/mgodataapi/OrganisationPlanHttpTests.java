@@ -30,6 +30,7 @@ class OrganisationPlanHttpTests {
     @Autowired MockMvc mvc;
     @MockitoBean JwtDecoder decoder;
     @MockitoBean UserAccounts users;
+    @MockitoBean OrganisationMembers members;
     @MockitoBean PurchasePlanRepository plans;
     @MockitoBean OperationalDate dates;
     @MockitoBean PlanAnalysisProvider provider;
@@ -51,8 +52,18 @@ class OrganisationPlanHttpTests {
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.detail").exists());
         for (String role : List.of("member", "buyer", "analyst", "unknown")) {
             mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", role))).andExpect(status().isForbidden());
+            mvc.perform(get("/api/v1/organisation").with(membership("org_a", role))).andExpect(status().isForbidden());
         }
-        verifyNoInteractions(plans, users);
+        verifyNoInteractions(plans, users, members);
+    }
+    @Test void loadingOrganisationRecordsTheTokenRoleAndSurvivesASyncFailure() throws Exception {
+        for (String role : List.of("officer", "manager", "admin")) {
+            mvc.perform(get("/api/v1/organisation").with(membership("org_a", role))).andExpect(status().isOk());
+            verify(members).sync("user_buyer", null, new OrganisationAccess("org_a", OrganisationAccess.Role.valueOf(role.toUpperCase())));
+        }
+        when(members.sync(any(), any(), any())).thenThrow(new IllegalStateException("database unavailable"));
+        mvc.perform(get("/api/v1/organisation").with(membership("org_a", "manager")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.role").value("org:manager"));
     }
     @Test void capabilitiesReflectSupportedRolesWithReadOnlyAdminAccess() throws Exception {
         for (String role : List.of("officer", "manager", "admin")) {

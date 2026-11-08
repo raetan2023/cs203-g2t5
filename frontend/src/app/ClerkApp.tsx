@@ -12,6 +12,8 @@ import { OrganisationSelection, OrganisationControl } from '../features/organisa
 import { fetchOrganisationAccess, type OrganisationPermissions } from '../features/organisation/apiService';
 import { organisationRoleLabel } from '../features/organisation/roles';
 import { organisationAppearance } from '../features/organisation/appearance';
+import { TeamReporting } from '../features/admin/TeamReporting';
+import { createTeamReportingService } from '../features/admin/teamReportingApi';
 import { createStoredMgoQuoteReader } from '../features/home/marketQuote';
 import { createStoredNewsReader } from '../features/home/newsFeed';
 import { createStoredAlertsReader } from '../features/home/newsAlerts';
@@ -116,6 +118,7 @@ export function ClerkApp() {
     }
     return token;
   }, [authState.getToken, organisationReady, currentGeneration]);
+  const teamReportingService = useMemo(() => createTeamReportingService({ getToken: () => getContextToken() }), [getContextToken]);
   const createPlanService = useCallback(
     () => createApiPlanService({ getToken: getContextToken }), [getContextToken],
   );
@@ -163,6 +166,7 @@ export function ClerkApp() {
             cardBox: { width: '100%', maxWidth: '100%', height: 'auto', minHeight: '520px', border: 'none', borderRadius: '0', boxShadow: 'none' },
           },
         }} /> : undefined}
+    teamReporting={organisationReady && scenario.state === 'ready' && scenario.permissions.role === 'org:admin' ? <TeamReporting service={teamReportingService} /> : undefined}
     planAccess={scenario.state === 'ready' ? scenario.permissions : undefined}
     auth={auth}
     createPlanService={createPlanService}

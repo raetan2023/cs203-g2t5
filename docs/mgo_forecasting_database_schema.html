@@ -15,14 +15,30 @@
 <div class="status">Local schema updated. Candidate migrations have not been applied to shared Supabase or executed against PostgreSQL in this session.</div>
 <div class="flow"><div class="eyebrow" style="color:#73e0d6">Clerk &rarr; application user &rarr; purchase plan</div><p><strong>Clerk account ID</strong> <code>user_abc123</code> &rarr; <strong>users.clerk_user_id</strong> &rarr; internal <strong>users.user_id</strong> UUID &rarr; <strong>purchase_plans.user_id</strong></p><p>Clerk handles login. The backend must verify the login token and resolve this mapping before accessing a user's plan. That API integration is pending.</p></div>
 <section class="group"><h2>Current MVP: dashboard and purchase plans</h2>
-<p>Four tables. Each user owns at most one plan; each market series contains zero or more observations.</p>
+<p>Core tables. Each market series contains zero or more observations. Each Procurement Officer has one Procurement Manager in an organisation; see <a href="pm-po-assignment.md">PM and PO assignment</a>.</p>
 <pre class="mermaid" id="mvp-diagram">erDiagram
   USERS ||--o| PURCHASE_PLANS : owns
+  USERS ||--o{ ORGANISATION_MEMBERS : joins
+  ORGANISATION_MEMBERS ||--o| PM_ASSIGNMENTS : "reports as PO"
+  ORGANISATION_MEMBERS ||--o{ PM_ASSIGNMENTS : "oversees as PM"
   MARKET_SERIES ||--o{ MARKET_OBSERVATIONS : contains
   USERS {
     uuid user_id PK "Generated UUID"
-    text clerk_user_id UK "Clerk account ID - nullable during backfill"
-    text email UK "Required"
+    text clerk_user_id UK "Required - Clerk account ID"
+    text email UK "Nullable"
+  }
+  ORGANISATION_MEMBERS {
+    uuid user_id PK, FK "Required"
+    text clerk_org_id PK "Required"
+    text role "Officer, manager or admin"
+    timestamptz updated_at "Required"
+  }
+  PM_ASSIGNMENTS {
+    uuid po_user_id PK, FK "Required"
+    text clerk_org_id PK, FK "Required"
+    uuid pm_user_id FK "Required"
+    uuid assigned_by_user_id FK "Nullable"
+    timestamptz assigned_at "Required"
   }
   PURCHASE_PLANS {
     uuid plan_id PK "Generated UUID"
@@ -56,7 +72,7 @@
 <section class="notes"><h2>How this matches the MVP</h2><ul>
 <li>The updated purchase-plan screens use quantity in MT, one purchase deadline, and a read-only historical scenario date. Time remaining is calculated from the dates.</li>
 <li>There is no separate profile table. Display names can come from Clerk. Passwords are not stored here.</li>
-<li>User UUIDs are generated with <code>gen_random_uuid()</code>. The unique Clerk ID is nullable while existing accounts are mapped; new Clerk-backed users need their verified Clerk ID.</li>
+<li>User UUIDs are generated with <code>gen_random_uuid()</code>. Every user has a unique, required Clerk ID. Email is optional because Clerk accounts may not have one.</li>
 <li>The fresh schema has no Supabase Auth foreign key, signup trigger, or auth-based policies. Supabase can still host PostgreSQL.</li>
 <li>RLS is enabled on all four tables with no client-facing policies. Direct access by ordinary client roles is denied. Trusted backend access needs suitable server-only database privileges and explicit user ownership checks.</li>
 <li>Deleting a user cascades to their plan. Deleting a plan leaves the user and market data intact. Deleting a market series is restricted while observations reference it.</li>

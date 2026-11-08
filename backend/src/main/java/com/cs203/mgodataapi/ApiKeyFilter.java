@@ -35,6 +35,8 @@ public class ApiKeyFilter extends OncePerRequestFilter {
         return "OPTIONS".equals(request.getMethod())
                 || !request.getRequestURI().startsWith("/api/")
                 || request.getRequestURI().startsWith("/api/v1/admin/")
+                // Clerk signs its webhook requests instead of sending the shared key.
+                || request.getRequestURI().equals("/api/v1/webhooks/clerk")
                 || request.getRequestURI().equals("/api/v1/organisation")
                 || request.getRequestURI().equals("/api/v1/forecast")
                 || request.getRequestURI().equals("/api/v1/purchase-plan")

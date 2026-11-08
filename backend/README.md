@@ -242,6 +242,8 @@ Supabase credentials or writes are needed.
 | `MGO_API_KEY` | `mgo_public_demo_2026` |
 | `FRONTEND_ORIGINS` | `http://127.0.0.1:5173,http://localhost:5173` — browser origins allowed to call the API |
 | `CLERK_ISSUER_URI` | the team's development tenant — the identity provider whose tokens are accepted |
+| `CLERK_WEBHOOK_SECRET` | empty — Clerk events are rejected until set; see [PM and PO assignment](../docs/pm-po-assignment.md) |
+| `CLERK_SECRET_KEY` | empty — the admin member sync reports "not configured" until set |
 | `MGO_SCENARIO_DATE` | Retired for operational plans/config. Runtime `OperationalDate` uses Asia/Singapore; setting this variable no longer freezes plan dates. |
 | `SUPABASE_DB_URL` | none — required |
 | `SUPABASE_DB_USER` | none — required |
