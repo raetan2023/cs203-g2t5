@@ -29,7 +29,16 @@ class ManagerOverviewTests {
         jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 1000, ?, ?, 'submitted', NULL, NULL, 'org_b')", UUID.randomUUID(), UUID.randomUUID(), today, today);
         jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 1000, ?, ?, 'submitted', NULL, NULL, NULL)", UUID.randomUUID(), UUID.randomUUID(), today, today);
         var dates = mock(OperationalDate.class); when(dates.today()).thenReturn(today);
-        var controller = new ManagerOverviewController(new PurchasePlanRepository(jdbc), jdbc, dates);
+        UUID pm = UUID.randomUUID();
+        jdbc.execute("CREATE TABLE pm_assignments (po_user_id UUID, clerk_org_id TEXT, pm_user_id UUID)");
+        jdbc.update("INSERT INTO pm_assignments SELECT user_id, clerk_org_id, ? FROM purchase_plans WHERE clerk_org_id = 'org_a'", pm);
+        // Same organisation, different manager: must not count towards this team.
+        UUID otherOfficer = UUID.randomUUID();
+        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 1000, ?, ?, 'submitted', NULL, NULL, 'org_a')", UUID.randomUUID(), otherOfficer, today, today);
+        jdbc.update("INSERT INTO pm_assignments VALUES (?, 'org_a', ?)", otherOfficer, UUID.randomUUID());
+        var users = mock(UserAccounts.class);
+        when(users.resolve(any(), any())).thenReturn(pm);
+        var controller = new ManagerOverviewController(new PurchasePlanRepository(jdbc), jdbc, dates, users);
         var result = controller.get(manager("org_a")).getBody();
         assertEquals(6, result.plan_count());
         assertEquals(0, new BigDecimal("61.50").compareTo(result.total_quantity_mt()));

@@ -2,12 +2,17 @@
 
 An organisation admin chooses which Procurement Manager (PM) oversees each Procurement Officer (PO). One PM can oversee many POs; a PO has one PM in an organisation. Admins cannot be PMs.
 
-This is delivered in two steps:
+## What assignments control
 
-| Step | What it adds | Effect on plan access |
+| Role | Sees | Can act on |
 | --- | --- | --- |
-| Assignments (this change) | `organisation_members`, `pm_assignments`, Clerk sync, and the Team reporting section on the Admin page | None. Managers still see every plan in the organisation. |
-| Enforcement (follow-up) | PMs see and approve only their own POs' plans; a PO with no PM cannot submit | Must be deployed only after every PO has a PM. |
+| PM | Plans of their current POs, plus plans they personally approved or rejected | Approves or rejects submitted plans of their current POs only |
+| PO | Their own plans | Cannot submit a plan until they have a PM |
+| Admin | Every plan in the organisation | Read-only |
+
+The manager overview counts only a PM's current POs. A PM asking for someone else's plan gets "not found".
+
+Deploy these rules only after every PO has a PM. Pending plans whose owner has no PM cannot be decided until an admin assigns one.
 
 ## How roles are kept up to date
 

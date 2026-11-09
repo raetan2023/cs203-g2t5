@@ -24,6 +24,17 @@ public class PurchasePlanRepository {
             rs.getTimestamp("submitted_at") == null ? null : rs.getTimestamp("submitted_at").toInstant(),
             rs.getObject("previous_plan_id", UUID.class));
 
+    private static final String COLUMNS = """
+            select p.plan_id, p.user_id, p.quantity_mt, p.purchase_deadline, p.scenario_as_of_date, p.status, p.submitted_at, p.previous_plan_id
+            from purchase_plans p
+            """;
+    static final String ASSIGNED_TO_MANAGER = """
+            exists (select 1 from pm_assignments a
+                    where a.po_user_id = p.user_id and a.clerk_org_id = p.clerk_org_id and a.pm_user_id = ?)""";
+    static final String VISIBLE_TO_MANAGER = "(" + ASSIGNED_TO_MANAGER + """
+             or exists (select 1 from plan_approval_decisions d
+                        where d.plan_id = p.plan_id and d.clerk_org_id = p.clerk_org_id and d.manager_user_id = ?))""";
+
     private final JdbcTemplate jdbc;
 
     public PurchasePlanRepository(JdbcTemplate jdbc) {
@@ -80,18 +91,40 @@ public class PurchasePlanRepository {
                 MAPPER, planId, requireOrganisation(organisationId)).stream().findFirst();
     }
 
+    /** Plans of the manager's current officers, plus any plan this manager personally decided. */
+    public List<PurchasePlan> findForManager(UUID managerId, String organisationId) {
+        return jdbc.query(COLUMNS + "where p.clerk_org_id = ? and " + VISIBLE_TO_MANAGER + " order by p.purchase_deadline, p.plan_id",
+                MAPPER, requireOrganisation(organisationId), managerId, managerId);
+    }
+
+    public Optional<PurchasePlan> findByIdForManager(UUID planId, UUID managerId, String organisationId) {
+        return jdbc.query(COLUMNS + "where p.plan_id = ? and p.clerk_org_id = ? and " + VISIBLE_TO_MANAGER,
+                MAPPER, planId, requireOrganisation(organisationId), managerId, managerId).stream().findFirst();
+    }
+
+    /** Current officers only: past decisions for someone else's team are not this manager's exposure. */
+    public List<PurchasePlan> findAssignedToManager(UUID managerId, String organisationId) {
+        return jdbc.query(COLUMNS + "where p.clerk_org_id = ? and " + ASSIGNED_TO_MANAGER + " order by p.purchase_deadline, p.plan_id",
+                MAPPER, requireOrganisation(organisationId), managerId);
+    }
+
+    /** Locks a plan only for the manager its officer currently reports to. */
+    public Optional<PurchasePlan> lockAssignedToManager(UUID planId, UUID managerId, String organisationId) {
+        return jdbc.query(COLUMNS + "where p.plan_id = ? and p.clerk_org_id = ? and " + ASSIGNED_TO_MANAGER + " for update",
+                MAPPER, planId, requireOrganisation(organisationId), managerId).stream().findFirst();
+    }
+
+    public boolean hasManager(UUID officerId, String organisationId) {
+        Integer count = jdbc.queryForObject("select count(*) from pm_assignments where po_user_id = ? and clerk_org_id = ?",
+                Integer.class, officerId, requireOrganisation(organisationId));
+        return count != null && count > 0;
+    }
+
     public Optional<PurchasePlan> lockOwned(UUID planId, UUID userId, String organisationId) {
         return jdbc.query("""
                 select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at, previous_plan_id
                 from purchase_plans where plan_id = ? and user_id = ? and clerk_org_id = ? for update""",
                 MAPPER, planId, userId, requireOrganisation(organisationId)).stream().findFirst();
-    }
-
-    public Optional<PurchasePlan> lockOrganisation(UUID planId, String organisationId) {
-        return jdbc.query("""
-                select plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, status, submitted_at, previous_plan_id
-                from purchase_plans where plan_id = ? and clerk_org_id = ? for update""",
-                MAPPER, planId, requireOrganisation(organisationId)).stream().findFirst();
     }
 
     public int markDecided(UUID planId, String organisationId, String decision) {

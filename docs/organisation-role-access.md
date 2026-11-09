@@ -1,7 +1,7 @@
 # Clerk organisation membership, roles and purchase-plan access
 
 This branch includes frontend organisation selection and backend enforcement for
-organisation-scoped purchase plans. Draft submission and the shared manager inbox
+organisation-scoped purchase plans. Draft submission and each manager's inbox
 are documented in [plan submission](plan-submission.md). Manager decisions and audit records are included.
 Organisation admins can manage members and view their organisation’s plans.
 
@@ -42,12 +42,12 @@ Keeping the member list current for PM assignments does need both; see
 | Membership role | Read plans and their analysis | Create/edit/delete plans |
 | --- | --- | --- |
 | `org:officer` | Own plans in the active organisation | Own drafts in the active organisation |
-| `org:manager` | All assigned plans in the active organisation | Denied |
+| `org:manager` | Plans of their currently assigned officers, plus plans they personally decided | Denied |
 | `org:admin` | All assigned plans in the active organisation, read-only | Denied |
 
 Admins have explicit read-only plan oversight and manage members through Clerk.
 Admin membership does not grant buyer or manager write privileges. Buyers can
-submit drafts, and managers can read their organisation approval inbox. Managers can approve/reject a submitted saved recommendation, with a required
+submit drafts, and managers can read the approval inbox for their assigned officers. Managers can approve/reject a submitted saved recommendation, with a required
 rejection reason and a final audit record. Roles do not inherit privileges from each other.
 
 Spring Security checks the role on each route. Controller checks provide defense

@@ -32,9 +32,11 @@ public class PlanApprovalController {
     @GetMapping("/{planId}/submission")
     public ResponseEntity<Map<String, Object>> submission(@AuthenticationPrincipal Jwt token, @PathVariable UUID planId) {
         var access = OrganisationAccess.requirePlanReader(token);
-        var plan = access.ownPlansOnly()
-                ? plans.findByIdAndUser(planId, users.resolve(token.getSubject(), token.getClaimAsString("email")), access.organisationId())
-                : plans.findByIdAndOrganisation(planId, access.organisationId());
+        var plan = switch (access.role()) {
+            case OFFICER -> plans.findByIdAndUser(planId, users.resolve(token.getSubject(), token.getClaimAsString("email")), access.organisationId());
+            case MANAGER -> plans.findByIdForManager(planId, users.resolve(token.getSubject(), token.getClaimAsString("email")), access.organisationId());
+            case ADMIN -> plans.findByIdAndOrganisation(planId, access.organisationId());
+        };
         if (plan.isEmpty()) throw new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found.");
         var response = new java.util.LinkedHashMap<String, Object>();
         response.put("submission", approvals.submittedRecommendation(planId, access.organisationId()));
@@ -67,6 +69,7 @@ public class PlanApprovalController {
         if (access.role() != OrganisationAccess.Role.MANAGER)
             throw new ApiException(HttpStatus.FORBIDDEN, "Only organisation managers can read approval notifications.");
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-                .body(Map.of("notifications", approvals.notifications(access.organisationId())));
+                .body(Map.of("notifications", approvals.notifications(access.organisationId(),
+                        users.resolve(token.getSubject(), token.getClaimAsString("email")))));
     }
 }
