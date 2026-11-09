@@ -2,25 +2,34 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MGO &middot; MVP database schema</title>
+<title>Bunker Buddy database schema</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#192c40;font:15px/1.55 system-ui,sans-serif}main{max-width:1440px;margin:auto;padding:40px 28px}h1{font-size:34px;margin:8px 0}h2{font-size:23px;margin:0 0 16px}h3{margin:0;font:700 21px ui-monospace,monospace}p{margin:8px 0 16px}.eyebrow{color:#087e83;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:12px}.muted{color:#586c80}.status{background:#e5eef9;border-left:4px solid #3677b7;padding:12px 16px;margin:20px 0}.flow{background:#102e43;color:white;border-radius:12px;padding:20px 24px;margin:24px 0}.flow strong{color:#73e0d6}.flow p{margin:5px 0}.group{margin:28px 0 36px}.relation{padding:10px 0;color:#456079;font-weight:600}.pair{display:grid;grid-template-columns:1fr 1.15fr;gap:24px;align-items:start}article{background:white;border:1px solid #cedae5;border-radius:12px;overflow:hidden;box-shadow:0 5px 18px #19344e08}header{padding:18px 20px;background:#eaf1f7;border-bottom:1px solid #cedae5}header p{margin:4px 0 0;color:#53697d}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #e6edf3;vertical-align:top}thead th{font-size:11px;text-transform:uppercase;color:#627487}tbody th{font-weight:500}code{font:12px ui-monospace,monospace;overflow-wrap:anywhere}tr.new{background:#ddf8f0}tr.new th{border-left:4px solid #11917a}.foot{padding:12px 16px;margin:0;background:#f5f8fb;font:12px ui-monospace,monospace}.notes{background:white;border:1px solid #cedae5;padding:24px;border-radius:12px}.notes li{margin:8px 0}a{color:#1468a1}details{margin-top:28px;padding:20px;border:1px solid #cedae5;border-radius:12px}summary{cursor:pointer;font-weight:600}pre{overflow:auto;font-size:13px}footer{margin-top:24px;color:#586c80;font-size:13px}@media(max-width:1000px){.pair{grid-template-columns:1fr}main{padding:24px 14px}th,td{padding:10px 8px}}@media print{body{background:white}main{padding:0}.pair{grid-template-columns:1fr}article{break-inside:avoid}details{display:none}}
 .group{background:white;padding:24px;border:1px solid #cedae5;border-radius:12px;overflow:auto}.mermaid{white-space:pre;overflow:auto}.mermaid svg{max-width:none!important}details section{overflow:auto;margin-top:20px}
 </style>
 </head>
 <body><main>
-<div class="eyebrow">Current sprint &middot; Four-table MVP</div>
+<div class="eyebrow">Current database</div>
 <h1>MGO database schema</h1>
-<p class="muted">Updated 26 September 2026 &middot; Dashboard data and one editable purchase plan per user.</p>
-<div class="status">Local schema updated. Candidate migrations have not been applied to shared Supabase or executed against PostgreSQL in this session.</div>
-<div class="flow"><div class="eyebrow" style="color:#73e0d6">Clerk &rarr; application user &rarr; purchase plan</div><p><strong>Clerk account ID</strong> <code>user_abc123</code> &rarr; <strong>users.clerk_user_id</strong> &rarr; internal <strong>users.user_id</strong> UUID &rarr; <strong>purchase_plans.user_id</strong></p><p>Clerk handles login. The backend must verify the login token and resolve this mapping before accessing a user's plan. That API integration is pending.</p></div>
-<section class="group"><h2>Current MVP: dashboard and purchase plans</h2>
-<p>Core tables. Each market series contains zero or more observations. Each Procurement Officer has one Procurement Manager in an organisation; see <a href="pm-po-assignment.md">PM and PO assignment</a>.</p>
+<p class="muted">Updated 9 November 2026 &middot; Checked against the shared database.</p>
+<div class="status">This page shows all 16 tables in the shared database. The full definition is in <a href="mgo_current_sprint_schema.sql">mgo_current_sprint_schema.sql</a>.</div>
+<div class="flow"><div class="eyebrow" style="color:#73e0d6">Clerk &rarr; application user &rarr; purchase plan</div><p><strong>Clerk account ID</strong> <code>user_abc123</code> &rarr; <strong>users.clerk_user_id</strong> &rarr; internal <strong>users.user_id</strong> UUID &rarr; <strong>purchase_plans.user_id</strong></p><p>Clerk handles login. The backend verifies the login token and resolves this mapping before accessing a user's plan.</p></div>
+<section class="group"><h2>Current tables</h2>
+<p>A user can have many plans. Each market series contains zero or more observations. Each Procurement Officer has one Procurement Manager in an organisation; see <a href="pm-po-assignment.md">PM and PO assignment</a>.</p>
 <pre class="mermaid" id="mvp-diagram">erDiagram
-  USERS ||--o| PURCHASE_PLANS : owns
+  USERS ||--o{ PURCHASE_PLANS : owns
   USERS ||--o{ ORGANISATION_MEMBERS : joins
   ORGANISATION_MEMBERS ||--o| PM_ASSIGNMENTS : "reports as PO"
   ORGANISATION_MEMBERS ||--o{ PM_ASSIGNMENTS : "oversees as PM"
+  PURCHASE_PLANS |o--o{ PURCHASE_PLANS : "revised by"
+  PURCHASE_PLANS ||--o{ PLAN_RECOMMENDATION_DECISIONS : "buyer responses"
+  PURCHASE_PLANS ||--o| PLAN_APPROVAL_NOTIFICATIONS : "manager inbox"
+  PURCHASE_PLANS ||--o| PLAN_APPROVAL_DECISIONS : "decided by"
+  PLAN_APPROVAL_DECISIONS ||--o| PLAN_DECISION_NOTIFICATIONS : "tells buyer"
+  PURCHASE_PLANS ||--o| PLAN_WITHDRAWALS : withdrawn
+  PURCHASE_PLANS ||--o| PURCHASE_RECORDS : purchased
+  FORECAST_RUNS ||--o{ FORECAST_VALUES : contains
+  FORECAST_RUNS ||--o| FORECAST_ACTIVE : current
   MARKET_SERIES ||--o{ MARKET_OBSERVATIONS : contains
   USERS {
     uuid user_id PK "Generated UUID"
@@ -42,10 +51,95 @@
   }
   PURCHASE_PLANS {
     uuid plan_id PK "Generated UUID"
-    uuid user_id FK, UK "Required - internal user UUID"
+    uuid user_id FK "Required - internal user UUID"
     numeric quantity_mt "Required - greater than zero"
-    date purchase_deadline "Required - single deadline"
-    date scenario_as_of_date "Required - historical scenario"
+    date purchase_deadline "Required"
+    date scenario_as_of_date "Required"
+    text clerk_org_id "Nullable"
+    text status "Draft through purchased"
+    timestamptz submitted_at "Nullable for drafts"
+    uuid previous_plan_id FK "Nullable - revision of"
+  }
+  PLAN_RECOMMENDATION_DECISIONS {
+    uuid decision_id PK "Generated UUID"
+    uuid plan_id FK "Required"
+    text clerk_org_id "Required"
+    uuid buyer_user_id FK "Required"
+    text buyer_clerk_user_id "Required"
+    text recommendation_id "Required"
+    uuid run_id "Nullable"
+    text action "Nullable"
+    text decision "Accept, reject or ignore"
+    text reason "Required to reject"
+    timestamptz decided_at "Required"
+  }
+  PLAN_APPROVAL_NOTIFICATIONS {
+    uuid notification_id PK "Generated UUID"
+    uuid plan_id FK, UK "Required"
+    text clerk_org_id "Required"
+    uuid buyer_user_id FK "Required"
+    timestamptz created_at "Required"
+    jsonb recommendation_snapshot "Nullable"
+  }
+  PLAN_APPROVAL_DECISIONS {
+    uuid decision_id PK "Generated UUID"
+    uuid plan_id FK, UK "Required"
+    text clerk_org_id "Required"
+    uuid manager_user_id FK "Required"
+    text manager_clerk_user_id "Required"
+    text manager_label "Required"
+    text decision "Approved or rejected"
+    text decision_comment "Required to reject"
+    timestamptz decided_at "Required"
+  }
+  PLAN_DECISION_NOTIFICATIONS {
+    uuid notification_id PK "Generated UUID"
+    uuid plan_id FK, UK "Required"
+    text clerk_org_id "Required"
+    uuid buyer_user_id "Required"
+    text decision "Approved or rejected"
+    timestamptz created_at "Required"
+    timestamptz seen_at "Nullable"
+  }
+  PLAN_WITHDRAWALS {
+    uuid plan_id PK, FK "Required"
+    text clerk_org_id "Required"
+    uuid buyer_user_id "Required"
+    text reason "Up to 2000 characters"
+    timestamptz withdrawn_at "Required"
+  }
+  PURCHASE_RECORDS {
+    uuid purchase_id PK "Generated UUID"
+    uuid plan_id FK, UK "Required"
+    text clerk_org_id "Required"
+    uuid buyer_user_id "Required"
+    date purchased_on "Required"
+    text supplier "Required"
+    numeric quantity_mt "Required"
+    numeric price_usd_per_mt "Required"
+    text note "Optional text"
+    timestamptz recorded_at "Required"
+  }
+  FORECAST_RUNS {
+    uuid id PK "Run ID"
+    date origin_date "Required"
+    text model_version "Required"
+    timestamptz published_at "Required"
+    jsonb payload "Required"
+  }
+  FORECAST_VALUES {
+    uuid run_id PK, FK "Required"
+    int horizon_days PK "7, 14 or 30"
+    jsonb payload "Required"
+  }
+  FORECAST_ACTIVE {
+    boolean singleton PK "Single row"
+    uuid run_id FK "Current run"
+  }
+  NEWS_DAILY_FEATURES {
+    date date PK "Required"
+    text version PK "Required"
+    jsonb payload "Required"
   }
   MARKET_SERIES {
     uuid series_id PK "Generated UUID"
@@ -69,16 +163,15 @@
 <p class="muted">PK = primary key; FK = foreign key; UK = unique constraint. Observations have a composite unique constraint on (series_id, observation_date).</p>
 <p id="render-status" role="status">Loading Mermaid diagram. An internet connection is required; diagram source stays visible if loading fails.</p>
 </section>
-<section class="notes"><h2>How this matches the MVP</h2><ul>
-<li>The updated purchase-plan screens use quantity in MT, one purchase deadline, and a read-only historical scenario date. Time remaining is calculated from the dates.</li>
+<section class="notes"><h2>Notes</h2><ul>
 <li>There is no separate profile table. Display names can come from Clerk. Passwords are not stored here.</li>
-<li>User UUIDs are generated with <code>gen_random_uuid()</code>. Every user has a unique, required Clerk ID. Email is optional because Clerk accounts may not have one.</li>
-<li>The fresh schema has no Supabase Auth foreign key, signup trigger, or auth-based policies. Supabase can still host PostgreSQL.</li>
-<li>RLS is enabled on all four tables with no client-facing policies. Direct access by ordinary client roles is denied. Trusted backend access needs suitable server-only database privileges and explicit user ownership checks.</li>
-<li>Deleting a user cascades to their plan. Deleting a plan leaves the user and market data intact. Deleting a market series is restricted while observations reference it.</li>
-<li>Unverified market unit and contract metadata stays nullable. Monetary series use USD by convention; non-monetary indicators may have no currency.</li>
+<li>Every user has a unique, required Clerk ID. Email is optional because Clerk accounts may not have one.</li>
+<li>Row Level Security is on for every table with no browser policies. Only the backend reads and writes these tables, and it enforces ownership itself.</li>
+<li>Deleting a Clerk account removes memberships and PM assignments, and keeps the user row so plans and decisions stay on record.</li>
+<li>A plan cannot be deleted while it has a recommendation response, decision, withdrawal or purchase record.</li>
+<li>Unverified market unit and contract metadata stays nullable. Monetary series use USD by convention.</li>
 </ul></section>
-<details><summary>Deferred larger schema &middot; outside the MVP</summary><p>This earlier design is retained for reference only. It does not add requirements to the four-table MVP above.</p><section><h2>Later: forecasting and purchase decisions</h2><pre class="mermaid" id="later-diagram">erDiagram
+<details><summary>Earlier design &middot; not built</summary><p>This earlier proposal is retained for reference only. These tables do not exist in the database.</p><section><h2>Later: forecasting and purchase decisions</h2><pre class="mermaid" id="later-diagram">erDiagram
   PURCHASE_PLANS ||--o{ PURCHASE_ANALYSES : snapshots
   MODEL_VERSIONS ||--o{ FORECASTS : produces
   FORECASTS }o--o| FORECASTS : derived_from
