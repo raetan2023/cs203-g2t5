@@ -14,15 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Team means the verified active organisation, consistent with plan and decision access. */
+/** Team means the officers currently assigned to this manager in the verified organisation. */
 @RestController
 public class ManagerOverviewController {
     private final PurchasePlanRepository plans;
     private final JdbcTemplate jdbc;
     private final OperationalDate dates;
+    private final UserAccounts users;
 
-    public ManagerOverviewController(PurchasePlanRepository plans, JdbcTemplate jdbc, OperationalDate dates) {
-        this.plans = plans; this.jdbc = jdbc; this.dates = dates;
+    public ManagerOverviewController(PurchasePlanRepository plans, JdbcTemplate jdbc, OperationalDate dates, UserAccounts users) {
+        this.plans = plans; this.jdbc = jdbc; this.dates = dates; this.users = users;
     }
 
     public record Reference(BigDecimal price, LocalDate date) {}
@@ -36,7 +37,7 @@ public class ManagerOverviewController {
         var access = OrganisationAccess.require(token);
         if (access.role() != OrganisationAccess.Role.MANAGER)
             throw new ApiException(HttpStatus.FORBIDDEN, "Manager membership is required.");
-        var rows = plans.findByOrganisation(access.organisationId());
+        var rows = plans.findAssignedToManager(users.resolve(token.getSubject(), token.getClaimAsString("email")), access.organisationId());
         var references = jdbc.query("""
                 SELECT o.value, o.observation_date
                 FROM public.market_observations o JOIN public.market_series s USING (series_id)

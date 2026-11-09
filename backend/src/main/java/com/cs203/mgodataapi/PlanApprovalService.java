@@ -30,6 +30,8 @@ public class PlanApprovalService {
                 new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         if (!"draft".equals(plan.status()))
             throw new ApiException(HttpStatus.CONFLICT, "Only a draft plan can be submitted.");
+        if (!plans.hasManager(owner, orgId))
+            throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "You don't have a Procurement Manager yet. Ask your admin to assign one.");
         var today = dates.today();
         if (plan.quantityMt().signum() <= 0 || plan.purchaseDeadline().isBefore(today))
             throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "Update the plan quantity and deadline before submitting.");
@@ -85,7 +87,7 @@ public class PlanApprovalService {
 
     @Transactional
     public PurchasePlan decide(UUID planId, String orgId, UUID manager, String managerSubject, String managerLabel, PlanDecisionRequest request) {
-        var plan = plans.lockOrganisation(planId, orgId).orElseThrow(() ->
+        var plan = plans.lockAssignedToManager(planId, manager, orgId).orElseThrow(() ->
                 new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         if (!"submitted".equals(plan.status()))
             throw new ApiException(HttpStatus.CONFLICT, "Only a submitted request can be decided. Reload to see its current status.");
@@ -147,21 +149,22 @@ public class PlanApprovalService {
         catch (Exception failure) { throw new IllegalStateException("The submitted recommendation could not be read.", failure); }
     }
 
-    /** The caller must be an active manager; the verified organisation scopes the shared inbox. */
-    public List<Map<String, Object>> notifications(String orgId) {
+    /** The caller must be an active manager; only that manager's visible plans appear. */
+    public List<Map<String, Object>> notifications(String orgId, UUID manager) {
         if (orgId == null || !orgId.matches("org_[A-Za-z0-9]+"))
             throw new IllegalArgumentException("An explicit Clerk organisation is required.");
         return jdbc.query("""
                 select n.notification_id, n.plan_id, n.created_at, p.quantity_mt, p.purchase_deadline, p.status
                 from plan_approval_notifications n
                 join purchase_plans p on p.plan_id = n.plan_id and p.clerk_org_id = n.clerk_org_id
-                where n.clerk_org_id = ?
+                where n.clerk_org_id = ? and """ + " " + PurchasePlanRepository.VISIBLE_TO_MANAGER + """
+
                 order by n.created_at desc, n.notification_id desc limit 100""", (rs, row) -> Map.<String, Object>of(
                     "notification_id", rs.getObject("notification_id", UUID.class).toString(),
                     "plan_id", rs.getObject("plan_id", UUID.class).toString(),
                     "created_at", rs.getTimestamp("created_at").toInstant().toString(),
                     "quantity_mt", rs.getBigDecimal("quantity_mt"),
                     "purchase_deadline", rs.getObject("purchase_deadline", java.time.LocalDate.class).toString(),
-                    "status", rs.getString("status")), orgId);
+                    "status", rs.getString("status")), orgId, manager, manager);
     }
 }
