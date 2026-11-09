@@ -20,7 +20,7 @@ class PlanLifecycleServiceTests {
     PlanApprovalService approvals;
     PlanLifecycleService lifecycle;
     DataSourceTransactionManager transactions;
-    final UUID id = UUID.randomUUID(), buyer = UUID.randomUUID();
+    final UUID id = UUID.randomUUID(), buyer = UUID.randomUUID(), manager = UUID.randomUUID();
     // 16:30 UTC is the following calendar day in Singapore.
     final Instant now = Instant.parse("2026-10-28T16:30:00Z");
     final LocalDate today = LocalDate.parse("2026-10-29");
@@ -59,6 +59,8 @@ class PlanLifecycleServiceTests {
                 CREATE TABLE purchase_records (purchase_id UUID PRIMARY KEY, plan_id UUID UNIQUE REFERENCES purchase_plans(plan_id),
                 clerk_org_id TEXT, buyer_user_id UUID, purchased_on DATE, supplier TEXT,
                 quantity_mt NUMERIC(30,6), price_usd_per_mt NUMERIC(30,6), note TEXT, recorded_at TIMESTAMP WITH TIME ZONE)""");
+        jdbc.execute("CREATE TABLE pm_assignments (po_user_id UUID NOT NULL, clerk_org_id TEXT NOT NULL, pm_user_id UUID NOT NULL, PRIMARY KEY (po_user_id, clerk_org_id))");
+        jdbc.update("INSERT INTO pm_assignments VALUES (?, ?, ?)", buyer, "org_a", manager);
         plans = new PurchasePlanRepository(jdbc);
         var dates = new OperationalDate(clock);
         approvals = transactional(new PlanApprovalService(plans, jdbc, dates, clock, null, tools.jackson.databind.json.JsonMapper.builder().build()));
@@ -74,7 +76,7 @@ class PlanLifecycleServiceTests {
         return (T) proxy.getProxy();
     }
     PurchasePlan decide(String outcome) {
-        return approvals.decide(id, "org_a", UUID.randomUUID(), "user_manager", "Manager", new PlanDecisionRequest(outcome, "Budget reviewed", fingerprint));
+        return approvals.decide(id, "org_a", manager, "user_manager", "Manager", new PlanDecisionRequest(outcome, "Budget reviewed", fingerprint));
     }
     PlanLifecycleService.PurchaseRequest purchase() {
         return new PlanLifecycleService.PurchaseRequest(today, "  Supplier A  ", new BigDecimal("5.25"), new BigDecimal("900.12"), "  Invoice 123  ");
@@ -146,7 +148,7 @@ class PlanLifecycleServiceTests {
         assertEquals("Changed schedule", lifecycle.withdrawal(id, "org_a").get("reason"));
         assertNull(lifecycle.withdrawal(id, "org_b"));
         assertNotNull(approvals.submittedRecommendation(id, "org_a"));
-        assertEquals("withdrawn", approvals.notifications("org_a").getFirst().get("status"));
+        assertEquals("withdrawn", approvals.notifications("org_a", manager).getFirst().get("status"));
         error(409, () -> decide("approved"));
         assertTrue(lifecycle.buyerNotifications(buyer, "org_a").isEmpty());
         assertFalse(plans.delete(id, buyer, "org_a"));

@@ -24,8 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
- * Organisation-scoped plans. Procurement officers manage their own plans; managers and admins
- * have read-only organisation access. Role admission is enforced in SecurityConfig.
+ * Organisation-scoped plans. Procurement officers manage their own plans; managers read their
+ * officers' plans and admins read every plan in the organisation. Role admission is enforced
+ * in SecurityConfig.
  */
 @RestController
 @RequestMapping("/api/v1/purchase-plans")
@@ -50,9 +51,11 @@ public class PurchasePlanController {
     public Map<String, List<Map<String, Object>>> get(@AuthenticationPrincipal Jwt token) {
         LocalDate scenarioDate = dates.today();
         var access = OrganisationAccess.requirePlanReader(token);
-        List<PurchasePlan> rows = access.ownPlansOnly()
-                ? plans.findByUser(ownerOf(token), access.organisationId())
-                : plans.findByOrganisation(access.organisationId());
+        List<PurchasePlan> rows = switch (access.role()) {
+            case OFFICER -> plans.findByUser(ownerOf(token), access.organisationId());
+            case MANAGER -> plans.findForManager(ownerOf(token), access.organisationId());
+            case ADMIN -> plans.findByOrganisation(access.organisationId());
+        };
         return Map.of("plans", rows.stream().map(plan -> plan.toResponse(scenarioDate)).toList());
     }
 
@@ -135,9 +138,11 @@ public class PurchasePlanController {
 
     private java.util.Optional<PurchasePlan> readPlan(Jwt token, UUID planId) {
         var access = OrganisationAccess.requirePlanReader(token);
-        return access.ownPlansOnly()
-                ? plans.findByIdAndUser(planId, ownerOf(token), access.organisationId())
-                : plans.findByIdAndOrganisation(planId, access.organisationId());
+        return switch (access.role()) {
+            case OFFICER -> plans.findByIdAndUser(planId, ownerOf(token), access.organisationId());
+            case MANAGER -> plans.findByIdForManager(planId, ownerOf(token), access.organisationId());
+            case ADMIN -> plans.findByIdAndOrganisation(planId, access.organisationId());
+        };
     }
 
     /** The application's user id for whoever signed in, created on their first request. */

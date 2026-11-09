@@ -105,6 +105,7 @@ class PlanLifecycleHttpTests {
     @Test void authorizedSubmissionReadersGetOutcomesButOtherBuyersAndOrganisationsDoNot() throws Exception {
         when(plans.findByIdAndUser(id, buyer, "org_a")).thenReturn(Optional.of(plan("purchased")));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan("purchased")));
+        when(plans.findByIdForManager(eq(id), any(), eq("org_a"))).thenReturn(Optional.of(plan("purchased")));
         when(lifecycle.purchase(id, "org_a")).thenReturn(Map.of("supplier", "A", "total_usd", new BigDecimal("9000")));
         when(lifecycle.revisions(id, "org_a")).thenReturn(List.of(UUID.randomUUID().toString()));
         for (String role : List.of("officer", "manager", "admin"))

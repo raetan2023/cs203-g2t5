@@ -100,7 +100,7 @@ Never run fixture scripts on the shared database. See
 
 ## PM and PO assignment (8 November 2026)
 
-Three migrations in `backend/migrations`, applied in this order before deploying the backend: `20261108_users_clerk_id_required.sql`, `20261108_organisation_members.sql`, `20261108_pm_assignments.sql`. Tested on a local database; not yet applied to shared Supabase. See [the assignment guide](../pm-po-assignment.md#go-live-order).
+Three migrations in `backend/migrations`, applied in this order before deploying the backend: `20261108_users_clerk_id_required.sql`, `20261108_organisation_members.sql`, `20261108_pm_assignments.sql`. Tested on a local database, then applied to shared Supabase on 9 November 2026 (Asia/Singapore). Do not rerun them. See [the assignment guide](../pm-po-assignment.md#go-live-order).
 
 ### Latest available news windows — 26 October 2026
 
