@@ -1,9 +1,6 @@
-# Candidate database migrations
+# Database migrations
 
-These scripts have not been applied to shared Supabase. Agree migration ownership,
-runner, and history with Wunna before adopting them. Do not run the full schema
-against an existing database: CREATE TABLE IF NOT EXISTS does not reconcile tables,
-and fresh-schema SQL is not an upgrade script.
+New changes to the shared database go in `backend/migrations`. The September notes below are kept as history. The shared database already includes their effect, so do not run them again. Do not run a full schema file against an existing database: CREATE TABLE IF NOT EXISTS does not reconcile tables.
 
 `20260925_required_fields.sql` adds the four required-field constraints only.
 It runs atomically, rejects existing NULL values, and never backfills or deletes data.
@@ -44,13 +41,7 @@ RLS bypass, plus verified Clerk authentication and explicit ownership checks.
 This migration does not implement token verification or provisioning, and does
 not make the temporary X-User-Id API header safe for authenticated use.
 
-On a disposable target copy, verify UUID generation without an external auth row,
-Clerk ID uniqueness, preserved users/plans, absence of legacy triggers/FKs/policies,
-and denied direct client access. Neither new migration has been executed locally
-in this session; no shared database has been changed.
-
-See the MVP-only review in
-[database-schema.md](../database-schema.md#clerk-mapping-and-ui-review-26-september-2026).
+See [database-schema.md](../database-schema.md#authentication-and-access) for how access works now.
 
 ## Daily published forecasts (26 October 2026)
 
