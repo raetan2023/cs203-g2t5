@@ -107,7 +107,9 @@ class OrganisationPlanHttpTests {
     }
     @Test void managersAndAdminsReadOrganisationPlansButCannotMutateThem() throws Exception {
         when(plans.findByOrganisation("org_a")).thenReturn(List.of(plan(id, colleague)));
+        when(plans.findForManager(any(), eq("org_a"))).thenReturn(List.of(plan(id, colleague)));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan(id, colleague)));
+        when(plans.findByIdForManager(eq(id), any(), eq("org_a"))).thenReturn(Optional.of(plan(id, colleague)));
         for (String role : List.of("manager", "admin")) {
             mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", role)))
                     .andExpect(status().isOk()).andExpect(jsonPath("$.plans[0].plan_id").value(id.toString()));
@@ -119,7 +121,6 @@ class OrganisationPlanHttpTests {
                     .contentType(MediaType.APPLICATION_JSON).content(input)).andExpect(status().isForbidden());
             mvc.perform(delete("/api/v1/purchase-plans/" + id).with(membership("org_a", role))).andExpect(status().isForbidden());
         }
-        verifyNoInteractions(users);
         verify(plans, never()).insert(any(), any(), any(), any(), any());
         verify(plans, never()).update(any(), any(), any(), any(), any(), any());
         verify(plans, never()).delete(any(), any(), any());
@@ -131,6 +132,7 @@ class OrganisationPlanHttpTests {
                 PlanAnalysisProvider.Result.unavailable("missing_forecast", "No current forecast")));
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(plan(id, owner)));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(plan(id, colleague)));
+        when(plans.findByIdForManager(eq(id), any(), eq("org_a"))).thenReturn(Optional.of(plan(id, colleague)));
         for (String role : List.of("officer", "manager", "admin")) {
             mvc.perform(get("/api/v1/purchase-plans/recommendation").with(membership("org_a", role))
                     .param("plan_id", id.toString()).param("quantity_mt", "100")

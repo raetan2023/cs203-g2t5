@@ -25,7 +25,7 @@ class PlanApprovalServiceTests {
     final UUID run = UUID.randomUUID();
     final java.util.concurrent.atomic.AtomicReference<BigDecimal> central = new java.util.concurrent.atomic.AtomicReference<>(new BigDecimal("1001"));
     final java.util.concurrent.atomic.AtomicInteger targetOffset = new java.util.concurrent.atomic.AtomicInteger();
-    final UUID owner = UUID.randomUUID(), id = UUID.randomUUID();
+    final UUID owner = UUID.randomUUID(), id = UUID.randomUUID(), manager = UUID.randomUUID();
     final Instant now = Instant.parse("2026-10-27T08:00:00Z");
     final LocalDate today = LocalDate.parse("2026-10-27");
 
@@ -43,6 +43,8 @@ class PlanApprovalServiceTests {
         jdbc.execute("CREATE TABLE plan_approval_decisions (decision_id UUID PRIMARY KEY, plan_id UUID NOT NULL UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, manager_user_id UUID NOT NULL, manager_clerk_user_id TEXT NOT NULL, manager_label TEXT NOT NULL, decision TEXT NOT NULL, decision_comment TEXT NOT NULL, decided_at TIMESTAMP WITH TIME ZONE NOT NULL)");
         jdbc.execute("CREATE TABLE plan_decision_notifications (notification_id UUID PRIMARY KEY, plan_id UUID UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, decision TEXT NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, seen_at TIMESTAMP WITH TIME ZONE)");
         jdbc.execute("CREATE TABLE plan_recommendation_decisions (decision_id UUID PRIMARY KEY, plan_id UUID NOT NULL, clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, recommendation_id TEXT NOT NULL, run_id UUID, action TEXT, decision TEXT NOT NULL, decided_at TIMESTAMP WITH TIME ZONE NOT NULL)");
+        jdbc.execute("CREATE TABLE pm_assignments (po_user_id UUID NOT NULL, clerk_org_id TEXT NOT NULL, pm_user_id UUID NOT NULL, PRIMARY KEY (po_user_id, clerk_org_id))");
+        assign(owner, manager);
         plans = new PurchasePlanRepository(jdbc);
         OperationalDate dates = mock(OperationalDate.class);
         when(dates.today()).thenReturn(today);
@@ -66,6 +68,8 @@ class PlanApprovalServiceTests {
         choice = selection(7, "NORMAL");
         respond(choice, choice.run_id(), "accept", now);
     }
+    void assign(UUID officer, UUID pm) { jdbc.update("MERGE INTO pm_assignments KEY (po_user_id, clerk_org_id) VALUES (?, ?, ?)", officer, "org_a", pm); }
+
     PurchasePlan submit(UUID planId, UUID buyer, String org) { return approvals.submit(planId, buyer, org, choice); }
 
     @Test void cannotSubmitAnAcceptedRunWhoseTargetNoLongerMatchesTheHorizon() {
@@ -124,12 +128,12 @@ class PlanApprovalServiceTests {
         var saved = submit(id, owner, "org_a");
         assertEquals("submitted", saved.status()); assertEquals(now, saved.submittedAt());
         assertEquals("submitted", plans.findByIdAndUser(id, owner, "org_a").orElseThrow().status());
-        var inbox = approvals.notifications("org_a");
+        var inbox = approvals.notifications("org_a", manager);
         assertEquals(1, inbox.size()); assertEquals(id.toString(), inbox.getFirst().get("plan_id"));
         assertEquals(now.toString(), inbox.getFirst().get("created_at"));
-        assertTrue(approvals.notifications("org_b").isEmpty());
+        assertTrue(approvals.notifications("org_b", manager).isEmpty());
         assertEquals(409, assertThrows(ApiException.class, () -> submit(id, owner, "org_a")).status().value());
-        assertEquals(1, approvals.notifications("org_a").size());
+        assertEquals(1, approvals.notifications("org_a", manager).size());
         assertFalse(plans.delete(id, owner, "org_a"));
     }
     @Test void selectionIsFrozenAndCannotBeReplacedByNewForecasts() {
@@ -156,13 +160,13 @@ class PlanApprovalServiceTests {
         jdbc.update("UPDATE purchase_plans SET quantity_mt=20 WHERE plan_id=?", id);
         assertEquals(409, assertThrows(ApiException.class, () -> submit(id, owner, "org_a")).status().value());
         assertEquals("draft", plans.findByIdAndUser(id, owner, "org_a").orElseThrow().status());
-        assertTrue(approvals.notifications("org_a").isEmpty());
+        assertTrue(approvals.notifications("org_a", manager).isEmpty());
     }
     @Test void wrongOwnerWrongOrganisationAndMissingPlanAreNotFound() {
         assertEquals(404, assertThrows(ApiException.class, () -> submit(id, UUID.randomUUID(), "org_a")).status().value());
         assertEquals(404, assertThrows(ApiException.class, () -> submit(id, owner, "org_b")).status().value());
         assertEquals(404, assertThrows(ApiException.class, () -> submit(UUID.randomUUID(), owner, "org_a")).status().value());
-        assertTrue(approvals.notifications("org_a").isEmpty());
+        assertTrue(approvals.notifications("org_a", manager).isEmpty());
     }
     @Test void invalidStoredQuantityExpiredDeadlineAndFinalStatesAreRejected() {
         jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today.minusDays(1), id);
@@ -173,14 +177,14 @@ class PlanApprovalServiceTests {
             jdbc.update("UPDATE purchase_plans SET quantity_mt = 10, status = ?, submitted_at = ? WHERE plan_id = ?", state, java.sql.Timestamp.from(now), id);
             assertEquals(409, assertThrows(ApiException.class, () -> submit(id, owner, "org_a")).status().value());
         }
-        assertTrue(approvals.notifications("org_a").isEmpty());
+        assertTrue(approvals.notifications("org_a", manager).isEmpty());
     }
     @Test void failureToStoreNotificationRollsBackSubmission() {
         jdbc.execute("ALTER TABLE plan_approval_notifications ADD CONSTRAINT simulate_failure CHECK (clerk_org_id <> 'org_a')");
         assertThrows(org.springframework.dao.DataAccessException.class, () -> submit(id, owner, "org_a"));
         var plan = plans.findByIdAndUser(id, owner, "org_a").orElseThrow();
         assertEquals("draft", plan.status()); assertNull(plan.submittedAt());
-        assertTrue(approvals.notifications("org_a").isEmpty());
+        assertTrue(approvals.notifications("org_a", manager).isEmpty());
     }
     @Test void simultaneousSubmissionsProduceOnlyOneNotification() throws Exception {
         var start = new CountDownLatch(1);
@@ -190,10 +194,10 @@ class PlanApprovalServiceTests {
             var results = java.util.List.of(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS));
             assertTrue(results.contains(200)); assertTrue(results.contains(409));
         }
-        assertEquals(1, approvals.notifications("org_a").size());
+        assertEquals(1, approvals.notifications("org_a", manager).size());
     }
     PurchasePlan decide(String result, String comment, String org, String subject) {
-        return approvals.decide(id, org, UUID.randomUUID(), subject, "Test Manager", new PlanDecisionRequest(result, comment, choice.approval_fingerprint()));
+        return approvals.decide(id, org, manager, subject, "Test Manager", new PlanDecisionRequest(result, comment, choice.approval_fingerprint()));
     }
     @Test void approvalAndItsActorTimeAndCommentArePersistedWithoutChangingTheSnapshot() {
         submit(id, owner, "org_a");
@@ -224,7 +228,7 @@ class PlanApprovalServiceTests {
     @Test void reviewedFingerprintMustMatchTheSavedChoiceButNewLiveForecastsDoNotInvalidateIt() {
         submit(id, owner, "org_a");
         var bad = new PlanDecisionRequest("approved", "", "f".repeat(64));
-        assertEquals(409, assertThrows(ApiException.class, () -> approvals.decide(id, "org_a", UUID.randomUUID(), "user_managerA", "Manager", bad)).status().value());
+        assertEquals(409, assertThrows(ApiException.class, () -> approvals.decide(id, "org_a", manager, "user_managerA", "Manager", bad)).status().value());
         central.set(new BigDecimal("1700"));
         assertEquals("approved", decide("approved", "", "org_a", "user_managerA").status());
     }
@@ -270,4 +274,57 @@ class PlanApprovalServiceTests {
         assertEquals("BUY_NOW", ((java.util.Map<?, ?>)((java.util.Map<?, ?>)payload.get("recommendation")).get("value")).get("action"));
     }
 
+    PurchasePlan decideAs(UUID pm, String result) {
+        return approvals.decide(id, "org_a", pm, "user_other", "Other", new PlanDecisionRequest(result, "Reviewed", choice.approval_fingerprint()));
+    }
+
+    @Test void onlyTheAssignedManagerSeesAndDecidesARequest() {
+        UUID other = UUID.randomUUID();
+        submit(id, owner, "org_a");
+        assertEquals(1, approvals.notifications("org_a", manager).size());
+        assertTrue(approvals.notifications("org_a", other).isEmpty());
+        assertEquals(1, plans.findForManager(manager, "org_a").size());
+        assertTrue(plans.findForManager(other, "org_a").isEmpty());
+        assertTrue(plans.findByIdForManager(id, other, "org_a").isEmpty());
+        assertEquals(404, assertThrows(ApiException.class, () -> decideAs(other, "approved")).status().value());
+        assertEquals("submitted", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
+    }
+
+    @Test void changingTheManagerMovesAPendingRequest() {
+        UUID next = UUID.randomUUID();
+        submit(id, owner, "org_a");
+        assign(owner, next);
+        assertTrue(approvals.notifications("org_a", manager).isEmpty());
+        assertEquals(1, approvals.notifications("org_a", next).size());
+        assertEquals(404, assertThrows(ApiException.class, () -> decideAs(manager, "approved")).status().value());
+        assertEquals("approved", decideAs(next, "approved").status());
+    }
+
+    @Test void aFormerManagerKeepsReadOnlyAccessToTheirOwnDecision() {
+        UUID next = UUID.randomUUID();
+        submit(id, owner, "org_a");
+        decideAs(manager, "approved");
+        assign(owner, next);
+        assertTrue(plans.findByIdForManager(id, manager, "org_a").isPresent());
+        assertEquals(1, plans.findForManager(manager, "org_a").size());
+        assertEquals(1, approvals.notifications("org_a", manager).size());
+        assertTrue(plans.findAssignedToManager(manager, "org_a").isEmpty(), "past decisions are not current team exposure");
+        assertEquals(1, plans.findAssignedToManager(next, "org_a").size());
+    }
+
+    @Test void anOfficerWithoutAManagerCannotSubmit() {
+        jdbc.update("DELETE FROM pm_assignments");
+        var failure = assertThrows(ApiException.class, () -> submit(id, owner, "org_a"));
+        assertEquals(422, failure.status().value());
+        assertTrue(failure.getMessage().contains("Ask your admin"));
+        assertEquals("draft", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
+    }
+
+    @Test void assignmentsInAnotherOrganisationDoNotGrantAccess() {
+        submit(id, owner, "org_a");
+        UUID stranger = UUID.randomUUID();
+        jdbc.update("INSERT INTO pm_assignments VALUES (?, ?, ?)", owner, "org_b", stranger);
+        assertTrue(plans.findByIdForManager(id, stranger, "org_a").isEmpty());
+        assertTrue(plans.findByIdForManager(id, stranger, "org_b").isEmpty());
+    }
 }

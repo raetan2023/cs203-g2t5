@@ -5,7 +5,7 @@
 
 Implemented on `fix-forecast-role-access`. The Supabase migration was **applied
 on 2026-10-27 (Asia/Singapore)** to the shared project with Nelson’s authorisation. No email, Clerk admin API key or external notification provider
-is required. This feature uses a durable, shared **in-app** manager inbox.
+is required. This feature uses a durable **in-app** manager inbox. Each manager sees requests from their assigned officers; see [PM and PO assignment](pm-po-assignment.md).
 
 ## Agreed behaviour
 

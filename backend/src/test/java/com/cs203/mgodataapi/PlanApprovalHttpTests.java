@@ -55,6 +55,7 @@ class PlanApprovalHttpTests {
         var saved = new PurchasePlan(id, owner, BigDecimal.TEN, LocalDate.parse("2026-11-01"), LocalDate.parse("2026-10-27"));
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(saved));
         when(plans.findByIdAndOrganisation(id, "org_a")).thenReturn(Optional.of(saved));
+        when(plans.findByIdForManager(eq(id), any(), eq("org_a"))).thenReturn(Optional.of(saved));
         when(approvals.submittedRecommendation(id, "org_a")).thenReturn(Map.of("horizon_days", 14));
         when(approvals.buyerLabel(id, "org_a")).thenReturn("buyer@example.test");
         when(approvals.decision(id, "org_a")).thenReturn(Map.of("decision", "rejected", "comment", "Budget"));
@@ -74,13 +75,13 @@ class PlanApprovalHttpTests {
         for (String role : List.of("officer", "analyst", "admin"))
             mvc.perform(get(inbox).with(member("org_a", role))).andExpect(status().isForbidden());
         verifyNoInteractions(approvals);
-        when(approvals.notifications("org_a")).thenReturn(List.of(Map.of("plan_id", id.toString())));
+        when(approvals.notifications(eq("org_a"), any())).thenReturn(List.of(Map.of("plan_id", id.toString())));
         mvc.perform(get(inbox).param("clerk_org_id", "org_attacker").with(member("org_a", "manager")))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.notifications[0].plan_id").value(id.toString()));
         mvc.perform(get(inbox).with(member("org_b", "manager"))).andExpect(status().isOk())
                 .andExpect(jsonPath("$.notifications").isEmpty());
-        verify(approvals).notifications("org_a"); verify(approvals).notifications("org_b");
+        verify(approvals).notifications(eq("org_a"), any()); verify(approvals).notifications(eq("org_b"), any());
     }
     @Test void teamOverviewIsManagerOnlyAndCannotOverrideVerifiedTeam() throws Exception {
         String endpoint = "/api/v1/purchase-plans/manager-overview";
@@ -88,15 +89,15 @@ class PlanApprovalHttpTests {
         for (String role : List.of("officer", "analyst", "admin", "unknown"))
             mvc.perform(get(endpoint).with(member("org_a", role))).andExpect(status().isForbidden());
         verifyNoInteractions(plans, jdbc);
-        when(plans.findByOrganisation("org_a")).thenReturn(List.of(new PurchasePlan(id, owner,
+        when(plans.findAssignedToManager(any(), eq("org_a"))).thenReturn(List.of(new PurchasePlan(id, owner,
                 BigDecimal.TEN, LocalDate.parse("2026-11-01"), LocalDate.parse("2026-10-27"), "submitted", Instant.now())));
         mvc.perform(get(endpoint).param("clerk_org_id", "org_attacker").with(member("org_a", "manager")))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.plan_count").value(1))
                 .andExpect(jsonPath("$.open_quantity_mt").value(10))
                 .andExpect(jsonPath("$.exposure_usd").isEmpty());
-        verify(plans).findByOrganisation("org_a");
-        verify(plans, never()).findByOrganisation("org_attacker");
+        verify(plans).findAssignedToManager(any(), eq("org_a"));
+        verify(plans, never()).findAssignedToManager(any(), eq("org_attacker"));
     }
     @Test void submittedPlanCannotBeEditedOrDeletedByItsBuyer() throws Exception {
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(new PurchasePlan(id, owner, BigDecimal.TEN,
