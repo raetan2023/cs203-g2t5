@@ -18,6 +18,12 @@ body { font: var(--bb-type-body); color: var(--bb-text); }
 .bb-app :focus-visible, .auth-page :focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 4px; }
 .bb-app button:disabled, .auth-page button:disabled { cursor: not-allowed; opacity: .5; }
 
+/* Phones: iOS Safari zooms into any field with text under 16px, so fields never go below it.
+   !important because page styles set smaller field text with higher specificity. */
+@media (max-width: 480px) {
+  :is(.bb-app, .auth-page) :is(input:not([type=checkbox], [type=radio], [type=range]), select, textarea) { font-size: var(--bb-text-xl) !important; }
+}
+
 /* Reduced motion: no looping or sliding animation and no transitions; state changes stay instant. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

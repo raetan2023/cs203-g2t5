@@ -90,11 +90,11 @@ Status: `[ ]` to do, `[~]` in progress, `[x]` done (verified at 360/390/430 + de
 
 ### Phase 0: shared layer (blocks everything)
 
-- [ ] Hamburger menu (section 3)
-- [ ] Shell gutters 16px, `#app-content` padding, safe-area insets
-- [ ] Global: inputs/selects/textarea 16px text at 480 and below; `.bb-button` min-height 44px
-- [ ] Mobile capture script: Playwright at 360/390/402/430 plus a 1440 desktop baseline, with an overflow assertion per screen (extends `docs/ui-revamp/tools/capture-states.mjs`)
-- [ ] Desktop baseline screenshots taken **before** any CSS change
+- [x] Hamburger menu (section 3): `AppShell.tsx`, `app.css`, menu/dismiss icons in `AppIcon.tsx`, tests in `AppShell.test.tsx`. The org control's 640px header rule is overridden at 480 in `organisation.css`.
+- [x] Shell gutters 16px (already: `--bb-page-pad` clamps to 16px), safe-area inset on the menu sheet
+- [x] Global: inputs/selects/textarea 16px text at 480 and below (`base.css`); `.bb-button` was already 44px tall
+- [x] Mobile capture script: `docs/ui-revamp/tools/capture-mobile.mjs` (see section 5)
+- [x] Desktop baseline screenshots taken **before** any CSS change (38 states, `submission/mobile/desktop-baseline/`, local only)
 
 ### Phase 1: Procurement Officer
 
@@ -133,9 +133,12 @@ Status: `[ ]` to do, `[~]` in progress, `[x]` done (verified at 360/390/430 + de
 
 ## 5. How to verify
 
-1. Run the preview harness on port 5197 (`npm run dev` in the worktree, `/preview.html`) and pick each state from "Demo controls".
-2. Run the mobile capture script: it takes screenshots into `docs/ui-revamp/submission/mobile/<phase>/` and fails on any horizontal overflow.
-3. Compare the desktop 1440 screenshots against the Phase 0 baseline; they must match.
+1. Start the preview harness on port 5199: in `frontend/`, run `npx vite --host 127.0.0.1 --port 5199 --strictPort`, then open `/preview.html` and pick a state from "Demo controls".
+2. From the repo root, run `node docs/ui-revamp/tools/capture-mobile.mjs check <officer|manager|admin|all> [state,...]`.
+   - It writes phone screenshots to `docs/ui-revamp/submission/mobile/<phase>/<state>-<width>.png` and a `report-<phase>.json` with the tap targets under 44px.
+   - It fails on any horizontal overflow.
+   - It compares the 1440px screenshots with `desktop-baseline/` and lists every state whose desktop changed. Only `baseline` mode rewrites the baseline.
+3. The desktop must match the baseline. Investigate any state listed as changed.
 4. `npx tsc --noEmit` and `npm test` in `frontend/`. Run the vitest journeys alone, because they time out when a Playwright script runs alongside.
 5. Finish each phase with a real-account check in Chrome DevTools device mode (iPhone 14 Pro / 15 Pro Max) and on a real phone against the deployed build, if possible.
 
