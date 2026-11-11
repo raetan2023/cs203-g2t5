@@ -75,7 +75,6 @@ export function DecisionHistory({ planService, today }: { planService: PurchaseP
       : cards.length === 0 ? <section className="dh-card dh-card--notice">
           <h2>Nothing submitted yet</h2>
           <p>When you send a plan’s recommendation to a manager, it is tracked here from submission to purchase.</p>
-          <AppLink className="bb-button" href="/purchase-plans">Go to your plans</AppLink>
         </section>
       : shown.length === 0 ? <section className="dh-card dh-card--notice" role="status">
           <h2>No plans match</h2>
