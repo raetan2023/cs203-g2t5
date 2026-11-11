@@ -53,6 +53,8 @@ const STATES = [
   // Phase 3: Admin
   { phase: 'admin', key: 'home-admin' }, { phase: 'admin', key: 'home-admin', menu: true, name: 'home-admin-menu' },
   { phase: 'admin', key: 'home-admin', path: '/admin', name: 'admin' },
+  { phase: 'admin', key: 'home-admin', path: '/admin', clickText: 'Which role should I assign?', name: 'admin-roles-open' },
+  { phase: 'admin', key: 'rec-admin-awaiting', wait: 8000, path: '/purchase-plans', name: 'plans-admin-list' },
   { phase: 'admin', key: 'home-admin', path: '/purchase-plans', name: 'plans-admin' },
   { phase: 'admin', key: 'rec-admin' }, { phase: 'admin', key: 'rec-admin-awaiting', wait: 8000 },
 ];
@@ -69,6 +71,7 @@ async function open(browser, state, viewport) {
     await page.waitForTimeout(2500);
   }
   if (state.click) { await page.getByRole('button', { name: state.click }).first().click(); await page.waitForTimeout(800); }
+  if (state.clickText) { await page.getByText(state.clickText).first().click(); await page.waitForTimeout(800); }
   return page;
 }
 

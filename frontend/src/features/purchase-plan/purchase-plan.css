@@ -238,4 +238,8 @@
   .pp-overview-value { flex-wrap: wrap; column-gap: var(--bb-space-1); row-gap: 0; }
   .pp-overview-note { margin-left: 0; font-size: var(--bb-text-xs); }
   .pp-filter button, .pp-sort button { min-height: 44px; min-width: 44px; }
+  /* Manager and admin status filters: one row that scrolls in its own box, like the officer tabs. */
+  .pp-filter { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .pp-filter::-webkit-scrollbar { display: none; }
+  .pp-filter button { flex: 0 0 auto; white-space: nowrap; }
 }
