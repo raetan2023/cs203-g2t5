@@ -58,3 +58,11 @@
 @media (max-width: 440px) { .md-panel { width: 100vw; } .md-header, .md-body, .md-footer { padding-left: var(--bb-space-4); padding-right: var(--bb-space-4); } .md-cost strong { font-size: var(--bb-text-xl); } }
 @media (prefers-reduced-motion: reduce) { .md-spinner { animation: none; } }
 .rec-manager-decision > .rec-approval-actions[hidden] { display: none; }
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): 44px targets, and the decision buttons share the footer equally. */
+@media (max-width: 480px) {
+  .md-close { width: 44px; height: 44px; }
+  .md-detail-link { display: flex; align-items: center; min-height: 44px; }
+  .md-footer { padding-bottom: calc(var(--bb-space-4) + env(safe-area-inset-bottom)); }
+  .md-footer .md-button { flex: 1 1 0; min-width: 0; min-height: 44px; }
+}

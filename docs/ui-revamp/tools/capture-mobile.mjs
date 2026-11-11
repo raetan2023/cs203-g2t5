@@ -45,6 +45,9 @@ const STATES = [
   { phase: 'manager', key: 'home-manager' }, { phase: 'manager', key: 'home-manager', menu: true, name: 'home-manager-menu' },
   { phase: 'manager', key: 'home-manager', path: '/purchase-plans', name: 'plans-manager' },
   { phase: 'manager', key: 'rec-review', wait: 8000 },
+  { phase: 'manager', key: 'rec-review', wait: 8000, path: '/purchase-plans', name: 'plans-manager-list' },
+  { phase: 'manager', key: 'rec-review', wait: 8000, click: 'Approve recommendation', name: 'manager-approve-panel', viewportOnly: true },
+  { phase: 'manager', key: 'rec-review', wait: 8000, click: 'Reject recommendation', name: 'manager-reject-panel', viewportOnly: true },
   { phase: 'manager', key: 'home-manager', path: '/market-dashboard', name: 'market-manager' },
   { phase: 'manager', key: 'home-manager', path: '/purchase-plans/decisions', name: 'decisions-restricted' },
   // Phase 3: Admin

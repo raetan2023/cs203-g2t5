@@ -231,4 +231,11 @@
   .pp-approval-list .pp-actions { justify-content: stretch; }
   .pp-approval-list .pp-actions > * { flex: 1 1 0; min-width: 0; }
   .pp-approval-list .pp-actions > a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); color: var(--bb-text); font-weight: 500; text-decoration: none; }
+  /* Manager and admin summary: three figures in one row rather than a tall stack. */
+  .pp-overview { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--bb-space-3); margin-bottom: var(--bb-space-6); }
+  .pp-overview > div { align-content: start; }
+  .pp-overview-label { font-size: var(--bb-text-xs); }
+  .pp-overview-value { flex-wrap: wrap; column-gap: var(--bb-space-1); row-gap: 0; }
+  .pp-overview-note { margin-left: 0; font-size: var(--bb-text-xs); }
+  .pp-filter button, .pp-sort button { min-height: 44px; min-width: 44px; }
 }

@@ -132,6 +132,15 @@ Follow-ups (done 2026-11-11):
 
 ### Phase 2: Procurement Manager
 
+Status 2026-11-11: done. All 9 manager states have no overflow at 360–430 and no tap targets under 44px. The desktop is unchanged; the only difference is Home's greeting, which follows the clock.
+- [x] Plan list (`purchase-plan.css`): the Active / Overdue / Next deadline summary is one row of three, and the filter and sort buttons are 44px. Admin uses the same summary.
+- [x] Review page (`recommendations.css`): "Approve recommendation" and "Reject recommendation" are stacked at full width.
+- [x] Approve / reject panel (`manager-decision.css`):
+  - Close button and "View full recommendation" are 44px.
+  - Reject and Approve share the footer equally at 44px, with the safe-area inset.
+- [x] New capture states: `plans-manager-list`, `manager-approve-panel`, `manager-reject-panel`.
+- [ ] Not visible in the preview: the approval inbox and team overview, because the preview's plan data has neither. The inbox reuses the Phase 1 decisions-feed styles. Check both with a real manager login.
+
 | # | View | Notes |
 |---|---|---|
 | 2.1 | Home (manager) | role-specific blocks |
