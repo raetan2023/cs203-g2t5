@@ -1,4 +1,4 @@
-export function AppIcon({ name }: { name: 'home' | 'plan' | 'chart' | 'bulb' | 'logout' | 'close' | 'eye' | 'eye-off' | 'arrow' }) {
+export function AppIcon({ name }: { name: 'home' | 'plan' | 'chart' | 'bulb' | 'logout' | 'close' | 'eye' | 'eye-off' | 'arrow' | 'menu' | 'dismiss' }) {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     {name === 'home' && <path d="m3 10 9-7 9 7v11h-6v-8H9v8H3Z" />}
     {name === 'plan' && <><rect x="4" y="5" width="16" height="16" rx="2" /><path d="M8 3v5M16 3v5M4 11h16" /></>}
@@ -7,6 +7,8 @@ export function AppIcon({ name }: { name: 'home' | 'plan' | 'chart' | 'bulb' | '
     {name === 'logout' && <path d="M9 4H4v16h5M10 12h11m-4-4 4 4-4 4" />}
     {name === 'close' && <path d="m15 3-9 9 9 9" />}
     {name === 'arrow' && <path d="M5 12h14M13 6l6 6-6 6" />}
+    {name === 'menu' && <path d="M4 7h16M4 12h16M4 17h16" />}
+    {name === 'dismiss' && <path d="M6 6l12 12M18 6 6 18" />}
     {(name === 'eye' || name === 'eye-off') && <><path d="M2 12s3-6 10-6 10 6 10 6-3 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{name === 'eye-off' && <path d="m3 3 18 18" />}</>}
   </svg>;
 }
