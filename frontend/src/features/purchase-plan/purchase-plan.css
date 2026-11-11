@@ -220,3 +220,15 @@
 .purchase-plan .pp-team-totals { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-block: 1.5rem; }
 .purchase-plan .pp-team-totals dt { color: var(--bb-text-secondary); font-size: .875rem; }
 .purchase-plan .pp-team-totals dd { margin: .5rem 0 0; font-size: 1.5rem; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): filter tabs stay on one line and scroll inside their own box;
+   the decisions feed gets two equal 44px actions. */
+@media (max-width: 480px) {
+  .pp-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .pp-tabs::-webkit-scrollbar { display: none; }
+  .pp-tabs button { flex: 1 0 auto; white-space: nowrap; }
+  .pp-heading > a { display: inline-flex; align-items: center; min-height: 44px; }
+  .pp-approval-list .pp-actions { justify-content: stretch; }
+  .pp-approval-list .pp-actions > * { flex: 1 1 0; min-width: 0; }
+  .pp-approval-list .pp-actions > a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); color: var(--bb-text); font-weight: 500; text-decoration: none; }
+}
