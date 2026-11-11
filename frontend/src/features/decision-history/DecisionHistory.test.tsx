@@ -108,7 +108,7 @@ describe('decision history page', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Network down');
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     await waitFor(() => expect(screen.getByText('Nothing submitted yet')).toBeVisible());
-    expect(screen.getByRole('link', { name: 'Go to your plans' })).toHaveAttribute('href', '/purchase-plans');
+    expect(screen.queryByRole('link', { name: 'Go to your plans' })).not.toBeInTheDocument();
   });
 });
 
