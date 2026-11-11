@@ -125,3 +125,8 @@ a.bb-home-quote:hover { border-color: var(--bb-border-control); background: colo
   .bb-home-plan-link:hover ~ .bb-home-content .bb-home-cta svg,
   .bb-home-cta:hover svg, .bb-home-cta:focus-visible svg { transform: translateX(3px); }
 }
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): each headline link is a full-width 44px-minimum target. */
+@media (max-width: 480px) {
+  .bb-home-news-headline a { display: block; min-height: 44px; padding-block: var(--bb-space-1); }
+}

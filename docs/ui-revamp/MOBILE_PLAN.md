@@ -105,10 +105,17 @@ Status 2026-11-11: no officer view overflows at 360–430. Fixed:
 - [x] Raised to 44px: back links, "View recommendation", Total / Per MT toggle (`recommendations.css`), Market text buttons (`stored-market.css`).
 - [x] Left as is: inline text links inside sentences on the mock sign-in (exempt from the target size rule), and the mock sign-in's checkbox (the real app uses Clerk's form).
 
-Still open:
-- [ ] The real Clerk sign-in on a phone (the preview shows the mock form).
-- [ ] Home news and alerts with a real login (the preview doesn't render them).
-- [ ] Recommendation: "Accept and submit" sits about 3,500px down at 390. Possible addition: a sticky bottom bar that jumps to the summary.
+Follow-ups (done 2026-11-11):
+- [x] Real Clerk sign-in, checked at 360/390/430 against the real app (port 5200):
+  - No overflow, and fields use 16px text.
+  - Fields and the show-password button raised to 44px (`auth.css`).
+  - Left as is: the "Sign up" inline link, the Clerk logo, and Clerk's dev-mode toggle (development keys only).
+- [x] Home news and alerts: new preview state "Home - news and alerts (officer)" (`preview/homeNewsScenario.ts`).
+  - Alerts stack, and news rows become two-line entries.
+  - Headline links raised to 44px (`home.css`).
+- [x] Recommendation: a phone-only "Review and submit" bar is fixed to the bottom of the screen (`RecommendationsPage.tsx`, `recommendations.css`).
+  - It appears only when submitting is possible, scrolls to the Decision section, focuses it, and hides while that section is on screen.
+  - It doesn't submit anything itself.
 
 | # | View | Route | Main files | Watch for |
 |---|---|---|---|---|

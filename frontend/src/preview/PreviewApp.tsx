@@ -6,6 +6,7 @@ import { DEMO_PLAN, DEMO_SCENARIO_DATE } from '../features/purchase-plan/fixture
 import { createMockPlanService } from '../features/purchase-plan/mockService';
 import { createMockAuthService, DEMO_USER } from './mockAuthService';
 import './preview.css';
+import { PREVIEW_ALERTS, PREVIEW_NEWS } from './homeNewsScenario';
 import { buildMockForecast } from '../features/forecast/mockService';
 import MarketDashboard from '../features/market-dashboard/MarketDashboard';
 import type { ReadyForecast } from '../features/forecast/apiService';
@@ -25,7 +26,7 @@ const examples = {
   'rec-ready': 'Recommendation - legacy fixture, no horizon fits', 'rec-loading': 'Recommendation - loading', 'rec-error': 'Recommendation - fails once', 'rec-unavailable': 'Recommendation - unavailable', 'rec-missing': 'Recommendation - missing forecast', 'rec-unsupported': 'Recommendation - unsupported context',
   'rec-empty': 'Recommendation - no saved plan',
   login: 'Sign in', signup: 'Create account', home: 'Home - procurement officer', 'home-manager': 'Home - manager', 'home-admin': 'Home - admin',
-  'home-price-error': 'Home - price unavailable', 'home-loading': 'Home loading (8 seconds)',
+  'home-price-error': 'Home - price unavailable', 'home-news': 'Home - news and alerts (officer)', 'home-loading': 'Home loading (8 seconds)',
   'session-error': 'Session load fails once', 'login-error': 'Sign-in fails once', 'signup-error': 'Signup fails once', 'logout-error': 'Sign-out fails once',
   multiple: 'Purchase plans - multiple', empty: 'Purchase plans - empty', saved: 'Purchase plans - saved', loading: 'Plan loading (8 seconds)',
   'load-error': 'Plan load fails once', 'save-error': 'Create / save fails once',
@@ -41,7 +42,7 @@ const approvalStarts: Partial<Record<Example, 'submitted' | 'approved' | 'reject
 /** Preview admin: reads every plan in the organisation, cannot edit, submit or decide. */
 const PREVIEW_ADMIN: OrganisationPermissions = { ...PREVIEW_MANAGER, role: 'org:admin' };
 const decisionPlans = previewDecisionPlans();
-const homeAccess: Partial<Record<Example, OrganisationPermissions>> = { home: PREVIEW_BUYER, 'home-price-error': PREVIEW_BUYER, 'home-manager': PREVIEW_MANAGER,
+const homeAccess: Partial<Record<Example, OrganisationPermissions>> = { home: PREVIEW_BUYER, 'home-price-error': PREVIEW_BUYER, 'home-news': PREVIEW_BUYER, 'home-manager': PREVIEW_MANAGER,
   'home-admin': PREVIEW_ADMIN };
 /** Synthetic preview price; the app reads SGP_MGO_OBSERVED from /api/v1/market/stored. */
 const PREVIEW_QUOTE: MgoQuote = { value: 1351.5, unit: 'USD/MT', currency: 'USD', changeAbs: 4.5, changePct: 0.33, observedDate: '2025-10-22',
@@ -79,6 +80,7 @@ export function PreviewApp() {
 
   return <>
     <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock MarketDashboard={MarketDashboard} readMarketQuote={readMarketQuote}
+      readNews={example === 'home-news' ? async () => PREVIEW_NEWS : undefined} readAlerts={example === 'home-news' ? async () => PREVIEW_ALERTS : undefined}
       onManageOrganisation={() => window.alert('Preview: this opens Clerk organisation settings (members, invitations and roles).')} createForecastService={() => marketScenario ? createMarketForecastService(marketScenario) : scenario ? createScenarioForecastService(scenario) : ({ read: async horizon => buildMockForecast(horizon) as ReadyForecast })} createRecommendationService={() => scenario ? createScenarioRecommendationService(scenario, slow ? 3500 : 600) : createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} planAccess={planAccess} createPlanService={() => withScenarioApproval(createMockPlanService({
       initialPlans: example === 'multiple' ? [DEMO_PLAN, { ...DEMO_PLAN, plan_id: 'second-demo-plan', quantity_mt: 250 }] : example === 'plans-decisions' ? decisionPlans.plans : undefined,
       initialPlan: scenario ? scenarioPlan(scenario) : example === 'rec-empty' ? null : example.startsWith('rec-') ? RECOMMENDATION_DEMO_PLAN : ['saved', 'edit-error', 'delete-error'].includes(example) ? DEMO_PLAN : null,
