@@ -378,3 +378,8 @@
   .rec-lc-unit { display: none; }
   .rec-lc-unit-short { display: inline; }
 }
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): the Total / Per MT toggle meets the 44px tap target. */
+@media (max-width: 480px) {
+  .rec-toggle button { min-height: 44px; }
+}

@@ -98,6 +98,18 @@ Status: `[ ]` to do, `[~]` in progress, `[x]` done (verified at 360/390/430 + de
 
 ### Phase 1: Procurement Officer
 
+Status 2026-11-11: no officer view overflows at 360–430. Fixed:
+- [x] Header logo link raised to 44px (`app.css`).
+- [x] Plan filter tabs (`purchase-plan.css`) and Decision history status tabs (`decision-history.css`): kept on one line, scrolling inside their own box.
+- [x] Manager decisions: "View decision" and "Mark as seen" are two equal 44px buttons.
+- [x] Raised to 44px: back links, "View recommendation", Total / Per MT toggle (`recommendations.css`), Market text buttons (`stored-market.css`).
+- [x] Left as is: inline text links inside sentences on the mock sign-in (exempt from the target size rule), and the mock sign-in's checkbox (the real app uses Clerk's form).
+
+Still open:
+- [ ] The real Clerk sign-in on a phone (the preview shows the mock form).
+- [ ] Home news and alerts with a real login (the preview doesn't render them).
+- [ ] Recommendation: "Accept and submit" sits about 3,500px down at 390. Possible addition: a sticky bottom bar that jumps to the summary.
+
 | # | View | Route | Main files | Watch for |
 |---|---|---|---|---|
 | 1.1 | Login | `/login` | `features/auth/auth.css` | 900px rule exists; video panel vs form at phone height |
