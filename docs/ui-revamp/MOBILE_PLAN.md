@@ -152,6 +152,16 @@ Status 2026-11-11: done. All 9 manager states have no overflow at 360–430 and 
 
 ### Phase 3: Admin
 
+Status 2026-11-11: done. All 8 admin states have no overflow at 360–430 and no tap targets under 44px. The desktop is unchanged, apart from capture artefacts: the clock-based greeting, the 16px brand flake, and the focused skip link.
+- [x] Organisation administration (`admin.css`): "← Back to Home" and the team-reporting manager dropdowns are 44px. Team reporting stacks each officer above a full-width dropdown (an existing 640px rule).
+- [x] Admin plan list (`purchase-plan.css`):
+  - The status filter (All / Pending approval / Approved / Rejected) is one row that scrolls inside its own box.
+  - The summary row is shared with the manager view.
+- [x] Role guide ("Which role should I assign?"): its table fits at 390, so no change.
+- [x] Preview additions:
+  - Team reporting on the admin page, with an in-memory service (`preview/teamReportingScenario.ts`).
+  - New capture states: `admin-roles-open` and `plans-admin-list`.
+
 | # | View | Notes |
 |---|---|---|
 | 3.1 | Organisation administration | `/admin`, `features/admin/admin.css` (640px rule exists) |

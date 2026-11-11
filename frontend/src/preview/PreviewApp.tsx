@@ -7,6 +7,10 @@ import { createMockPlanService } from '../features/purchase-plan/mockService';
 import { createMockAuthService, DEMO_USER } from './mockAuthService';
 import './preview.css';
 import { PREVIEW_ALERTS, PREVIEW_NEWS } from './homeNewsScenario';
+import { createPreviewTeamReporting } from './teamReportingScenario';
+import { TeamReporting } from '../features/admin/TeamReporting';
+
+const previewTeamReporting = createPreviewTeamReporting();
 import { buildMockForecast } from '../features/forecast/mockService';
 import MarketDashboard from '../features/market-dashboard/MarketDashboard';
 import type { ReadyForecast } from '../features/forecast/apiService';
@@ -80,6 +84,7 @@ export function PreviewApp() {
 
   return <>
     <App key={`${example}-${revision}-${slow}`} auth={auth} scenarioDate={scenarioDate} mock MarketDashboard={MarketDashboard} readMarketQuote={readMarketQuote}
+      teamReporting={example === 'home-admin' ? <TeamReporting service={previewTeamReporting} /> : undefined}
       readNews={example === 'home-news' ? async () => PREVIEW_NEWS : undefined} readAlerts={example === 'home-news' ? async () => PREVIEW_ALERTS : undefined}
       onManageOrganisation={() => window.alert('Preview: this opens Clerk organisation settings (members, invitations and roles).')} createForecastService={() => marketScenario ? createMarketForecastService(marketScenario) : scenario ? createScenarioForecastService(scenario) : ({ read: async horizon => buildMockForecast(horizon) as ReadyForecast })} createRecommendationService={() => scenario ? createScenarioRecommendationService(scenario, slow ? 3500 : 600) : createMockRecommendationService({ delayMs: example === 'rec-loading' ? 8000 : slow ? 3500 : 700, failOnce: example === 'rec-error', example: example === 'rec-unavailable' ? 'unavailable' : example === 'rec-missing' ? 'missing-forecast' : example === 'rec-unsupported' ? 'unsupported' : 'ready' })} planAccess={planAccess} createPlanService={() => withScenarioApproval(createMockPlanService({
       initialPlans: example === 'multiple' ? [DEMO_PLAN, { ...DEMO_PLAN, plan_id: 'second-demo-plan', quantity_mt: 250 }] : example === 'plans-decisions' ? decisionPlans.plans : undefined,
