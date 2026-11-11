@@ -392,3 +392,9 @@
   .rec-jump-bar .bb-button { width: 100%; }
   .rec-summary { scroll-margin-top: var(--bb-space-4); }
 }
+
+/* Phones: the manager's Approve / Reject recommendation buttons stack at full width. */
+@media (max-width: 480px) {
+  .rec-manager-decision .rec-approval-actions { flex-direction: column; }
+  .rec-manager-decision .rec-approval-actions .bb-button { width: 100%; }
+}
