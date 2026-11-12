@@ -153,4 +153,30 @@ class OrganisationPlanHttpTests {
                 .contentType(MediaType.APPLICATION_JSON).content(input)).andExpect(status().isForbidden());
         verifyNoInteractions(plans, users);
     }
+
+    @Test void managerListsSayWhoseEachPlanIsButOfficerListsDoNot() throws Exception {
+        when(plans.findForManager(any(), eq("org_a"))).thenReturn(List.of(plan(id, colleague)));
+        when(plans.findByUser(owner, "org_a")).thenReturn(List.of(plan(id, owner)));
+        when(users.labels(any())).thenReturn(Map.of(colleague, "Rae Tan"));
+        mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", "manager")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.plans[0].buyer_user_id").value(colleague.toString()))
+                .andExpect(jsonPath("$.plans[0].buyer_label").value("Rae Tan"));
+        mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", "officer")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.plans[0].buyer_label").doesNotExist());
+    }
+
+    @Test void withdrawnPlansLeaveOfficerAndManagerListsAfterFiveDaysButNotAdminLists() throws Exception {
+        UUID old = UUID.randomUUID();
+        when(plans.findByUser(owner, "org_a")).thenReturn(List.of(plan(id, owner), plan(old, owner)));
+        when(plans.findForManager(any(), eq("org_a"))).thenReturn(List.of(plan(id, owner), plan(old, owner)));
+        when(plans.findByOrganisation("org_a")).thenReturn(List.of(plan(id, owner), plan(old, owner)));
+        when(plans.withdrawnBefore(eq("org_a"), any())).thenReturn(java.util.Set.of(old));
+        for (String role : List.of("officer", "manager"))
+            mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", role)))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.plans.length()").value(1))
+                    .andExpect(jsonPath("$.plans[0].plan_id").value(id.toString()));
+        mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", "admin")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.plans.length()").value(2));
+    }
 }

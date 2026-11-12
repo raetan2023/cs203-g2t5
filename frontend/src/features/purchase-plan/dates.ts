@@ -5,6 +5,16 @@ export function formatDate(value: string): string {
   }).format(new Date(`${value}T00:00:00Z`));
 }
 
+const dateTime = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Asia/Singapore', day: '2-digit', month: 'short', year: 'numeric',
+  hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+});
+
+/** A moment in Singapore time on a 24-hour clock, such as "11 Nov 2026, 23:56:36". */
+export function formatDateTime(value: Date | string): string {
+  return dateTime.format(typeof value === 'string' ? new Date(value) : value);
+}
+
 export function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);

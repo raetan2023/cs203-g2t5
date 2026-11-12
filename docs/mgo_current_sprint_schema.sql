@@ -369,6 +369,7 @@ CREATE TABLE public.plan_withdrawals (
     buyer_user_id uuid NOT NULL,
     reason text DEFAULT ''::text NOT NULL,
     withdrawn_at timestamp with time zone DEFAULT now() NOT NULL,
+    manager_user_id uuid,
     CONSTRAINT plan_withdrawals_clerk_org_id_check CHECK ((clerk_org_id ~ '^org_[A-Za-z0-9]+$'::text)),
     CONSTRAINT plan_withdrawals_reason_check CHECK ((length(reason) <= 2000))
 );
@@ -404,7 +405,7 @@ CREATE TABLE public.purchase_plans (
     previous_plan_id uuid,
     CONSTRAINT purchase_plans_no_self_revision CHECK (((previous_plan_id IS NULL) OR (previous_plan_id <> plan_id))),
     CONSTRAINT purchase_plans_quantity_mt_check CHECK ((quantity_mt > (0)::numeric)),
-    CONSTRAINT purchase_plans_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'submitted'::text, 'approved'::text, 'rejected'::text, 'withdrawn'::text, 'purchased'::text]))),
+    CONSTRAINT purchase_plans_status_check CHECK ((status = ANY (ARRAY['draft'::text, 'submitted'::text, 'approved'::text, 'rejected'::text, 'withdrawn'::text, 'purchased'::text, 'closed'::text]))),
     CONSTRAINT purchase_plans_submission_time_check CHECK ((((status = 'draft'::text) AND (submitted_at IS NULL)) OR ((status <> 'draft'::text) AND (submitted_at IS NOT NULL))))
 );
 
@@ -439,7 +440,9 @@ CREATE TABLE public.purchase_records (
 CREATE TABLE public.users (
     user_id uuid DEFAULT gen_random_uuid() NOT NULL,
     email text,
-    clerk_user_id text NOT NULL
+    clerk_user_id text NOT NULL,
+    display_name text,
+    CONSTRAINT users_display_name_length CHECK (((display_name IS NULL) OR (length(display_name) <= 200)))
 );
 
 

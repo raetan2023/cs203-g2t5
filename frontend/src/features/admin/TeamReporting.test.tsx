@@ -247,3 +247,21 @@ it('explains empty teams', async () => {
   render(<TeamReporting service={service({ load: vi.fn(async () => ({ officers: [], managers: [] })) })} />);
   expect(await screen.findByText(/No Procurement Officers yet/)).toBeVisible();
 });
+
+it('shows names, keeps the email under each officer, and adds the email only to managers who share a name', async () => {
+  const named: ReportingOverview = {
+    officers: [{ user_id: 'po1', label: 'Rae Tan', email: 'rae@example.com', pm_user_id: null }],
+    managers: [
+      { user_id: 'pm1', label: 'Alex Lim', email: 'alex1@example.com', officer_count: 0 },
+      { user_id: 'pm2', label: 'Alex Lim', email: 'alex2@example.com', officer_count: 0 },
+      { user_id: 'pm3', label: 'Yashwanth Annem', email: 'yash@example.com', officer_count: 0 },
+    ],
+  };
+  render(<TeamReporting service={service({ load: vi.fn(async () => named) })} />);
+  const select = await screen.findByRole('combobox');
+  expect(screen.getByText('Rae Tan')).toBeVisible();
+  expect(screen.getByText('rae@example.com')).toBeVisible();
+  expect(within(select).getByRole('option', { name: 'Alex Lim (alex1@example.com) (0 PO)' })).toBeInTheDocument();
+  expect(within(select).getByRole('option', { name: 'Alex Lim (alex2@example.com) (0 PO)' })).toBeInTheDocument();
+  expect(within(select).getByRole('option', { name: 'Yashwanth Annem (0 PO)' })).toBeInTheDocument();
+});

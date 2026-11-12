@@ -31,12 +31,13 @@ public class ClerkMembershipSync {
     }
 
     /** One membership as Clerk describes it, in both webhook events and the member list. */
-    public record Membership(String organisationId, String clerkUserId, String role, String email) {
+    public record Membership(String organisationId, String clerkUserId, String role, String email, String name) {
         static Membership from(Map<?, ?> data) {
             var organisation = data.get("organization") instanceof Map<?, ?> o ? o : Map.of();
             var user = data.get("public_user_data") instanceof Map<?, ?> u ? u : Map.of();
             return new Membership(text(organisation.get("id")), text(user.get("user_id")),
-                    text(data.get("role")), ClerkMembershipSync.email(user.get("identifier")));
+                    text(data.get("role")), ClerkMembershipSync.email(user.get("identifier")),
+                    ClerkMembershipSync.name(user));
         }
 
         boolean valid() {
@@ -51,7 +52,7 @@ public class ClerkMembershipSync {
         switch (type == null ? "" : type) {
             case "organizationMembership.created", "organizationMembership.updated" -> save(Membership.from(data));
             case "organizationMembership.deleted" -> remove(Membership.from(data));
-            case "user.created", "user.updated" -> updateEmail(text(data.get("id")), primaryEmail(data));
+            case "user.created", "user.updated" -> updateUser(text(data.get("id")), primaryEmail(data), name(data));
             // Keep the user row so their plans and decisions stay on record; only
             // their access goes.
             case "user.deleted" -> removeAllMemberships(text(data.get("id")));
@@ -77,6 +78,7 @@ public class ClerkMembershipSync {
         int removed = 0;
         for (UUID userId : stored) {
             if (kept.contains(userId)) continue;
+            members.closeOfficerWork(userId, organisationId);
             removed += jdbc.update("delete from organisation_members where user_id = ? and clerk_org_id = ?",
                     userId, organisationId);
         }
@@ -94,13 +96,15 @@ public class ClerkMembershipSync {
             remove(membership);
             return null;
         }
-        UUID userId = upsertUser(membership.clerkUserId(), membership.email());
+        UUID userId = upsertUser(membership.clerkUserId(), membership.email(), membership.name());
         members.save(userId, membership.organisationId(), membership.role());
         return userId;
     }
 
     void remove(Membership membership) {
         if (!membership.valid()) return;
+        jdbc.queryForList("select user_id from users where clerk_user_id = ?", UUID.class, membership.clerkUserId())
+                .forEach(userId -> members.closeOfficerWork(userId, membership.organisationId()));
         jdbc.update("""
                 delete from organisation_members where clerk_org_id = ?
                   and user_id = (select user_id from users where clerk_user_id = ?)""",
@@ -109,22 +113,27 @@ public class ClerkMembershipSync {
 
     private void removeAllMemberships(String clerkUserId) {
         if (clerkUserId == null) return;
+        jdbc.query("select m.user_id, m.clerk_org_id from organisation_members m join users u on u.user_id = m.user_id where u.clerk_user_id = ?",
+                (org.springframework.jdbc.core.RowCallbackHandler) rs -> { members.closeOfficerWork(rs.getObject("user_id", UUID.class), rs.getString("clerk_org_id")); }, clerkUserId);
         jdbc.update("delete from organisation_members where user_id = (select user_id from users where clerk_user_id = ?)",
                 clerkUserId);
     }
 
-    private UUID upsertUser(String clerkUserId, String email) {
+    private UUID upsertUser(String clerkUserId, String email, String name) {
         String usable = available(email, clerkUserId);
         return jdbc.queryForObject("""
-                insert into users (clerk_user_id, email) values (?, ?)
-                on conflict (clerk_user_id) do update set email = coalesce(excluded.email, users.email)
-                returning user_id""", UUID.class, clerkUserId, usable);
+                insert into users (clerk_user_id, email, display_name) values (?, ?, ?)
+                on conflict (clerk_user_id) do update set email = coalesce(excluded.email, users.email),
+                    display_name = coalesce(excluded.display_name, users.display_name)
+                returning user_id""", UUID.class, clerkUserId, usable, name);
     }
 
-    private void updateEmail(String clerkUserId, String email) {
+    /** A user event carries the full profile, so a cleared name is cleared here too. */
+    private void updateUser(String clerkUserId, String email, String name) {
+        if (clerkUserId == null) return;
         String usable = available(email, clerkUserId);
-        if (clerkUserId == null || usable == null) return;
-        jdbc.update("update users set email = ? where clerk_user_id = ?", usable, clerkUserId);
+        jdbc.update("update users set email = coalesce(?, email), display_name = ? where clerk_user_id = ?",
+                usable, name, clerkUserId);
     }
 
     /**
@@ -151,6 +160,13 @@ public class ClerkMembershipSync {
                 return email(address.get("email_address"));
         }
         return null;
+    }
+
+    /** "First Last" from Clerk's first_name and last_name, or null when neither is set. */
+    static String name(Map<?, ?> data) {
+        String first = text(data.get("first_name")), last = text(data.get("last_name"));
+        String full = first == null ? last : last == null ? first : first + " " + last;
+        return full == null ? null : full.length() > 200 ? full.substring(0, 200) : full;
     }
 
     static String email(Object value) {

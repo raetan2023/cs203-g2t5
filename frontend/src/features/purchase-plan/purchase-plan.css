@@ -78,6 +78,13 @@
 .purchase-plan .pp-field-error { margin-top: var(--bb-space-2); color: var(--bb-error-text); font-size: var(--bb-text-md); }
 /* Row-first compact cards: auto-fill keeps a lone plan at card width instead of spanning the page. */
 .pp-plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: var(--pp-space); align-items: stretch; }
+/* Plans section: its own card, three per row and two rows per page, like the Approval inbox. */
+.purchase-plan .pp-plans-panel { margin-top: var(--pp-space); }
+.pp-plan-grid--paged { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+.pp-plan-spacer { visibility: hidden; }
+.purchase-plan .pp-plans-panel .pp-overview { margin: var(--bb-space-2) 0 var(--bb-space-6); padding-bottom: var(--bb-space-5); border-bottom: 1px solid var(--bb-border-subtle); }
+@media (max-width: 1000px) { .pp-plan-grid--paged { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .pp-plan-grid--paged { grid-template-columns: minmax(0, 1fr); } }
 .pp-summary { position: relative; min-width: 0; display: flex; flex-direction: column; padding: var(--bb-space-5); }
 .pp-summary:has(.pp-summary-link:hover) { border-color: var(--bb-border-control); }
 .pp-summary-top { display: flex; justify-content: space-between; align-items: center; gap: var(--bb-space-2); min-height: 24px; margin-bottom: var(--bb-space-4); }
@@ -127,6 +134,8 @@
 .pp-overview--alert .pp-overview-value { color: var(--bb-error-text); }
 .pp-list-heading { display: flex; justify-content: space-between; align-items: center; gap: var(--bb-space-4); margin-bottom: var(--bb-space-4); }
 .purchase-plan .pp-list-heading h2 { font-size: var(--bb-text-xl); font-weight: 600; }
+/* Team oversight and Approval inbox: section titles stand out from the figures and cards below. */
+.purchase-plan .pp-manager-panel h2 { font-size: var(--bb-text-4xl); font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
 /* Officer filter row. The selected tab is a quiet fill, so its text also steps up: the fill alone is only 1.23:1. */
 .pp-tabs { display: flex; flex-wrap: wrap; max-width: 100%; background: var(--pp-surface); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); }
 .pp-tabs button { min-height: 44px; padding: var(--bb-space-2) var(--bb-space-4); border: 0; border-radius: 5px; background: transparent; color: var(--pp-muted); font: inherit; cursor: pointer;
@@ -207,8 +216,36 @@
 .purchase-plan .pp-decision-comment { color: var(--bb-text); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .purchase-plan .pp-decision-meta { color: var(--bb-text-secondary); }
 .pp-approval-inbox { margin-bottom: var(--bb-space-6); }
-.pp-approval-list { list-style: none; padding: 0; display: grid; gap: var(--bb-space-4); }
-.pp-approval-list li { padding: var(--bb-space-4) 0; border-top: 1px solid var(--bb-border-subtle); }
+.pp-approval-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--bb-space-4); margin-top: var(--bb-space-8); }
+.pp-approval-list li.pp-approval-spacer { visibility: hidden; }
+.pp-approval-list li { min-width: 0; padding: var(--bb-space-5); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); overflow-wrap: anywhere; }
+.pp-approval-list .pp-inbox-card { display: flex; flex-direction: column; gap: var(--bb-space-3); }
+.purchase-plan .pp-inbox-meta { color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.5; }
+.purchase-plan .pp-inbox-meta strong { color: var(--bb-text); }
+.pp-approval-list a.pp-inbox-open { width: 100%; margin-top: auto; color: var(--bb-text-on-action); text-decoration: none; }
+.pp-approval-list a.pp-inbox-open:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.pp-sort-panel { width: 220px; }
+.pp-sort-group + .pp-sort-group { margin-top: var(--bb-space-2); padding-top: var(--bb-space-2); border-top: 1px solid var(--bb-border-subtle); }
+.purchase-plan .pp-sort-heading { padding: var(--bb-space-1) var(--bb-space-2); color: var(--bb-text-tertiary); font-size: var(--bb-text-xs); text-transform: uppercase; letter-spacing: .06em; }
+.pp-sort-panel label { display: flex; align-items: center; gap: var(--bb-space-2); min-height: 36px; padding: 0 var(--bb-space-2); border-radius: var(--bb-radius-control); cursor: pointer; }
+.pp-sort-panel label:hover { background: var(--bb-surface-hover); }
+.pp-sort-panel input { accent-color: var(--bb-action); }
+@media (max-width: 1000px) { .pp-approval-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .pp-approval-list { grid-template-columns: minmax(0, 1fr); } }
+.pp-pager-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--bb-space-3); margin-top: var(--bb-space-5); padding-top: var(--bb-space-4); border-top: 1px solid var(--bb-border-subtle); }
+.purchase-plan .pp-page-summary { margin: 0; font-size: var(--bb-text-md); color: var(--bb-text-secondary); font-variant-numeric: tabular-nums; }
+.pp-pagination { display: flex; align-items: center; gap: var(--bb-space-1); }
+.pp-page-numbers { display: flex; align-items: center; gap: 2px; margin-inline: var(--bb-space-2); }
+.pp-pagination button { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--bb-space-1); min-width: 40px; height: 40px; padding: 0 var(--bb-space-2); color: var(--bb-text-secondary); background: transparent; border: 0; border-radius: var(--bb-radius-control); font: inherit; font-size: var(--bb-text-md); font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+.pp-pagination button:hover:not(:disabled) { color: var(--bb-text); background: var(--bb-surface-hover); }
+.pp-pagination button:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.pp-pagination button:disabled { color: var(--bb-text-disabled); cursor: default; }
+.pp-pagination .pp-page-step { padding: 0 var(--bb-space-3); }
+.pp-pagination .pp-page-edge { min-width: 32px; }
+.pp-pagination button[aria-current="page"] { color: var(--bb-text); font-weight: 700; }
+.pp-pagination button[aria-current="page"]::after { content: ''; position: absolute; left: 25%; right: 25%; bottom: 6px; height: 2px; border-radius: 1px; background: var(--bb-text); }
+@media (prefers-reduced-motion: reduce) { .pp-pagination button { transition: none; } }
+@media (max-width: 640px) { .pp-pager-bar { justify-content: center; } .pp-page-step-text { display: none; } }
 .pp-approval-list p { font-size: var(--bb-text-md); }
 .pp-approval-list a { color: inherit; text-decoration: underline; }
 .pp-previous-plan { margin-block: var(--bb-space-5); padding: var(--bb-space-4); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); color: var(--bb-text-secondary); }
@@ -217,9 +254,104 @@
 .pp-filter { display: flex; flex-wrap: wrap; gap: var(--bb-space-2); }
 .pp-filter button { padding: var(--bb-space-2) var(--bb-space-3); border: 1px solid var(--bb-border-control); background: var(--bb-surface); color: var(--bb-text); font: inherit; cursor: pointer; }
 .pp-filter button[aria-pressed="true"] { background: var(--bb-action); color: var(--bb-text-on-action); }
+/* Title and figures on the left; filters and refresh pinned to the top right, wrapping within their own column. */
+.purchase-plan .pp-overview-header { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(0, max-content); align-items: start; gap: var(--bb-space-4); }
+@media (max-width: 640px) { .purchase-plan .pp-overview-header { grid-template-columns: minmax(0, 1fr); } }
+.purchase-plan .pp-overview-controls { display: flex; align-items: center; gap: var(--bb-space-3); }
+.purchase-plan .pp-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: var(--bb-text); background: transparent; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); cursor: pointer; }
+.purchase-plan .pp-icon-button:hover:not(:disabled) { background: var(--bb-surface-hover); }
+.purchase-plan .pp-icon-button:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.purchase-plan .pp-icon-button:disabled { color: var(--bb-text-disabled); cursor: default; }
+.purchase-plan .pp-icon-button.is-refreshing svg { animation: pp-icon-spin .9s linear infinite; }
+@keyframes pp-icon-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .purchase-plan .pp-icon-button.is-refreshing svg { animation: none; } }
+.purchase-plan .pp-inbox-counts { display: flex; gap: var(--bb-space-6); margin: var(--bb-space-4) 0 0; }
+.purchase-plan .pp-inbox-counts dt { color: var(--bb-text-secondary); font-size: var(--bb-text-xl); }
+.purchase-plan .pp-inbox-counts dd { margin: var(--bb-space-1) 0 0; font-size: 2rem; line-height: 1.2; font-weight: 600; font-variant-numeric: tabular-nums; }
+.purchase-plan .pp-inbox-counts-withdrawn dd { color: var(--bb-error-text); }
+.purchase-plan .pp-inbox-counts-overdue dd { color: var(--bb-warning-text); }
+.purchase-plan .pp-inbox-controls { flex-wrap: wrap; justify-content: flex-end; }
+.pp-officer-filter { position: relative; }
+.pp-filter-trigger { display: inline-flex; align-items: center; gap: var(--bb-space-2); min-height: 40px; max-width: 260px; padding: 0 var(--bb-space-3); color: var(--bb-text); background: var(--bb-surface-input, transparent); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font: inherit; font-size: var(--bb-text-md); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-filter-trigger:focus-visible, .pp-officer-panel input:focus-visible, .pp-inbox-reset:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.pp-filter-caret { color: var(--bb-text-secondary); font-size: var(--bb-text-xs); }
+.pp-officer-panel { position: absolute; z-index: 20; top: calc(100% + var(--bb-space-1)); left: 0; width: 280px; max-width: calc(100vw - 32px); padding: var(--bb-space-2); background: var(--bb-surface); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); box-shadow: 0 8px 24px rgb(0 0 0 / 35%); }
+.pp-officer-search { width: 100%; margin-bottom: var(--bb-space-2); padding: var(--bb-space-2); color: var(--bb-text); background: var(--bb-surface-input, transparent); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font: inherit; }
+.pp-officer-panel ul { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; }
+.pp-officer-panel label { display: flex; align-items: center; gap: var(--bb-space-2); min-height: 36px; padding: 0 var(--bb-space-2); border-radius: var(--bb-radius-control); cursor: pointer; }
+.pp-officer-panel label:hover { background: var(--bb-surface-hover); }
+.pp-officer-panel label span:nth-of-type(1) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pp-officer-count { color: var(--bb-text-secondary); font-size: var(--bb-text-xs); font-variant-numeric: tabular-nums; }
+.pp-officer-none { padding: var(--bb-space-2); color: var(--bb-text-secondary); }
+.pp-inbox-reset { padding: var(--bb-space-2) var(--bb-space-3); color: var(--bb-text); background: transparent; border: 0; font: inherit; font-size: var(--bb-text-md); text-decoration: underline; cursor: pointer; }
+/* "Select all" sits above the officers, set apart by a line. */
+.pp-officer-panel label.pp-officer-all { margin-bottom: var(--bb-space-1); padding-bottom: 0; border-bottom: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-control) var(--bb-radius-control) 0 0; font-weight: 600; }
+.purchase-plan .pp-officer-hint { padding: var(--bb-space-2); color: var(--bb-warning-text); font-size: var(--bb-text-xs); }
+.purchase-plan .pp-inbox-notes { margin-top: var(--bb-space-2); }
+.purchase-plan .pp-inbox-empty { margin-top: var(--bb-space-8); }
+.purchase-plan .pp-inbox-note { font-size: var(--bb-text-xs); }
+.purchase-plan .pp-inbox-note + .pp-inbox-note { margin-top: 2px; }
+.purchase-plan .pp-inbox-note-overdue { color: var(--bb-warning-text); font-weight: 600; }
+.purchase-plan .pp-inbox-note-withdrawn { color: var(--bb-error-text); font-weight: 600; }
+.purchase-plan .pp-updated { display: flex; align-items: center; gap: var(--bb-space-2); margin-top: var(--bb-space-3); }
+.purchase-plan .pp-updated strong { color: var(--bb-text); font-weight: 600; }
+.purchase-plan .pp-updated-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--bb-text); }
+.purchase-plan .pp-updated-dot--fresh { background: var(--bb-success-text); }
 .purchase-plan .pp-team-totals { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-block: 1.5rem; }
 .purchase-plan .pp-team-totals dt { color: var(--bb-text-secondary); font-size: .875rem; }
 .purchase-plan .pp-team-totals dd { margin: .5rem 0 0; font-size: 1.5rem; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Purchase progress: a tall two-part bar (see components/PurchaseProgress.tsx). */
+.purchase-plan .pp-progress { --pp-progress-fill: var(--bb-chart-series-1); --pp-progress-track: color-mix(in oklab, var(--bb-chart-series-1) 26%, var(--bb-surface)); margin: 0 0 var(--bb-space-5); }
+.purchase-plan .pp-progress-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--bb-space-2); margin-bottom: var(--bb-space-3); }
+.purchase-plan .pp-progress-title { color: var(--bb-text-secondary); font-size: var(--bb-text-md); }
+.purchase-plan .pp-progress-share { color: var(--bb-text-secondary); font-size: var(--bb-text-md); }
+.purchase-plan .pp-progress-share strong { color: var(--bb-text); font-size: var(--bb-text-4xl); font-weight: 600; margin-right: var(--bb-space-1); }
+.purchase-plan .pp-progress-bar { display: flex; gap: 2px; height: 28px; }
+.purchase-plan .pp-progress-part { position: relative; display: flex; align-items: center; min-width: 4px; padding: 0 var(--bb-space-3); border-radius: 4px; transition: width .6s cubic-bezier(.2, .8, .2, 1); outline: none; }
+.purchase-plan .pp-progress-part--purchased { background: var(--pp-progress-fill); color: var(--bb-text-on-action); }
+.purchase-plan .pp-progress-part--remaining { background: var(--pp-progress-track); color: var(--bb-text); }
+.purchase-plan .pp-progress-part:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.purchase-plan .pp-progress-label { font-size: var(--bb-text-xs); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.purchase-plan .pp-progress-tip { position: absolute; z-index: 5; bottom: calc(100% + 8px); left: 50%; display: none; gap: 2px; flex-direction: column; padding: var(--bb-space-2) var(--bb-space-3); color: var(--bb-text); background: var(--bb-surface-input); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font-size: var(--bb-text-xs); white-space: nowrap; transform: translateX(-50%); pointer-events: none; box-shadow: 0 6px 18px rgb(0 0 0 / 35%); }
+.purchase-plan .pp-progress-part:hover .pp-progress-tip, .purchase-plan .pp-progress-part:focus-visible .pp-progress-tip { display: flex; }
+/* Keep the tooltip inside the card: the first part's tip opens rightward from its left edge, the last part's leftward from its right edge. */
+.purchase-plan .pp-progress-part:first-child .pp-progress-tip { left: 0; transform: none; }
+.purchase-plan .pp-progress-part:last-child .pp-progress-tip { left: auto; right: 0; transform: none; }
+.purchase-plan .pp-progress-legend { display: flex; flex-wrap: wrap; gap: var(--bb-space-4); margin: var(--bb-space-3) 0 0; padding: 0; list-style: none; color: var(--bb-text-secondary); font-size: var(--bb-text-xs); }
+.purchase-plan .pp-progress-legend li { display: inline-flex; align-items: center; gap: var(--bb-space-2); }
+.purchase-plan .pp-progress-swatch { width: 10px; height: 10px; border-radius: 2px; }
+.purchase-plan .pp-progress-swatch--purchased { background: var(--pp-progress-fill); }
+.purchase-plan .pp-progress-swatch--remaining { background: var(--pp-progress-track); }
+/* Approved volume that was never bought: a striped block, so it does not read as a normal part. */
+.purchase-plan .pp-progress-part--shortfall, .purchase-plan .pp-progress-swatch--shortfall { color: var(--bb-text); background: repeating-linear-gradient(135deg, var(--pp-progress-track) 0 4px, transparent 4px 8px); box-shadow: inset 0 0 0 1px var(--pp-progress-track); }
+.purchase-plan .pp-figure-note { margin-top: var(--bb-space-1); color: var(--bb-text-secondary); font-size: var(--bb-text-xs); }
+.purchase-plan .pp-progress-empty { margin-bottom: var(--bb-space-5); }
+@media (prefers-reduced-motion: reduce) { .purchase-plan .pp-progress-part { transition: none; } }
+
+/* A manager's plan card: the Approval inbox layout. */
+.pp-manager-plan { gap: var(--bb-space-3); }
+.pp-manager-plan a.pp-inbox-open { width: 100%; margin-top: auto; color: var(--bb-text-on-action); text-decoration: none; }
+.purchase-plan .pp-manager-plan-outcome { color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.5; }
+.purchase-plan .pp-manager-plan-reason { color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.5; overflow-wrap: anywhere; }
+.purchase-plan .pp-manager-plan-late { color: var(--bb-warning-text); font-size: var(--bb-text-md); line-height: 1.5; }
+/* A card's top line: quantity and deadline on the left, the status tag in the top-right corner. */
+.pp-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--bb-space-3); min-width: 0; }
+.pp-card-top .pp-summary-title { min-width: 0; }
+.pp-tag { display: inline-flex; flex-shrink: 0; align-items: center; gap: 6px; margin-top: 6px; font-size: var(--bb-text-md); font-weight: 700; line-height: 1.2; white-space: nowrap; }
+.pp-tag svg { width: 16px; height: 16px; flex-shrink: 0; }
+.pp-tag--to-buy { color: var(--bb-text); }
+.pp-tag--overdue { color: var(--bb-warning-text); }
+.pp-tag--purchased { color: var(--bb-success-text); }
+.pp-tag--rejected, .pp-tag--withdrawn { color: var(--bb-error-text); }
+.pp-tag--closed { color: var(--bb-text-secondary); }
+.purchase-plan .pp-manager-plan-closed { color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.5; }
+.purchase-plan .pp-inbox-note-closed { color: var(--bb-text); font-weight: 600; }
+/* The Plans counts wear the same colours as their tags. */
+.purchase-plan .pp-plan-count--overdue dd { color: var(--bb-warning-text); }
+.purchase-plan .pp-plan-count--purchased dd { color: var(--bb-success-text); }
+.purchase-plan .pp-plan-count--rejected dd { color: var(--bb-error-text); }
+.pp-plans-panel .pp-plan-grid { margin-top: var(--bb-space-8); }
 
 /* Phones (docs/ui-revamp/MOBILE_PLAN.md): filter tabs stay on one line and scroll inside their own box;
    the decisions feed gets two equal 44px actions. */

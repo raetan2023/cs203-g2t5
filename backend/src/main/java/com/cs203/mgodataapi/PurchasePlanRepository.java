@@ -31,9 +31,15 @@ public class PurchasePlanRepository {
     static final String ASSIGNED_TO_MANAGER = """
             exists (select 1 from pm_assignments a
                     where a.po_user_id = p.user_id and a.clerk_org_id = p.clerk_org_id and a.pm_user_id = ?)""";
+    /**
+     * A manager sees plans of their current officers, plans they decided, and requests that were withdrawn
+     * from them because the officer stopped being an officer. Takes the manager's id three times.
+     */
     static final String VISIBLE_TO_MANAGER = "(" + ASSIGNED_TO_MANAGER + """
              or exists (select 1 from plan_approval_decisions d
-                        where d.plan_id = p.plan_id and d.clerk_org_id = p.clerk_org_id and d.manager_user_id = ?))""";
+                        where d.plan_id = p.plan_id and d.clerk_org_id = p.clerk_org_id and d.manager_user_id = ?)
+             or exists (select 1 from plan_withdrawals mw
+                        where mw.plan_id = p.plan_id and mw.clerk_org_id = p.clerk_org_id and mw.manager_user_id = ?))""";
 
     private final JdbcTemplate jdbc;
 
@@ -94,18 +100,60 @@ public class PurchasePlanRepository {
     /** Plans of the manager's current officers, plus any plan this manager personally decided. */
     public List<PurchasePlan> findForManager(UUID managerId, String organisationId) {
         return jdbc.query(COLUMNS + "where p.clerk_org_id = ? and " + VISIBLE_TO_MANAGER + " order by p.purchase_deadline, p.plan_id",
-                MAPPER, requireOrganisation(organisationId), managerId, managerId);
+                MAPPER, requireOrganisation(organisationId), managerId, managerId, managerId);
     }
 
     public Optional<PurchasePlan> findByIdForManager(UUID planId, UUID managerId, String organisationId) {
         return jdbc.query(COLUMNS + "where p.plan_id = ? and p.clerk_org_id = ? and " + VISIBLE_TO_MANAGER,
-                MAPPER, planId, requireOrganisation(organisationId), managerId, managerId).stream().findFirst();
+                MAPPER, planId, requireOrganisation(organisationId), managerId, managerId, managerId).stream().findFirst();
     }
 
     /** Current officers only: past decisions for someone else's team are not this manager's exposure. */
     public List<PurchasePlan> findAssignedToManager(UUID managerId, String organisationId) {
         return jdbc.query(COLUMNS + "where p.clerk_org_id = ? and " + ASSIGNED_TO_MANAGER + " order by p.purchase_deadline, p.plan_id",
                 MAPPER, requireOrganisation(organisationId), managerId);
+    }
+
+    private static final String APPROVED_SINCE = """
+             and exists (select 1 from plan_approval_decisions d
+                         where d.plan_id = p.plan_id and d.clerk_org_id = p.clerk_org_id
+                           and d.decision = 'approved' and d.decided_at >= ?)""";
+
+    /** MT recorded as bought for each purchased plan of the manager's current officers. */
+    public java.util.Map<UUID, BigDecimal> purchasedByPlanForManager(UUID managerId, String organisationId) {
+        var result = new java.util.HashMap<UUID, BigDecimal>();
+        jdbc.query("""
+                select r.plan_id, r.quantity_mt from purchase_records r
+                join purchase_plans p on p.plan_id = r.plan_id and p.clerk_org_id = r.clerk_org_id
+                where p.clerk_org_id = ? and p.status = 'purchased' and """ + " " + ASSIGNED_TO_MANAGER,
+                rs -> { result.merge(rs.getObject("plan_id", UUID.class), rs.getBigDecimal("quantity_mt"), BigDecimal::add); },
+                requireOrganisation(organisationId), managerId);
+        return result;
+    }
+
+    /** The officers this manager oversees, with how each is shown: name, else email, else Clerk ID. */
+    public List<java.util.Map.Entry<UUID, String>> officersForManager(UUID managerId, String organisationId) {
+        return jdbc.query("select a.po_user_id, " + UserAccounts.labelOf("u") + """
+                 as label from pm_assignments a join users u on u.user_id = a.po_user_id
+                where a.pm_user_id = ? and a.clerk_org_id = ? order by label, a.po_user_id""",
+                (rs, n) -> java.util.Map.entry(rs.getObject("po_user_id", UUID.class), rs.getString("label")),
+                managerId, requireOrganisation(organisationId));
+    }
+
+    /** Withdrawn plans leave officer and manager lists this long after being withdrawn. Admins still see them. */
+    public static final java.time.Duration WITHDRAWN_VISIBLE_FOR = java.time.Duration.ofDays(5);
+
+    /** Plans in the organisation withdrawn before {@code cutoff}. */
+    public java.util.Set<UUID> withdrawnBefore(String organisationId, java.time.Instant cutoff) {
+        return new java.util.HashSet<>(jdbc.queryForList(
+                "select plan_id from plan_withdrawals where clerk_org_id = ? and withdrawn_at < ?",
+                UUID.class, requireOrganisation(organisationId), java.sql.Timestamp.from(cutoff)));
+    }
+
+    /** Plans of the manager's current officers that a manager approved on or after {@code since}. */
+    public java.util.Set<UUID> approvedSinceForManager(UUID managerId, String organisationId, java.time.Instant since) {
+        return new java.util.HashSet<>(jdbc.queryForList("select p.plan_id from purchase_plans p where p.clerk_org_id = ? and "
+                + ASSIGNED_TO_MANAGER + APPROVED_SINCE, UUID.class, requireOrganisation(organisationId), managerId, java.sql.Timestamp.from(since)));
     }
 
     /** Locks a plan only for the manager its officer currently reports to. */

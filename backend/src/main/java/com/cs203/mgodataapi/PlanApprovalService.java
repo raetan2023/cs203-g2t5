@@ -119,10 +119,39 @@ public class PlanApprovalService {
         return new PurchasePlan(planId, plan.userId(), plan.quantityMt(), plan.purchaseDeadline(), dates.today(), request.decision(), plan.submittedAt(), plan.previousPlanId());
     }
 
+    public static final String AUTOMATIC_LABEL = "Bunker Buddy (automatic)";
+    public static final String AUTOMATIC_SUBJECT = "system";
+    public static final String AUTOMATIC_REASON = "Rejected automatically: no decision within 5 days of the purchase deadline.";
+
+    /**
+     * Rejects one request that is still waiting for a decision and whose deadline is on or before
+     * {@code lastDeadline}. Recorded like a manager's rejection, under the officer's current manager,
+     * and the officer is notified. Returns false when the request changed in the meantime.
+     */
+    @Transactional
+    public boolean rejectOverdue(UUID planId, String orgId, UUID manager, java.time.LocalDate lastDeadline) {
+        var plan = plans.lockAssignedToManager(planId, manager, orgId).orElse(null);
+        if (plan == null || !"submitted".equals(plan.status()) || plan.purchaseDeadline().isAfter(lastDeadline)) return false;
+        if (plans.markDecided(planId, orgId, "rejected") != 1) return false;
+        Instant decidedAt = clock.instant();
+        jdbc.update("""
+                insert into plan_approval_decisions
+                (decision_id, plan_id, clerk_org_id, manager_user_id, manager_clerk_user_id, manager_label, decision, decision_comment, decided_at)
+                values (?, ?, ?, ?, ?, ?, 'rejected', ?, ?)""", UUID.randomUUID(), planId, orgId, manager,
+                AUTOMATIC_SUBJECT, AUTOMATIC_LABEL, AUTOMATIC_REASON, java.sql.Timestamp.from(decidedAt));
+        jdbc.update("""
+                insert into plan_decision_notifications
+                (notification_id, plan_id, clerk_org_id, buyer_user_id, decision, created_at)
+                values (?, ?, ?, ?, 'rejected', ?)""", UUID.randomUUID(), planId, orgId, plan.userId(), java.sql.Timestamp.from(decidedAt));
+        return true;
+    }
+
     public Map<String, Object> decision(UUID planId, String orgId) {
         var rows = jdbc.query("""
-                select decision_id, decision, decision_comment, manager_clerk_user_id, manager_label, decided_at
-                from plan_approval_decisions where plan_id = ? and clerk_org_id = ?""", (rs, row) -> Map.<String, Object>of(
+                select d.decision_id, d.decision, d.decision_comment, d.manager_clerk_user_id, d.decided_at,
+                    case when d.manager_clerk_user_id = 'system' then d.manager_label
+                         else coalesce((select nullif(trim(u.display_name), '') from users u where u.user_id = d.manager_user_id), d.manager_label) end as manager_label
+                from plan_approval_decisions d where d.plan_id = ? and d.clerk_org_id = ?""", (rs, row) -> Map.<String, Object>of(
                     "decision_id", rs.getObject("decision_id", UUID.class).toString(),
                     "decision", rs.getString("decision"), "comment", rs.getString("decision_comment"),
                     "manager_clerk_user_id", rs.getString("manager_clerk_user_id"), "manager_label", rs.getString("manager_label"),
@@ -133,10 +162,10 @@ public class PlanApprovalService {
     /** Called only after the controller authorizes the plan in the active organisation. */
     public String buyerLabel(UUID planId, String orgId) {
         var rows = jdbc.query("""
-                SELECT COALESCE(NULLIF(TRIM(u.email), ''), u.clerk_user_id) AS buyer_label
+                SELECT %s AS buyer_label
                 FROM purchase_plans p JOIN users u ON u.user_id = p.user_id
                 WHERE p.plan_id = ? AND p.clerk_org_id = ?
-                """, (rs, n) -> rs.getString("buyer_label"), planId, orgId);
+                """.formatted(UserAccounts.labelOf("u")), (rs, n) -> rs.getString("buyer_label"), planId, orgId);
         return rows.isEmpty() ? null : rows.getFirst();
     }
 
@@ -149,22 +178,30 @@ public class PlanApprovalService {
         catch (Exception failure) { throw new IllegalStateException("The submitted recommendation could not be read.", failure); }
     }
 
-    /** The caller must be an active manager; only that manager's visible plans appear. */
+    /**
+     * The caller must be an active manager; only that manager's visible plans appear. Only requests
+     * still waiting for a decision, and withdrawn ones, are listed: decided requests need no action.
+     */
     public List<Map<String, Object>> notifications(String orgId, UUID manager) {
         if (orgId == null || !orgId.matches("org_[A-Za-z0-9]+"))
             throw new IllegalArgumentException("An explicit Clerk organisation is required.");
         return jdbc.query("""
-                select n.notification_id, n.plan_id, n.created_at, p.quantity_mt, p.purchase_deadline, p.status
+                select n.notification_id, n.plan_id, n.created_at, p.quantity_mt, p.purchase_deadline, p.status, p.user_id as buyer_user_id,
+                    coalesce((select %s from users u where u.user_id = p.user_id), 'Unknown officer') as buyer_label
                 from plan_approval_notifications n
                 join purchase_plans p on p.plan_id = n.plan_id and p.clerk_org_id = n.clerk_org_id
-                where n.clerk_org_id = ? and """ + " " + PurchasePlanRepository.VISIBLE_TO_MANAGER + """
+                where n.clerk_org_id = ? and p.status in ('submitted', 'withdrawn')
+                  and not exists (select 1 from plan_withdrawals w where w.plan_id = p.plan_id
+                                  and w.clerk_org_id = p.clerk_org_id and w.withdrawn_at < ?) and """.formatted(UserAccounts.labelOf("u")) + " " + PurchasePlanRepository.VISIBLE_TO_MANAGER + """
 
-                order by n.created_at desc, n.notification_id desc limit 100""", (rs, row) -> Map.<String, Object>of(
+                order by n.created_at desc, n.notification_id desc limit 500""", (rs, row) -> Map.<String, Object>of(
+                    "buyer_user_id", rs.getObject("buyer_user_id", UUID.class).toString(),
                     "notification_id", rs.getObject("notification_id", UUID.class).toString(),
                     "plan_id", rs.getObject("plan_id", UUID.class).toString(),
                     "created_at", rs.getTimestamp("created_at").toInstant().toString(),
                     "quantity_mt", rs.getBigDecimal("quantity_mt"),
                     "purchase_deadline", rs.getObject("purchase_deadline", java.time.LocalDate.class).toString(),
-                    "status", rs.getString("status")), orgId, manager, manager);
+                    "status", rs.getString("status"), "buyer_label", rs.getString("buyer_label")),
+                orgId, java.sql.Timestamp.from(clock.instant().minus(PurchasePlanRepository.WITHDRAWN_VISIBLE_FOR)), manager, manager, manager);
     }
 }

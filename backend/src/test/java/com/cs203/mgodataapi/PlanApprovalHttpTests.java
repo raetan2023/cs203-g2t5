@@ -89,15 +89,19 @@ class PlanApprovalHttpTests {
         for (String role : List.of("officer", "analyst", "admin", "unknown"))
             mvc.perform(get(endpoint).with(member("org_a", role))).andExpect(status().isForbidden());
         verifyNoInteractions(plans, jdbc);
+        when(users.find("user_buyer")).thenReturn(java.util.Optional.of(UUID.randomUUID()));
         when(plans.findAssignedToManager(any(), eq("org_a"))).thenReturn(List.of(new PurchasePlan(id, owner,
                 BigDecimal.TEN, LocalDate.parse("2026-11-01"), LocalDate.parse("2026-10-27"), "submitted", Instant.now())));
         mvc.perform(get(endpoint).param("clerk_org_id", "org_attacker").with(member("org_a", "manager")))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
-                .andExpect(jsonPath("$.plan_count").value(1))
-                .andExpect(jsonPath("$.open_quantity_mt").value(10))
+                .andExpect(jsonPath("$.total_quantity_mt").value(0))
+                .andExpect(jsonPath("$.purchased_quantity_mt").value(0))
+                .andExpect(jsonPath("$.open_quantity_mt").value(0))
+                .andExpect(jsonPath("$.plan_count").doesNotExist())
                 .andExpect(jsonPath("$.exposure_usd").isEmpty());
         verify(plans).findAssignedToManager(any(), eq("org_a"));
         verify(plans, never()).findAssignedToManager(any(), eq("org_attacker"));
+        verify(users, never()).resolve(any(), any());
     }
     @Test void submittedPlanCannotBeEditedOrDeletedByItsBuyer() throws Exception {
         when(plans.findByIdAndUser(id, owner, "org_a")).thenReturn(Optional.of(new PurchasePlan(id, owner, BigDecimal.TEN,

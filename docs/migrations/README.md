@@ -93,6 +93,12 @@ Never run fixture scripts on the shared database. See
 
 Three migrations in `backend/migrations`, applied in this order before deploying the backend: `20261108_users_clerk_id_required.sql`, `20261108_organisation_members.sql`, `20261108_pm_assignments.sql`. Tested on a local database, then applied to shared Supabase on 9 November 2026 (Asia/Singapore). Do not rerun them. See [the assignment guide](../pm-po-assignment.md#go-live-order).
 
+## User names (12 November 2026)
+
+`backend/migrations/20261112_users_display_name.sql` adds an optional `users.display_name`. Apply it to shared Supabase before deploying the backend that reads it, then use the Team reporting refresh once so existing members get their names.
+
+`backend/migrations/20261112_officer_role_change.sql` adds the `closed` plan status and `plan_withdrawals.manager_user_id`. Apply it to shared Supabase before deploying the backend that closes an officer's open plans when they stop being an officer; that backend reads the new column in every manager plan query.
+
 ### Latest available news windows — 26 October 2026
 
 `20261026_latest_news_windows.sql` is a follow-on CREATE OR REPLACE migration,

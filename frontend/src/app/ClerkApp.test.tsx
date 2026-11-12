@@ -103,7 +103,7 @@ describe('Singapore application date refresh', () => {
     expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(1);
     await act(async () => { await vi.advanceTimersByTimeAsync(1100); });
     expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(2);
-    expect(screen.getByText('Tuesday 27 October')).toBeVisible(); // Home shows the date in its greeting, not the header chip
+    expect(screen.getByText('Tuesday 27 Oct 2026')).toBeVisible(); // Home shows the date in its greeting, not the header chip
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
     await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
     expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(3);
@@ -276,7 +276,9 @@ describe('Verified organisation permissions', () => {
     backend(role);
     window.history.replaceState(null, '', '/purchase-plans');
     render(<ClerkApp />);
-    expect(await screen.findByRole('link', { name: /View recommendation/ })).toBeInTheDocument();
+    // The sample plan is a draft: admins see it, while a manager's list holds only decided plans.
+    if (role === 'org:manager') expect(await screen.findByText(/No approved, purchased or rejected plans/)).toBeInTheDocument();
+    else expect(await screen.findByRole('link', { name: /View recommendation/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Organisation purchase plans' })).toBeInTheDocument();
     for (const name of ['Create plan', 'Edit', 'Delete']) {
       expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();

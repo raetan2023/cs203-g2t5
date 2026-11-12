@@ -167,7 +167,7 @@ describe('approval workflow in the redesigned cards', () => {
   it('does not ask for a decision while the plan is still awaiting review', () => {
     const service = { readSubmission: vi.fn() } as unknown as PurchasePlanService;
     render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status: 'submitted' }} service={service} onEdit={vi.fn()} onDelete={vi.fn()} />);
-    expect(screen.getByText('Locked while managers review it.')).toBeVisible();
+    expect(screen.getByText('Locked while your manager reviews it.')).toBeVisible();
     expect(service.readSubmission).not.toHaveBeenCalled();
   });
 });

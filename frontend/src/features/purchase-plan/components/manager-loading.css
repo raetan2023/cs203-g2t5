@@ -14,8 +14,8 @@
 .pp-manager-skeleton--cards .pp-manager-skeleton-item { display: grid; gap: var(--bb-space-6); border: 1px solid var(--bb-border-subtle); background: var(--bb-surface); border-radius: var(--bb-radius-card); padding: var(--bb-space-6); }
 .pp-manager-skeleton--cards .pp-shimmer--value { height: 44px; }
 .pp-manager-loading-overview { margin-block: var(--bb-space-6); }
-.pp-refresh-bar { position: absolute; top: 0; left: 0; right: 0; height: 2px; overflow: hidden; }
-.pp-refresh-bar > span { display: block; width: 30%; height: 100%; background: var(--bb-action); animation: pp-manager-refresh 1.3s ease-in-out infinite; }
+.pp-refresh-bar { position: absolute; z-index: 1; top: 0; left: 0; right: 0; height: 2px; overflow: hidden; }
+.pp-refresh-bar > span { display: block; width: 30%; height: 100%; background: var(--bb-text); border-radius: 1px; animation: pp-manager-refresh .9s ease-in-out infinite; }
 .pp-refresh-content { transition: opacity var(--bb-motion-fast); }
 .pp-refresh-content--pending { opacity: .65; }
 @keyframes pp-manager-shimmer { to { transform: translateX(100%); } }

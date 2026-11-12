@@ -13,7 +13,7 @@ describe('Home greeting', () => {
   it('greets by time of day with the full name and shows the operational date', () => {
     render(<HomePage displayName=" Jordan Lee " today="2026-10-28" now={afternoon} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Good afternoon, Jordan Lee');
-    expect(screen.getByText('Wednesday 28 October')).toBeVisible();
+    expect(screen.getByText('Wednesday 28 Oct 2026')).toBeVisible();
     expect([5, 11, 12, 17, 18, 23].map(greetingFor)).toEqual(['Good morning', 'Good morning', 'Good afternoon', 'Good afternoon', 'Good evening', 'Good evening']);
   });
 
@@ -25,19 +25,17 @@ describe('Home greeting', () => {
 });
 
 describe('Home primary action', () => {
-  it('provides a keyboard-accessible purchase-plan link for the whole homepage', async () => {
+  it('does not turn the whole page into a link', async () => {
     window.history.replaceState(null, '', '/home');
-    render(<HomePage displayName="Jordan" role="org:buyer" now={afternoon} />);
-    const background = screen.getByRole('link', { name: 'Open purchase plans' });
-    background.focus();
-    expect(background).toHaveFocus();
-    await userEvent.keyboard('{Enter}');
-    expect(window.location.pathname).toBe('/purchase-plans');
+    const { container } = render(<HomePage displayName="Jordan" role="org:officer" marketAvailable now={afternoon} />);
+    expect(container.querySelector('.bb-home-plan-link')).toBeNull();
+    await userEvent.click(screen.getByRole('heading', { level: 1 }));
+    expect(window.location.pathname).toBe('/home');
   });
 
   it.each([
     ['org:officer', 'Go to your plans', '/purchase-plans'],
-    ['org:manager', 'Plans for approval', '/purchase-plans#approval-inbox'],
+    ['org:manager', 'Approval inbox', '/purchase-plans#approval-inbox'],
   ])('links %s to the matching page', (role, name, href) => {
     render(<HomePage displayName="Jordan" role={role} marketAvailable now={afternoon} />);
     expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
