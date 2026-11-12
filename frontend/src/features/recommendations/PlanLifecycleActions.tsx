@@ -9,7 +9,7 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
   onChanged(plan: PurchasePlan): void; onReload(): void;
 }) {
   const [action, setAction] = useState<'revise' | 'purchase'>();
-  const [draft, setDraft] = useState({ purchased_on: today, supplier: '', quantity_mt: String(plan.quantity_mt), price_usd_per_mt: '', note: '' });
+  const [draft, setDraft] = useState({ purchased_on: today, supplier: '', price_usd_per_mt: '', note: '' });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [uncertain, setUncertain] = useState(false);
   const focusInvalid = useRef(false);
@@ -32,12 +32,10 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
     if (action === 'purchase') {
       if (!isValidDate(draft.purchased_on) || draft.purchased_on > today || (approvedOn && draft.purchased_on < approvedOn)) validation.purchased_on = 'Choose a date from approval through today (Singapore).';
       if (!draft.supplier.trim() || draft.supplier.trim().length > 200) validation.supplier = 'Enter a supplier of at most 200 characters.';
-      for (const key of ['quantity_mt', 'price_usd_per_mt'] as const) {
-        const n = Number(draft[key]);
-        if (!draft[key].trim() || !Number.isFinite(n) || n <= 0 || n >= 1e12 || !/^\d+(\.\d{1,6})?$/.test(draft[key])) validation[key] = 'Enter a positive amount with at most 6 decimal places.';
-      }
+      const price = Number(draft.price_usd_per_mt);
+      if (!draft.price_usd_per_mt.trim() || !Number.isFinite(price) || price <= 0 || price >= 1e12 || !/^\d+(\.\d{1,6})?$/.test(draft.price_usd_per_mt)) validation.price_usd_per_mt = 'Enter a positive amount with at most 6 decimal places.';
       if (draft.note.trim().length > 2000) validation.note = 'Use at most 2000 characters.';
-      input = { ...draft, supplier: draft.supplier.trim(), quantity_mt: Number(draft.quantity_mt), price_usd_per_mt: Number(draft.price_usd_per_mt), note: draft.note.trim() };
+      input = { ...draft, supplier: draft.supplier.trim(), price_usd_per_mt: Number(draft.price_usd_per_mt), note: draft.note.trim() };
     }
     focusInvalid.current = Object.keys(validation).length > 0; setErrors(validation); if (Object.keys(validation).length) return;
     lock.current = true; setBusy(true); setError('');
@@ -69,11 +67,10 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
             <div className="rec-purchase-fields">
               {field('purchased_on', 'Date bought (Singapore)', 'date', { min: approvedOn, max: today, autoFocus: true })}
               {field('supplier', 'Supplier', 'text', { maxLength: 200 })}
-              {field('quantity_mt', 'Actual quantity (MT)', 'number', { step: '0.000001', min: '0.000001' })}
               {field('price_usd_per_mt', 'Price paid (USD/MT)', 'number', { step: '0.000001', min: '0.000001' })}
               {field('note', 'Note (optional)', 'text', { maxLength: 2000 })}
             </div>
-            <p>The server calculates the actual total from the recorded quantity and price.</p></>}
+            <p>The quantity is the {plan.quantity_mt.toLocaleString('en-GB')} MT in the approved plan. The total is worked out from it and the price paid.</p></>}
       <div className="rec-approval-actions"><button type="button" className="bb-button bb-button--secondary" disabled={busy} onClick={() => { setAction(undefined); if (!uncertain) setError(''); setErrors({}); }}>Cancel</button>
         <button className="bb-button" type="submit" disabled={busy || uncertain}>{busy ? 'Saving…' : action === 'purchase' ? 'Confirm purchase record' : 'Create linked draft'}</button></div>
     </form>}
@@ -132,7 +129,8 @@ export function PurchaseOutcome({ data }: { data: SubmissionResponse }) {
         <summary>Compare total costs</summary>
         <div className="rec-fine-body">
           {totalComparisons.length > 0 && <>
-            <p>Saved totals use the {c.planned_quantity_mt.toLocaleString('en-GB')} MT planned. Differences use the {c.actual_quantity_mt.toLocaleString('en-GB')} MT actually bought.</p>
+            <p>{c.same_quantity ? <>Totals use the {c.planned_quantity_mt.toLocaleString('en-GB')} MT in the plan.</>
+              : <>Saved totals use the {c.planned_quantity_mt.toLocaleString('en-GB')} MT planned. Differences use the {c.actual_quantity_mt.toLocaleString('en-GB')} MT actually bought.</>}</p>
             <table className="rec-cost-table" aria-label="Total cost comparison in USD">
               <thead><tr><th scope="col">Compared with</th><th scope="col">Saved total (USD)</th><th scope="col">Difference (USD)</th></tr></thead>
               <tbody>{totalComparisons.map(row => <tr key={row.label}>
