@@ -72,7 +72,8 @@ public class OrganisationMembers {
                     insert into plan_withdrawals (plan_id, clerk_org_id, buyer_user_id, reason, manager_user_id)
                     values (?, ?, ?, ?, ?)""", planId, organisationId, userId, ROLE_CHANGE_REASON, reviewer);
         }
-        jdbc.update("update purchase_plans set status = 'closed' where user_id = ? and clerk_org_id = ? and status = 'approved'",
-                userId, organisationId);
+        jdbc.update("""
+                update purchase_plans set status = 'closed', closed_reason = 'role_change', closed_at = now()
+                where user_id = ? and clerk_org_id = ? and status = 'approved'""", userId, organisationId);
     }
 }

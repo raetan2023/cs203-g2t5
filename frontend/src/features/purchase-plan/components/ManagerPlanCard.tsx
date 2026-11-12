@@ -4,7 +4,7 @@ import type { ApprovalDecision, PurchasePlan, PurchasePlanService } from '../typ
 import { formatDate, formatDateTime } from '../dates';
 import { CardTop, type TagKind } from './StatusTag';
 
-export type ManagerPlanState = Extract<TagKind, 'to-buy' | 'overdue' | 'purchased' | 'rejected' | 'withdrawn' | 'closed'>;
+export type ManagerPlanState = Extract<TagKind, 'to-buy' | 'purchased' | 'rejected' | 'withdrawn' | 'closed'>;
 
 /** Each plan is exactly one of these. Overdue means approved, past its deadline, and still not bought. */
 export function managerPlanState(plan: Pick<PurchasePlan, 'status' | 'days_remaining'>): ManagerPlanState {
@@ -13,7 +13,8 @@ export function managerPlanState(plan: Pick<PurchasePlan, 'status' | 'days_remai
     case 'rejected': return 'rejected';
     case 'withdrawn': return 'withdrawn';
     case 'closed': return 'closed';
-    default: return plan.days_remaining < 0 ? 'overdue' : 'to-buy';
+    // An approval not bought by its deadline is closed; the hourly job may not have saved that yet.
+    default: return plan.days_remaining < 0 ? 'closed' : 'to-buy';
   }
 }
 
@@ -21,7 +22,6 @@ type Details = { planId: string; buyer?: string | null; decision?: ApprovalDecis
 /** Details already read, per account's service, so a card shown again needs no loading pause. */
 const seen = new WeakMap<PurchasePlanService, Map<string, Details>>();
 
-const days = (count: number) => `${count} ${count === 1 ? 'day' : 'days'}`;
 
 /**
  * One plan, laid out like an Approval inbox card: quantity, deadline and status on top, who submitted it
@@ -55,7 +55,6 @@ export function ManagerPlanCard({ plan, service, showManager = false }: { plan: 
   const outcome = status === 'withdrawn' ? 'Withdrawn before a decision was made.'
     : decision ? `${decision.decision === 'approved' ? 'Approved' : 'Rejected'} by ${decision.manager_label} · ${formatDateTime(decision.decided_at)}` : '';
   const action = status === 'purchased' ? 'View purchase record' : status === 'withdrawn' ? 'View withdrawn request' : 'View decision';
-  const late = -plan.days_remaining;
   return <section className="pp-card pp-summary pp-manager-plan" aria-label={`${quantity} MT plan`}>
     <CardTop quantity={quantity} deadline={plan.purchase_deadline} due={formatDate(plan.purchase_deadline)} tag={state} />
     <p className="pp-inbox-meta">
@@ -67,8 +66,7 @@ export function ManagerPlanCard({ plan, service, showManager = false }: { plan: 
     {/* One line about the outcome; a rejection's reason or a lateness reminder follows it. */}
     <p className="pp-manager-plan-outcome">{outcome || ' '}</p>
     {status === 'rejected' && decision?.comment && <p className="pp-manager-plan-reason">Reason: “{decision.comment}”</p>}
-    {state === 'closed' && <p className="pp-manager-plan-closed">Closed: the officer changed role.</p>}
-    {state === 'overdue' && <p className="pp-manager-plan-late">Deadline passed {days(late)} ago, not bought yet.</p>}
+    {state === 'closed' && <p className="pp-manager-plan-closed">{plan.closed_reason === 'role_change' ? 'Closed: the officer changed role.' : 'Closed: not bought by the deadline.'}</p>}
     <AppLink className="pp-button pp-button--primary pp-inbox-open" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(plan.plan_id)}`}>{action}</AppLink>
   </section>;
 }

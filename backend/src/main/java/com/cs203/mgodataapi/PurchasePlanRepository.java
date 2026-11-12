@@ -140,6 +140,15 @@ public class PurchasePlanRepository {
                 managerId, requireOrganisation(organisationId));
     }
 
+    /** Why each closed plan in the organisation was closed: role_change or deadline_passed. */
+    public java.util.Map<UUID, String> closedReasons(String organisationId) {
+        var result = new java.util.HashMap<UUID, String>();
+        jdbc.query("select plan_id, closed_reason from purchase_plans where clerk_org_id = ? and status = 'closed' and closed_reason is not null",
+                (org.springframework.jdbc.core.RowCallbackHandler) rs -> result.put(rs.getObject("plan_id", UUID.class), rs.getString("closed_reason")),
+                requireOrganisation(organisationId));
+        return result;
+    }
+
     /** Each officer's current PM in the organisation; officers without one are absent. */
     public java.util.Map<UUID, UUID> managersByOfficer(String organisationId) {
         var result = new java.util.HashMap<UUID, UUID>();

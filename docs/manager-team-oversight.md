@@ -63,10 +63,16 @@ dropdowns use it, so an officer with nothing yet still appears with a count of 0
 
 ## Plans section
 
-Managers and admins see decided plans (approved, purchased, rejected, and closed when
-there are any) as cards, 6 per page. Each plan is one of To buy, Overdue (approved,
-past its deadline, not bought), Purchased, Rejected or Closed; the filter buttons show
-how many of each. Admins also filter by PM and officer in one People dropdown and
+Managers and admins see decided plans (approved, purchased, rejected and closed) as
+cards, 6 per page. Each plan is one of To buy, Purchased, Rejected or Closed; the
+filter buttons show how many of each.
+
+An approval lasts until the purchase deadline. An approved plan not bought by then is
+closed by the hourly backend job (reason `deadline_passed`), because the approved
+price is out of date; recording a purchase after the deadline is refused even before
+the job runs. Closed plans are not counted in Team or Organisation oversight. A plan is
+also closed when its officer stops being an officer (reason `role_change`). The officer
+can copy a closed plan into a new draft to plan the purchase again. Admins also filter by PM and officer in one People dropdown and
 see each officer's PM on the card. Drafts, pending and withdrawn requests are not
 listed here.
 
@@ -74,18 +80,17 @@ listed here.
 
 The inbox lists pending and withdrawn requests from the manager's officers, newest
 first, 6 per page (two rows of three). Approved, rejected and purchased requests are left out because
-they need no action. The type buttons show how many requests are pending, overdue
-and withdrawn, and the list can be narrowed to any number of officers and to one
+they need no action. The type buttons show how many requests are pending and
+withdrawn, and the list can be narrowed to any number of officers and to one
 request type; the counts follow the officer choice.
 
-A pending request whose purchase deadline has passed is shown as overdue, with its
-own count and filter. A manager can still approve it after confirming. If it is still
-pending 5 days after the deadline, an hourly backend job rejects it automatically with
-the reason "Rejected automatically: no decision within 5 days of the purchase deadline."
-The decision is stored under the officer's current manager and shown as
-"Bunker Buddy (automatic)"; the officer is notified. Requests whose officer has no
-manager are left until one is assigned. Set `mgo.overdue-rejection.enabled=false` to
-turn the job off.
+A pending request must be decided by the end of its purchase deadline day (Singapore
+time). After that the PM can no longer approve or reject it, and an hourly backend job
+rejects it automatically with the reason "Rejected automatically: no decision by the
+purchase deadline." The decision is stored under the officer's current manager and
+shown as "Bunker Buddy (automatic)"; the officer is notified. Requests whose officer has
+no manager are left until one is assigned. There is therefore no overdue state in the
+inbox. Set `mgo.overdue-rejection.enabled=false` to turn the job off.
 
 A withdrawn plan disappears from officer and manager views (the inbox and plan
 lists) five days after it was withdrawn. Admins still see every plan, and nothing is

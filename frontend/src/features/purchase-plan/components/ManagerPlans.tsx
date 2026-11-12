@@ -20,13 +20,13 @@ const SHOWN: Record<Audience, string[]> = {
 };
 type Audience = 'manager' | 'admin';
 /** Types that are rare, so their figure and filter show only while there are some. */
-const RARE: ManagerPlanState[] = ['withdrawn', 'closed'];
+const RARE: ManagerPlanState[] = ['withdrawn'];
 /** The "No PM assigned" choice in the admin's PM filter. */
 const NO_PM = 'no-pm';
 
 type PlanType = 'all' | ManagerPlanState;
 const TYPES: { id: PlanType; label: string }[] = [
-  { id: 'all', label: 'All' }, { id: 'to-buy', label: 'To buy' }, { id: 'overdue', label: 'Overdue' },
+  { id: 'all', label: 'All' }, { id: 'to-buy', label: 'To buy' },
   { id: 'purchased', label: 'Purchased' }, { id: 'rejected', label: 'Rejected' }, { id: 'withdrawn', label: 'Withdrawn' }, { id: 'closed', label: 'Closed' },
 ];
 type PlanSort = 'deadline-soonest' | 'deadline-latest' | 'mt-high' | 'mt-low' | 'newest' | 'oldest';
@@ -143,25 +143,25 @@ export function ManagerPlans({ service, audience = 'manager' }: { service: Purch
         <h2>Plans</h2>
         <p className="pp-card-description">{admin ? 'Decided plans from every officer.' : 'Decided plans from the officers you manage.'}</p>
         <UpdatedAt loadedAt={loadedAt} current={!loading && !error} />
-        {data && (!admin || present.has('closed')) && <div className="pp-inbox-notes">
-          {!admin && <p className="pp-card-description pp-inbox-note">* <span className="pp-inbox-note-overdue">Overdue</span> plans: not bought by their deadline.</p>}
-          {present.has('closed') && <p className="pp-card-description pp-inbox-note">* <span className="pp-inbox-note-closed">Closed</span> plans: the officer changed role.</p>}
+        {data && <div className="pp-inbox-notes">
+          <p className="pp-card-description pp-inbox-note">* <span className="pp-inbox-note-closed">Closed</span> plans: not bought by the deadline, or the officer changed role.</p>
         </div>}
       </div>
-      <div className="pp-overview-controls pp-inbox-controls">
-        {/* Every filter shows even when there are no plans, so the section keeps the same shape. */}
-        {data && <>
+      <div className="pp-overview-controls pp-inbox-controls pp-controls-stack">
+        {/* Row 1: who and in what order; row 2: which type, and refresh. Every filter shows even with no plans. */}
+        {data && <div className="pp-controls-row">
           {/* Always takes its space (just hidden when there is nothing to reset), so the filters never shift. */}
           <button type="button" className={`pp-inbox-reset${changed ? '' : ' pp-inbox-reset--idle'}`} onClick={showEverything} aria-hidden={!changed} tabIndex={changed ? undefined : -1}>Show all plans</button>
           {admin ? <PeopleFilter groups={teams} selected={chosen} onChange={chooseOfficers} />
             : <OfficerFilter options={officerOptions} selected={chosen} onChange={chooseOfficers} />}
           <SortMenu groups={SORTS} value={sort} onChange={chooseSort} />
-          <div className="pp-filter" role="group" aria-label="Plan type">
-            {/* Rare types (Closed) come right after Rejected, only while there are some. */}
+        </div>}
+        <div className="pp-controls-row">
+          {data && <div className="pp-filter" role="group" aria-label="Plan type">
             {types.map(option => <button type="button" key={option.id} aria-pressed={type === option.id} onClick={() => chooseType(option.id)}>{option.label} ({counts[option.id]})</button>)}
-          </div>
-        </>}
-        <RefreshIconButton label="Refresh plans" loading={loading} refreshing={refreshing} onClick={() => { sweep.start(); refresh(); }} />
+          </div>}
+          <RefreshIconButton label="Refresh plans" loading={loading} refreshing={refreshing} onClick={() => { sweep.start(); refresh(); }} />
+        </div>
       </div>
     </div>
     {sweep.sweeping && <ManagerRefreshBar label="Updating plans…" />}
