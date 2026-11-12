@@ -365,3 +365,11 @@ The existing `complete` status remains reserved for collected GDELT windows.
 Curated selections are excluded from news-spike counts and model archives.
 Dates without a publisher timezone use a midnight placeholder and retain that
 precision limitation in `seen_at_basis`; they do not establish exact ordering.
+
+The 5–11 November backfill contains 51 distinct publisher stories in 19 topics.
+Home reads up to 14 archived windows and requests up to 100 headlines so the full
+week can be reached with Show more. Human topic labels do not imply a measured
+price effect. The retained research and reproducible selection builder live in
+`data-ingestion/news-research-2026-11-05-to-11.json` and
+`data-ingestion/build_curated_news.py`. Running the builder writes local JSON
+only; publication requires an explicit upsert keyed by `(date, version)`.

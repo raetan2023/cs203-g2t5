@@ -16,8 +16,8 @@ import tools.jackson.databind.json.JsonMapper;
 /** Latest stored provider and curated publisher headlines for Home. Reads only what the news pipeline archived; never calls GDELT. */
 @Service
 public class NewsService {
-    /** Rolling windows overlap, so a few of them cover the last day or two without duplicates after merging. */
-    static final int WINDOWS = 4;
+    /** Read enough provider and curated windows to cover a week; merge overlapping URLs. */
+    static final int WINDOWS = 14;
     static final int MAX_LIMIT = 100;
 
     public record Item(String title, String url, String source, Instant seenAt, String topic, String marketBias) {}
