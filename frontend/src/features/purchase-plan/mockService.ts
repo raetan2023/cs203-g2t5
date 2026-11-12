@@ -72,6 +72,7 @@ export function createMockPlanService(options: MockOptions = {}): PurchasePlanSe
     async decide(id, input) {
       await wait('update'); const plan = owned(id, 'submitted');
       if (input.decision === 'rejected' && !input.comment.trim()) throw new PlanError('Provide a rejection reason.', {}, 422);
+      if (input.decision === 'approved' && plan.purchase_deadline < getScenarioDate()) throw new PlanError('The purchase deadline has passed, so this request can only be rejected.', {}, 422);
       notify(plan, input.decision, input.comment.trim());
       return replace({ ...plan, status: input.decision });
     },
@@ -96,7 +97,7 @@ export function createMockPlanService(options: MockOptions = {}): PurchasePlanSe
       await wait('purchase'); const plan = owned(id, 'approved');
       const approvedOn = outcomes.get(id)?.decision?.decided_at.slice(0, 10) ?? getScenarioDate();
       if (!input.supplier.trim() || input.supplier.trim().length > 200 || !Number.isFinite(input.quantity_mt) || input.quantity_mt <= 0
-          || !Number.isFinite(input.price_usd_per_mt) || input.price_usd_per_mt <= 0 || input.purchased_on > getScenarioDate() || input.purchased_on < approvedOn)
+          || !Number.isFinite(input.price_usd_per_mt) || input.price_usd_per_mt <= 0 || input.purchased_on > getScenarioDate() || input.purchased_on > plan.purchase_deadline || input.purchased_on < approvedOn)
         throw new PlanError('Please check the purchase details.', {}, 422);
       outcomes.set(id, { ...outcomes.get(id), submission: outcomes.get(id)?.submission ?? null,
         purchase: { ...input, purchase_id: crypto.randomUUID(), total_usd: input.quantity_mt * input.price_usd_per_mt, recorded_at: instant() } });

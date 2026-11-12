@@ -59,9 +59,10 @@ public class PlanLifecycleService {
                 .atZone(ZoneId.of("Asia/Singapore")).toLocalDate();
         var errors = new LinkedHashMap<String, String>();
         if (request == null) { invalid(Map.of("purchase", "Enter the purchase details.")); }
+        // The date bought counts, not the day it is recorded, so a purchase made on time can still be logged late.
         if (request.purchased_on() == null || request.purchased_on().isBefore(approvedOn)
-                || request.purchased_on().isAfter(dates.today()))
-            errors.put("purchased_on", "Choose a date on or after approval and no later than today (Singapore).");
+                || request.purchased_on().isAfter(dates.today()) || request.purchased_on().isAfter(plan.purchaseDeadline()))
+            errors.put("purchased_on", "Choose a date on or after approval, no later than today and no later than the purchase deadline (Singapore).");
         String supplier = request.supplier() == null ? "" : request.supplier().strip();
         String note = request.note() == null ? "" : request.note().strip();
         if (supplier.isEmpty() || supplier.length() > 200) errors.put("supplier", "Enter a supplier of at most 200 characters.");

@@ -96,6 +96,8 @@ public class PlanApprovalService {
         String comment = request.comment() == null ? "" : request.comment().strip();
         if (comment.length() > 2000 || ("rejected".equals(request.decision()) && comment.isBlank()))
             throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "Provide a rejection reason; comments must be at most 2000 characters.");
+        if ("approved".equals(request.decision()) && plan.purchaseDeadline().isBefore(dates.today()))
+            throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "The purchase deadline has passed, so this request can only be rejected.");
         var snapshot = submittedRecommendation(planId, orgId);
         if (snapshot == null) throw new ApiException(HttpStatus.CONFLICT, "This earlier plan-only request has no saved recommendation to approve.");
         var savedAnalysis = snapshot.get("analysis") instanceof Map<?, ?> values ? values : Map.of();
