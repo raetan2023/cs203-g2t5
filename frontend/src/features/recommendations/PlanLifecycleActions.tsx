@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { AppLink, navigate } from '../../app/router';
 import { isValidDate, formatDate } from '../purchase-plan/dates';
 import { requestError, type PurchasePlan, type PurchasePlanService, type SubmissionResponse, type PurchaseInput, type FieldErrors } from '../purchase-plan/types';
+import { currencyAmount } from './format';
 
 export function PlanLifecycleActions({ plan, data, service, today, onChanged, onReload }: {
   plan: PurchasePlan; data: SubmissionResponse; service: PurchasePlanService; today: string;
@@ -82,25 +83,72 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
   </section>;
 }
 
-const money = (n: number) => `USD ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const difference = (n: number) => n === 0 ? 'No difference' : `${money(Math.abs(n))} ${n < 0 ? 'less' : 'more'}`;
+const money = (n: number) => `USD ${currencyAmount(n)}`;
+const difference = (n: number) => Math.abs(n) < 0.005 ? 'No difference' : `${currencyAmount(Math.abs(n))} ${n < 0 ? 'less' : 'more'}`;
 export function PurchaseOutcome({ data }: { data: SubmissionResponse }) {
+  const titleId = useId();
   const p = data.purchase, c = data.comparison;
   if (!p) return null;
-  return <section className="rec-detail" aria-label="Recorded purchase">
-    <h2>Recorded purchase</h2>
-    <dl className="rec-detail-grid">
-      <div><dt>Supplier</dt><dd>{p.supplier}</dd></div><div><dt>Date bought</dt><dd>{formatDate(p.purchased_on)}</dd></div>
-      <div><dt>Actual quantity</dt><dd>{p.quantity_mt.toLocaleString('en-GB')} MT</dd></div>
-      <div><dt>Price paid</dt><dd>{money(p.price_usd_per_mt)}/MT</dd></div><div><dt>Actual total</dt><dd>{money(p.total_usd)}</dd></div>
-      {c?.reference_total != null && <div><dt>Reference at submission · {c.planned_quantity_mt} MT</dt><dd>{money(c.reference_total)}</dd></div>}
-      {c?.central_total != null && <div><dt>Estimate at submission · {c.planned_quantity_mt} MT</dt><dd>{money(c.central_total)}</dd></div>}
-      {c?.forecast_total && <div><dt>Estimated range at submission · {c.planned_quantity_mt} MT</dt><dd>{money(c.forecast_total.lower)}–{money(c.forecast_total.upper)}</dd></div>}
-      {c?.actual_minus_adjusted_reference != null && <div><dt>Compared with reference{!c.same_quantity && ' for actual quantity'}</dt><dd>{difference(c.actual_minus_adjusted_reference)}</dd></div>}
-      {c?.actual_minus_adjusted_estimate != null && <div><dt>Compared with estimate{!c.same_quantity && ' for actual quantity'}</dt><dd>{difference(c.actual_minus_adjusted_estimate)}</dd></div>}
-    </dl>
-    {c && !c.same_quantity && <p>Planned {c.planned_quantity_mt} MT; bought {c.actual_quantity_mt} MT. Differences compare the same actual quantity so a smaller delivery is not shown as a price saving.</p>}
-    {c && c.central_total == null && <p>No model point estimate was saved for this purchase; no estimated saving is inferred.</p>}
-    {p.note && <p>Note: {p.note}</p>}
+  const analysis = data.submission?.analysis;
+  const observationDate = analysis?.reference.status === 'ready' ? analysis.reference.value.observation_date : undefined;
+  const forecastDate = (analysis?.cost_impact.status === 'ready' && analysis.cost_impact.value.target_date)
+    || (analysis?.forecast.status === 'ready' ? analysis.forecast.value.target_date : undefined);
+  const benchmarks = [
+    { label: 'Forecast price', date: forecastDate && `For ${formatDate(forecastDate)}`, total: c?.central_total, totalDifference: c?.actual_minus_adjusted_estimate },
+    { label: 'Market price', date: observationDate && `Observed ${formatDate(observationDate)}`, total: c?.reference_total, totalDifference: c?.actual_minus_adjusted_reference },
+  ];
+  const totalComparisons = benchmarks.filter(row => row.total != null || row.totalDifference != null);
+  return <section className="rec-detail rec-purchase-outcome" aria-labelledby={titleId}>
+    <div className="rec-purchase-summary">
+      <h2 id={titleId}>Recorded purchase</h2>
+      <dl className="rec-purchase-prices">
+        <div><dt>Price paid per MT</dt><dd>{money(p.price_usd_per_mt)}</dd></div>
+        <div><dt>Total paid</dt><dd>{money(p.total_usd)}</dd></div>
+      </dl>
+      <dl className="rec-detail-grid rec-purchase-facts">
+        <div><dt>Supplier</dt><dd>{p.supplier}</dd></div>
+        <div><dt>Date bought</dt><dd><time dateTime={p.purchased_on}>{formatDate(p.purchased_on)}</time></dd></div>
+        <div><dt>Quantity bought</dt><dd>{p.quantity_mt.toLocaleString('en-GB')} MT</dd></div>
+      </dl>
+      {p.note && <dl className="rec-purchase-note"><dt>Purchase note</dt><dd>{p.note}</dd></dl>}
+    </div>
+    {c && <div className="rec-purchase-comparison">
+      <h3>How the price paid compares</h3>
+      <table className="rec-cost-table" aria-label="Price comparison in USD per MT">
+        <thead><tr><th scope="col">At submission</th><th scope="col">USD per MT</th><th scope="col">Difference</th></tr></thead>
+        <tbody>{benchmarks.map(row => {
+          const savedPrice = row.total == null ? undefined : row.total / c.planned_quantity_mt;
+          return <tr key={row.label}>
+            <th scope="row">{row.label}{savedPrice != null && row.date && <span className="rec-saved-price-date">{row.date}</span>}</th>
+            {savedPrice == null ? <td colSpan={2}>Unavailable</td> : <>
+              <td>{currencyAmount(savedPrice)}</td>
+              <td>{difference(p.price_usd_per_mt - savedPrice)}</td>
+            </>}
+          </tr>;
+        })}</tbody>
+      </table>
+      <p>The forecast is the model’s predicted price. The market price is the quote used when the plan was submitted.</p>
+      {(totalComparisons.length > 0 || c.forecast_total) && <details className="rec-fine">
+        <summary>Compare total costs</summary>
+        <div className="rec-fine-body">
+          {totalComparisons.length > 0 && <>
+            <p>Saved totals use the {c.planned_quantity_mt.toLocaleString('en-GB')} MT planned. Differences use the {c.actual_quantity_mt.toLocaleString('en-GB')} MT actually bought.</p>
+            <table className="rec-cost-table" aria-label="Total cost comparison in USD">
+              <thead><tr><th scope="col">Compared with</th><th scope="col">Saved total (USD)</th><th scope="col">Difference (USD)</th></tr></thead>
+              <tbody>{totalComparisons.map(row => <tr key={row.label}>
+                <th scope="row">{row.label}</th>
+                <td>{row.total == null ? 'Unavailable' : currencyAmount(row.total)}</td>
+                <td>{row.totalDifference == null ? 'Unavailable' : difference(row.totalDifference)}</td>
+              </tr>)}</tbody>
+            </table>
+          </>}
+          {c.forecast_total && <dl className="rec-purchase-range">
+            <dt>Original forecast range for {c.planned_quantity_mt.toLocaleString('en-GB')} MT</dt>
+            <dd>{money(c.forecast_total.lower)} to {currencyAmount(c.forecast_total.upper)} total</dd>
+            <dd>{money(c.forecast_total.lower / c.planned_quantity_mt)} to {currencyAmount(c.forecast_total.upper / c.planned_quantity_mt)} per MT</dd>
+          </dl>}
+        </div>
+      </details>}
+    </div>}
   </section>;
 }

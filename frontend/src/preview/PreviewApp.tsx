@@ -24,7 +24,7 @@ const examples = {
   market: 'Market dashboard - sample data', 'market-no-forecast': 'Market dashboard - forecast unavailable', 'market-read-error': 'Market dashboard - stored data fails',
   'rec-stale': 'Recommendation - Monitor, 11-day-old quote (888 MT)', 'rec-monitor': 'Recommendation - Monitor (8-day plan)', 'rec-buy': 'Recommendation - Buy now (33-day plan)', 'rec-wait': 'Recommendation - Wait (33-day plan)',
   'rec-awaiting': 'Approval - awaiting manager (buyer)', 'rec-review': 'Approval - manager review (manager)', 'rec-approved': 'Approval - approved (buyer)', 'rec-rejected': 'Approval - rejected (buyer)',
-  'rec-withdrawn': 'Approval - withdrawn (buyer)', 'rec-purchased': 'Purchase - recorded (buyer)',
+  'rec-withdrawn': 'Approval - withdrawn (buyer)', 'rec-purchased': 'Purchase - recorded (buyer)', 'rec-pm-purchased': 'Purchase - recorded (manager)',
   'rec-admin': 'Recommendation - Wait, read-only (admin)', 'rec-admin-awaiting': 'Approval - awaiting manager (admin)',
   'plans-decisions': 'Purchase plans - every approval state',
   'rec-ready': 'Recommendation - legacy fixture, no horizon fits', 'rec-loading': 'Recommendation - loading', 'rec-error': 'Recommendation - fails once', 'rec-unavailable': 'Recommendation - unavailable', 'rec-missing': 'Recommendation - missing forecast', 'rec-unsupported': 'Recommendation - unsupported context',
@@ -39,10 +39,10 @@ const examples = {
 type Example = keyof typeof examples;
 const publicExamples = ['login', 'signup', 'login-error', 'signup-error'];
 const recommendationScenarios: Partial<Record<Example, RecommendationScenario>> = { 'rec-stale': 'stale', 'rec-monitor': 'monitor', 'rec-buy': 'buy', 'rec-wait': 'wait',
-  'rec-awaiting': 'wait', 'rec-review': 'wait', 'rec-approved': 'wait', 'rec-rejected': 'wait', 'rec-withdrawn': 'wait', 'rec-purchased': 'wait',
+  'rec-awaiting': 'wait', 'rec-review': 'wait', 'rec-approved': 'wait', 'rec-rejected': 'wait', 'rec-withdrawn': 'wait', 'rec-purchased': 'wait', 'rec-pm-purchased': 'monitor',
   'rec-admin': 'wait', 'rec-admin-awaiting': 'wait' };
 const marketScenarios: Partial<Record<Example, MarketScenario>> = { market: 'ready', 'market-no-forecast': 'no-forecast', 'market-read-error': 'read-error' };
-const approvalStarts: Partial<Record<Example, 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased'>> = { 'rec-awaiting': 'submitted', 'rec-review': 'submitted', 'rec-approved': 'approved', 'rec-rejected': 'rejected', 'rec-withdrawn': 'withdrawn', 'rec-purchased': 'purchased', 'rec-admin-awaiting': 'submitted' };
+const approvalStarts: Partial<Record<Example, 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased'>> = { 'rec-awaiting': 'submitted', 'rec-review': 'submitted', 'rec-approved': 'approved', 'rec-rejected': 'rejected', 'rec-withdrawn': 'withdrawn', 'rec-purchased': 'purchased', 'rec-pm-purchased': 'purchased', 'rec-admin-awaiting': 'submitted' };
 /** Preview admin: reads every plan in the organisation, cannot edit, submit or decide. */
 const PREVIEW_ADMIN: OrganisationPermissions = { ...PREVIEW_MANAGER, role: 'org:admin' };
 const decisionPlans = previewDecisionPlans();
@@ -63,7 +63,7 @@ export function PreviewApp() {
   useStoredMarketFixture(marketScenario ?? null);
   const withScenarioApproval = (plans: PurchasePlanService) => scenario ? withPreviewApproval(plans, scenario, approvalStarts[example])
     : example === 'plans-decisions' ? decisionPlans.withDecisions(plans) : plans;
-  const planAccess = homeAccess[example] ?? (example === 'rec-review' ? PREVIEW_MANAGER : example.startsWith('rec-admin') ? PREVIEW_ADMIN : scenario || example === 'plans-decisions' ? PREVIEW_BUYER : undefined);
+  const planAccess = homeAccess[example] ?? (example === 'rec-review' || example === 'rec-pm-purchased' ? PREVIEW_MANAGER : example.startsWith('rec-admin') ? PREVIEW_ADMIN : scenario || example === 'plans-decisions' ? PREVIEW_BUYER : undefined);
   const readMarketQuote = useMemo(() => example === 'home-price-error'
     ? async () => { await delay(slow ? 3500 : 600); throw new Error('Preview: market API unavailable.'); }
     : async () => { await delay(slow ? 3500 : 600); return PREVIEW_QUOTE; }, [example, slow]);
