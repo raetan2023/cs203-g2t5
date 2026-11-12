@@ -15,7 +15,7 @@ it('uses authenticated lifecycle routes and validates new states and previous-pl
   expect(fetcher.mock.calls[0][0]).toContain(`/${DEMO_PLAN.plan_id}/withdraw`);
   expect(fetcher.mock.calls[0][1]).toMatchObject({ method: 'POST', cache: 'no-store', headers: { Authorization: 'Bearer session' }, body: JSON.stringify({ reason: 'Schedule changed' }) });
   expect((await service.revise!(DEMO_PLAN.plan_id)).plan.previous_plan_id).toBe(DEMO_PLAN.plan_id);
-  await service.recordPurchase!(DEMO_PLAN.plan_id, { purchased_on: '2026-10-29', supplier: 'A', quantity_mt: 5, price_usd_per_mt: 900 });
+  await service.recordPurchase!(DEMO_PLAN.plan_id, { purchased_on: '2026-10-29', supplier: 'A', price_usd_per_mt: 900 });
   expect(fetcher.mock.calls[2][0]).toContain('/purchase');
   await service.markNotificationSeen!('notification/a');
   expect(fetcher.mock.calls[3][0]).toContain('/my-notifications/notification%2Fa/seen');
@@ -25,7 +25,7 @@ it('rejects a revision that loses its link and a purchase response with the wron
   vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ plan: { ...DEMO_PLAN, status: 'draft' } }))));
   const service = createApiPlanService();
   await expect(service.revise!(DEMO_PLAN.plan_id)).rejects.toMatchObject({ status: 502 });
-  await expect(service.recordPurchase!(DEMO_PLAN.plan_id, { purchased_on: '2026-10-29', supplier: 'A', quantity_mt: 5, price_usd_per_mt: 900 })).rejects.toMatchObject({ status: 502 });
+  await expect(service.recordPurchase!(DEMO_PLAN.plan_id, { purchased_on: '2026-10-29', supplier: 'A', price_usd_per_mt: 900 })).rejects.toMatchObject({ status: 502 });
 });
 
 const notification = { notification_id: 'n1', plan_id: 'p1', decision: 'approved', created_at: '2026-10-29T01:00:00Z', seen_at: null,
