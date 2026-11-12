@@ -77,3 +77,9 @@
   .bb-admin-team-list li, .bb-admin-team-choice { flex-direction: column; align-items: stretch; gap: var(--bb-space-2); }
   .bb-admin-team-choice select { width: 100%; }
 }
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): 44px targets for the back link and the manager dropdowns. */
+@media (max-width: 480px) {
+  .bb-admin-back { display: inline-flex; align-items: center; min-height: 44px; }
+  .bb-admin-team-choice select { min-height: 44px; }
+}

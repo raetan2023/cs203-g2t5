@@ -32,7 +32,34 @@
 .bb-header-account { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2); }
 .bb-signout:disabled { opacity: .55; cursor: wait; }
 @media (max-width: 1050px) { .bb-topnav { order: 3; width: 100%; } }
-@media (max-width: 480px) { .bb-header .bb-brand { font-size: var(--bb-text-xl); } .bb-topnav { gap: 0; } .bb-header-account { gap: 0; } }
+/* Phone menu (docs/ui-revamp/MOBILE_PLAN.md §3). Above 480px the toggle and badge are hidden and both
+   wrappers are display: contents, so the desktop header is unchanged. */
+.bb-menu-toggle, .bb-menu-badge { display: none; }
+.bb-header-menu, .bb-header-menu-sheet { display: contents; }
+@media (max-width: 480px) {
+  .bb-header { flex-wrap: nowrap; height: 64px; gap: var(--bb-space-2); }
+  .bb-header .bb-brand { font-size: var(--bb-text-xl); }
+  .bb-brand-home { margin-right: auto; min-height: 44px; align-items: center; }
+  .bb-menu-toggle { display: grid; margin-right: calc(-1 * var(--bb-space-2)); }
+  .bb-menu-toggle[aria-expanded=true] { background: var(--bb-surface-hover); }
+  .bb-menu-toggle:focus-visible, .bb-menu-badge:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+  .bb-menu-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 var(--bb-space-3); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-pill); color: var(--bb-text); font-size: var(--bb-text-md); font-weight: 600; text-decoration: none; }
+
+  .bb-header-menu { display: none; }
+  .bb-header-menu[data-open] { display: block; position: fixed; inset: var(--bb-menu-top, 64px) 0 0; z-index: 20; background: color-mix(in srgb, var(--bb-canvas) 72%, transparent); }
+  .bb-header-menu-sheet { display: flex; flex-direction: column; gap: var(--bb-space-4); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; padding: var(--bb-space-3) var(--bb-page-pad) calc(var(--bb-space-6) + env(safe-area-inset-bottom)); background: var(--bb-canvas); border-top: 1px solid var(--bb-border-subtle); border-bottom: 1px solid var(--bb-border-subtle); box-shadow: var(--bb-shadow-card); }
+  .bb-topnav { order: 0; width: 100%; flex-direction: column; flex-wrap: nowrap; gap: var(--bb-space-1); }
+  .bb-topnav a, .bb-signout { min-height: 48px; padding: 0 var(--bb-space-3); gap: var(--bb-space-3); font-size: var(--bb-text-xl); }
+  .bb-header-account { margin-left: 0; flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: var(--bb-space-3); padding-top: var(--bb-space-4); border-top: 1px solid var(--bb-border-subtle); }
+  .bb-header-account .bb-decisions-alert { display: flex; align-items: center; max-width: none; min-height: 48px; padding: 0 var(--bb-space-3); font-size: var(--bb-text-md); }
+  .bb-signout { justify-content: flex-start; }
+}
+@media (max-width: 480px) and (prefers-reduced-motion: no-preference) {
+  .bb-header-menu[data-open] { animation: bb-menu-fade var(--bb-motion-base) var(--bb-ease-out); }
+  .bb-header-menu[data-open] .bb-header-menu-sheet { animation: bb-menu-drop var(--bb-motion-base) var(--bb-ease-out); }
+  @keyframes bb-menu-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes bb-menu-drop { from { transform: translateY(-8px); } to { transform: translateY(0); } }
+}
 .bb-notice { margin: 0; padding: var(--bb-space-3) var(--bb-space-6); background: var(--bb-surface); color: var(--bb-text-secondary); border-bottom: 1px solid var(--bb-border-subtle); }
 @media (max-width: 640px) { .bb-date { display: none; } }
 .bb-decisions-alert { color: var(--bb-text); font-size: var(--bb-text-md); padding: var(--bb-space-2); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); text-decoration: none; }
