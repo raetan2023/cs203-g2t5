@@ -16,6 +16,22 @@ class RecommendationPolicyTests {
         return new Prices(date, Result.ready(new Reference(new BigDecimal("720"), date, basis)),
                 Result.ready(new Forecast(new Range(new BigDecimal(point).subtract(BigDecimal.ONE), new BigDecimal(point).add(BigDecimal.ONE)), date.plusDays(days), basis, "Experimental bounds", days + " days", new BigDecimal(point))));
     }
+    @Test void allEligibleHorizonsContributeInverseDayWeights() {
+        var result = RecommendationPolicy.evaluateAvailable(context(30),
+                List.of(prices(30, "680"), prices(7, "710"), prices(14, "695")));
+        var inputs = result.evidence().signal_inputs();
+        assertEquals(3, inputs.size());
+        assertEquals(date.plusDays(7), inputs.get(0).target_date());
+        assertEquals(date.plusDays(30), inputs.get(2).target_date());
+        assertEquals(0.576923, inputs.get(0).weight().doubleValue(), 0.000001);
+        assertEquals(0.288462, inputs.get(1).weight().doubleValue(), 0.000001);
+        assertEquals(0.134615, inputs.get(2).weight().doubleValue(), 0.000001);
+        assertEquals(0, BigDecimal.ONE.compareTo(inputs.stream().map(SignalInput::weight)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        assertEquals(701.634615, result.evidence().signal_price().doubleValue(), 0.000001);
+        assertEquals(700.634615, result.evidence().signal_low().doubleValue(), 0.000001);
+        assertEquals(702.634615, result.evidence().signal_high().doubleValue(), 0.000001);
+    }
     @Test void twentyDayExample() {
         var result = RecommendationPolicy.evaluateAvailable(context(20), List.of(prices(7, "710"), prices(14, "695"), prices(30, "680")));
         assertEquals("WAIT", result.action());

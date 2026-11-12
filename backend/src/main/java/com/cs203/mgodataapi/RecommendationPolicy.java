@@ -61,32 +61,32 @@ public final class RecommendationPolicy {
         var signalInputs = new ArrayList<SignalInput>();
         if (!eligibleForecasts.isEmpty()) {
             Forecast nearest = eligibleForecasts.get(0);
-            signal = nearest.central_estimate();
-            signalLow = nearest.prices().lower();
-            signalHigh = nearest.prices().upper();
-            long nearDistance = ChronoUnit.DAYS.between(c.scenario_as_of_date(), nearest.target_date());
-            if (eligibleForecasts.size() > 1) {
-                Forecast other = eligibleForecasts.get(1);
-                long otherDistance = ChronoUnit.DAYS.between(c.scenario_as_of_date(), other.target_date());
-                BigDecimal totalDistance = BigDecimal.valueOf(nearDistance + otherDistance);
-                BigDecimal nearestWeight = BigDecimal.valueOf(otherDistance).divide(totalDistance, MathContext.DECIMAL128);
-                BigDecimal otherWeight = BigDecimal.ONE.subtract(nearestWeight);
-                signal = nearest.central_estimate().multiply(nearestWeight)
-                        .add(other.central_estimate().multiply(otherWeight));
-                signalLow = nearest.prices().lower().multiply(nearestWeight).add(other.prices().lower().multiply(otherWeight));
-                signalHigh = nearest.prices().upper().multiply(nearestWeight).add(other.prices().upper().multiply(otherWeight));
-                signalInputs.add(new SignalInput(nearest.target_date(), nearestWeight, nearest.central_estimate()));
-                signalInputs.add(new SignalInput(other.target_date(), otherWeight, other.central_estimate()));
-                reasons.add("Blended signal: " + percent(nearestWeight) + "% of the " + nearest.target_date()
-                        + " forecast ($" + money(nearest.central_estimate()) + "/mt) + " + percent(otherWeight)
-                        + "% of the " + other.target_date() + " forecast ($" + money(other.central_estimate())
-                        + "/mt). Weights use inverse days from the planning date; nearer-term forecasts receive more weight.");
-                limitations.add("The blend is a timing signal, not a forecast for the recommended date or a split purchase schedule.");
-            } else {
-                signalInputs.add(new SignalInput(nearest.target_date(), BigDecimal.ONE, nearest.central_estimate()));
-                reasons.add("Used the " + nearest.target_date() + " forecast at 100% weight: "
-                        + "it is the only eligible forecast.");
+            BigDecimal inverseDaysTotal = eligibleForecasts.stream()
+                    .map(f -> BigDecimal.ONE.divide(BigDecimal.valueOf(
+                            ChronoUnit.DAYS.between(c.scenario_as_of_date(), f.target_date())), MathContext.DECIMAL128))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            signal = BigDecimal.ZERO;
+            signalLow = BigDecimal.ZERO;
+            signalHigh = BigDecimal.ZERO;
+            BigDecimal remainingWeight = BigDecimal.ONE;
+            var contributions = new ArrayList<String>();
+            for (int index = 0; index < eligibleForecasts.size(); index++) {
+                Forecast forecast = eligibleForecasts.get(index);
+                BigDecimal inverseDays = BigDecimal.ONE.divide(BigDecimal.valueOf(
+                        ChronoUnit.DAYS.between(c.scenario_as_of_date(), forecast.target_date())), MathContext.DECIMAL128);
+                BigDecimal weight = index == eligibleForecasts.size() - 1 ? remainingWeight
+                        : inverseDays.divide(inverseDaysTotal, MathContext.DECIMAL128);
+                remainingWeight = remainingWeight.subtract(weight);
+                signal = signal.add(forecast.central_estimate().multiply(weight));
+                signalLow = signalLow.add(forecast.prices().lower().multiply(weight));
+                signalHigh = signalHigh.add(forecast.prices().upper().multiply(weight));
+                signalInputs.add(new SignalInput(forecast.target_date(), weight, forecast.central_estimate()));
+                contributions.add(percent(weight) + "% of the " + forecast.target_date()
+                        + " forecast ($" + money(forecast.central_estimate()) + "/mt)");
             }
+            reasons.add("Blended signal: " + String.join(" + ", contributions)
+                    + ". Weights use inverse days from the planning date; nearer-term forecasts receive more weight.");
+            limitations.add("The blend is a timing signal, not a forecast for the recommended date or a split purchase schedule.");
             reasons.add("Eligible price signal: $" + money(signal) + "/mt; weighted uncertainty range $"
                     + money(signalLow) + "–$" + money(signalHigh) + "/mt.");
             limitations.add("Weighted uncertainty bounds are a descriptive signal, not a calibrated confidence interval.");
@@ -121,7 +121,7 @@ public final class RecommendationPolicy {
             summary = best == null ? "Buy today. The eligible forecast signal does not offer a saving over today's reference price."
                     : "Buy in " + waitDays + " days (" + target + "). Estimated MGO price signal is $" + money(price)
                     + "/mt, representing a potential saving of $" + money(saving) + "/mt compared with buying today.";
-            reasons.add("Compared buying today at $" + money(reference.price()) + "/mt with " + eligibleForecasts.size() + " eligible forecasts. Up to two earliest eligible targets form the signal; uncertainty can require monitoring.");
+            reasons.add("Compared buying today at $" + money(reference.price()) + "/mt with " + eligibleForecasts.size() + " eligible forecasts. All eligible targets form the signal; uncertainty can require monitoring.");
             reasons.add("Estimated savings: $" + money(saving) + "/mt; $" + money(now.subtract(chosen)) + " for " + c.quantity_mt().stripTrailingZeros().toPlainString() + " MT.");
             if (eligibleForecasts.isEmpty()) limitations.add("No available forecast fits the deadline; buying today is the only priced option in the comparison.");
             if (signal != null) {
