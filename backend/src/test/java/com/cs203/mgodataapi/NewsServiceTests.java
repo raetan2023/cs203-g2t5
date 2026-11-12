@@ -26,7 +26,7 @@ class NewsServiceTests {
     }
 
     @Test void mergesOverlappingWindowsNewestFirstWithoutDuplicates() {
-        when(repository.latestCompleteWindows(NewsService.WINDOWS)).thenReturn(List.of(
+        when(repository.latestHeadlineWindows(NewsService.WINDOWS)).thenReturn(List.of(
             window("2026-11-02T08:00:00Z",
                 record("OPEC+ holds December output", "https://example.com/a", "2026-11-02T06:00:00Z", "production_decision"),
                 record("Tanker attacked near Hormuz", "https://example.com/b", "2026-11-01T20:00:00Z", "shipping_disruption")),
@@ -46,7 +46,7 @@ class NewsServiceTests {
     }
 
     @Test void dropsUnsafeLinksAndRecordsWithoutHeadlineOrTime() {
-        when(repository.latestCompleteWindows(NewsService.WINDOWS)).thenReturn(List.of(window("2026-11-02T08:00:00Z",
+        when(repository.latestHeadlineWindows(NewsService.WINDOWS)).thenReturn(List.of(window("2026-11-02T08:00:00Z",
             record("Script link", "javascript:alert(1)", "2026-11-02T06:00:00Z", "other"),
             record("", "https://example.com/blank", "2026-11-02T06:00:00Z", "other"),
             record("No time", "https://example.com/time", "yesterday", "other"),
@@ -54,8 +54,17 @@ class NewsServiceTests {
         assertEquals(List.of("Kept"), service.latest(40).items().stream().map(NewsService.Item::title).toList());
     }
 
+    @Test void curatedSelectionIsDisplayedAlongsideProviderWindows() {
+        String curated = window("2026-11-12T12:00:00Z",
+            record("US inflation and Fed policy", "https://example.com/inflation", "2026-11-11T13:02:23Z", "other"))
+            .replace("complete", "curated");
+        when(repository.latestHeadlineWindows(NewsService.WINDOWS)).thenReturn(List.of(curated));
+        assertEquals("US inflation and Fed policy", service.latest(40).items().getFirst().title());
+        verify(repository, never()).latestCompleteWindows(anyInt());
+    }
+
     @Test void emptyStoreIsAnEmptyListNotAnError() {
-        when(repository.latestCompleteWindows(NewsService.WINDOWS)).thenReturn(List.of());
+        when(repository.latestHeadlineWindows(NewsService.WINDOWS)).thenReturn(List.of());
         var response = service.latest(40);
         assertTrue(response.items().isEmpty());
         assertNull(response.updatedAt());
@@ -64,7 +73,7 @@ class NewsServiceTests {
     @Test void rejectsOutOfRangeLimitsAndReportsDatabaseFailure() {
         assertEquals(422, assertThrows(ApiException.class, () -> service.latest(0)).status().value());
         assertEquals(422, assertThrows(ApiException.class, () -> service.latest(101)).status().value());
-        when(repository.latestCompleteWindows(anyInt())).thenThrow(new DataAccessResourceFailureException("private"));
+        when(repository.latestHeadlineWindows(anyInt())).thenThrow(new DataAccessResourceFailureException("private"));
         assertEquals(503, assertThrows(ApiException.class, () -> service.latest(40)).status().value());
     }
 }

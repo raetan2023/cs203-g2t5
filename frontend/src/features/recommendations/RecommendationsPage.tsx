@@ -12,8 +12,7 @@ import { CalculationSteps } from './CalculationSteps';
 import { CompareBuyingDates, buildColumns, useHorizonComparison, type Column, type ColumnId, type Entry } from './TimingComparison';
 import { forecastSource } from './PurchaseImpact';
 import { KeyAssumptions } from './KeyAssumptions';
-import { downloadReportPdf } from './reportPdf';
-import { buildRecommendationReport, reportFilename } from './recommendationReport';
+import { RecommendationReportDownload } from './RecommendationReportDownload';
 import { HeroFigures, verdictNote, type HeroPoint } from './RecommendationHero';
 import { actionLabel, amount, dayDate, readableDates, usd } from './format';
 import './recommendations.css';
@@ -172,7 +171,6 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
       : <p className="rec-tile-note">{i.analysis?.cost_impact.status === 'unavailable' ? i.analysis.cost_impact.message : 'Cost impact is unavailable for this forecast date.'}</p>}
   </div> : impactNote && <div className="rec-tile rec-tile--note"><p className="rec-tile-note">{impactNote}</p></div>;
   const refresh = connected && <button type="button" className="bb-button bb-button--secondary rec-refresh" onClick={onRefresh}><RefreshIcon />Refresh prices</button>;
-  const download = () => downloadReportPdf(reportFilename(plan), buildRecommendationReport({ plan, guidance: guidance!, analysis: analysis!, columns, buyNow, waitCost: waitTarget && point?.mid != null ? point.mid * plan.quantity_mt : undefined, costDetail, demo }));
   // Phones (docs/ui-revamp/MOBILE_PLAN.md): the decision sits far down the page, so a bar fixed to the bottom
   // jumps to it. It only scrolls; submitting still happens in the decision section. Hidden once that section is on screen.
   const decision = useRef<HTMLElement>(null);
@@ -240,17 +238,8 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
           : approval && (preparing || held) ? <div className="rec-approval-pending"><div className="rec-approval-row"><button type="button" className="bb-button rec-submit" disabled>{SUBMIT_LABEL}</button>{refresh}</div><p>Available when the recommendation is ready</p></div>
           : refresh && <div className="rec-approval-row">{refresh}</div>}
       </div>
-      <div className="rec-report">
-        <h3><DocumentIcon />Full report (PDF)</h3>
-        <p>Everything behind this recommendation, for your records:</p>
-        <ul>
-          <li>Full method and decision rules</li>
-          <li>All assumptions and limitations</li>
-          <li>Data sources and timestamps</li>
-          <li>Model version and evaluation</li>
-        </ul>
-        <button type="button" className="bb-button bb-button--secondary" disabled={!guidance || !analysis} onClick={download}>Download report</button>
-      </div>
+      <RecommendationReportDownload report={guidance && analysis ? { plan, guidance, analysis, columns, buyNow,
+        waitCost: waitTarget && point?.mid != null ? point.mid * plan.quantity_mt : undefined, costDetail, demo } : undefined} />
     </section>
   </div>;
 }
@@ -282,9 +271,6 @@ function CompareSkeleton() {
     <h2>Compare buying dates</h2>
     <div className="rec-compare-skeleton-cols"><span className="rec-shimmer" /><span className="rec-shimmer" /><span className="rec-shimmer" /><span className="rec-shimmer" /></div>
   </section>;
-}
-function DocumentIcon() {
-  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z" /><path d="M14 3v5h5" /><path d="M9 13h6M9 17h6" /></svg>;
 }
 function ChevronLeft() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>;

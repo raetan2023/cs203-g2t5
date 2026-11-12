@@ -22,6 +22,17 @@ public class NewsRepository {
                 """, (row, index) -> row.getString("payload"), windows);
     }
 
+    /** Display-only curated selections are excluded from complete-window analytics. */
+    public List<String> latestHeadlineWindows(int windows) {
+        return jdbc.query("""
+                SELECT CAST(payload AS text) AS payload
+                FROM public.news_daily_features
+                WHERE payload->>'status' IN ('complete', 'curated')
+                ORDER BY (payload->>'end')::timestamptz DESC, (payload->>'retrieved_at')::timestamptz DESC
+                LIMIT ?
+                """, (row, index) -> row.getString("payload"), windows);
+    }
+
     public record WindowCount(Instant start, Instant end, int articleCount) {}
 
     /** Article counts of recent complete 24-hour windows, newest first, without loading their headlines. */

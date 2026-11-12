@@ -231,7 +231,7 @@ describe('Verified organisation permissions', () => {
       if (url.endsWith('/market/stored')) return reply({ storage: 'supabase', missing: [], series: [{ category: 'prices',
         ticker: { seriesKey: 'SGP_MGO_OBSERVED', unit: 'USD/MT', currency: 'USD', value: 1351.5, changeAbs: 0, changePct: 0, observedDate: '2026-10-26' },
         history: [{ date: '2026-10-24', value: 1351.5 }, { date: '2026-10-26', value: 1351.5 }] }] });
-      if (url.endsWith('/news/latest?limit=40')) return reply({ storage: 'supabase', updatedAt: '2026-11-02T00:00:00Z', items: [
+      if (url.endsWith('/news/latest?limit=100')) return reply({ storage: 'supabase', updatedAt: '2026-11-02T00:00:00Z', items: [
         { title: 'OPEC+ producers hold December oil output steady', url: 'https://example.com/opec', source: 'reuters.com',
           seenAt: '2026-11-01T22:00:00Z', topic: 'production_decision', marketBias: 'neutral' }] });
       if (url.endsWith('/news/alerts')) return reply({ storage: 'supabase', news: null, price: null });
