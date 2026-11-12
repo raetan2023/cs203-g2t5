@@ -1,4 +1,4 @@
--- MANUAL. Run once BEFORE deploying the backend that closes approved plans not bought by their deadline.
+-- MANUAL. Applied to shared Supabase on 2026-11-13; do not rerun there. Run once BEFORE deploying the backend that closes approved plans not bought by their deadline.
 -- Additive: two optional columns saying why and when a plan was closed.
 --   role_change     : the officer stopped being a procurement officer (promoted, made admin or left)
 --   deadline_passed : approved but not bought by the purchase deadline
