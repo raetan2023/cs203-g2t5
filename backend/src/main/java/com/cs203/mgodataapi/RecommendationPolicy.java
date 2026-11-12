@@ -10,7 +10,9 @@ import static com.cs203.mgodataapi.PlanAnalysisProvider.*;
 
 /** One buying date from a weighted signal using only forecasts within the saved deadline. */
 public final class RecommendationPolicy {
-    public static final String VERSION = "near-term-weighted-v2";
+    public static final String VERSION = "near-term-weighted-v3";
+    /** With this many days or fewer left there is no time to wait, so the engine says Buy Now outright. */
+    public static final int BUY_NOW_WITHIN_DAYS = 7;
     private RecommendationPolicy() {}
     public static void validate(PlanAnalysisService.Context c) {
         if (c == null || c.plan_id() == null || !positive(c.quantity_mt()) || c.purchase_deadline() == null || c.scenario_as_of_date() == null)
@@ -40,7 +42,9 @@ public final class RecommendationPolicy {
         Long age = reference == null ? null : ChronoUnit.DAYS.between(reference.observation_date(), c.scenario_as_of_date());
         Forecast best = null;
         var eligibleForecasts = new ArrayList<Forecast>();
-        if (reference != null && days >= 0) {
+        // A short deadline leaves no time to wait, so forecasts are not used at all.
+        boolean shortDeadline = days >= 0 && days <= BUY_NOW_WITHIN_DAYS;
+        if (reference != null && days >= 0 && !shortDeadline) {
             for (Prices p : candidates) {
                 if (p == null || !c.scenario_as_of_date().equals(p.scenario_as_of_date()) || p.forecast() == null
                         || !"ready".equals(p.forecast().status())) continue;
@@ -94,7 +98,7 @@ public final class RecommendationPolicy {
         }
         // Current news-aware Ridge results may use dated observed references, as disclosed.
         // The requested estimate-based policy uses the centre for timing, not range overlap.
-        boolean estimateDriven = candidates.stream().filter(Objects::nonNull)
+        boolean estimateDriven = !shortDeadline && candidates.stream().filter(Objects::nonNull)
                 .filter(p -> c.scenario_as_of_date().equals(p.scenario_as_of_date()))
                 .filter(p -> p.forecast() != null && "ready".equals(p.forecast().status()))
                 .map(p -> p.forecast().value())
@@ -110,6 +114,16 @@ public final class RecommendationPolicy {
         } else if (reference == null) {
             action = "MONITOR";
             summary = "A valid reference price is unavailable. Refresh prices before choosing when to buy.";
+        } else if (shortDeadline) {
+            // No Monitor override applies, even for an old reference price: waiting is not an option.
+            action = "BUY_NOW";
+            target = c.scenario_as_of_date();
+            chosen = now;
+            difference = BigDecimal.ZERO;
+            summary = "Buy today. With " + days + (days == 1 ? " day" : " days") + " left before the deadline, there is no time to wait for a lower price.";
+            reasons.add("The deadline is " + BUY_NOW_WITHIN_DAYS + " days away or less, so forecasts are not used and buying today at $"
+                    + money(reference.price()) + "/mt is the recommendation.");
+            limitations.add("Forecasts are not compared for deadlines " + BUY_NOW_WITHIN_DAYS + " days away or less.");
         } else {
             action = best == null ? "BUY_NOW" : "WAIT";
             target = best == null ? c.scenario_as_of_date() : best.target_date();
