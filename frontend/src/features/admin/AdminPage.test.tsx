@@ -24,3 +24,10 @@ it('shows the active company and embedded management without a redundant launch 
   expect(screen.getByText('Live member controls')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Manage organisation' })).not.toBeInTheDocument();
 });
+
+it('has no purchase plan oversight section and offers the organisation switcher at the top', () => {
+  render(<AdminPage organisationName="Acme Shipping" organisationSwitcher={<button type="button">Acme Shipping ▾</button>} />);
+  expect(screen.queryByText('Purchase plan oversight')).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'View purchase plans' })).not.toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'Switch organisation' })).toContainElement(screen.getByRole('button', { name: 'Acme Shipping ▾' }));
+});

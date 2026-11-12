@@ -8,14 +8,15 @@ export interface ManagerOverview {
   purchased_quantity_mt: number;
   /** Approved but not yet purchased; the basis for exposure. */
   open_quantity_mt: number;
-  /** Bought minus planned over purchased plans: negative when officers bought less than approved. */
-  purchase_difference_mt?: number;
-  /** Everyone the manager oversees, with their counted plans in the chosen period. */
-  officers?: { user_id: string; label: string; plan_count: number }[];
+  /** Everyone in the team, with their counted plans in the chosen period. Admins also get each officer's current PM. */
+  officers?: { user_id: string; label: string; plan_count: number; pm_user_id?: string | null; pm_label?: string | null }[];
   reference_price_usd_per_mt: number | null;
   reference_date: string | null;
   exposure_usd: number | null;
 }
+/** An officer the filters offer; pm_* are sent to admins only. */
+export interface TeamMember { user_id: string; label: string; pm_user_id?: string | null; pm_label?: string | null }
+
 export interface ApprovalNotification {
   notification_id: string;
   plan_id: string;
@@ -41,6 +42,9 @@ export interface PurchasePlan {
   /** Sent to managers only, so they can filter plans by officer. */
   buyer_user_id?: string;
   buyer_label?: string;
+  /** Sent to admins only: the officer's current PM, or null when they have none. */
+  pm_user_id?: string | null;
+  pm_label?: string | null;
 }
 
 export interface RecommendationSelection {
@@ -262,6 +266,8 @@ export interface BuyerDecisionRecord {
 export interface PurchasePlanService {
   /** '30d' counts only plans approved in the last 30 days, for every figure. */
   managerOverview?(period?: OverviewPeriod, officerIds?: string[]): Promise<ManagerOverview>;
+  /** Everyone a manager or admin can filter by, even before they have plans; admins also get each officer's PM. */
+  team?(): Promise<{ officers: TeamMember[] }>;
   /** MPP-97: record and read the buyer's own accept/reject/ignore answers. Optional so preview/mocks can omit them. */
   recordRecommendationDecision?(planId: string, input: BuyerDecisionInput): Promise<BuyerDecisionRecord>;
   readRecommendationDecisions?(planId?: string): Promise<BuyerDecisionRecord[]>;

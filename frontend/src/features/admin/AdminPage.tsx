@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { AppLink } from '../../app/router';
 import './admin.css';
 
-export function AdminPage({ organisationName, management, teamReporting, onManageOrganisation }: {
-  organisationName?: string; management?: ReactNode; teamReporting?: ReactNode; onManageOrganisation?: () => void;
+export function AdminPage({ organisationName, organisationSwitcher, management, teamReporting, onManageOrganisation }: {
+  organisationName?: string; organisationSwitcher?: ReactNode; management?: ReactNode; teamReporting?: ReactNode; onManageOrganisation?: () => void;
 }) {
   return <main className="bb-admin">
     <AppLink className="bb-admin-back" href="/home">← Back to Home</AppLink>
@@ -12,12 +12,12 @@ export function AdminPage({ organisationName, management, teamReporting, onManag
         <h1>{organisationName || 'Your organisation'}</h1>
         <p className="bb-admin-intro">Give your team the right access. Manage people, invitations and company settings.</p>
       </div>
-      <span className="bb-admin-role">Admin access</span>
+      <div className="bb-admin-heading-side">
+        {organisationSwitcher && <div className="bb-admin-switcher"><span className="bb-admin-switcher-label" id="admin-switch-organisation">Switch organisation</span>
+          <div aria-labelledby="admin-switch-organisation" role="group">{organisationSwitcher}</div></div>}
+        <span className="bb-admin-role">Admin access</span>
+      </div>
     </header>
-    <section className="bb-admin-plan-access" aria-labelledby="admin-plan-access">
-      <div><h2 id="admin-plan-access">Purchase plan oversight</h2><p>View pending approvals, approved plans, rejected plans and saved manager comments.</p></div>
-      <AppLink className="bb-button bb-button--secondary" href="/purchase-plans">View purchase plans</AppLink>
-    </section>
     {teamReporting}
     <section className="bb-admin-workspace" aria-labelledby="admin-workspace">
       <div className="bb-admin-section-heading"><h2 id="admin-workspace">People and settings</h2>

@@ -1,4 +1,5 @@
-.pp-manager-panel { position: relative; overflow: hidden; }
+/* No overflow clipping here, so filter dropdowns can open past a short section; the refresh bar rounds its own ends instead. */
+.pp-manager-panel { position: relative; }
 .pp-manager-skeleton { margin-block: var(--bb-space-5); }
 .pp-manager-skeleton-item { min-width: 0; }
 .pp-manager-skeleton--rows .pp-manager-skeleton-item { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 100px; gap: var(--bb-space-6); align-items: center; padding: var(--bb-space-5) 0; border-bottom: 1px solid var(--bb-border-subtle); }
@@ -14,7 +15,7 @@
 .pp-manager-skeleton--cards .pp-manager-skeleton-item { display: grid; gap: var(--bb-space-6); border: 1px solid var(--bb-border-subtle); background: var(--bb-surface); border-radius: var(--bb-radius-card); padding: var(--bb-space-6); }
 .pp-manager-skeleton--cards .pp-shimmer--value { height: 44px; }
 .pp-manager-loading-overview { margin-block: var(--bb-space-6); }
-.pp-refresh-bar { position: absolute; z-index: 1; top: 0; left: 0; right: 0; height: 2px; overflow: hidden; }
+.pp-refresh-bar { position: absolute; z-index: 1; top: 0; left: var(--bb-radius-card, 12px); right: var(--bb-radius-card, 12px); height: 2px; overflow: hidden; }
 .pp-refresh-bar > span { display: block; width: 30%; height: 100%; background: var(--bb-text); border-radius: 1px; animation: pp-manager-refresh .9s ease-in-out infinite; }
 .pp-refresh-content { transition: opacity var(--bb-motion-fast); }
 .pp-refresh-content--pending { opacity: .65; }

@@ -19,13 +19,10 @@ it('leaves out labels that do not fit and explains an empty team', () => {
   expect(screen.getByText(/No approved volume yet/)).toBeVisible();
 });
 
-it('shows approved volume that was never bought as a striped part, without changing the headline', () => {
-  const { container } = render(<PurchaseProgress purchased={690} remaining={580} shortfall={10} />);
+it('has only bought and still-to-buy parts, since every purchase is the whole plan', () => {
+  const { container } = render(<PurchaseProgress purchased={690} remaining={580} />);
   expect(screen.getByText('54%')).toBeVisible();
-  expect(screen.getByRole('img', { name: '54% purchased: 690 MT bought, 580 MT remaining to buy, 10 MT approved but not bought.' })).toBeVisible();
-  const parts = container.querySelectorAll<HTMLElement>('.pp-progress-part');
-  expect(parts).toHaveLength(3);
-  expect(parts[2]).toHaveClass('pp-progress-part--shortfall');
-  expect(parseFloat(parts[2].style.width)).toBeCloseTo(10 / 1280 * 100, 2);
-  expect(container.querySelector('.pp-progress-legend')).toHaveTextContent('Not bought');
+  expect(screen.getByRole('img', { name: '54% purchased: 690 MT bought, 580 MT remaining to buy.' })).toBeVisible();
+  expect(container.querySelectorAll('.pp-progress-part')).toHaveLength(2);
+  expect(container.querySelector('.pp-progress-legend')).not.toHaveTextContent('Not bought');
 });

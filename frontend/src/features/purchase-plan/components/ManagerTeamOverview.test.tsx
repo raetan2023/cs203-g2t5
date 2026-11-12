@@ -145,22 +145,34 @@ it('filters the figures by the officers chosen', async () => {
   expect(api.managerOverview).toHaveBeenLastCalledWith('all', ['u-yash']);
   expect(await screen.findByText('$4,200.00')).toBeVisible();
   expect(screen.getByRole('button', { name: /Yashwanth Annem/ })).toBeVisible();
-  expect(screen.getByRole('checkbox', { name: /Select all/ })).toBePartiallyChecked();
+  expect(screen.getByRole('checkbox', { name: /Select all/ })).not.toBeChecked();
   // Ticking "Select all" goes back to everyone.
   await user.click(screen.getByRole('checkbox', { name: /Select all/ }));
   expect(api.managerOverview).toHaveBeenLastCalledWith('all', []);
   expect(screen.getByRole('button', { name: /All officers/ })).toBeVisible();
 });
 
-it('says how far purchases were from plan under Purchased volume', async () => {
+it('no longer compares purchases with the plan: a purchase is always the whole plan', async () => {
   const api = service();
-  api.managerOverview.mockResolvedValue({ ...overview, purchase_difference_mt: -10 });
-  const view = render(<ManagerTeamOverview service={api} />);
-  await screen.findByText('$18,450.00');
-  expect(totals().getByText('10 MT less than planned')).toBeVisible();
-  view.unmount();
-  api.managerOverview.mockResolvedValue({ ...overview, purchase_difference_mt: 15 });
   render(<ManagerTeamOverview service={api} />);
   await screen.findByText('$18,450.00');
-  expect(totals().getByText('15 MT more than planned')).toBeVisible();
+  expect(screen.queryByText(/than planned/)).not.toBeInTheDocument();
+  expect(document.querySelector('.pp-progress-part--shortfall')).toBeNull();
+});
+
+it('gives admins the organisation figures, filterable by PM and officer', async () => {
+  const api = service();
+  api.managerOverview.mockResolvedValue({ ...overview, officers: [
+    { user_id: 'u-rae', label: 'Rae Tan', plan_count: 2, pm_user_id: 'u-wunna', pm_label: 'Wunna Aung' },
+    { user_id: 'u-yash', label: 'Yashwanth Annem', plan_count: 1, pm_user_id: null, pm_label: null }] });
+  const user = userEvent.setup();
+  render(<ManagerTeamOverview service={api} audience="admin" />);
+  expect(await screen.findByRole('heading', { name: 'Organisation oversight' })).toBeVisible();
+  expect(screen.getByText('Plans from every officer in your organisation.')).toBeVisible();
+  await screen.findByText('$18,450.00');
+  await user.click(screen.getByRole('button', { name: /Everyone/ }));
+  expect([...document.querySelectorAll('.pp-people-pm')].map(label => label.textContent)).toEqual(['Wunna Aung · PM2', 'No PM assigned1']);
+  await user.click(screen.getByRole('checkbox', { name: /Select all/ }));
+  await user.click(screen.getByRole('checkbox', { name: /Wunna Aung/ }));
+  expect(api.managerOverview).toHaveBeenLastCalledWith('all', ['u-rae']);
 });

@@ -49,7 +49,8 @@ class ManagerOverviewTests {
         var result = controller.get(manager("org_a")).getBody();
         // Planned: approved + purchased. Drafts, pending, rejected and withdrawn are left out.
         assertEquals(0, new BigDecimal("20.50").compareTo(result.total_quantity_mt()));
-        assertEquals(0, new BigDecimal("9.5").compareTo(result.purchased_quantity_mt()));
+        // A purchase counts as its whole planned amount (10.25 MT), not the 9.5 MT recorded.
+        assertEquals(0, new BigDecimal("10.25").compareTo(result.purchased_quantity_mt()));
         // Remaining to buy (exposure basis): approved and not yet purchased.
         assertEquals(0, new BigDecimal("10.25").compareTo(result.open_quantity_mt()));
         assertEquals(0, new BigDecimal("6150").compareTo(result.exposure_usd()));
@@ -101,12 +102,12 @@ class ManagerOverviewTests {
 
         var all = controller.get(manager("org_a"), "all").getBody();
         assertEquals(0, new BigDecimal("150").compareTo(all.total_quantity_mt()));
-        assertEquals(0, new BigDecimal("118").compareTo(all.purchased_quantity_mt()));
+        assertEquals(0, new BigDecimal("120").compareTo(all.purchased_quantity_mt()), "whole planned amounts: 40 + 80");
         assertEquals(0, new BigDecimal("30").compareTo(all.open_quantity_mt()));
 
         var recent = controller.get(manager("org_a"), "30d").getBody();
         assertEquals(0, new BigDecimal("50").compareTo(recent.total_quantity_mt()), "approved in the window: 10 + 40");
-        assertEquals(0, new BigDecimal("39").compareTo(recent.purchased_quantity_mt()), "a recent purchase of an old approval is left out");
+        assertEquals(0, new BigDecimal("40").compareTo(recent.purchased_quantity_mt()), "a recent purchase of an old approval is left out");
         assertEquals(0, new BigDecimal("10").compareTo(recent.open_quantity_mt()), "only the recently approved plan is still to buy");
         assertEquals(422, assertThrows(ApiException.class, () -> controller.get(manager("org_a"), "7d")).status().value());
     }
@@ -134,8 +135,7 @@ class ManagerOverviewTests {
 
         var everyone = controller.get(manager("org_a"), "all", null).getBody();
         assertEquals(0, new BigDecimal("157").compareTo(everyone.total_quantity_mt()));
-        assertEquals(0, new BigDecimal("48").compareTo(everyone.purchased_quantity_mt()));
-        assertEquals(0, new BigDecimal("-2").compareTo(everyone.purchase_difference_mt()), "48 MT bought against 50 MT planned");
+        assertEquals(0, new BigDecimal("50").compareTo(everyone.purchased_quantity_mt()), "the whole planned 50 MT, not the 48 MT recorded");
         assertEquals(java.util.List.of("Rae Tan", "yash@example.com"), everyone.officers().stream().map(ManagerOverviewController.Officer::label).toList());
         assertEquals(java.util.List.of(2, 1), everyone.officers().stream().map(ManagerOverviewController.Officer::plan_count).toList());
 
@@ -147,5 +147,62 @@ class ManagerOverviewTests {
 
         var stranger = controller.get(manager("org_a"), "all", java.util.List.of(UUID.randomUUID())).getBody();
         assertEquals(0, BigDecimal.ZERO.compareTo(stranger.total_quantity_mt()), "someone outside the team matches nothing");
+    }
+
+    @Test void adminSeesTheWholeOrganisationWithEachOfficersPm() {
+        var jdbc = new JdbcTemplate(new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=PostgreSQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=VALUE", "sa", ""));
+        jdbc.execute("CREATE TABLE purchase_plans (plan_id UUID, user_id UUID, quantity_mt NUMERIC(20,3), purchase_deadline DATE, scenario_as_of_date DATE, status TEXT, submitted_at TIMESTAMP, previous_plan_id UUID, clerk_org_id TEXT)");
+        jdbc.execute("CREATE TABLE users (user_id UUID PRIMARY KEY, clerk_user_id TEXT, email TEXT, display_name TEXT)");
+        jdbc.execute("CREATE TABLE market_series (series_id INT, series_key TEXT, currency_code TEXT, unit TEXT)");
+        jdbc.execute("CREATE TABLE market_observations (series_id INT, observation_date DATE, value NUMERIC(20,3), value_type TEXT)");
+        jdbc.execute("CREATE TABLE pm_assignments (po_user_id UUID, clerk_org_id TEXT, pm_user_id UUID)");
+        jdbc.execute("CREATE TABLE organisation_members (user_id UUID, clerk_org_id TEXT, role TEXT)");
+        jdbc.execute("CREATE TABLE purchase_records (plan_id UUID, clerk_org_id TEXT, quantity_mt NUMERIC(20,3), purchased_on DATE)");
+        jdbc.execute("CREATE TABLE plan_approval_decisions (plan_id UUID, clerk_org_id TEXT, decision TEXT, decided_at TIMESTAMP WITH TIME ZONE)");
+        UUID rae = UUID.randomUUID(), yash = UUID.randomUUID(), idle = UUID.randomUUID(), pm = UUID.randomUUID(), bought = UUID.randomUUID();
+        for (Object[] person : new Object[][] {{rae, "Rae Tan"}, {yash, "Yashwanth Annem"}, {idle, "New Officer"}, {pm, "Wunna Aung"}})
+            jdbc.update("INSERT INTO users VALUES (?, ?, NULL, ?)", person[0], "user_" + person[1].hashCode(), person[1]);
+        for (UUID officer : new UUID[] {rae, yash, idle}) jdbc.update("INSERT INTO organisation_members VALUES (?, 'org_a', 'org:officer')", officer);
+        jdbc.update("INSERT INTO organisation_members VALUES (?, 'org_a', 'org:manager')", pm);
+        jdbc.update("INSERT INTO pm_assignments VALUES (?, 'org_a', ?)", rae, pm);
+        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 100, ?, ?, 'approved', NULL, NULL, 'org_a')", UUID.randomUUID(), rae, today, today);
+        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 40, ?, ?, 'purchased', NULL, NULL, 'org_a')", bought, yash, today, today);
+        jdbc.update("INSERT INTO purchase_records VALUES (?, 'org_a', 38, ?)", bought, today);
+        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 5, ?, ?, 'submitted', NULL, NULL, 'org_a')", UUID.randomUUID(), yash, today, today);
+        // Another organisation never counts.
+        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 999, ?, ?, 'approved', NULL, NULL, 'org_b')", UUID.randomUUID(), UUID.randomUUID(), today, today);
+        var dates = mock(OperationalDate.class); when(dates.today()).thenReturn(today);
+        var repository = new PurchasePlanRepository(jdbc);
+        var users = new UserAccounts(jdbc);
+        var controller = new ManagerOverviewController(repository, jdbc, dates, users);
+        Jwt admin = Jwt.withTokenValue("test").header("alg", "none").subject("admin").claim("o", Map.of("id", "org_a", "rol", "admin")).build();
+
+        var everyone = controller.get(admin, "all", null).getBody();
+        assertEquals(0, new BigDecimal("140").compareTo(everyone.total_quantity_mt()));
+        assertEquals(0, new BigDecimal("40").compareTo(everyone.purchased_quantity_mt()));
+        assertEquals(0, new BigDecimal("100").compareTo(everyone.open_quantity_mt()));
+        assertEquals(java.util.List.of("New Officer", "Rae Tan", "Yashwanth Annem"), everyone.officers().stream().map(ManagerOverviewController.Officer::label).toList());
+        var raeRow = everyone.officers().get(1);
+        assertEquals(pm, raeRow.pm_user_id());
+        assertEquals("Wunna Aung", raeRow.pm_label());
+        assertNull(everyone.officers().get(2).pm_user_id(), "Yashwanth has no PM");
+
+        var onlyYash = controller.get(admin, "all", java.util.List.of(yash)).getBody();
+        assertEquals(0, new BigDecimal("40").compareTo(onlyYash.total_quantity_mt()));
+        assertEquals(0, BigDecimal.ZERO.compareTo(onlyYash.open_quantity_mt()));
+
+        // 30 days counts only plans approved in that window (none here were).
+        var recent = controller.get(admin, "30d", null).getBody();
+        assertEquals(0, BigDecimal.ZERO.compareTo(recent.total_quantity_mt()));
+
+        // The filters list every current officer, even one with no plans yet, with their PM.
+        var team = controller.team(admin).getBody().officers();
+        assertEquals(java.util.List.of("New Officer", "Rae Tan", "Yashwanth Annem"), team.stream().map(ManagerOverviewController.TeamMember::label).toList());
+        assertEquals("Wunna Aung", team.get(1).pm_label());
+        assertNull(team.get(0).pm_user_id());
+        // A manager's team is their assigned officers only.
+        jdbc.update("UPDATE users SET clerk_user_id = 'pm_subject' WHERE user_id = ?", pm);
+        Jwt manager = Jwt.withTokenValue("test").header("alg", "none").subject("pm_subject").claim("o", Map.of("id", "org_a", "rol", "manager")).build();
+        assertEquals(java.util.List.of("Rae Tan"), controller.team(manager).getBody().officers().stream().map(ManagerOverviewController.TeamMember::label).toList());
     }
 }

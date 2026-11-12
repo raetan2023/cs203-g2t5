@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReportingOverview, TeamReportingService } from './teamReportingApi';
+import { RefreshIconButton, UpdatedAt } from '../purchase-plan/components/UpdatedAt';
+import { ManagerRefreshBar, useRefreshSweep } from '../purchase-plan/components/ManagerLoading';
 
 const AUTO_UPDATE_MS = 5000;
 const SUCCESS_MESSAGE_MS = 4000;
 const poCount = (count: number) => `${count} PO${count > 1 ? 's' : ''}`;
 
 export function TeamReporting({ service }: { service: TeamReportingService }) {
-  const [overview, setOverview] = useState<ReportingOverview | null>(null);
+  const [overview, setLoadedOverview] = useState<ReportingOverview | null>(null);
+  // When the list on screen was last read, for the "Updated as of" line.
+  const [loadedAt, setLoadedAt] = useState<Date>();
+  const setOverview = useCallback((next: ReportingOverview) => { setLoadedOverview(next); setLoadedAt(new Date()); }, []);
   const [loadError, setLoadError] = useState('');
   const [message, setMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -17,7 +22,7 @@ export function TeamReporting({ service }: { service: TeamReportingService }) {
     setLoadError('');
     try { setOverview(await service.load()); }
     catch (failure) { setLoadError(failure instanceof Error ? failure.message : "We couldn't load your team. Please try again."); }
-  }, [service]);
+  }, [service, setOverview]);
   useEffect(() => { void load(); }, [load]);
 
   // Success messages clear themselves; errors stay until the next action.
@@ -48,12 +53,12 @@ export function TeamReporting({ service }: { service: TeamReportingService }) {
     const onVisible = () => void check();
     document.addEventListener('visibilitychange', onVisible);
     return () => { active = false; clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); };
-  }, [service]);
+  }, [service, setOverview]);
 
   async function run(action: () => Promise<string>) {
     saving.current = true; saveCount.current += 1;
     setBusy(true); setMessage(null);
-    try { setMessage({ tone: 'success', text: await action() }); }
+    try { const text = await action(); if (text) setMessage({ tone: 'success', text }); }
     catch (failure) { setMessage({ tone: 'error', text: failure instanceof Error ? failure.message : 'Something went wrong. Please try again.' }); }
     finally { saving.current = false; setBusy(false); }
   }
@@ -71,13 +76,16 @@ export function TeamReporting({ service }: { service: TeamReportingService }) {
     return 'Saved.';
   });
   const cancel = () => { setMessage(null); setPicks({}); };
+  // A refresh shows the moving bar and the new "Updated as of" time rather than a message.
+  const sweep = useRefreshSweep(refreshing);
   const refresh = async () => {
+    sweep.start();
     setRefreshing(true);
     await run(async () => {
       await service.syncMembers();
       setOverview(await service.load());
       setLoadError('');
-      return 'Team list updated.';
+      return '';
     });
     setRefreshing(false);
   };
@@ -101,18 +109,17 @@ export function TeamReporting({ service }: { service: TeamReportingService }) {
         {overview && overview.officers.length > 0 && (unassigned > 0
           ? <p className="bb-admin-team-status bb-admin-team-status--required">PM assignments required: {unassigned} {unassigned === 1 ? 'officer has' : 'officers have'} no manager.</p>
           : <p className="bb-admin-team-status bb-admin-team-status--complete">All officers have a manager.</p>)}
+        <UpdatedAt loadedAt={loadedAt} current={!loadError && !refreshing} />
       </div>
-      <button type="button" className={`bb-admin-team-refresh${refreshing ? ' is-refreshing' : ''}`} aria-label="Refresh team list" title="Refresh team list" disabled={busy} onClick={() => void refresh()}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8" /><path d="M21 3v5h-5" /></svg>
-      </button>
+      <RefreshIconButton label="Refresh team list" loading={busy} refreshing={refreshing} onClick={() => void refresh()} />
     </div>
-    <div className="bb-admin-team-body">
+    {sweep.sweeping && <ManagerRefreshBar label="Updating team list…" />}
+    <div className={`bb-admin-team-body pp-refresh-content${refreshing || sweep.sweeping ? ' pp-refresh-content--pending' : ''}`}>
       {message && <p role={message.tone === 'error' ? 'alert' : 'status'} className={`bb-admin-team-message bb-admin-team-message--${message.tone}`}>{message.text}</p>}
       {loadError ? <div role="alert"><p className="bb-admin-team-message bb-admin-team-message--error">{loadError}</p><button type="button" className="bb-button bb-button--secondary" onClick={() => void load()}>Try again</button></div>
         : !overview ? <p role="status" className="bb-admin-team-note">Loading your team...</p>
         : overview.officers.length === 0 ? <p className="bb-admin-team-note">No Procurement Officers yet. Invite people below, then refresh this list.</p>
         : <>
-          {managers.length === 0 && <p className="bb-admin-team-note">Add a Procurement Manager before assigning officers.</p>}
           <ul className="bb-admin-team-list">
             {overview.officers.map(officer => {
               const selectId = `pm-for-${officer.user_id}`;
