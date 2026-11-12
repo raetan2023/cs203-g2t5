@@ -38,8 +38,9 @@ While the plan is Draft, the PO can:
 2. PO GENERATES A RECOMMENDATION
 ────────────────────────────────────────
 Only allowed while the plan is Draft
-Runs only when the PO presses Generate
-  (opening or refreshing the page does not save anything)
+Runs only when the PO clicks "New recommendation"
+  (opening or refreshing the page does not create or save anything)
+  A new draft shows no recommendation until the PO clicks it
 
 Engine takes today's reference price and the 7, 14 and 30 day forecasts
   Only forecasts dated on or before the deadline are used
@@ -64,7 +65,9 @@ Engine returns one of:
 Save the recommendation as a new record
   (never overwrite older ones)
 Record who generated it and when
-PO can generate again on any day, and every run is kept
+PO can click "New recommendation" again on any day,
+  and every run is kept
+The draft shows only the latest one (see step 8)
 
 PO responds to a recommendation: Accept, Reject (with a reason) or Ignore
 Every response is kept
@@ -175,8 +178,16 @@ PO starts again from step 2
 8. WHO SEES WHAT
 ────────────────────────────────────────
 PO sees their own plans
-PM sees the plans of the POs assigned to them
+  Draft: only the latest recommendation
+    (older ones are kept for audit, not shown)
+  their own responses, on the Decision history page
+  Submitted and later: the locked recommendation, with the PDF
+PM sees the plans of the POs assigned to them,
+  except drafts (a PM never sees a draft or its recommendations)
+  the locked recommendation of each submitted plan, with the PDF
 Admin sees every plan in the organisation
+  a read-only list of every recommendation generated for any plan,
+    each shown with the PO's response to it
 Withdrawn plans drop out of the PO's and PM's lists
   5 days after they were withdrawn
   Admins still see them, and nothing is deleted
@@ -184,13 +195,16 @@ Withdrawn plans drop out of the PO's and PM's lists
 ────────────────────────────────────────
 9. AUDIT TRAIL
 ────────────────────────────────────────
-Kept forever:
+Kept forever (for every plan that was submitted):
   every recommendation generated, and every response to it
+    (admins can view these, see step 8)
   the locked recommendation for each submitted plan
   every status change, with who, when and why
   every purchase record
   links between copied plans and their originals
 Only drafts can be deleted.
+  Deleting a draft also deletes its recommendations and responses,
+  so they drop out of the admin list too.
 Once a plan is submitted, nothing about it is deleted.
 Plans that are done are only marked Finished.
 ```
@@ -199,9 +213,11 @@ Plans that are done are only marked Finished.
 
 Everything above that isn't listed here already works on `main`.
 
-1. **Saved recommendations.** Recommendations are worked out again on every request and never stored. The only things saved now are the PO's response (`plan_recommendation_decisions`) and the snapshot locked at submission. Needs a new table that is only ever added to, plus a Generate endpoint that saves one row each time it's pressed. Submission should read the latest saved row.
+1. **Saved recommendations.** Recommendations are worked out again on every request and never stored. The only things saved now are the PO's response (`plan_recommendation_decisions`) and the snapshot locked at submission. Needs a new table that is only ever added to, plus an endpoint behind the "New recommendation" button that saves one row per click. The draft page should show the latest saved row instead of working one out when it opens, and submission should use that row.
 2. **Blocking Monitor at submission.** `PlanApprovalService.submit` doesn't check the action, so a Monitor recommendation can be submitted today. Add the block, plus the conversion when the deadline is 7 days or less away and its note on the plan.
 3. **Creation time.** `purchase_plans` has no `created_at`, so there's no record of when a plan was created. Draft edits also overwrite the volume and deadline without a record.
 4. **Who closed a plan, and when.** Moving to `closed` only changes the status; nothing records who, when or why.
 5. **Deleting a draft that has responses.** `plan_recommendation_decisions` blocks deleting a plan that has rows in it (`ON DELETE RESTRICT`). Deleting a draft the PO has already responded to most likely fails with an error instead of working. The saved-recommendations table needs the same care.
-6. **Wording of the automatic rejection reason.** The code acts 5 days *after* the deadline, but the saved reason says "within 5 days of the purchase deadline" (`PlanApprovalService.AUTOMATIC_REASON`).
+6. **Hiding drafts from PMs.** A PM's plan list includes every plan of their assigned POs, drafts too (`ASSIGNED_TO_MANAGER` in `PurchasePlanRepository` doesn't filter by status). The live recommendation endpoint also lets a manager read any plan they can see. Both need to leave drafts out.
+7. **Admin recommendation history.** New read-only endpoint and admin page listing every saved recommendation for any plan in the organisation, each with the PO's response.
+8. **Wording of the automatic rejection reason.** The code acts 5 days *after* the deadline, but the saved reason says "within 5 days of the purchase deadline" (`PlanApprovalService.AUTOMATIC_REASON`).
