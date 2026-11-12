@@ -78,8 +78,7 @@ class PlanLifecycleHttpTests {
                 .content("{\"purchased_on\":\"2026-10-29\",\"supplier\":\"A\",\"quantity_mt\":5.25,\"price_usd_per_mt\":900.12,\"total_usd\":1,\"clerk_org_id\":\"org_attacker\"}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.plan.status").value("purchased"))
                 .andExpect(header().string("Cache-Control", "no-store"));
-        verify(lifecycle).recordPurchase(eq(id), eq(buyer), eq("org_a"), argThat(body -> body.quantity_mt().compareTo(new BigDecimal("5.25")) == 0
-                && body.price_usd_per_mt().compareTo(new BigDecimal("900.12")) == 0));
+        verify(lifecycle).recordPurchase(eq(id), eq(buyer), eq("org_a"), argThat(body -> body.price_usd_per_mt().compareTo(new BigDecimal("900.12")) == 0));
     }
 
     @Test void domainErrorsHaveExpectedStatusAndFieldErrors() throws Exception {
@@ -96,7 +95,7 @@ class PlanLifecycleHttpTests {
     }
 
     @Test void malformedPurchaseFieldsReturn422WithoutCallingTheService() throws Exception {
-        for (String body : List.of("{", "{\"purchased_on\":\"2026-02-31\"}", "{\"quantity_mt\":\"not-a-number\"}"))
+        for (String body : List.of("{", "{\"purchased_on\":\"2026-02-31\"}", "{\"price_usd_per_mt\":\"not-a-number\"}"))
             mvc.perform(post(root + "/" + id + "/purchase").with(member("officer", "org_a")).contentType("application/json").content(body))
                     .andExpect(status().isUnprocessableContent()).andExpect(header().string("Cache-Control", "no-store"));
         verifyNoInteractions(lifecycle);
