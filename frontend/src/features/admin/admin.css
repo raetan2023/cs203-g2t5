@@ -63,6 +63,8 @@
 .bb-admin-team-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--bb-space-4); padding: var(--bb-space-3) 0; border-bottom: 1px solid var(--bb-border-subtle); }
 .bb-admin-team-list li:last-child { border-bottom: 0; }
 .bb-admin-team-list label { min-width: 0; overflow-wrap: anywhere; font-size: var(--bb-text-md); }
+.bb-admin-team-person { display: flex; flex-direction: column; }
+.bb-admin-team-email { font-size: var(--bb-text-xs); color: var(--bb-text-secondary); }
 .bb-admin-team-choice { display: flex; align-items: center; gap: var(--bb-space-3); min-width: 0; }
 .bb-admin-team-warning { flex-shrink: 0; font-size: var(--bb-text-xs); color: var(--bb-warning-text); }
 .bb-admin-team-choice select { width: 280px; max-width: 100%; padding: var(--bb-space-2) var(--bb-space-3); color: var(--bb-text); background: var(--bb-surface-input); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font: inherit; font-size: var(--bb-text-md); }

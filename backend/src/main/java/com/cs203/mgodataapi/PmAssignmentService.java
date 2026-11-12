@@ -13,8 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 /** Which procurement manager oversees each procurement officer in an organisation. */
 @Service
 public class PmAssignmentService {
-    public record Officer(UUID user_id, String label, UUID pm_user_id) {}
-    public record Manager(UUID user_id, String label, int officer_count) {}
+    /** {@code label} is the name when known; {@code email} helps tell apart people with the same name. */
+    public record Officer(UUID user_id, String label, String email, UUID pm_user_id) {}
+    public record Manager(UUID user_id, String label, String email, int officer_count) {}
     public record Overview(List<Officer> officers, List<Manager> managers) {}
 
     private final JdbcTemplate jdbc;
@@ -25,22 +26,22 @@ public class PmAssignmentService {
 
     public Overview overview(String organisationId) {
         var officers = jdbc.query("""
-                select m.user_id, coalesce(nullif(trim(u.email), ''), u.clerk_user_id) as label, a.pm_user_id
+                select m.user_id, %s as label, u.email, a.pm_user_id
                 from organisation_members m
                 join users u on u.user_id = m.user_id
                 left join pm_assignments a on a.po_user_id = m.user_id and a.clerk_org_id = m.clerk_org_id
                 where m.clerk_org_id = ? and m.role = 'org:officer'
-                order by label, m.user_id""", (rs, row) -> new Officer(rs.getObject("user_id", UUID.class),
-                    rs.getString("label"), rs.getObject("pm_user_id", UUID.class)), organisationId);
+                order by label, m.user_id""".formatted(UserAccounts.labelOf("u")), (rs, row) -> new Officer(rs.getObject("user_id", UUID.class),
+                    rs.getString("label"), rs.getString("email"), rs.getObject("pm_user_id", UUID.class)), organisationId);
         var managers = jdbc.query("""
-                select m.user_id, coalesce(nullif(trim(u.email), ''), u.clerk_user_id) as label, count(a.po_user_id) as officer_count
+                select m.user_id, %s as label, u.email, count(a.po_user_id) as officer_count
                 from organisation_members m
                 join users u on u.user_id = m.user_id
                 left join pm_assignments a on a.pm_user_id = m.user_id and a.clerk_org_id = m.clerk_org_id
                 where m.clerk_org_id = ? and m.role = 'org:manager'
-                group by m.user_id, u.email, u.clerk_user_id
-                order by label, m.user_id""", (rs, row) -> new Manager(rs.getObject("user_id", UUID.class),
-                    rs.getString("label"), rs.getInt("officer_count")), organisationId);
+                group by m.user_id, u.email, u.clerk_user_id, u.display_name
+                order by label, m.user_id""".formatted(UserAccounts.labelOf("u")), (rs, row) -> new Manager(rs.getObject("user_id", UUID.class),
+                    rs.getString("label"), rs.getString("email"), rs.getInt("officer_count")), organisationId);
         return new Overview(officers, managers);
     }
 

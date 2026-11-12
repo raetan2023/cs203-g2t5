@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppLink } from '../../app/router';
-import { formatDate } from '../purchase-plan/dates';
+import { formatDate, formatDateTime } from '../purchase-plan/dates';
 import { requestError, type PlanAnalysis, type PurchasePlan, type PurchasePlanService, type SubmissionResponse } from '../purchase-plan/types';
 import type { Horizon } from '../forecast/apiService';
 import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
 import { PlanLifecycleActions, PurchaseOutcome } from './PlanLifecycleActions';
 import { ManagerDecisionForm } from './ManagerDecisionForm';
 import { EvidenceView } from './RecommendationEvidence';
-import { actionLabel, amount, dayDate, readableDates, usd } from './format';
-import { decisionTime } from '../purchase-plan/components/PlanDecisionNote';
+import { actionLabel, amount, readableDates, usd } from './format';
 
 export const SUBMIT_LABEL = 'Accept and submit for approval';
 
@@ -82,7 +81,7 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
   const current = result?.scope === scope ? result : undefined;
   const submission = current?.submission;
   const decision = current?.decision;
-  const status = plan.status === 'purchased' || plan.status === 'withdrawn' ? plan.status : decision?.decision ?? plan.status;
+  const status = plan.status === 'purchased' || plan.status === 'withdrawn' || plan.status === 'closed' ? plan.status : decision?.decision ?? plan.status;
   const refreshDecision = () => { setResult(undefined); setAttempt(value => value + 1); };
   const analysis = submission?.analysis;
   const rec = analysis?.recommendation.status === 'ready' ? analysis.recommendation.value : undefined;
@@ -96,15 +95,16 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
     : !canAct ? 'Read-only access to the saved request, manager decision and purchase history.' : status === 'submitted' ? 'Await a manager decision.'
     : status === 'purchased' ? 'The actual purchase is recorded below. The plan and approval history remain saved.'
     : status === 'withdrawn' ? 'This request was withdrawn. Copy it to a new draft to request approval again.'
+    : status === 'closed' ? 'Closed because the officer is no longer a procurement officer. It can no longer be bought.'
     : approved ? 'Buy using a current supplier quote, then record the actual purchase. Approval does not place an order.'
     : 'This plan stays locked. Copy it to a new draft to review the quantity and deadline before submitting again.';
-  const title = status === 'purchased' ? 'Purchase recorded' : status === 'withdrawn' ? 'Request withdrawn'
+  const title = status === 'purchased' ? 'Purchase recorded' : status === 'withdrawn' ? 'Request withdrawn' : status === 'closed' ? 'Plan closed'
     : status === 'approved' ? 'Recommendation approved' : status === 'rejected' ? 'Recommendation rejected' : 'Awaiting manager approval';
   return <main className="recommendations">
     <header className="rec-header">
       <AppLink href="/purchase-plans" aria-label="Back to purchase plans"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>Purchase plans</AppLink>
       <h1>Submitted recommendation</h1>
-      <p>{quantity} MT · due {dayDate(deadline, true)}{plan.submitted_at && <> · submitted <time dateTime={plan.submitted_at}>{decisionTime(plan.submitted_at)}</time></>}</p>
+      <p>{quantity} MT · due {formatDate(deadline)}{plan.submitted_at && <> · submitted <time dateTime={plan.submitted_at}>{formatDateTime(plan.submitted_at)}</time></>}</p>
     </header>
     {plan.previous_plan_id && <PreviousPlanNote plan={plan} service={planService} />}
     {!current ? <section className="rec-card" role="status"><h2>Loading submitted recommendation…</h2><div className="rec-skeleton" aria-hidden="true" /></section>
@@ -115,14 +115,14 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
             <span className="rec-verdict-icon" aria-hidden="true"><StatusIcon status={status} /></span>
             <div><span className="rec-kicker">Approval status</span>
               <h2>{title}</h2>
-              <p className="rec-tagline">{decision ? <>Decided by {decision.manager_label} · <time dateTime={decision.decided_at}>{decisionTime(decision.decided_at)}</time></>
-                : status === 'withdrawn' ? 'Managers can no longer approve this request.' : 'All managers in your organisation have been notified. The plan is locked while it’s reviewed.'}</p>
-              {decision && decision.manager_label !== decision.manager_clerk_user_id && <p className="rec-context">Manager account: {decision.manager_clerk_user_id}</p>}
+              <p className="rec-tagline">{decision ? <>Decided by {decision.manager_label} · <time dateTime={decision.decided_at}>{formatDateTime(decision.decided_at)}</time></>
+                : status === 'withdrawn' ? 'The manager can no longer approve this request.' : `${canAct ? 'Your' : 'The officer’s'} Procurement Manager has been notified. The plan is locked while it’s reviewed.`}</p>
+              {decision && decision.manager_label !== decision.manager_clerk_user_id && decision.manager_clerk_user_id !== 'system' && <p className="rec-context">Manager account: {decision.manager_clerk_user_id}</p>}
             </div>
           </div>
           {decision?.comment && <div className="rec-status-comment"><span className="rec-kicker">{decision.decision === 'approved' ? 'Manager’s comment' : 'Reason for rejection'}</span><p className="rec-decision-comment">{decision.comment}</p></div>}
           <p className="rec-next"><strong>Next step</strong> {nextStep}</p>
-          {current.withdrawal && <p>Withdrawn {decisionTime(current.withdrawal.withdrawn_at)}{current.withdrawal.reason && ` · ${current.withdrawal.reason}`}</p>}
+          {current.withdrawal && <p>Withdrawn {formatDateTime(current.withdrawal.withdrawn_at)}{current.withdrawal.reason && ` · ${current.withdrawal.reason}`}</p>}
           {canAct && <PlanLifecycleActions key={`${plan.plan_id}:${status}:${today}`} plan={{ ...plan, status }} data={{ ...current, submission: submission ?? null }}
             service={planService} today={today} onChanged={saved => onChanged?.(saved)} onReload={onReload ?? refreshDecision} />}
           {!canAct && current.revision_plan_ids?.map(id => <p key={id}><AppLink href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(id)}`}>View copied plan</AppLink></p>)}
@@ -136,8 +136,8 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
             <div><span className="rec-kicker">Saved recommendation</span><strong className="rec-rail-action">{rec ? actionLabel(rec.action) : 'Not saved'}</strong></div>
             <dl className="rec-rail-facts">
               <div><dt>Plan</dt><dd>{quantity} MT</dd></div>
-              <div><dt>Deadline</dt><dd>{dayDate(deadline)}</dd></div>
-              {submission && <div><dt>Cost detail</dt><dd>{cost ? `${submission.horizon_days}-day${saved ? ` · ${dayDate(saved.target_date)}` : ''}` : 'Reference price'}</dd></div>}
+              <div><dt>Deadline</dt><dd>{formatDate(deadline)}</dd></div>
+              {submission && <div><dt>Cost detail</dt><dd>{cost ? `${submission.horizon_days}-day${saved ? ` · ${formatDate(saved.target_date)}` : ''}` : 'Reference price'}</dd></div>}
               {cost && <div><dt>Saved estimate</dt><dd>{cost.central_total == null ? `${usd(cost.forecast_total.lower)}–${amount(cost.forecast_total.upper)}` : usd(cost.central_total)}</dd></div>}
             </dl>
           </div>
@@ -173,6 +173,7 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
 function StatusIcon({ status }: { status?: string }) {
   const path = status === 'approved' || status === 'purchased' ? <path d="M5 12.5l4.5 4.5L19 7.5" />
     : status === 'rejected' || status === 'withdrawn' ? <path d="M6 6l12 12M18 6L6 18" />
+    : status === 'closed' ? <path d="M6 12h12" />
     : <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>;
   return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{path}</svg>;
 }

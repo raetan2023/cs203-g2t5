@@ -54,12 +54,13 @@ class PlanLifecycleServiceTests {
                 decision TEXT, created_at TIMESTAMP WITH TIME ZONE, seen_at TIMESTAMP WITH TIME ZONE)""");
         jdbc.execute("""
                 CREATE TABLE plan_withdrawals (plan_id UUID PRIMARY KEY REFERENCES purchase_plans(plan_id), clerk_org_id TEXT, buyer_user_id UUID,
-                reason TEXT, withdrawn_at TIMESTAMP WITH TIME ZONE)""");
+                reason TEXT, withdrawn_at TIMESTAMP WITH TIME ZONE, manager_user_id UUID)""");
         jdbc.execute("""
                 CREATE TABLE purchase_records (purchase_id UUID PRIMARY KEY, plan_id UUID UNIQUE REFERENCES purchase_plans(plan_id),
                 clerk_org_id TEXT, buyer_user_id UUID, purchased_on DATE, supplier TEXT,
                 quantity_mt NUMERIC(30,6), price_usd_per_mt NUMERIC(30,6), note TEXT, recorded_at TIMESTAMP WITH TIME ZONE)""");
-        jdbc.execute("CREATE TABLE pm_assignments (po_user_id UUID NOT NULL, clerk_org_id TEXT NOT NULL, pm_user_id UUID NOT NULL, PRIMARY KEY (po_user_id, clerk_org_id))");
+
+        jdbc.execute("CREATE TABLE users (user_id UUID PRIMARY KEY, clerk_user_id TEXT, email TEXT, display_name TEXT)");        jdbc.execute("CREATE TABLE pm_assignments (po_user_id UUID NOT NULL, clerk_org_id TEXT NOT NULL, pm_user_id UUID NOT NULL, PRIMARY KEY (po_user_id, clerk_org_id))");
         jdbc.update("INSERT INTO pm_assignments VALUES (?, ?, ?)", buyer, "org_a", manager);
         plans = new PurchasePlanRepository(jdbc);
         var dates = new OperationalDate(clock);
@@ -272,5 +273,43 @@ class PlanLifecycleServiceTests {
         var comparison = lifecycle.comparison(plan, "org_a", lifecycle.purchase(id, "org_a"));
         assertEquals(new BigDecimal("10000"), comparison.get("reference_total"));
         assertNull(comparison.get("central_total")); assertNull(comparison.get("actual_minus_estimate"));
+    }
+
+    @Test void aWithdrawnRequestLeavesTheInboxFiveDaysAfterWithdrawal() {
+        lifecycle.withdraw(id, buyer, "org_a", null);
+        assertEquals(1, approvals.notifications("org_a", manager).size(), "still shown just after withdrawal");
+        java.util.function.Function<Duration, PlanApprovalService> at = after -> {
+            var later = Clock.fixed(now.plus(after), ZoneOffset.UTC);
+            return new PlanApprovalService(plans, jdbc, new OperationalDate(later), later, null, tools.jackson.databind.json.JsonMapper.builder().build());
+        };
+        assertEquals(1, at.apply(Duration.ofDays(5)).notifications("org_a", manager).size(), "shown for the full five days");
+        assertTrue(at.apply(Duration.ofDays(5).plusSeconds(1)).notifications("org_a", manager).isEmpty());
+        assertTrue(plans.withdrawnBefore("org_a", now).isEmpty());
+        assertEquals(java.util.Set.of(id), plans.withdrawnBefore("org_a", now.plusSeconds(1)));
+        assertTrue(plans.withdrawnBefore("org_b", now.plusSeconds(1)).isEmpty());
+    }
+
+    @Test void requestsStillPendingFiveDaysAfterTheirDeadlineAreRejectedAutomatically() {
+        var rejector = new OverdueRequestRejector(jdbc, approvals, new OperationalDate(clock), true);
+        // Four days past the deadline: still waiting.
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today.minusDays(4), id);
+        assertEquals(0, rejector.rejectDue());
+        assertEquals("submitted", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
+        // Five days past: rejected, recorded and the officer notified.
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today.minusDays(5), id);
+        assertEquals(1, rejector.rejectDue());
+        assertEquals("rejected", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
+        var decision = approvals.decision(id, "org_a");
+        assertEquals(PlanApprovalService.AUTOMATIC_LABEL, decision.get("manager_label"));
+        assertEquals(PlanApprovalService.AUTOMATIC_REASON, decision.get("comment"));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM plan_decision_notifications WHERE plan_id = ? AND decision = 'rejected'", Integer.class, id));
+        assertEquals(0, rejector.rejectDue(), "already decided requests are left alone");
+    }
+
+    @Test void anOverdueRequestWithoutAManagerWaitsForOne() {
+        jdbc.update("DELETE FROM pm_assignments");
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today.minusDays(30), id);
+        assertEquals(0, new OverdueRequestRejector(jdbc, approvals, new OperationalDate(clock), true).rejectDue());
+        assertEquals("submitted", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
     }
 }

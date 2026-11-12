@@ -88,7 +88,7 @@ export function createMockPlanService(options: MockOptions = {}): PurchasePlanSe
     },
     async revise(id) {
       await wait('revise'); const plan = owned(id);
-      if (plan.status !== 'rejected' && plan.status !== 'withdrawn') throw new PlanError('Only rejected or withdrawn plans can be copied.', {}, 409);
+      if (plan.status !== 'rejected' && plan.status !== 'withdrawn' && plan.status !== 'closed') throw new PlanError('Only rejected or withdrawn plans can be copied.', {}, 409);
       const copy = active({ ...plan, plan_id: crypto.randomUUID(), previous_plan_id: id, status: 'draft', submitted_at: null });
       plans.push(copy); return { plan: { ...copy } };
     },

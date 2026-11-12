@@ -63,12 +63,23 @@ class ClerkWebhookVerifierTests {
         var membership = ClerkMembershipSync.Membership.from(java.util.Map.of(
                 "role", "org:manager", "organization", java.util.Map.of("id", "org_abc"),
                 "public_user_data", java.util.Map.of("user_id", "user_1", "identifier", "pm@example.com")));
-        assertEquals(new ClerkMembershipSync.Membership("org_abc", "user_1", "org:manager", "pm@example.com"), membership);
+        assertEquals(new ClerkMembershipSync.Membership("org_abc", "user_1", "org:manager", "pm@example.com", null), membership);
         assertTrue(membership.valid());
         assertNull(ClerkMembershipSync.Membership.from(java.util.Map.of("public_user_data", java.util.Map.of("identifier", "+6591234567"))).email());
         assertFalse(ClerkMembershipSync.Membership.from(java.util.Map.of("organization", java.util.Map.of("id", "bad org"))).valid());
         assertEquals("b@example.com", ClerkMembershipSync.primaryEmail(java.util.Map.of("primary_email_address_id", "e2",
                 "email_addresses", java.util.List.of(java.util.Map.of("id", "e1", "email_address", "a@example.com"),
                         java.util.Map.of("id", "e2", "email_address", "b@example.com")))));
+    }
+
+    @Test void readsANameFromClerkFirstAndLastNames() {
+        assertEquals("Rae Tan", ClerkMembershipSync.name(java.util.Map.of("first_name", " Rae ", "last_name", "Tan")));
+        assertEquals("Rae", ClerkMembershipSync.name(java.util.Map.of("first_name", "Rae")));
+        assertEquals("Tan", ClerkMembershipSync.name(java.util.Map.of("last_name", "Tan")));
+        assertNull(ClerkMembershipSync.name(java.util.Map.of("first_name", "  ")));
+        var membership = ClerkMembershipSync.Membership.from(java.util.Map.of(
+                "organization", java.util.Map.of("id", "org_abc"), "role", "org:officer",
+                "public_user_data", java.util.Map.of("user_id", "user_2", "identifier", "rae@example.com", "first_name", "Rae", "last_name", "Tan")));
+        assertEquals("Rae Tan", membership.name());
     }
 }

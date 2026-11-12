@@ -1,9 +1,17 @@
-export type PlanStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased';
+/** 'closed': approved but never bought, because the officer stopped being an officer. */
+export type PlanStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased' | 'closed';
+export type OverviewPeriod = '30d' | 'all';
 export interface ManagerOverview {
-  plan_count: number;
+  /** Plans a manager approved, including those since purchased. */
   total_quantity_mt: number;
+  /** MT recorded in purchase records. */
+  purchased_quantity_mt: number;
+  /** Approved but not yet purchased; the basis for exposure. */
   open_quantity_mt: number;
-  pending_approval_count: number;
+  /** Bought minus planned over purchased plans: negative when officers bought less than approved. */
+  purchase_difference_mt?: number;
+  /** Everyone the manager oversees, with their counted plans in the chosen period. */
+  officers?: { user_id: string; label: string; plan_count: number }[];
   reference_price_usd_per_mt: number | null;
   reference_date: string | null;
   exposure_usd: number | null;
@@ -15,6 +23,9 @@ export interface ApprovalNotification {
   quantity_mt: number;
   purchase_deadline: string;
   status: PlanStatus;
+  /** Who submitted it: their name when known, otherwise their email. */
+  buyer_label: string;
+  buyer_user_id: string;
 }
 
 export interface PurchasePlan {
@@ -27,6 +38,9 @@ export interface PurchasePlan {
   purchase_deadline: string;
   scenario_as_of_date: string;
   days_remaining: number;
+  /** Sent to managers only, so they can filter plans by officer. */
+  buyer_user_id?: string;
+  buyer_label?: string;
 }
 
 export interface RecommendationSelection {
@@ -246,7 +260,8 @@ export interface BuyerDecisionRecord {
 }
 
 export interface PurchasePlanService {
-  managerOverview?(): Promise<ManagerOverview>;
+  /** '30d' counts only plans approved in the last 30 days, for every figure. */
+  managerOverview?(period?: OverviewPeriod, officerIds?: string[]): Promise<ManagerOverview>;
   /** MPP-97: record and read the buyer's own accept/reject/ignore answers. Optional so preview/mocks can omit them. */
   recordRecommendationDecision?(planId: string, input: BuyerDecisionInput): Promise<BuyerDecisionRecord>;
   readRecommendationDecisions?(planId?: string): Promise<BuyerDecisionRecord[]>;

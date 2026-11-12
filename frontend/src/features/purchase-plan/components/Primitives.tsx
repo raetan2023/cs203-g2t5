@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef } from 'react';
 
-export function Icon({ name }: { name: 'plus' | 'trash' | 'alert' | 'anchor' | 'menu' | 'more' | 'clock' | 'check' | 'check-circle' | 'cross-circle' | 'refresh' | 'chevron-down' }) {
+export function Icon({ name }: { name: 'plus' | 'trash' | 'alert' | 'anchor' | 'menu' | 'more' | 'clock' | 'check' | 'check-circle' | 'cross-circle' | 'minus-circle' | 'slash-circle' | 'refresh' | 'chevron-down' }) {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     {name === 'plus' && <path d="M12 5v14M5 12h14" />}
     {name === 'trash' && <><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" /></>}
@@ -12,6 +12,8 @@ export function Icon({ name }: { name: 'plus' | 'trash' | 'alert' | 'anchor' | '
     {name === 'check' && <path d="M5 12.5l4.5 4.5L19 7" />}
     {name === 'check-circle' && <><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.8 2.8L16.5 9.5" /></>}
     {name === 'cross-circle' && <><circle cx="12" cy="12" r="9" /><path d="M9 9l6 6M15 9l-6 6" /></>}
+    {name === 'slash-circle' && <><circle cx="12" cy="12" r="9" /><path d="M5.6 18.4L18.4 5.6" /></>}
+    {name === 'minus-circle' && <><circle cx="12" cy="12" r="9" /><path d="M8 12h8" /></>}
     {name === 'refresh' && <path d="M20 11a8 8 0 0 0-14.3-4.3L3 9.5M3 4v5.5h5.5M4 13a8 8 0 0 0 14.3 4.3l2.7-2.8M21 20v-5.5h-5.5" />}
     {name === 'chevron-down' && <path d="M6 9l6 6 6-6" />}
   </svg>;

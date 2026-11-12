@@ -3,6 +3,12 @@ import type { ApprovalDecision, PurchasePlan, PurchasePlanService } from '../typ
 import { Icon } from './Primitives';
 
 export const decisionTime = (value: string) => new Date(value).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+/** "Bought 195 MT of 200 MT planned. " or "Bought all 200 MT. "; empty until the purchase has loaded. */
+export function boughtText(bought: number | undefined, planned: number) {
+  if (bought === undefined) return '';
+  const mt = (value: number) => `${value.toLocaleString('en-GB', { maximumFractionDigits: 3 })} MT`;
+  return bought === planned ? `Bought all ${mt(planned)}. ` : `Bought ${mt(bought)} of ${mt(planned)} planned. `;
+}
 const decisionDay = (value: string) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 
 /** The officer's card note: always one line. The status pill and the buttons carry the rest. */
@@ -18,24 +24,28 @@ function NoteLine({ icon, text, tone, busy = false }: { icon: 'clock' | 'check-c
  */
 export function PlanDecisionNote({ plan, service, canAct = true }: { plan: PurchasePlan; service?: PurchasePlanService; canAct?: boolean }) {
   const decided = plan.status === 'approved' || plan.status === 'rejected';
-  const [result, setResult] = useState<{ planId: string; status?: string; decision?: ApprovalDecision | null; error?: boolean }>();
+  // A purchased plan also reads its submission, for the amount actually bought.
+  const reads = decided || plan.status === 'purchased';
+  const [result, setResult] = useState<{ planId: string; status?: string; decision?: ApprovalDecision | null; bought?: number; error?: boolean }>();
   useEffect(() => {
-    if (!decided || !service?.readSubmission) return;
+    if (!reads || !service?.readSubmission) return;
     let active = true;
     service.readSubmission(plan.plan_id)
-      .then(({ decision }) => { if (active) setResult({ planId: plan.plan_id, status: plan.status, decision: decision ?? null }); })
+      .then(({ decision, purchase }) => { if (active) setResult({ planId: plan.plan_id, status: plan.status, decision: decision ?? null, bought: purchase?.quantity_mt }); })
       .catch(() => { if (active) setResult({ planId: plan.plan_id, status: plan.status, error: true }); });
     return () => { active = false; };
-  }, [decided, service, plan.plan_id, plan.status]);
+  }, [reads, service, plan.plan_id, plan.status]);
+  const bought = result?.planId === plan.plan_id && result.status === plan.status ? result.bought : undefined;
 
-  if (canAct && plan.status === 'submitted') return <NoteLine icon="clock" text="Locked while managers review it." />;
-  if (canAct && plan.status === 'purchased') return <NoteLine icon="check-circle" text="See the actual cost and saved estimate." />;
+  if (canAct && plan.status === 'submitted') return <NoteLine icon="clock" text="Locked while your manager reviews it." />;
+  if (canAct && plan.status === 'purchased') return <NoteLine icon="check-circle" text={`${boughtText(bought, plan.quantity_mt)}See the actual cost and saved estimate.`} />;
   if (canAct && plan.status === 'withdrawn') return <NoteLine icon="cross-circle" text="You withdrew this request." />;
   if (plan.status === 'submitted') return <div className="pp-decision pp-decision--submitted">
-    <Icon name="clock" /><p><strong>Awaiting manager approval.</strong> All managers in your organisation have been notified. This plan is locked while awaiting review.</p>
+    <Icon name="clock" /><p><strong>Awaiting manager approval.</strong> The officer’s Procurement Manager has been notified. This plan is locked while awaiting review.</p>
   </div>;
-  if (plan.status === 'purchased') return <div className="pp-decision"><Icon name="check-circle" /><p>Purchase recorded. Open this plan to see the actual cost and saved estimate.</p></div>;
+  if (plan.status === 'purchased') return <div className="pp-decision"><Icon name="check-circle" /><p>Purchase recorded. {boughtText(bought, plan.quantity_mt)}Open this plan to see the actual cost and saved estimate.</p></div>;
   if (plan.status === 'withdrawn') return <div className="pp-decision"><Icon name="cross-circle" /><p>Request withdrawn. Copy it to a new draft to request approval again.</p></div>;
+  if (plan.status === 'closed') return <div className="pp-decision"><Icon name="minus-circle" /><p>Closed because the officer is no longer a procurement officer. It can no longer be bought.</p></div>;
   if (!decided) return null;
   const approved = plan.status === 'approved';
   const current = result?.planId === plan.plan_id && result.status === plan.status ? result : undefined;
