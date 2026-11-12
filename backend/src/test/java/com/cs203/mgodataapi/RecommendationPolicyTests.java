@@ -16,13 +16,29 @@ class RecommendationPolicyTests {
         return new Prices(date, Result.ready(new Reference(new BigDecimal("720"), date, basis)),
                 Result.ready(new Forecast(new Range(new BigDecimal(point).subtract(BigDecimal.ONE), new BigDecimal(point).add(BigDecimal.ONE)), date.plusDays(days), basis, "Experimental bounds", days + " days", new BigDecimal(point))));
     }
+    @Test void allEligibleHorizonsContributeInverseDayWeights() {
+        var result = RecommendationPolicy.evaluateAvailable(context(30),
+                List.of(prices(30, "680"), prices(7, "710"), prices(14, "695")));
+        var inputs = result.evidence().signal_inputs();
+        assertEquals(3, inputs.size());
+        assertEquals(date.plusDays(7), inputs.get(0).target_date());
+        assertEquals(date.plusDays(30), inputs.get(2).target_date());
+        assertEquals(0.576923, inputs.get(0).weight().doubleValue(), 0.000001);
+        assertEquals(0.288462, inputs.get(1).weight().doubleValue(), 0.000001);
+        assertEquals(0.134615, inputs.get(2).weight().doubleValue(), 0.000001);
+        assertEquals(0, BigDecimal.ONE.compareTo(inputs.stream().map(SignalInput::weight)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)));
+        assertEquals(701.634615, result.evidence().signal_price().doubleValue(), 0.000001);
+        assertEquals(700.634615, result.evidence().signal_low().doubleValue(), 0.000001);
+        assertEquals(702.634615, result.evidence().signal_high().doubleValue(), 0.000001);
+    }
     @Test void twentyDayExample() {
         var result = RecommendationPolicy.evaluateAvailable(context(20), List.of(prices(7, "710"), prices(14, "695"), prices(30, "680")));
         assertEquals("WAIT", result.action());
-        assertEquals(date.plusDays(14), result.evidence().supported_target_date());
-        assertTrue(result.explanation().contains("$20.26/mt"));
-        assertEquals(-2028.85, result.evidence().alternative_minus_now_usd().doubleValue(), 0.01);
-        assertTrue(result.evidence().reasons().stream().anyMatch(s -> s.contains("68.42%") && s.contains("31.58%")));
+        assertEquals(date.plusDays(7), result.evidence().supported_target_date());
+        assertTrue(result.explanation().contains("$15.00/mt"));
+        assertEquals(-1501.875, result.evidence().alternative_minus_now_usd().doubleValue(), 0.01);
+        assertTrue(result.evidence().reasons().stream().anyMatch(s -> s.contains("66.67%") && s.contains("33.33%")));
         assertTrue(result.evidence().reasons().stream().anyMatch(s -> s.contains("Excluded")));
     }
     @Test void deadlineInclusiveAndTodayCheaper() {
@@ -34,7 +50,7 @@ class RecommendationPolicyTests {
     }
     @Test void tiesPreferTodayAndBlendedSignalUsesNearestEligibleDate() {
         assertEquals("MONITOR", RecommendationPolicy.evaluate(context(30), prices(7, "720")).action());
-        assertEquals(date.plusDays(14), RecommendationPolicy.evaluateAvailable(context(30), List.of(prices(14, "695"), prices(7, "695"))).evidence().supported_target_date());
+        assertEquals(date.plusDays(7), RecommendationPolicy.evaluateAvailable(context(30), List.of(prices(14, "695"), prices(7, "695"))).evidence().supported_target_date());
     }
     @Test void shortAndOverdueDeadlines() {
         for (int days : new int[] {0, 1, 6}) assertEquals("BUY_NOW", RecommendationPolicy.evaluate(context(days), prices(7, "695")).action());
@@ -53,15 +69,16 @@ class RecommendationPolicyTests {
         assertEquals("WAIT", RecommendationPolicy.evaluate(context(20).withUrgency("HIGH"), prices(14, "695")).action());
         assertEquals(RecommendationPolicy.evaluate(context(20), prices(14, "695")), RecommendationPolicy.evaluate(context(20), prices(14, "695")));
     }
-    @Test void blendCanRejectWaitingEvenWhenOneIndividualForecastIsCheaper() {
+    @Test void nearTermDipReceivesMoreWeightThanLaterIncrease() {
         var result = RecommendationPolicy.evaluateAvailable(context(20), List.of(prices(7, "600"), prices(14, "800"), prices(30, "500")));
-        assertEquals("BUY_NOW", result.action());
-        assertEquals(0, result.evidence().alternative_minus_now_usd().signum());
+        assertEquals("WAIT", result.action());
+        assertEquals(date.plusDays(7), result.evidence().supported_target_date());
+        assertTrue(result.evidence().alternative_minus_now_usd().signum() < 0);
     }
-    @Test void exactDeadlineUsesOnlyMatchingForecast() {
+    @Test void exactDeadlineDoesNotOverrideNearTermWeighting() {
         var result = RecommendationPolicy.evaluateAvailable(context(14), List.of(prices(7, "600"), prices(14, "730")));
-        assertEquals("BUY_NOW", result.action());
-        assertTrue(result.evidence().reasons().stream().anyMatch(s -> s.contains("100%")));
+        assertEquals("WAIT", result.action());
+        assertTrue(result.evidence().reasons().stream().anyMatch(s -> s.contains("66.67%") && s.contains("33.33%")));
     }
     @Test void uncertaintyOverlapProducesMonitorWithDirectionAndPotentialSavings() {
         var original = prices(14, "695");
@@ -78,7 +95,7 @@ class RecommendationPolicyTests {
         var wide = new Prices(date, b.reference(), Result.ready(new Forecast(new Range(new BigDecimal("600"), new BigDecimal("800")), date.plusDays(14), basis, "Wide", "14 days", new BigDecimal("695"))));
         var result = RecommendationPolicy.evaluateAvailable(context(20), List.of(a, wide));
         assertEquals("MONITOR", result.action());
-        assertTrue(result.evidence().reasons().stream().anyMatch(reason -> reason.contains("$634.42") && reason.contains("$771.89")));
+        assertTrue(result.evidence().reasons().stream().anyMatch(reason -> reason.contains("$672.67") && reason.contains("$740.67")));
     }
     @Test void staleReferenceProducesMonitorAndMalformedForecastCannotCreateSavings() {
         var p = prices(14, "695");
