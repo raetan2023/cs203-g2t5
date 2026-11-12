@@ -29,7 +29,7 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, onCopy, c
   const headingId = useId();
   const draft = !plan.status || plan.status === 'draft';
   const quantity = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 20 }).format(plan.quantity_mt);
-  const closed = !!plan.status && ['rejected', 'withdrawn', 'purchased'].includes(plan.status);
+  const closed = !!plan.status && ['rejected', 'withdrawn', 'purchased', 'closed'].includes(plan.status);
   // An approved plan is still live for its officer until the purchase is recorded, so its deadline still shows.
   const showDeadline = !closed && (canEdit || plan.status !== 'approved');
   const overdue = plan.days_remaining < 0;
@@ -40,7 +40,7 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, onCopy, c
   const statusLabel = draft ? 'Draft' : plan.status === 'submitted' ? 'Awaiting approval' : plan.status!.charAt(0).toUpperCase() + plan.status!.slice(1);
   const planHref = (planId: string) => `/purchase-plans/recommendation?plan_id=${encodeURIComponent(planId)}`;
   const editOnly = canEdit && draft && overdue;
-  const copyable = canEdit && (plan.status === 'rejected' || plan.status === 'withdrawn') && (!!onCopy || !!copiedPlanId);
+  const copyable = canEdit && (plan.status === 'rejected' || plan.status === 'withdrawn' || plan.status === 'closed') && (!!onCopy || !!copiedPlanId);
   const openLabel = draft ? 'View recommendation' : plan.status === 'submitted' ? 'View submitted recommendation' : plan.status === 'approved' && canEdit ? 'Record purchase' : plan.status === 'purchased' ? 'View purchase record' : plan.status === 'withdrawn' ? 'View withdrawn request' : 'View decision';
 
   // Guide: docs/ui-revamp/assets/inspo/purchase-plans-page/image.png. Quantity leads; deadline and time left follow.

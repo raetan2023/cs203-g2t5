@@ -30,14 +30,20 @@ describe('createApiPlanService', () => {
     await expect(service.readSubmission!('p1')).rejects.toMatchObject({ status: 502 });
   });
   it('loads manager exposure using the session without accepting a requested team', async () => {
-    const value = { plan_count: 2, total_quantity_mt: 20, open_quantity_mt: 10, pending_approval_count: 1,
+    const value = { total_quantity_mt: 20, purchased_quantity_mt: 5, open_quantity_mt: 10,
       reference_price_usd_per_mt: 600, reference_date: '2026-11-02', exposure_usd: 6000 };
     const fetchMock = mockFetch(200, value);
     await expect(service.managerOverview!()).resolves.toEqual(value);
-    expect(fetchMock.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/manager-overview');
+    expect(fetchMock.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/manager-overview?period=all');
+    mockFetch(200, value);
+    await service.managerOverview!('30d');
+    expect(globalThis.fetch).toHaveBeenLastCalledWith('http://backend.test/api/v1/purchase-plans/manager-overview?period=30d', expect.anything());
+    mockFetch(200, value);
+    await service.managerOverview!('all', ['u1', 'u2']);
+    expect(globalThis.fetch).toHaveBeenLastCalledWith('http://backend.test/api/v1/purchase-plans/manager-overview?period=all&officer=u1&officer=u2', expect.anything());
     expect(fetchMock.mock.calls[0][1].headers).toEqual({ Authorization: 'Bearer session-token' });
     for (const invalid of [{ ...value, exposure_usd: -1 }, { ...value, reference_date: null },
-      { ...value, open_quantity_mt: 21 }, { ...value, plan_count: 0.5 }]) {
+      { ...value, open_quantity_mt: 21 }, { ...value, purchased_quantity_mt: -1 }, { total_quantity_mt: 20, open_quantity_mt: 10 }]) {
       mockFetch(200, invalid);
       await expect(service.managerOverview!()).rejects.toMatchObject({ status: 502 });
     }
@@ -212,6 +218,13 @@ describe('approval API contracts', () => {
   it('reads and validates the manager inbox, propagating forbidden responses', async () => {
     const fetchMock = mockFetch(200, { notifications: [] });
     await expect(service.notifications!()).resolves.toEqual({ notifications: [] });
+    const row = { notification_id: 'n1', plan_id: 'p1', created_at: '2026-10-27T08:00:00Z', quantity_mt: 5, purchase_deadline: '2026-11-01', status: 'submitted', buyer_label: 'Rae Tan', buyer_user_id: 'u-rae' };
+    mockFetch(200, { notifications: [row] });
+    await expect(service.notifications!()).resolves.toEqual({ notifications: [row] });
+    mockFetch(200, { notifications: [{ ...row, buyer_label: ' ' }] });
+    await expect(service.notifications!()).rejects.toMatchObject({ status: 502 });
+    mockFetch(200, { notifications: [] });
+    await service.notifications!();
     expect(fetchMock.mock.calls[0][0]).toBe('http://backend.test/api/v1/purchase-plans/approval-notifications');
     mockFetch(200, { notifications: [{ notification_id: 'n1', quantity_mt: 'invalid' }] });
     await expect(service.notifications!()).rejects.toMatchObject({ status: 502 });

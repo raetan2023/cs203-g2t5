@@ -43,7 +43,9 @@ class PlanApprovalServiceTests {
         jdbc.execute("CREATE TABLE plan_approval_decisions (decision_id UUID PRIMARY KEY, plan_id UUID NOT NULL UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, manager_user_id UUID NOT NULL, manager_clerk_user_id TEXT NOT NULL, manager_label TEXT NOT NULL, decision TEXT NOT NULL, decision_comment TEXT NOT NULL, decided_at TIMESTAMP WITH TIME ZONE NOT NULL)");
         jdbc.execute("CREATE TABLE plan_decision_notifications (notification_id UUID PRIMARY KEY, plan_id UUID UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, decision TEXT NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, seen_at TIMESTAMP WITH TIME ZONE)");
         jdbc.execute("CREATE TABLE plan_recommendation_decisions (decision_id UUID PRIMARY KEY, plan_id UUID NOT NULL, clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, recommendation_id TEXT NOT NULL, run_id UUID, action TEXT, decision TEXT NOT NULL, decided_at TIMESTAMP WITH TIME ZONE NOT NULL)");
-        jdbc.execute("CREATE TABLE pm_assignments (po_user_id UUID NOT NULL, clerk_org_id TEXT NOT NULL, pm_user_id UUID NOT NULL, PRIMARY KEY (po_user_id, clerk_org_id))");
+
+        jdbc.execute("CREATE TABLE users (user_id UUID PRIMARY KEY, clerk_user_id TEXT, email TEXT, display_name TEXT)");
+        jdbc.execute("CREATE TABLE plan_withdrawals (plan_id UUID PRIMARY KEY, clerk_org_id TEXT, buyer_user_id UUID, reason TEXT, withdrawn_at TIMESTAMP WITH TIME ZONE, manager_user_id UUID)");        jdbc.execute("CREATE TABLE pm_assignments (po_user_id UUID NOT NULL, clerk_org_id TEXT NOT NULL, pm_user_id UUID NOT NULL, PRIMARY KEY (po_user_id, clerk_org_id))");
         assign(owner, manager);
         plans = new PurchasePlanRepository(jdbc);
         OperationalDate dates = mock(OperationalDate.class);
@@ -81,9 +83,11 @@ class PlanApprovalServiceTests {
     }
 
     @Test void buyerDetailsStayInsideTheAuthorizedPlanOrganisation() {
-        jdbc.execute("CREATE TABLE users (user_id UUID PRIMARY KEY, clerk_user_id TEXT, email TEXT)");
-        jdbc.update("INSERT INTO users VALUES (?, 'user_buyer', 'buyer@example.test')", owner);
+        jdbc.update("INSERT INTO users (user_id, clerk_user_id, email) VALUES (?, 'user_buyer', 'buyer@example.test')", owner);
         assertEquals("buyer@example.test", approvals.buyerLabel(id, "org_a"));
+        jdbc.update("UPDATE users SET display_name = 'Rae Tan' WHERE user_id = ?", owner);
+        assertEquals("Rae Tan", approvals.buyerLabel(id, "org_a"), "a known name is shown instead of the email");
+        jdbc.update("UPDATE users SET display_name = NULL WHERE user_id = ?", owner);
         assertNull(approvals.buyerLabel(id, "org_b"));
         assertNull(approvals.buyerLabel(UUID.randomUUID(), "org_a"));
         jdbc.update("UPDATE users SET email = NULL WHERE user_id = ?", owner);
@@ -307,7 +311,7 @@ class PlanApprovalServiceTests {
         assign(owner, next);
         assertTrue(plans.findByIdForManager(id, manager, "org_a").isPresent());
         assertEquals(1, plans.findForManager(manager, "org_a").size());
-        assertEquals(1, approvals.notifications("org_a", manager).size());
+        assertTrue(approvals.notifications("org_a", manager).isEmpty(), "decided requests leave the inbox");
         assertTrue(plans.findAssignedToManager(manager, "org_a").isEmpty(), "past decisions are not current team exposure");
         assertEquals(1, plans.findAssignedToManager(next, "org_a").size());
     }
@@ -326,5 +330,27 @@ class PlanApprovalServiceTests {
         jdbc.update("INSERT INTO pm_assignments VALUES (?, ?, ?)", owner, "org_b", stranger);
         assertTrue(plans.findByIdForManager(id, stranger, "org_a").isEmpty());
         assertTrue(plans.findByIdForManager(id, stranger, "org_b").isEmpty());
+    }
+
+    @Test void officerWhoStopsBeingAnOfficerHasPendingRequestsWithdrawnForTheirManagerAndApprovedPlansClosed() {
+        submit(id, owner, "org_a");
+        UUID approved = UUID.randomUUID(), bought = UUID.randomUUID();
+        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, NULL)", approved, owner, BigDecimal.TEN, today.plusDays(5), today, "org_a", java.sql.Timestamp.from(now));
+        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, ?, ?, ?, ?, 'purchased', ?, NULL)", bought, owner, BigDecimal.TEN, today.plusDays(5), today, "org_a", java.sql.Timestamp.from(now));
+        var members = new OrganisationMembers(jdbc, null);
+        members.closeOfficerWork(owner, "org_a");
+        // Promotion then removes the assignment; the reviewing manager still sees the request, marked withdrawn.
+        jdbc.update("DELETE FROM pm_assignments WHERE po_user_id = ?", owner);
+        var inbox = approvals.notifications("org_a", manager);
+        assertEquals(1, inbox.size());
+        assertEquals("withdrawn", inbox.getFirst().get("status"));
+        assertEquals(OrganisationMembers.ROLE_CHANGE_REASON, jdbc.queryForObject("SELECT reason FROM plan_withdrawals WHERE plan_id = ?", String.class, id));
+        assertTrue(plans.findByIdForManager(id, manager, "org_a").isPresent());
+        assertTrue(approvals.notifications("org_a", UUID.randomUUID()).isEmpty());
+        assertEquals("closed", jdbc.queryForObject("SELECT status FROM purchase_plans WHERE plan_id = ?", String.class, approved));
+        assertEquals("purchased", jdbc.queryForObject("SELECT status FROM purchase_plans WHERE plan_id = ?", String.class, bought));
+        // Running it again changes nothing.
+        members.closeOfficerWork(owner, "org_a");
+        assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM plan_withdrawals", Integer.class));
     }
 }

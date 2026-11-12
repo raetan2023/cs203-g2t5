@@ -38,13 +38,15 @@ public class PurchasePlanController {
     private final UserAccounts users;
     private final OperationalDate dates;
     private final PlanAnalysisService analysis;
+    private final java.time.Clock clock;
 
     public PurchasePlanController(PurchasePlanRepository plans, UserAccounts users,
-            OperationalDate dates, PlanAnalysisService analysis) {
+            OperationalDate dates, PlanAnalysisService analysis, java.time.Clock clock) {
         this.plans = plans;
         this.users = users;
         this.dates = dates;
         this.analysis = analysis;
+        this.clock = clock;
     }
 
     @GetMapping
@@ -56,6 +58,21 @@ public class PurchasePlanController {
             case MANAGER -> plans.findForManager(ownerOf(token), access.organisationId());
             case ADMIN -> plans.findByOrganisation(access.organisationId());
         };
+        if (access.role() != OrganisationAccess.Role.ADMIN) {
+            // Officers and managers stop seeing a withdrawn plan a few days after it was withdrawn.
+            var expired = plans.withdrawnBefore(access.organisationId(), clock.instant().minus(PurchasePlanRepository.WITHDRAWN_VISIBLE_FOR));
+            if (!expired.isEmpty()) rows = rows.stream().filter(plan -> !expired.contains(plan.planId())).toList();
+        }
+        if (access.role() == OrganisationAccess.Role.MANAGER) {
+            // Managers filter their plans by officer, so each plan says whose it is.
+            var labels = users.labels(rows.stream().map(PurchasePlan::userId).toList());
+            return Map.of("plans", rows.stream().map(plan -> {
+                var body = plan.toResponse(scenarioDate);
+                body.put("buyer_user_id", plan.userId().toString());
+                body.put("buyer_label", labels.getOrDefault(plan.userId(), "An officer"));
+                return body;
+            }).toList());
+        }
         return Map.of("plans", rows.stream().map(plan -> plan.toResponse(scenarioDate)).toList());
     }
 

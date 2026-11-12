@@ -1,20 +1,27 @@
 # Manager team oversight and approvals
 
-Team scope is the manager's active Clerk organisation. There is no separate
-subteam or reporting-line model. Managers can see all plans belonging to that
-organisation, across buyers; other organisations and legacy unassigned plans are
-excluded. Query parameters cannot change the verified organisation.
+Team scope is the officers currently assigned to the manager in their active Clerk
+organisation; see [PM and PO assignment](pm-po-assignment.md). Other teams,
+other organisations and legacy unassigned plans are excluded. Query parameters
+cannot change the verified organisation.
 
 The Purchase plans page includes the existing approval inbox, plan listing and a
 new Team oversight section. `GET /api/v1/purchase-plans/manager-overview` requires a
 manager session, returns `Cache-Control: no-store`, and provides:
 
-- `plan_count` and `total_quantity_mt`: every plan currently in the organisation,
-  including finished plans. Revision drafts are separate plans, so this historical
-  total is not a total of unique purchases.
-- `pending_approval_count`: submitted plans awaiting a decision.
-- `open_quantity_mt`: drafts, submitted plans and approved plans awaiting purchase.
-  Rejected, withdrawn and purchased plans are excluded.
+Only approved plans count. `period=30d` limits every figure to plans approved in
+the last 30 days including today (Singapore time); `period=all`, the default, has no
+time limit. Repeating `officer=<user id>` limits the figures to those officers; the
+response always lists the manager's full team in `officers` for the dropdown.
+
+- `total_quantity_mt`, shown as Total planned volume: plans a manager approved,
+  including those since purchased. Pending, rejected and withdrawn plans are left out.
+- `purchased_quantity_mt`, shown as Purchased volume: MT the officers recorded
+  buying, from their purchase records.
+- `open_quantity_mt`, shown as Remaining to buy: approved plans not yet purchased.
+  Pending requests are not counted until a manager approves them.
+- `exposure_usd`, shown as Estimated remaining cost: Remaining to buy multiplied by the
+  reference price below. A line under the figures shows this formula and the price used.
 - `reference_price_usd_per_mt`, `reference_date` and `exposure_usd`: open MT multiplied
   by the most recent positive observed Singapore MGO USD/MT price on or before
   the application's planning date. This is indicative gross procurement exposure,
@@ -42,3 +49,24 @@ manager-only HTTP access, response validation and stale responses on team switch
 The existing approval service and HTTP tests cover comments, audit rollback,
 status changes and concurrent decisions. A live journey still requires separate
 buyer and manager memberships in Clerk.
+
+## Approval inbox
+
+The inbox lists pending and withdrawn requests from the manager's officers, newest
+first, 6 per page (two rows of three). Approved, rejected and purchased requests are left out because
+they need no action. Pending and Withdrawn counts sit under the heading, and the
+list can be narrowed to any number of officers and to one request type; the counts
+follow the officer choice.
+
+A pending request whose purchase deadline has passed is shown as overdue, with its
+own count and filter. A manager can still approve it after confirming. If it is still
+pending 5 days after the deadline, an hourly backend job rejects it automatically with
+the reason "Rejected automatically: no decision within 5 days of the purchase deadline."
+The decision is stored under the officer's current manager and shown as
+"Bunker Buddy (automatic)"; the officer is notified. Requests whose officer has no
+manager are left until one is assigned. Set `mgo.overdue-rejection.enabled=false` to
+turn the job off.
+
+A withdrawn plan disappears from officer and manager views (the inbox and plan
+lists) five days after it was withdrawn. Admins still see every plan, and nothing is
+deleted.

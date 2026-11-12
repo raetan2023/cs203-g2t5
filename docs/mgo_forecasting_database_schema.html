@@ -35,6 +35,7 @@
     uuid user_id PK "Generated UUID"
     text clerk_user_id UK "Required - Clerk account ID"
     text email UK "Nullable"
+    text display_name "Nullable - name from Clerk"
   }
   ORGANISATION_MEMBERS {
     uuid user_id PK, FK "Required"
