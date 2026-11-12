@@ -167,7 +167,7 @@ it('pins guidance and impact to the selected publication and clears both when it
   expect(screen.queryByText('Loading recommendation…')).not.toBeInTheDocument();
 });
 
-it('uses an available horizon when the default has expired and labels estimated news', async () => {
+it('uses an available horizon when the default has expired with estimated news', async () => {
   const forecasts = { read: vi.fn(async (h: 7 | 14 | 30) => h === 7
     ? { status: 'unavailable' as const, reason: 'ridge_unavailable', message: 'The 7-day target has expired.' }
     : { ...buildMockForecast(h), run_id: 'estimated-run', source_dates: { ...buildMockForecast(h).source_dates, gdelt_estimated: '2025-10-25' } } as ReadyForecast) };
@@ -177,7 +177,6 @@ it('uses an available horizon when the default has expired and labels estimated 
   render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
     <RecommendationsPage planId={livePlan.plan_id} planService={createMockPlanService({ initialPlan: availablePlan, delayMs: 0 })} service={service} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
-  expect(await screen.findByRole('note', { name: 'Data freshness' })).toHaveTextContent('include API-supplied estimates');
   await waitFor(() => expect(guidance).toHaveBeenCalledWith(expect.objectContaining({ plan_id: plan.plan_id }), 14, 'estimated-run'));
   expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
 });
@@ -191,11 +190,8 @@ it('labels experimental plan ranges without displaying confidence coverage claim
   render(<ForecastProvider service={{ read: async h => ({ ...data, horizon_days: h, target_date: buildMockForecast(h).target_date }) }} scenarioDate={plan.scenario_as_of_date}>
     <RecommendationsPage planId={livePlan.plan_id} planService={createMockPlanService({ initialPlan: livePlan, delayMs: 0 })} service={liveService()} scenarioDate={plan.scenario_as_of_date} />
   </ForecastProvider>);
-  const notice = await screen.findByRole('note', { name: 'Data freshness' });
-  expect(notice).toHaveTextContent('Get a current supplier quote before you buy');
-  expect(notice).toHaveTextContent('No current Ridge forecast is available');
-  expect(notice).toHaveTextContent('its coverage hasn’t been measured');
   expect(await screen.findByText('Last-quote fallback · Ridge unavailable')).toBeVisible();
+  expect(screen.queryByRole('note', { name: 'Data freshness' })).not.toBeInTheDocument();
   expect(screen.queryByText(/Target coverage:/)).not.toBeInTheDocument();
   expect(screen.getByText(/^Source: last observed quote · MGO quote/)).toBeVisible();
   expect(screen.getByText('Price ranges are experimental, not calibrated confidence intervals.')).toBeVisible();
@@ -302,15 +298,6 @@ it('renders one final recommendation with positive savings and no urgency overri
   expect(screen.queryByLabelText('Urgency for this analysis')).not.toBeInTheDocument();
 });
 
-it('shows the actual date when older news is used', async () => {
-  const forecasts = { read: async (h: 7 | 14 | 30) => ({ ...buildMockForecast(h),
-    source_dates: { ...buildMockForecast(h).source_dates, gdelt: '2025-10-23', gdelt_fallback: '2025-10-23' } }) as ReadyForecast };
-  render(<ForecastProvider service={forecasts} scenarioDate={plan.scenario_as_of_date}>
-    <RecommendationsPage planId={plan.plan_id} planService={plans()} service={ready()} scenarioDate={plan.scenario_as_of_date} />
-  </ForecastProvider>);
-  expect(await screen.findByRole('note', { name: 'Data freshness' })).toHaveTextContent('23 Oct 2025');
-});
-
 // The 888 MT plan from Option A: the 26 Oct quote is 11 days old, so 7 days has passed and 14 and 30 land on their real dates.
 const staleToday = '2026-11-06';
 const stalePlan = { ...plan, status: 'draft' as const, quantity_mt: 888, scenario_as_of_date: staleToday, purchase_deadline: '2026-11-26', days_remaining: 20 };
@@ -360,7 +347,6 @@ it('uses each forecast on its real target date, defaults to the one nearest the 
   expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-col--unavailable');
   expect(screen.getByRole('group', { name: '7 days' })).toHaveAccessibleDescription(/Passed/);
   expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('30-day forecast · Wed 25 Nov')).toBeVisible();
-  expect(screen.getByRole('note', { name: 'Data freshness' })).toHaveTextContent('Prices use the MGO quote from Mon 26 Oct (11 days old).');
   await waitFor(() => expect(screen.getByRole('button', { name: 'Accept and submit for approval' })).toBeEnabled());
 });
 
@@ -383,9 +369,6 @@ it('counts the news-aware model from today, even with an old quote', async () =>
   expect(screen.getByRole('group', { name: '14 days' })).toHaveTextContent('Fri 20 Nov');
   expect(screen.getByRole('group', { name: '30 days' })).toHaveAccessibleDescription(/After deadline/);
   expect(screen.getByText(/Forecast dates count from today\./)).toBeVisible();
-  const notice = screen.getByRole('note', { name: 'Data freshness' });
-  expect(notice).toHaveTextContent('(11 days old)');
-  expect(notice).toHaveTextContent('which affect the model price and its range');
 });
 
 // Forecasts from today on a far deadline: 7, 14 and 30 days all fit, and the policy blends the last two.
