@@ -47,10 +47,15 @@ Engine takes today's reference price and the 7, 14 and 30 day forecasts
   The forecasts are blended into one price signal
     Nearer forecasts get more weight
 
-Engine returns one of:
+Engine returns one of (checked in this order):
   Monitor         → the deadline has passed
                   → or there is no valid reference price
-  Buy Now         → no forecast fits before the deadline
+  Buy Now         → the deadline is 7 days away or less
+                    There is no time left to wait, so forecasts
+                    are not used and no Monitor check applies
+                    (even if the reference price is old)
+  Otherwise (more than 7 days left):
+  Buy Now         → no forecast is available
                   → or the blended signal is not cheaper than today
   Buy on Date X   → the blended signal is cheaper than today
                     X is the earliest forecast date before the deadline
@@ -83,18 +88,16 @@ Only allowed if:
 PO picks the forecast horizon (7, 14 or 30 days) to show the PM
 Take the latest saved recommendation
   It must be from today and match the plan's current volume and deadline
-    Otherwise: "Generate a new recommendation"
+    Otherwise: "Click New recommendation for today's advice"
   The PO must have accepted it
     Otherwise: "Accept the recommendation before submitting"
 
 If it says Monitor:
-  If the deadline is 7 days away or less:
-    Treat it as Buy Now, since there is no time left to wait
-    Note on the plan: "Converted from Monitor due to deadline"
-  Otherwise:
-    Block the submission
-    Show "Monitoring, check again tomorrow"
-    Stop here, and the plan stays Draft
+  Block the submission
+  Show "Monitoring, check again tomorrow"
+  Stop here, and the plan stays Draft
+  (With 7 days or less left the engine already says Buy Now,
+   so a short deadline is never stuck on Monitor)
 
 Lock this recommendation to the plan (it can't change after this)
 Plan becomes Awaiting Approval
@@ -215,7 +218,7 @@ Plans that are done are only marked Finished.
 Everything above that isn't listed here already works on `main`.
 
 1. **Saved recommendations.** Recommendations are worked out again on every request and never stored. The only things saved now are the PO's response (`plan_recommendation_decisions`) and the snapshot locked at submission. Needs a new table that is only ever added to, plus an endpoint behind the "New recommendation" button that saves one row per click. The draft page should show the latest saved row instead of working one out when it opens, and submission should use that row.
-2. **Blocking Monitor at submission.** `PlanApprovalService.submit` doesn't check the action, so a Monitor recommendation can be submitted today. Add the block, plus the conversion when the deadline is 7 days or less away and its note on the plan.
+2. **Buy Now with 7 days or less, and blocking Monitor at submission.** Today a short deadline gives Buy Now only as a side effect: forecasts are dated today + 7, 14 or 30 days, so none fit a deadline under 7 days away. A stale reference price can still give Monitor, and at exactly 7 days the engine can say Buy on Date X (the deadline) or Monitor. `RecommendationPolicy` should return Buy Now outright when 0–7 days are left, after the deadline-passed and missing-reference checks. Separately, `PlanApprovalService.submit` doesn't check the action, so a Monitor recommendation can be submitted today; add the block.
 3. **Creation time.** `purchase_plans` has no `created_at`, so there's no record of when a plan was created. Draft edits also overwrite the volume and deadline without a record.
 4. **Who closed a plan, and when.** Moving to `closed` only changes the status; nothing records who, when or why.
 5. **Deleting a draft that has responses.** `plan_recommendation_decisions` blocks deleting a plan that has rows in it (`ON DELETE RESTRICT`). Deleting a draft the PO has already responded to most likely fails with an error instead of working. The saved-recommendations table needs the same care.
