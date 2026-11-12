@@ -39,10 +39,10 @@ it('gives admins the read-only Plans section of decided plans, filterable by PM 
   await waitFor(() => expect(within(section).queryByRole('button', { name: /^To buy \(/ })).not.toBeNull());
   const count = (label: string) => within(section).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
   const shown = () => [...section.querySelectorAll('.pp-summary-qty .pp-sr-only')].map(el => el.textContent);
-  // Drafts, pending and withdrawn requests are hidden, and admins get no overdue reminder note.
+  // Drafts, pending and withdrawn requests are hidden; an approval past its deadline counts as closed.
   expect(within(section).queryByRole('button', { name: /^Withdrawn \(/ })).not.toBeInTheDocument();
-  expect(section.querySelector('.pp-inbox-note')).toBeNull();
-  expect([count('To buy'), count('Overdue'), count('Purchased'), count('Rejected')]).toEqual(['1', '1', '0', '1']);
+  expect(within(section).queryByRole('button', { name: /^Overdue \(/ })).not.toBeInTheDocument();
+  expect([count('To buy'), count('Purchased'), count('Rejected'), count('Closed')]).toEqual(['1', '0', '1', '1']);
   expect(within(section).queryByRole('button', { name: /^Pending \(/ })).not.toBeInTheDocument();
   expect(shown().sort()).toEqual(['104 MT', '105 MT', '106 MT']);
   expect(section.querySelector('.pp-tag--to-buy svg circle')).not.toBeNull();
@@ -66,7 +66,7 @@ it('gives admins the read-only Plans section of decided plans, filterable by PM 
   expect(within(section).getByRole('checkbox', { name: /Wunna/ })).toBeChecked();
 
   await user.click(within(section).getByRole('button', { name: 'Show all plans' }));
-  await user.click(within(section).getByRole('button', { name: /^Overdue \(/ }));
+  await user.click(within(section).getByRole('button', { name: /^Closed \(/ }));
   expect(shown()).toEqual(['105 MT']);
   for (const name of ['Create plan', /^Edit/, 'Delete', 'Approve', 'Reject', 'Record purchase']) {
     expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();

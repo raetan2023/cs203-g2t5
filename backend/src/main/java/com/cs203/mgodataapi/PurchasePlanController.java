@@ -70,8 +70,11 @@ public class PurchasePlanController {
             var people = new java.util.HashSet<UUID>(managers.values());
             rows.forEach(plan -> people.add(plan.userId()));
             var labels = users.labels(people);
+            var closed = plans.closedReasons(access.organisationId());
             return Map.of("plans", rows.stream().map(plan -> {
                 var body = plan.toResponse(scenarioDate);
+                // Why a closed plan was closed: role_change or deadline_passed.
+                if ("closed".equals(plan.status())) body.put("closed_reason", closed.get(plan.planId()));
                 body.put("buyer_user_id", plan.userId().toString());
                 body.put("buyer_label", labels.getOrDefault(plan.userId(), "An officer"));
                 if (admin) {

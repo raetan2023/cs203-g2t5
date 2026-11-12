@@ -91,6 +91,9 @@ public class PlanApprovalService {
                 new ApiException(HttpStatus.NOT_FOUND, "No saved purchase plan was found."));
         if (!"submitted".equals(plan.status()))
             throw new ApiException(HttpStatus.CONFLICT, "Only a submitted request can be decided. Reload to see its current status.");
+        // A request must be decided by its purchase deadline; after that it is rejected automatically (OverdueRequestRejector).
+        if (plan.purchaseDeadline().isBefore(dates.today()))
+            throw new ApiException(HttpStatus.CONFLICT, "The purchase deadline has passed, so this request is rejected automatically.");
         if (request == null || request.decision() == null || !java.util.Set.of("approved", "rejected").contains(request.decision()))
             throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "Choose approve or reject.");
         String comment = request.comment() == null ? "" : request.comment().strip();
@@ -121,7 +124,7 @@ public class PlanApprovalService {
 
     public static final String AUTOMATIC_LABEL = "Bunker Buddy (automatic)";
     public static final String AUTOMATIC_SUBJECT = "system";
-    public static final String AUTOMATIC_REASON = "Rejected automatically: no decision within 5 days of the purchase deadline.";
+    public static final String AUTOMATIC_REASON = "Rejected automatically: no decision by the purchase deadline.";
 
     /**
      * Rejects one request that is still waiting for a decision and whose deadline is on or before

@@ -66,3 +66,6 @@
   .md-footer { padding-bottom: calc(var(--bb-space-4) + env(safe-area-inset-bottom)); }
   .md-footer .md-button { flex: 1 1 0; min-width: 0; min-height: 44px; }
 }
+/* Past the purchase deadline: the request is rejected automatically, so the manager can no longer decide it. */
+.rec-expired-note { margin: var(--bb-space-3) 0 0; padding: var(--bb-space-3) var(--bb-space-4); color: var(--bb-text); background: var(--bb-warning-surface, transparent); border: 1px solid var(--bb-warning-text); border-radius: var(--bb-radius-control); font-size: var(--bb-text-md); line-height: 1.5; }
+.rec-expired-note strong { color: var(--bb-warning-text); }

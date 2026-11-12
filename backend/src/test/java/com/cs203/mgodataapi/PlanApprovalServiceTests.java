@@ -38,7 +38,7 @@ class PlanApprovalServiceTests {
                 return super.update(sql.replace("CAST(? AS jsonb)", "?"), values);
             }
         };
-        jdbc.execute("CREATE TABLE purchase_plans (plan_id UUID PRIMARY KEY, user_id UUID NOT NULL, quantity_mt NUMERIC NOT NULL, purchase_deadline DATE NOT NULL, scenario_as_of_date DATE NOT NULL, clerk_org_id TEXT, status TEXT NOT NULL DEFAULT 'draft', submitted_at TIMESTAMP WITH TIME ZONE, previous_plan_id UUID)");
+        jdbc.execute("CREATE TABLE purchase_plans (plan_id UUID PRIMARY KEY, user_id UUID NOT NULL, quantity_mt NUMERIC NOT NULL, purchase_deadline DATE NOT NULL, scenario_as_of_date DATE NOT NULL, clerk_org_id TEXT, status TEXT NOT NULL DEFAULT 'draft', submitted_at TIMESTAMP WITH TIME ZONE, previous_plan_id UUID, closed_reason TEXT, closed_at TIMESTAMP WITH TIME ZONE)");
         jdbc.execute("CREATE TABLE plan_approval_notifications (notification_id UUID PRIMARY KEY, plan_id UUID NOT NULL UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, recommendation_snapshot TEXT)");
         jdbc.execute("CREATE TABLE plan_approval_decisions (decision_id UUID PRIMARY KEY, plan_id UUID NOT NULL UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, manager_user_id UUID NOT NULL, manager_clerk_user_id TEXT NOT NULL, manager_label TEXT NOT NULL, decision TEXT NOT NULL, decision_comment TEXT NOT NULL, decided_at TIMESTAMP WITH TIME ZONE NOT NULL)");
         jdbc.execute("CREATE TABLE plan_decision_notifications (notification_id UUID PRIMARY KEY, plan_id UUID UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT NOT NULL, buyer_user_id UUID NOT NULL, decision TEXT NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, seen_at TIMESTAMP WITH TIME ZONE)");
@@ -66,7 +66,7 @@ class PlanApprovalServiceTests {
                 tools.jackson.databind.json.JsonMapper.builder().build()));
         proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source), new AnnotationTransactionAttributeSource()));
         approvals = (PlanApprovalService) proxy.getProxy();
-        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, ?, ?, ?, ?, 'draft', NULL, NULL)", id, owner, BigDecimal.TEN, today.plusDays(40), today, "org_a");
+        jdbc.update("INSERT INTO purchase_plans (plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, clerk_org_id, status, submitted_at, previous_plan_id) VALUES (?, ?, ?, ?, ?, ?, 'draft', NULL, NULL)", id, owner, BigDecimal.TEN, today.plusDays(40), today, "org_a");
         choice = selection(7, "NORMAL");
         respond(choice, choice.run_id(), "accept", now);
     }
@@ -335,8 +335,8 @@ class PlanApprovalServiceTests {
     @Test void officerWhoStopsBeingAnOfficerHasPendingRequestsWithdrawnForTheirManagerAndApprovedPlansClosed() {
         submit(id, owner, "org_a");
         UUID approved = UUID.randomUUID(), bought = UUID.randomUUID();
-        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, NULL)", approved, owner, BigDecimal.TEN, today.plusDays(5), today, "org_a", java.sql.Timestamp.from(now));
-        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, ?, ?, ?, ?, 'purchased', ?, NULL)", bought, owner, BigDecimal.TEN, today.plusDays(5), today, "org_a", java.sql.Timestamp.from(now));
+        jdbc.update("INSERT INTO purchase_plans (plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, clerk_org_id, status, submitted_at, previous_plan_id) VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, NULL)", approved, owner, BigDecimal.TEN, today.plusDays(5), today, "org_a", java.sql.Timestamp.from(now));
+        jdbc.update("INSERT INTO purchase_plans (plan_id, user_id, quantity_mt, purchase_deadline, scenario_as_of_date, clerk_org_id, status, submitted_at, previous_plan_id) VALUES (?, ?, ?, ?, ?, ?, 'purchased', ?, NULL)", bought, owner, BigDecimal.TEN, today.plusDays(5), today, "org_a", java.sql.Timestamp.from(now));
         var members = new OrganisationMembers(jdbc, null);
         members.closeOfficerWork(owner, "org_a");
         // Promotion then removes the assignment; the reviewing manager still sees the request, marked withdrawn.
@@ -348,6 +348,7 @@ class PlanApprovalServiceTests {
         assertTrue(plans.findByIdForManager(id, manager, "org_a").isPresent());
         assertTrue(approvals.notifications("org_a", UUID.randomUUID()).isEmpty());
         assertEquals("closed", jdbc.queryForObject("SELECT status FROM purchase_plans WHERE plan_id = ?", String.class, approved));
+        assertEquals("role_change", jdbc.queryForObject("SELECT closed_reason FROM purchase_plans WHERE plan_id = ?", String.class, approved));
         assertEquals("purchased", jdbc.queryForObject("SELECT status FROM purchase_plans WHERE plan_id = ?", String.class, bought));
         // Running it again changes nothing.
         members.closeOfficerWork(owner, "org_a");

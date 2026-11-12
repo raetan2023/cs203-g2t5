@@ -273,6 +273,9 @@
 .purchase-plan .pp-inbox-controls { flex-wrap: wrap; justify-content: flex-end; align-items: flex-start; }
 /* The reset link keeps its space while hidden, so choosing a filter never moves the others. */
 .pp-inbox-reset--idle { visibility: hidden; }
+/* Approval inbox and Plans: filters in two right-aligned rows (people and sort, then type and refresh). */
+.purchase-plan .pp-controls-stack { flex-direction: column; align-items: flex-end; gap: var(--bb-space-3); }
+.purchase-plan .pp-controls-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--bb-space-3); }
 .pp-officer-filter { position: relative; }
 /* Fixed widths: a longer choice is shortened with … rather than widening the row. */
 .pp-filter-trigger { display: inline-flex; align-items: center; justify-content: space-between; width: 190px; gap: var(--bb-space-2); min-height: 40px; padding: 0 var(--bb-space-3); color: var(--bb-text); background: var(--bb-surface-input, transparent); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font: inherit; font-size: var(--bb-text-md); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -360,6 +363,7 @@
 .pp-tag--rejected, .pp-tag--withdrawn { color: var(--bb-error-text); }
 .pp-tag--closed { color: var(--bb-text-secondary); }
 .purchase-plan .pp-manager-plan-closed { color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.5; }
+.purchase-plan .pp-inbox-note-pending { color: var(--bb-text); font-weight: 600; }
 .purchase-plan .pp-inbox-note-closed { color: var(--bb-text); font-weight: 600; }
 /* The Plans counts wear the same colours as their tags. */
 .purchase-plan .pp-plan-count--overdue dd { color: var(--bb-warning-text); }

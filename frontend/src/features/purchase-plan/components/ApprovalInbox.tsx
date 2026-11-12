@@ -7,13 +7,12 @@ import { useManagerRefresh } from '../useManagerRefresh';
 import { ManagerRefreshBar, ManagerSkeleton, useRefreshSweep } from './ManagerLoading';
 import { formatDate, formatDateTime } from '../dates';
 import { Pagination } from './Pagination';
-import { singaporeToday } from '../../market-dashboard/format';
 import { OfficerFilter } from './OfficerFilter';
 import { SortMenu, type SortGroup } from './SortMenu';
 import { CardTop } from './StatusTag';
 import { useTeam, withTeam } from '../useTeam';
 
-type InboxType = 'all' | 'submitted' | 'overdue' | 'withdrawn';
+type InboxType = 'all' | 'submitted' | 'withdrawn';
 type InboxSort = 'newest' | 'oldest' | 'deadline-soonest' | 'deadline-latest' | 'mt-high' | 'mt-low';
 const SORTS: SortGroup<InboxSort>[] = [
   { heading: 'Date submitted', options: [{ id: 'newest', label: 'Newest' }, { id: 'oldest', label: 'Oldest' }] },
@@ -29,16 +28,19 @@ const SORTERS: Record<InboxSort, (a: InboxRow, b: InboxRow) => number> = {
   'mt-high': (a, b) => b.quantity_mt - a.quantity_mt || b.created_at.localeCompare(a.created_at),
   'mt-low': (a, b) => a.quantity_mt - b.quantity_mt || b.created_at.localeCompare(a.created_at),
 };
-const TYPES: { id: InboxType; label: string }[] = [{ id: 'all', label: 'All' }, { id: 'submitted', label: 'Pending' }, { id: 'overdue', label: 'Overdue' }, { id: 'withdrawn', label: 'Withdrawn' }];
+const TYPES: { id: InboxType; label: string }[] = [{ id: 'all', label: 'All' }, { id: 'submitted', label: 'Pending' }, { id: 'withdrawn', label: 'Withdrawn' }];
 
-/** Pending, overdue (still pending after its purchase deadline) or withdrawn: each request is exactly one. */
-export function inboxState(row: { status: string; purchase_deadline: string }, today: string): Exclude<InboxType, 'all'> {
-  return row.status === 'withdrawn' ? 'withdrawn' : row.purchase_deadline < today ? 'overdue' : 'submitted';
+/**
+ * Pending or withdrawn: each request is exactly one. A request not decided by its purchase deadline is
+ * rejected automatically the day after, so it leaves the inbox rather than becoming overdue.
+ */
+export function inboxState(row: { status: string; purchase_deadline: string }): Exclude<InboxType, 'all'> {
+  return row.status === 'withdrawn' ? 'withdrawn' : 'submitted';
 }
 
-/** Pending requests carry no tag; overdue and withdrawn ones do. */
-function inboxTag(row: { status: string; purchase_deadline: string }, today: string) {
-  const state = inboxState(row, today);
+/** Pending requests carry no tag; withdrawn ones do. */
+function inboxTag(row: { status: string; purchase_deadline: string }) {
+  const state = inboxState(row);
   return state === 'submitted' ? undefined : state;
 }
 
@@ -67,13 +69,11 @@ export function ApprovalInbox({ service }: { service: PurchasePlanService }) {
   // An officer who no longer has requests drops out of the choice by itself.
   const chosen = officers.filter(id => officerOptions.some(option => option.id === id));
   const byOfficer = chosen.length === 0 ? all : all.filter(row => chosen.includes(row.buyer_user_id));
-  const today = singaporeToday();
-  const rows = (type === 'all' ? byOfficer : byOfficer.filter(row => inboxState(row, today) === type)).slice().sort(SORTERS[sort]);
+  const rows = (type === 'all' ? byOfficer : byOfficer.filter(row => inboxState(row) === type)).slice().sort(SORTERS[sort]);
   // The figures follow the officer choice; the type choice decides which cards show.
-  const pendingCount = byOfficer.filter(row => inboxState(row, today) === 'submitted').length;
-  const overdueCount = byOfficer.filter(row => inboxState(row, today) === 'overdue').length;
+  const pendingCount = byOfficer.filter(row => inboxState(row) === 'submitted').length;
   const withdrawnCount = byOfficer.filter(row => row.status === 'withdrawn').length;
-  const counts: Record<InboxType, number> = { all: byOfficer.length, submitted: pendingCount, overdue: overdueCount, withdrawn: withdrawnCount };
+  const counts: Record<InboxType, number> = { all: byOfficer.length, submitted: pendingCount, withdrawn: withdrawnCount };
   const filtered = chosen.length > 0 || type !== 'all';
   const changed = filtered || sort !== 'newest';
   function chooseOfficers(ids: string[]) { setOfficers(ids); setPage(1); }
@@ -108,29 +108,31 @@ export function ApprovalInbox({ service }: { service: PurchasePlanService }) {
         <p className="pp-card-description">Requests from the officers you manage.</p>
         <UpdatedAt loadedAt={loadedAt} current={!loading && !error} />
         {data && <div className="pp-inbox-notes">
-          <p className="pp-card-description pp-inbox-note">* <span className="pp-inbox-note-overdue">Overdue</span> submissions are rejected automatically 5 days after their deadline.</p>
+          <p className="pp-card-description pp-inbox-note">* <span className="pp-inbox-note-pending">Pending</span> submissions not decided by their deadline are rejected automatically.</p>
           <p className="pp-card-description pp-inbox-note">* <span className="pp-inbox-note-withdrawn">Withdrawn</span> submissions disappear after 5 days.</p>
         </div>}
       </div>
-      <div className="pp-overview-controls pp-inbox-controls">
-        {data && <>
-          {/* Every filter shows even when the inbox is empty, so the section keeps the same shape. */}
+      <div className="pp-overview-controls pp-inbox-controls pp-controls-stack">
+        {/* Row 1: who and in what order; row 2: which type, and refresh. Every filter shows even when the inbox is empty. */}
+        {data && <div className="pp-controls-row">
           {/* Always takes its space (just hidden when there is nothing to reset), so the filters never shift. */}
           <button type="button" className={`pp-inbox-reset${changed ? '' : ' pp-inbox-reset--idle'}`} onClick={showEverything} aria-hidden={!changed} tabIndex={changed ? undefined : -1}>Show all requests</button>
           <OfficerFilter options={officerOptions} selected={chosen} onChange={chooseOfficers} />
           <SortMenu groups={SORTS} value={sort} onChange={chooseSort} />
-          <div className="pp-filter" role="group" aria-label="Request type">
-            {/* Each button carries its count; the counts follow the officer choice. */}
+        </div>}
+        <div className="pp-controls-row">
+          {/* Each button carries its count; the counts follow the officer choice. */}
+          {data && <div className="pp-filter" role="group" aria-label="Request type">
             {TYPES.map(option => <button type="button" key={option.id} aria-pressed={type === option.id} onClick={() => chooseType(option.id)}>{option.label} ({counts[option.id]})</button>)}
-          </div>
-        </>}
-        <RefreshIconButton label="Refresh inbox" loading={loading} refreshing={refreshing} onClick={() => { sweep.start(); refresh(); }} />
+          </div>}
+          <RefreshIconButton label="Refresh inbox" loading={loading} refreshing={refreshing} onClick={() => { sweep.start(); refresh(); }} />
+        </div>
       </div>
     </div>
     {sweep.sweeping && <ManagerRefreshBar label="Updating approval inbox…" />}
     {loading && !data ? <><p className="pp-sr-only" role="status">Loading approval notifications…</p><ManagerSkeleton /></> : error ? <ErrorBanner>{error}</ErrorBanner> : <><div className="pp-fixed-grid">{rows.length === 0 && <p className="pp-inbox-empty pp-grid-empty">{filtered ? 'No requests match these filters.' : 'No requests are waiting for you.'}</p>}<ul className={`pp-approval-list pp-refresh-content${refreshing || sweep.sweeping ? ' pp-refresh-content--pending' : ''}`}>{visible.map(row => <li key={row.notification_id} className="pp-inbox-card">
       <CardTop quantity={row.quantity_mt.toLocaleString('en-GB')} deadline={row.purchase_deadline} due={formatDate(row.purchase_deadline)}
-        tag={inboxTag(row, today)} />
+        tag={inboxTag(row)} />
       <p className="pp-inbox-meta">Submitted by <strong>{row.buyer_label}</strong><br /><time dateTime={row.created_at}>{formatDateTime(row.created_at)}</time></p>
       <AppLink className="pp-button pp-button--primary pp-inbox-open" href={`/purchase-plans/recommendation?plan_id=${encodeURIComponent(row.plan_id)}`}>View submitted recommendation</AppLink>
     </li>)}{Array.from({ length: spacers }, (_, i) => <li key={`spacer-${i}`} role="presentation" aria-hidden="true" className="pp-approval-spacer" />)}</ul></div>

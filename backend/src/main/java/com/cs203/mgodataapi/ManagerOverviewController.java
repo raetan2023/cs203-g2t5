@@ -87,7 +87,8 @@ public class ManagerOverviewController {
         var rows = chosen == null ? inPeriod : inPeriod.stream().filter(plan -> chosen.contains(plan.userId())).toList();
         var counted = java.util.Set.of("approved", "purchased");
         java.util.function.ToIntFunction<UUID> planCount = officer -> (int) inPeriod.stream()
-                .filter(plan -> plan.userId().equals(officer) && counted.contains(plan.status())).count();
+                .filter(plan -> plan.userId().equals(officer) && counted.contains(plan.status())
+                        && !("approved".equals(plan.status()) && plan.purchaseDeadline().isBefore(dates.today()))).count();
         var officers = admin ? organisationOfficers(org, all, planCount)
                 : manager.map(id -> plans.officersForManager(id, org)).orElse(List.of()).stream()
                 .map(officer -> new Officer(officer.getKey(), officer.getValue(), planCount.applyAsInt(officer.getKey())))
@@ -102,7 +103,7 @@ public class ManagerOverviewController {
                 """, (rs, n) -> new Reference(rs.getBigDecimal("value"),
                     rs.getObject("observation_date", LocalDate.class)), dates.today());
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-                .body(summarize(rows, references.isEmpty() ? null : references.getFirst(), officers));
+                .body(summarize(rows, references.isEmpty() ? null : references.getFirst(), officers, dates.today()));
     }
 
     /** Every current officer, plus anyone else who owns a plan here, each with their current PM; sorted by name. */
@@ -153,9 +154,11 @@ public class ManagerOverviewController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(new Team(members));
     }
 
-    static Overview summarize(List<PurchasePlan> rows, Reference reference, List<Officer> officers) {
+    static Overview summarize(List<PurchasePlan> rows, Reference reference, List<Officer> officers, LocalDate today) {
         BigDecimal total = BigDecimal.ZERO, purchased = BigDecimal.ZERO, open = BigDecimal.ZERO;
         for (var plan : rows) {
+            // An approval not bought by its deadline is closed (or about to be, by the hourly job): not counted.
+            if ("approved".equals(plan.status()) && plan.purchaseDeadline().isBefore(today)) continue;
             if (java.util.Set.of("approved", "purchased").contains(plan.status()))
                 total = total.add(plan.quantityMt());
             // A purchase is always the whole planned amount.

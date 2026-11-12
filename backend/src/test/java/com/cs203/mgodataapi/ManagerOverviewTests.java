@@ -171,6 +171,8 @@ class ManagerOverviewTests {
         jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 5, ?, ?, 'submitted', NULL, NULL, 'org_a')", UUID.randomUUID(), yash, today, today);
         // Another organisation never counts.
         jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 999, ?, ?, 'approved', NULL, NULL, 'org_b')", UUID.randomUUID(), UUID.randomUUID(), today, today);
+        // Approved but past its deadline unbought: about to be closed, so not counted.
+        jdbc.update("INSERT INTO purchase_plans VALUES (?, ?, 77, ?, ?, 'approved', NULL, NULL, 'org_a')", UUID.randomUUID(), rae, today.minusDays(1), today);
         var dates = mock(OperationalDate.class); when(dates.today()).thenReturn(today);
         var repository = new PurchasePlanRepository(jdbc);
         var users = new UserAccounts(jdbc);
