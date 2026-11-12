@@ -173,8 +173,7 @@ it('counts pending and withdrawn requests and filters by officer and type', asyn
   expect(count('Withdrawn')).toBe('2');
   expect(within(inbox).queryByRole('button', { name: 'Show all requests' })).not.toBeInTheDocument();
   const notes = [...inbox.querySelectorAll('.pp-inbox-note')].map(note => note.textContent);
-  expect(notes).toEqual(['* Overdue submissions are rejected automatically 5 days after their deadline.', '* Withdrawn submissions disappear after 5 days.']);
-  expect(inbox.querySelector('.pp-inbox-note-overdue')).toHaveTextContent('Overdue');
+  expect(notes).toEqual(['* Pending submissions not decided by their deadline are rejected automatically.', '* Withdrawn submissions disappear after 5 days.']);
   expect(inbox.querySelector('.pp-inbox-note-withdrawn')).toHaveTextContent('Withdrawn');
 
   // Choose two officers: the counts and cards follow.
@@ -250,10 +249,12 @@ it('lists only approved, purchased and rejected plans for a manager', async () =
   const shown = [...section.querySelectorAll('.pp-summary-qty .pp-sr-only')].map(el => el.textContent);
   expect(shown.sort()).toEqual(['103 MT', '104 MT', '105 MT']);
   const count = (label: string) => within(section).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
-  expect([count('To buy'), count('Overdue'), count('Purchased'), count('Rejected')]).toEqual(['1', '0', '1', '1']);
+  expect([count('To buy'), count('Purchased'), count('Rejected'), count('Closed')]).toEqual(['1', '1', '1', '0']);
+  // Overdue is no longer a type here: an approval not bought by its deadline is closed.
+  expect(within(section).queryByRole('button', { name: /^Overdue \(/ })).not.toBeInTheDocument();
 });
 
-it('sorts out overdue plans, filters plans by officer and type, and resets', async () => {
+it('closes approvals not bought by their deadline, filters plans by officer and type, and resets', async () => {
   const at = (n: number, status: 'approved' | 'purchased' | 'rejected', days: number, who: string) => ({ ...DEMO_PLAN,
     plan_id: `00000000-0000-4000-8000-00000000020${n}`, quantity_mt: n, status, days_remaining: days, submitted_at: '2025-10-24T01:00:00Z',
     // Days from the demo date (24 Oct 2025); negative days are past the deadline.
@@ -266,65 +267,65 @@ it('sorts out overdue plans, filters plans by officer and type, and resets', asy
   await waitFor(() => expect(within(section).queryByRole('button', { name: /^To buy \(/ })).not.toBeNull());
   const count = (label: string) => within(section).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
   const shown = () => [...section.querySelectorAll('.pp-summary-qty .pp-sr-only')].map(el => el.textContent);
-  expect([count('To buy'), count('Overdue'), count('Purchased'), count('Rejected')]).toEqual(['1', '2', '1', '1']);
+  expect([count('To buy'), count('Purchased'), count('Rejected'), count('Closed')]).toEqual(['1', '1', '1', '2']);
   expect(within(section).getByText(/Updated as of/)).toBeVisible();
-  expect(within(section).getByText('Deadline passed 3 days ago, not bought yet.')).toBeVisible();
-  // A purchased plan is never overdue, even after its deadline.
-  expect(section.querySelectorAll('.pp-tag--overdue')).toHaveLength(2);
+  // Approved but past the deadline: shown as closed, even before the backend job saves it. A purchased plan stays purchased.
+  expect(section.querySelectorAll('.pp-tag--closed')).toHaveLength(2);
+  expect(within(section).getAllByText('Closed: not bought by the deadline.')).toHaveLength(2);
 
-  await user.click(within(section).getByRole('button', { name: /^Overdue \(/ }));
+  await user.click(within(section).getByRole('button', { name: /^Closed \(/ }));
   expect(shown()).toEqual(['2 MT', '3 MT']);
   await user.click(within(section).getByRole('button', { name: /All officers/ }));
   await user.click(within(section).getByRole('checkbox', { name: /Select all/ }));
   await user.click(within(section).getByRole('checkbox', { name: /Yash/ }));
   expect(shown()).toEqual(['3 MT']);
-  expect([count('To buy'), count('Overdue'), count('Purchased'), count('Rejected')]).toEqual(['0', '1', '1', '0']);
+  expect([count('To buy'), count('Purchased'), count('Rejected'), count('Closed')]).toEqual(['0', '1', '0', '1']);
 
   await user.click(within(section).getByRole('button', { name: 'Show all plans' }));
   expect(shown()).toHaveLength(5);
   expect(within(section).getByRole('button', { name: /^All \(/ })).toHaveAttribute('aria-pressed', 'true');
 });
 
-it('marks requests past their deadline as overdue, counts them and filters them', async () => {
+it('has no Overdue state: a request past its deadline is still pending until it is rejected automatically', async () => {
   const row = (n: number, due: string, status: 'submitted' | 'withdrawn' = 'submitted') => ({ notification_id: `n${n}`, plan_id: `p${n}`,
     created_at: '2026-11-05T15:54:04Z', quantity_mt: n, purchase_deadline: due, status, buyer_label: 'Rae Tan', buyer_user_id: 'u-rae' });
   const api = { ...service(), notifications: vi.fn().mockResolvedValue({ notifications: [row(1, '2099-01-01'), row(2, '2020-01-01'), row(3, '2020-01-01', 'withdrawn')] }) };
-  const user = userEvent.setup();
   render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
   const inbox = await screen.findByRole('region', { name: 'Approval inbox' });
   await waitFor(() => expect(within(inbox).queryByRole('button', { name: /^Pending \(/ })).not.toBeNull());
   const count = (label: string) => within(inbox).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
-  expect([count('Pending'), count('Overdue'), count('Withdrawn')]).toEqual(['1', '1', '1']);
-  expect(inbox.querySelectorAll('.pp-tag--overdue')).toHaveLength(1);
-  await user.click(within(inbox).getByRole('button', { name: /^Overdue/ }));
-  expect([...inbox.querySelectorAll('.pp-inbox-card .pp-summary-qty .pp-sr-only')].map(el => el.textContent)).toEqual(['2 MT']);
+  expect([count('All'), count('Pending'), count('Withdrawn')]).toEqual(['3', '2', '1']);
+  expect(within(inbox).queryByRole('button', { name: /^Overdue/ })).not.toBeInTheDocument();
+  expect(inbox.querySelectorAll('.pp-tag--overdue')).toHaveLength(0);
 });
 
-it('shows closed plans with their own tag, figure and filter only when there are some', async () => {
-  const at = (n: number, status: 'approved' | 'closed') => ({ ...DEMO_PLAN, plan_id: `00000000-0000-4000-8000-00000000030${n}`, quantity_mt: n,
-    status, submitted_at: '2025-10-24T01:00:00Z', buyer_user_id: 'u-rae', buyer_label: 'Rae' });
-  const api = { ...createMockPlanService({ initialPlans: [at(1, 'approved'), at(2, 'closed')], delayMs: 0 }), notifications: vi.fn().mockResolvedValue({ notifications: [] }) };
+it('shows closed plans with their reason, and Closed right after Rejected', async () => {
+  const at = (n: number, status: 'approved' | 'closed', closed_reason?: 'role_change' | 'deadline_passed') => ({ ...DEMO_PLAN, plan_id: `00000000-0000-4000-8000-00000000030${n}`, quantity_mt: n,
+    status, closed_reason, submitted_at: '2025-10-24T01:00:00Z', buyer_user_id: 'u-rae', buyer_label: 'Rae' });
+  const api = { ...createMockPlanService({ initialPlans: [at(1, 'approved'), at(2, 'closed', 'role_change'), at(3, 'closed', 'deadline_passed')], delayMs: 0 }), notifications: vi.fn().mockResolvedValue({ notifications: [] }) };
   const user = userEvent.setup();
   render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
   const section = await screen.findByRole('region', { name: 'Plans' });
   await waitFor(() => expect(section.querySelector('.pp-tag--closed')).not.toBeNull());
   expect(within(section).getByText('Closed: the officer changed role.')).toBeVisible();
+  expect(within(section).getByText('Closed: not bought by the deadline.')).toBeVisible();
+  expect([...section.querySelectorAll('.pp-inbox-note')].map(note => note.textContent)).toContain('* Closed plans: not bought by the deadline, or the officer changed role.');
   const count = (label: string) => within(section).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
-  expect(count('Closed')).toBe('1');
+  expect(count('Closed')).toBe('2');
   // Closed comes right after Rejected.
   const labels = [...within(section).getByRole('group', { name: 'Plan type' }).querySelectorAll('button')].map(button => button.textContent);
-  expect(labels.slice(-2)).toEqual(['Rejected (0)', 'Closed (1)']);
+  expect(labels.slice(-2)).toEqual(['Rejected (0)', 'Closed (2)']);
   await user.click(within(section).getByRole('button', { name: /^Closed \(/ }));
-  expect([...section.querySelectorAll('.pp-summary-qty .pp-sr-only')].map(el => el.textContent)).toEqual(['2 MT']);
+  expect([...section.querySelectorAll('.pp-summary-qty .pp-sr-only')].map(el => el.textContent).sort()).toEqual(['2 MT', '3 MT']);
 });
 
-it('shows no Closed figure or filter when nothing is closed', async () => {
+it('always offers Closed, now that plans close at their deadline', async () => {
   const api = { ...createMockPlanService({ initialPlans: [{ ...DEMO_PLAN, status: 'approved' as const, submitted_at: '2025-10-24T01:00:00Z' }], delayMs: 0 }),
     notifications: vi.fn().mockResolvedValue({ notifications: [] }) };
   render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
   const section = await screen.findByRole('region', { name: 'Plans' });
   await waitFor(() => expect(within(section).queryByRole('button', { name: /^To buy \(/ })).not.toBeNull());
-  expect(within(section).queryByRole('button', { name: /^Closed \(/ })).not.toBeInTheDocument();
+  expect(within(section).getByRole('button', { name: /^Closed \(/ })).toHaveTextContent('Closed (0)');
   expect(section.querySelector('.pp-plan-counts')).toBeNull();
 });
 

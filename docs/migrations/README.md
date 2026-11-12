@@ -97,6 +97,8 @@ Three migrations in `backend/migrations`, applied in this order before deploying
 
 `backend/migrations/20261112_users_display_name.sql` adds an optional `users.display_name`. Apply it to shared Supabase before deploying the backend that reads it, then use the Team reporting refresh once so existing members get their names.
 
+`backend/migrations/20261113_plan_closed_reason.sql` adds `purchase_plans.closed_reason` (`role_change` or `deadline_passed`) and `closed_at`, and marks existing closed plans as `role_change`. Apply it to shared Supabase before deploying the backend that closes approved plans not bought by their deadline.
+
 `backend/migrations/20261112_officer_role_change.sql` adds the `closed` plan status and `plan_withdrawals.manager_user_id`. Apply it to shared Supabase before deploying the backend that closes an officer's open plans when they stop being an officer; that backend reads the new column in every manager plan query.
 
 ### Latest available news windows — 26 October 2026

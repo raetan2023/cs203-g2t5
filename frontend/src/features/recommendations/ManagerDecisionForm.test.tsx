@@ -123,18 +123,13 @@ it('shows the final decision and reason to the buyer without giving them decisio
   expect(api.decide).not.toHaveBeenCalled();
 });
 
-it('asks once more before approving a request whose deadline has passed', async () => {
-  const user = userEvent.setup();
+it('blocks a decision once the deadline has passed, since the request is rejected automatically', async () => {
   const api = service();
   const late = { ...plan, purchase_deadline: '2026-10-20' };
   render(<ManagerDecisionForm planId={plan.plan_id} fingerprint={fingerprint} service={api}
     onDecided={vi.fn()} onRefresh={vi.fn()} plan={late} analysis={snapshot.analysis} today="2026-10-23" />);
-  await user.click(screen.getByRole('button', { name: 'Approve recommendation' }));
-  await user.click(screen.getByRole('button', { name: 'Confirm approval' }));
+  expect(screen.getByRole('status')).toHaveTextContent('The purchase deadline has passed. This request is rejected automatically, so it can no longer be approved or rejected.');
+  for (const name of ['Approve recommendation', 'Reject recommendation']) expect(screen.getByRole('button', { name })).toBeDisabled();
+  expect(screen.queryByText(/Approve anyway/)).not.toBeInTheDocument();
   expect(api.decide).not.toHaveBeenCalled();
-  expect(screen.getByText('The purchase deadline has passed')).toBeVisible();
-  expect(screen.getByText('It was 3 days ago. Approve anyway?')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Confirm approval' })).toHaveTextContent('Approve anyway');
-  await user.click(screen.getByRole('button', { name: 'Confirm approval' }));
-  await waitFor(() => expect(api.decide).toHaveBeenCalledTimes(1));
 });

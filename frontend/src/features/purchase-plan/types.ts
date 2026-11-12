@@ -45,6 +45,8 @@ export interface PurchasePlan {
   /** Sent to admins only: the officer's current PM, or null when they have none. */
   pm_user_id?: string | null;
   pm_label?: string | null;
+  /** Sent to managers and admins for closed plans: why it was closed. */
+  closed_reason?: 'role_change' | 'deadline_passed' | null;
 }
 
 export interface RecommendationSelection {
