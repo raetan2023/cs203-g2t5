@@ -170,7 +170,7 @@ export function withPreviewApproval(plans: PurchasePlanService, scenario: Recomm
     const saved = await plans.submit!(planId, { horizon_days: horizon, run_id: `preview-${scenario}`,
       recommendation_id: guidance!.recommendation_id, approval_fingerprint: analysis.approval_fingerprint!,
       urgency: 'NORMAL', quantity_mt: plan.quantity_mt, purchase_deadline: plan.purchase_deadline, scenario_as_of_date: plan.scenario_as_of_date });
-    snapshots.set(planId, { horizon_days: horizon, analysis });
+    snapshots.set(planId, { horizon_days: horizon, analysis: { ...analysis, provenance: 'fixture' } });
     return saved;
   }
   let opening: Promise<unknown> | undefined;

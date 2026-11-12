@@ -7,6 +7,8 @@ import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
 import { PlanLifecycleActions, PurchaseOutcome } from './PlanLifecycleActions';
 import { ManagerDecisionForm } from './ManagerDecisionForm';
 import { EvidenceView } from './RecommendationEvidence';
+import { RecommendationReportDownload } from './RecommendationReportDownload';
+import { submittedReportInput } from './recommendationReport';
 import { actionLabel, amount, readableDates, usd } from './format';
 
 export const SUBMIT_LABEL = 'Accept and submit for approval';
@@ -82,6 +84,7 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
   const submission = current?.submission;
   const decision = current?.decision;
   const status = plan.status === 'purchased' || plan.status === 'withdrawn' || plan.status === 'closed' ? plan.status : decision?.decision ?? plan.status;
+  const report = (canDecide || canAct) && submission && submittedReportInput({ ...plan, status }, submission);
   const refreshDecision = () => { setResult(undefined); setAttempt(value => value + 1); };
   const analysis = submission?.analysis;
   const rec = analysis?.recommendation.status === 'ready' ? analysis.recommendation.value : undefined;
@@ -142,6 +145,7 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
             </dl>
           </div>
           <p className="rec-rail-note">Saved at submission. These figures don’t change when new prices are published.</p>
+          {report && <RecommendationReportDownload report={report} />}
         </aside>
 
         <div className="rec-evidence">
