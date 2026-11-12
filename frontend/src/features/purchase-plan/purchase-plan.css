@@ -352,3 +352,26 @@
 .purchase-plan .pp-plan-count--purchased dd { color: var(--bb-success-text); }
 .purchase-plan .pp-plan-count--rejected dd { color: var(--bb-error-text); }
 .pp-plans-panel .pp-plan-grid { margin-top: var(--bb-space-8); }
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): filter tabs stay on one line and scroll inside their own box;
+   the decisions feed gets two equal 44px actions. */
+@media (max-width: 480px) {
+  .pp-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .pp-tabs::-webkit-scrollbar { display: none; }
+  .pp-tabs button { flex: 1 0 auto; white-space: nowrap; }
+  .pp-heading > a { display: inline-flex; align-items: center; min-height: 44px; }
+  .pp-approval-list .pp-actions { justify-content: stretch; }
+  .pp-approval-list .pp-actions > * { flex: 1 1 0; min-width: 0; }
+  .pp-approval-list .pp-actions > a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); color: var(--bb-text); font-weight: 500; text-decoration: none; }
+  /* Manager and admin summary: three figures in one row rather than a tall stack. */
+  .pp-overview { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--bb-space-3); margin-bottom: var(--bb-space-6); }
+  .pp-overview > div { align-content: start; }
+  .pp-overview-label { font-size: var(--bb-text-xs); }
+  .pp-overview-value { flex-wrap: wrap; column-gap: var(--bb-space-1); row-gap: 0; }
+  .pp-overview-note { margin-left: 0; font-size: var(--bb-text-xs); }
+  .pp-filter button, .pp-sort button { min-height: 44px; min-width: 44px; }
+  /* Manager and admin status filters: one row that scrolls in its own box, like the officer tabs. */
+  .pp-filter { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .pp-filter::-webkit-scrollbar { display: none; }
+  .pp-filter button { flex: 0 0 auto; white-space: nowrap; }
+}

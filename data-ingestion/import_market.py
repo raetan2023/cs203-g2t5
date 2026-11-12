@@ -108,7 +108,11 @@ def normalize(payload, source_id):
         metadata = row.get("metadata", {})
         estimated = metadata.get("imputed") is True or metadata.get("data_status") == "estimated"
         estimated_gdelt_source = row_source == "Derived from GDELT" or (
-            row_source == "ChatGPT web search" and metadata.get("imputation_method") == "chat_web_search")
+            row_source, metadata.get("imputation_method")
+        ) in (
+            ("ChatGPT web search", "chat_web_search"),
+            ("OpenAI web search", "openai_web_search"),
+        )
         if estimated and not (source_id == "gdelt" and estimated_gdelt_source
                               and metadata.get("imputed") is True and metadata.get("data_status") == "estimated"):
             raise ValueError("Estimated inputs require explicitly labelled GDELT provenance")

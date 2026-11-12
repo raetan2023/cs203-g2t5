@@ -156,7 +156,8 @@ export function ClerkApp() {
 
   return <App
     key={contextKey}
-    organisationControl={organisationReady ? <OrganisationControl name={organisationState.organization!.name} role={roleLabel!} /> : undefined}
+    organisationControl={organisationReady ? <OrganisationControl name={organisationState.organization!.name}
+      imageUrl={organisationState.organization!.imageUrl} role={roleLabel!} readOnly={orgRole === 'org:admin'} /> : undefined}
     organisationName={organisationReady ? organisationState.organization!.name : undefined}
     organisationManagement={organisationReady && scenario.state === 'ready' && scenario.permissions.role === 'org:admin'
       ? <OrganizationProfile key={orgId} routing="hash" afterLeaveOrganizationUrl="/home" appearance={{

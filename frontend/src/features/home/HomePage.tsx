@@ -19,18 +19,18 @@ export function greetingFor(hour: number) {
   return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 }
 
-type Action = { label: string; href: string } | { label: string; onClick(): void };
+type Action = { label: string; href: string };
 
 /** One primary action per organisation role, matching what that role can do elsewhere in the app. */
-export function homeAction({ role, canReadPlans, onManageOrganisation }: {
-  role?: string; canReadPlans: boolean; onManageOrganisation?: () => void;
+export function homeAction({ role, canReadPlans }: {
+  role?: string; canReadPlans: boolean;
 }): Action | null {
-  if (role === 'org:admin') return onManageOrganisation ? { label: 'Manage organisation', onClick: onManageOrganisation } : null;
+  if (role === 'org:admin') return { label: 'Enter administration', href: '/admin' };
   if (role === 'org:manager') return { label: 'Approval inbox', href: '/purchase-plans#approval-inbox' };
   return canReadPlans ? { label: 'Go to your plans', href: '/purchase-plans' } : null;
 }
 
-export function HomePage({ displayName, role, canReadPlans = true, marketAvailable = false, today, readQuote, readNews, readAlerts, onManageOrganisation, now = new Date() }: {
+export function HomePage({ displayName, role, canReadPlans = true, marketAvailable = false, today, readQuote, readNews, readAlerts, now = new Date() }: {
   displayName: string;
   role?: string;
   canReadPlans?: boolean;
@@ -43,7 +43,6 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
   readNews?: ReadNews;
   /** Omitted where no news API is connected; the Market alerts tiles are then hidden. */
   readAlerts?: ReadAlerts;
-  onManageOrganisation?: () => void;
   now?: Date;
 }) {
   const name = displayName.trim();
@@ -54,7 +53,7 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
   const oneLine = width / (full.length * CHAR_EM);
   const split = !!name && oneLine < MIN_ONE_LINE_PX;
   const firstLine = split ? `${part},` : full;
-  const action = homeAction({ role, canReadPlans, onManageOrganisation });
+  const action = homeAction({ role, canReadPlans });
 
   return <main className="bb-home" aria-labelledby="home-greeting">
     <section className="bb-home-hero">
@@ -69,10 +68,7 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
         </div>
         <div className="bb-home-actions">
           <div className="bb-home-actions-start">
-            {role === 'org:admin' && <AppLink className="bb-button bb-home-cta" href="/admin">Enter administration<AppIcon name="arrow" /></AppLink>}
-            {action && ('href' in action
-              ? <AppLink className="bb-button bb-home-cta" href={action.href}>{action.label}<AppIcon name="arrow" /></AppLink>
-              : <button type="button" className="bb-button bb-home-cta" onClick={action.onClick}>{action.label}<AppIcon name="arrow" /></button>)}
+            {action && <AppLink className="bb-button bb-home-cta" href={action.href}>{action.label}<AppIcon name="arrow" /></AppLink>}
             {marketAvailable && <AppLink className="bb-button bb-button--secondary bb-home-cta" href="/market-dashboard">Market dashboard<AppIcon name="arrow" /></AppLink>}
           </div>
           {readNews && <a className="bb-home-jump" href="#latest-news" onClick={jumpToNews}>Latest news <span aria-hidden="true">↓</span></a>}

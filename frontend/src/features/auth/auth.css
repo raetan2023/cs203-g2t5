@@ -123,3 +123,9 @@
   .auth-copy p { font-size: 15px; line-height: 22px; }
   .auth-form-area { padding: 8px 0 24px; }
 }
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): Clerk's fields and show-password button meet the 44px tap target. */
+@media (max-width: 480px) {
+  .clerk-auth-host .cl-formFieldInput:not([aria-hidden="true"]) { min-height: 44px !important; }
+  .clerk-auth-host .cl-formFieldInputShowPasswordButton { min-width: 44px !important; min-height: 44px !important; }
+}

@@ -148,9 +148,10 @@ describe('Organisation selection and role recognition', () => {
     configuration(); clerk.auth.orgRole = role;
     window.history.replaceState(null, '', '/purchase-plans');
     render(<ClerkApp />);
-    expect(await screen.findByRole('button', { name: 'Switch organisation' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Active organisation')).toHaveTextContent('Bunker Buddy');
-    expect(screen.getByLabelText('Active organisation')).toHaveTextContent(label);
+    const organisation = await screen.findByLabelText('Active organisation');
+    expect(organisation).toHaveTextContent('Bunker Buddy');
+    expect(organisation).toHaveTextContent(label);
+    expect(screen.queryAllByRole('button', { name: 'Switch organisation' })).toHaveLength(role === 'org:admin' ? 0 : 1);
   });
 
   it.each([null, 'org:member', 'org:buyer', 'org:analyst', 'org:unknown', 'toString'])('does not guess a role for %s', role => {
@@ -254,17 +255,22 @@ describe('Verified organisation permissions', () => {
     expect(screen.queryByText('Embedded organisation profile')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Team reporting' })).not.toBeInTheDocument();
   });
-  it('opens Clerk organisation settings from an admin Home and shows the latest stored MGO quote', async () => {
+  it('shows the admin organisation as text and links Home to the administration page', async () => {
     const fetcher = backend('org:admin');
     window.history.replaceState(null, '', '/home');
     render(<ClerkApp />);
-    await userEvent.click(await screen.findByRole('button', { name: 'Manage organisation' }));
-    expect(clerk.client.openOrganizationProfile).toHaveBeenCalledTimes(1);
+    const adminLink = await screen.findByRole('link', { name: 'Enter administration' });
+    expect(screen.getByLabelText('Active organisation')).toHaveTextContent('Bunker Buddy');
+    expect(screen.queryByRole('button', { name: 'Switch organisation' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Manage organisation' })).not.toBeInTheDocument();
     expect(await screen.findByRole('link', { name: /^Singapore MGO price USD 1,351\.50 per tonne, 26 October, no change\./ }))
       .toHaveAttribute('href', '/market-dashboard');
     expect(await screen.findByRole('link', { name: 'OPEC+ producers hold December oil output steady, opens in a new tab' }))
       .toHaveAttribute('href', 'https://example.com/opec');
     expect(fetcher.mock.calls.some(([url]) => url.endsWith('/purchase-plans'))).toBe(false);
+    await userEvent.click(adminLink);
+    expect(await screen.findByText('Embedded organisation profile')).toBeVisible();
+    expect(clerk.client.openOrganizationProfile).not.toHaveBeenCalled();
   });
   it.each(['org:manager', 'org:admin'])('shows organisation plans read-only for %s', async role => {
     backend(role);
