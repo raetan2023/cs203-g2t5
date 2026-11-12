@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { Forecast, ForecastService, Horizon, ReadyForecast } from '../forecast/apiService';
 import { calendarDays, formatDate } from '../purchase-plan/dates';
 import { amount, change, changeRange, compact, dayDate, total, totalRange, usd } from './format';
@@ -63,34 +63,43 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
   const ready = columns.filter(c => c.observed || c.forecast);
   const lo = Math.min(...ready.map(c => c.low)), hi = Math.max(...ready.map(c => c.high));
   const pad = Math.max(hi - lo, 1) * .08;
-  const top = (value: number) => `${((1 - (value - (lo - pad)) / (hi - lo + 2 * pad)) * 100).toFixed(2)}%`;
+  // Horizontal position of a price on the shared scale; 0% is the cheap end.
+  const left = (v: number) => `${(((v - (lo - pad)) / (hi - lo + 2 * pad)) * 100).toFixed(2)}%`;
   const reference = columns.find(c => c.observed);
   const quoteDate = entries?.find(e => e.forecast)?.forecast?.anchor_quote_date;
   const before = columns.filter(c => !c.late), after = columns.filter(c => c.late);
   const value = (n: number) => unit === 'total' ? total(n * quantity) : `${usd(n)}/MT`;
-  // Every horizon failing for one reason is a single fact; say it once instead of on three empty cards.
   const messages = entries && !entries.some(e => e.forecast) ? new Set(entries.map(e => e.message)) : undefined;
   const sharedMessage = messages?.size === 1 ? [...messages][0] : undefined;
-  const column = (c: Column) => {
+  const ticks = (): number[] => {
+    if (!ready.length) return [];
+    const domainLo = lo - pad, rawStep = ((hi + pad) - domainLo) / 4;
+    const mag = Math.pow(10, Math.floor(Math.log10(rawStep))), norm = rawStep / mag;
+    const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag, out: number[] = [];
+    for (let t = Math.ceil(domainLo / step) * step; t <= hi + pad + 1e-6; t += step) out.push(t);
+    return out;
+  };
+  const row = (c: Column) => {
     const available = c.observed || !!c.forecast;
     const status = !available ? 'Unavailable' : c.late ? 'After deadline' : c.past ? 'Past target'
       : recommended.includes(c.id) ? 'Recommended' : c.observed ? 'Observed' : 'Eligible';
     const key = `${id}-${c.id}`;
-    return <button key={c.id} type="button" className={`rec-col${c.late ? ' rec-col--late' : ''}${status === 'Recommended' ? ' rec-col--recommended' : ''}`}
+    return <button key={c.id} type="button" className={`rec-row${c.late ? ' rec-row--late' : ''}${status === 'Recommended' ? ' rec-row--recommended' : ''}`}
       aria-pressed={explored === c.id} aria-labelledby={`${key}-label`} aria-describedby={`${key}-status ${key}-values`}
       disabled={!available} onClick={() => onExplore(c.id)}>
-      <span className="rec-col-head">
-        <span><span id={`${key}-label`} className="rec-col-label">{c.label}</span>{c.date && <span className="rec-col-date">{dayDate(c.date)}</span>}</span>
+      <span className="rec-row-head">
+        <span id={`${key}-label`} className="rec-row-label">{c.label}</span>
+        {c.date && <span className="rec-row-date">{dayDate(c.date)}</span>}
         <span id={`${key}-status`} className="rec-chip">{status}</span>
       </span>
-      {available && <span className="rec-col-plot" aria-hidden="true">
-        {reference && <span className="rec-col-reference" style={{ top: top(reference.mid) }} />}
-        {c.observed ? <span className="rec-col-dot" style={{ top: top(c.mid) }} />
-          : <><span className="rec-col-bar" style={{ top: top(c.high), bottom: `calc(100% - ${top(c.low)})` }} /><span className="rec-col-tick" style={{ top: top(c.mid) }} /></>}
-      </span>}
-      <span id={`${key}-values`} className="rec-col-values">
+      <span className="rec-row-plot" aria-hidden="true">
+        {available && (c.observed
+          ? <span className="rec-row-dot" style={{ left: left(c.mid) }} />
+          : <><span className="rec-row-bar" style={{ left: left(c.low), right: `calc(100% - ${left(c.high)})` }} /><span className="rec-row-dot" style={{ left: left(c.mid) }} /></>)}
+      </span>
+      <span id={`${key}-values`} className="rec-row-values">
         {available ? <><strong>{value(c.mid)}</strong><span>{c.observed
-          ? (unit === 'total' ? `${amount(quantity)} MT × USD ${amount(c.mid)}/MT` : `Quote from ${dayDate(quoteDate!)}`)
+          ? `Quote from ${dayDate(c.quote ?? today)}`
           : `Range ${unit === 'total' ? `${compact(c.low * quantity)}–${compact(c.high * quantity)}` : `${amount(c.low)}–${amount(c.high)}/MT`}`}</span></>
           : <><strong>Unavailable</strong><span>Model status: {c.message}</span></>}
       </span>
@@ -113,16 +122,21 @@ export function CompareBuyingDates({ entries, quantity, today, deadline, explore
         <WarningIcon />No 7, 14 or 30-day forecast is available{sharedMessage === knownMessage ? ', for the reason shown above.' : <>. Model status: {sharedMessage}</>}
       </p>
       : <>
-        {/* repeat(0, …) is invalid CSS, so the late group is only added when it has columns. */}
-        <div className="rec-columns" style={{ '--rec-columns': `repeat(${before.length}, minmax(0, 1fr)) 64px${after.length ? ` repeat(${after.length}, minmax(0, 1fr))` : ''}` } as CSSProperties}>
-          {before.map(column)}
-          <div className="rec-deadline-mark" aria-label={`Purchase deadline ${formatDate(deadline)}`}>
-            <span>Deadline</span><span>{dayDate(deadline)}</span><i aria-hidden="true" />
-          </div>
-          {after.map(column)}
+        <div className="rec-rows">
+          {reference && ready.length > 0 && <div className="rec-rows-plot" aria-hidden="true">
+            <span className="rec-rows-today" style={{ left: left(reference.mid) }} />
+          </div>}
+          {before.map(row)}
+          {after.length > 0 && <div className="rec-row-deadline" aria-label={`Purchase deadline ${formatDate(deadline)}`}>
+            <span>Deadline · {dayDate(deadline)}</span>
+          </div>}
+          {after.map(row)}
         </div>
-        <p className="rec-footnote">Bars show each forecast’s range on a shared price scale; the tick is the central estimate and the dashed line is today’s price.
-          {quoteDate && ` Forecast dates count from the ${formatDate(quoteDate)} quote, not from today.`} Select a column to see its detail.</p>
+        {ready.length > 0 && <div className="rec-axis" aria-hidden="true">
+          {ticks().map(t => <span key={t} className="rec-axis-tick" style={{ left: left(t) }}>{unit === 'total' ? compact(t * quantity) : amount(t)}</span>)}
+        </div>}
+        <p className="rec-footnote">Each bar is the forecast’s range on a shared price scale; the dot is the central estimate and the dashed line is today’s price.
+          {quoteDate && ` Forecast dates count from the ${formatDate(quoteDate)} quote, not from today.`} Select a row to see its detail.</p>
       </>}
   </section>;
 }
