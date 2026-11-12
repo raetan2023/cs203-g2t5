@@ -44,8 +44,11 @@ public class SecurityConfig {
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(ADMIN))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/organisation").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER, MANAGER, ADMIN))))
-                        .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/approval-notifications", "/api/v1/purchase-plans/manager-overview").access((auth, context) ->
+                        .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/approval-notifications").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(MANAGER))))
+                        // Managers see their team's figures; admins see the whole organisation's, read-only.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/manager-overview", "/api/v1/purchase-plans/team").access((auth, context) ->
+                                new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(MANAGER, ADMIN))))
                         .requestMatchers(HttpMethod.GET, "/api/v1/purchase-plans/my-notifications").access((auth, context) ->
                                 new AuthorizationDecision(OrganisationAccess.allows(auth.get(), Set.of(OFFICER))))
                         .requestMatchers(HttpMethod.POST, "/api/v1/purchase-plans/*/withdraw", "/api/v1/purchase-plans/*/revise",

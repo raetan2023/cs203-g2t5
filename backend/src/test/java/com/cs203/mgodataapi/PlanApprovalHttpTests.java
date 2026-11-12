@@ -86,7 +86,8 @@ class PlanApprovalHttpTests {
     @Test void teamOverviewIsManagerOnlyAndCannotOverrideVerifiedTeam() throws Exception {
         String endpoint = "/api/v1/purchase-plans/manager-overview";
         mvc.perform(get(endpoint)).andExpect(status().isUnauthorized());
-        for (String role : List.of("officer", "analyst", "admin", "unknown"))
+        // Admins may read it too (organisation-wide); see ManagerOverviewTests.
+        for (String role : List.of("officer", "analyst", "unknown"))
             mvc.perform(get(endpoint).with(member("org_a", role))).andExpect(status().isForbidden());
         verifyNoInteractions(plans, jdbc);
         when(users.find("user_buyer")).thenReturn(java.util.Optional.of(UUID.randomUUID()));

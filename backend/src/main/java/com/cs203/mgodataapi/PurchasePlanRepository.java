@@ -119,16 +119,16 @@ public class PurchasePlanRepository {
                          where d.plan_id = p.plan_id and d.clerk_org_id = p.clerk_org_id
                            and d.decision = 'approved' and d.decided_at >= ?)""";
 
-    /** MT recorded as bought for each purchased plan of the manager's current officers. */
-    public java.util.Map<UUID, BigDecimal> purchasedByPlanForManager(UUID managerId, String organisationId) {
-        var result = new java.util.HashMap<UUID, BigDecimal>();
-        jdbc.query("""
-                select r.plan_id, r.quantity_mt from purchase_records r
-                join purchase_plans p on p.plan_id = r.plan_id and p.clerk_org_id = r.clerk_org_id
-                where p.clerk_org_id = ? and p.status = 'purchased' and """ + " " + ASSIGNED_TO_MANAGER,
-                rs -> { result.merge(rs.getObject("plan_id", UUID.class), rs.getBigDecimal("quantity_mt"), BigDecimal::add); },
-                requireOrganisation(organisationId), managerId);
-        return result;
+    /** Plans in the organisation that a manager approved on or after {@code since} (an admin's overview). */
+    public java.util.Set<UUID> approvedSince(String organisationId, java.time.Instant since) {
+        return new java.util.HashSet<>(jdbc.queryForList("select p.plan_id from purchase_plans p where p.clerk_org_id = ? "
+                + APPROVED_SINCE, UUID.class, requireOrganisation(organisationId), java.sql.Timestamp.from(since)));
+    }
+
+    /** Everyone who is currently a procurement officer in the organisation. */
+    public List<UUID> officerMembers(String organisationId) {
+        return jdbc.queryForList("select user_id from organisation_members where clerk_org_id = ? and role = 'org:officer'",
+                UUID.class, requireOrganisation(organisationId));
     }
 
     /** The officers this manager oversees, with how each is shown: name, else email, else Clerk ID. */
@@ -138,6 +138,15 @@ public class PurchasePlanRepository {
                 where a.pm_user_id = ? and a.clerk_org_id = ? order by label, a.po_user_id""",
                 (rs, n) -> java.util.Map.entry(rs.getObject("po_user_id", UUID.class), rs.getString("label")),
                 managerId, requireOrganisation(organisationId));
+    }
+
+    /** Each officer's current PM in the organisation; officers without one are absent. */
+    public java.util.Map<UUID, UUID> managersByOfficer(String organisationId) {
+        var result = new java.util.HashMap<UUID, UUID>();
+        jdbc.query("select po_user_id, pm_user_id from pm_assignments where clerk_org_id = ?",
+                (org.springframework.jdbc.core.RowCallbackHandler) rs -> result.put(rs.getObject("po_user_id", UUID.class), rs.getObject("pm_user_id", UUID.class)),
+                requireOrganisation(organisationId));
+        return result;
     }
 
     /** Withdrawn plans leave officer and manager lists this long after being withdrawn. Admins still see them. */

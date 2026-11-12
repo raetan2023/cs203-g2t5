@@ -63,13 +63,23 @@ public class PurchasePlanController {
             var expired = plans.withdrawnBefore(access.organisationId(), clock.instant().minus(PurchasePlanRepository.WITHDRAWN_VISIBLE_FOR));
             if (!expired.isEmpty()) rows = rows.stream().filter(plan -> !expired.contains(plan.planId())).toList();
         }
-        if (access.role() == OrganisationAccess.Role.MANAGER) {
-            // Managers filter their plans by officer, so each plan says whose it is.
-            var labels = users.labels(rows.stream().map(PurchasePlan::userId).toList());
+        if (access.role() != OrganisationAccess.Role.OFFICER) {
+            // Managers filter their plans by officer, and admins by PM too, so each plan says whose it is.
+            var admin = access.role() == OrganisationAccess.Role.ADMIN;
+            var managers = admin ? plans.managersByOfficer(access.organisationId()) : Map.<UUID, UUID>of();
+            var people = new java.util.HashSet<UUID>(managers.values());
+            rows.forEach(plan -> people.add(plan.userId()));
+            var labels = users.labels(people);
             return Map.of("plans", rows.stream().map(plan -> {
                 var body = plan.toResponse(scenarioDate);
                 body.put("buyer_user_id", plan.userId().toString());
                 body.put("buyer_label", labels.getOrDefault(plan.userId(), "An officer"));
+                if (admin) {
+                    // The officer's current PM; null when they have none.
+                    UUID pm = managers.get(plan.userId());
+                    body.put("pm_user_id", pm == null ? null : pm.toString());
+                    body.put("pm_label", pm == null ? null : labels.getOrDefault(pm, "A manager"));
+                }
                 return body;
             }).toList());
         }

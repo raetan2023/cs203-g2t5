@@ -154,10 +154,21 @@ it('refresh copies members from Clerk and reloads the list', async () => {
   const api = service();
   render(<TeamReporting service={api} />);
   await screen.findByLabelText('po1@example.com');
+  expect(screen.getByText(/Updated as of/)).toBeVisible();
   await userEvent.click(screen.getByRole('button', { name: 'Refresh team list' }));
-  expect(await screen.findByRole('status')).toHaveTextContent('Team list updated.');
+  // The moving bar shows while it refreshes; afterwards the "Updated as of" line moves on, with no message.
+  expect(document.querySelector('.pp-refresh-bar')).not.toBeNull();
+  await waitFor(() => expect(api.load).toHaveBeenCalledTimes(2));
   expect(api.syncMembers).toHaveBeenCalledTimes(1);
-  expect(api.load).toHaveBeenCalledTimes(2);
+  expect(screen.queryByText('Team list updated.')).not.toBeInTheDocument();
+  expect(screen.getByText(/Updated as of/)).toBeVisible();
+});
+
+it('lists officers without the old note when there is no manager yet', async () => {
+  const api = service({ load: vi.fn(async () => ({ officers: [{ user_id: 'po1', label: 'po1@example.com', email: 'po1@example.com', pm_user_id: null }], managers: [] })) });
+  render(<TeamReporting service={api} />);
+  await screen.findByLabelText('po1@example.com');
+  expect(screen.queryByText('Add a Procurement Manager before assigning officers.')).not.toBeInTheDocument();
 });
 
 it('shows the reason when a refresh fails and allows another try', async () => {

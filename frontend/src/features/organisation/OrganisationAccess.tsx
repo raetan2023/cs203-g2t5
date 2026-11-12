@@ -24,6 +24,13 @@ export function OrganisationSelection({ unsupportedRole, onSignOut }: {
   </OrganisationSelectionFrame>;
 }
 
+/** Lets an admin who runs several organisations move between them from the administration page. */
+export function AdminOrganisationSwitcher() {
+  return <OrganizationSwitcher hidePersonal afterSelectOrganizationUrl="/admin"
+    afterCreateOrganizationUrl="/admin" afterLeaveOrganizationUrl="/home"
+    appearance={organisationAppearance} organizationProfileProps={{ appearance: organisationAppearance }} />;
+}
+
 export function OrganisationControl({ name, role, readOnly = false, imageUrl }: {
   name: string; role: string; readOnly?: boolean; imageUrl?: string;
 }) {
