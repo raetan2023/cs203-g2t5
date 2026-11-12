@@ -325,7 +325,7 @@ class PlanLifecycleServiceTests {
         assertEquals("rejected", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
         var decision = approvals.decision(id, "org_a");
         assertEquals(PlanApprovalService.AUTOMATIC_LABEL, decision.get("manager_label"));
-        assertEquals(PlanApprovalService.AUTOMATIC_REASON, decision.get("comment"));
+        assertEquals("Rejected automatically: no decision within 5 days after the purchase deadline.", decision.get("comment"));
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM plan_decision_notifications WHERE plan_id = ? AND decision = 'rejected'", Integer.class, id));
         assertEquals(0, rejector.rejectDue(), "already decided requests are left alone");
     }

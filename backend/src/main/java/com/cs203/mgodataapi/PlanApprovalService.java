@@ -128,7 +128,7 @@ public class PlanApprovalService {
     public static final String MONITOR_BLOCKED = "Monitoring, check again tomorrow. A Monitor recommendation can't be submitted for approval.";
     public static final String AUTOMATIC_LABEL = "Bunker Buddy (automatic)";
     public static final String AUTOMATIC_SUBJECT = "system";
-    public static final String AUTOMATIC_REASON = "Rejected automatically: no decision within 5 days of the purchase deadline.";
+    public static final String AUTOMATIC_REASON = "Rejected automatically: no decision within 5 days after the purchase deadline.";
 
     /**
      * Rejects one request that is still waiting for a decision and whose deadline is on or before

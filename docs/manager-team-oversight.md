@@ -81,7 +81,7 @@ request type; the counts follow the officer choice.
 A pending request whose purchase deadline has passed is shown as overdue, with its
 own count and filter. A manager can still approve it after confirming. If it is still
 pending 5 days after the deadline, an hourly backend job rejects it automatically with
-the reason "Rejected automatically: no decision within 5 days of the purchase deadline."
+the reason "Rejected automatically: no decision within 5 days after the purchase deadline."
 The decision is stored under the officer's current manager and shown as
 "Bunker Buddy (automatic)"; the officer is notified. Requests whose officer has no
 manager are left until one is assigned. Set `mgo.overdue-rejection.enabled=false` to
