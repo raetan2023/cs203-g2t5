@@ -20,8 +20,8 @@ export function SortMenu<T extends string>({ groups, value, onChange }: {
   const group = groups.find(g => g.options.some(option => option.id === value));
   const current = group?.options.find(option => option.id === value);
   return <div className="pp-officer-filter" ref={box}>
-    <button type="button" className="pp-filter-trigger" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(v => !v)}>
-      <span className="pp-sr-only">Sort: </span>{group?.heading}: {current?.label}<span aria-hidden="true" className="pp-filter-caret">▾</span>
+    <button type="button" className="pp-filter-trigger pp-sort-trigger" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(v => !v)}>
+      <span className="pp-sr-only">Sort: </span><span className="pp-filter-label" title={`${group?.heading}: ${current?.label}`}>{group?.heading}: {current?.label}</span><span aria-hidden="true" className="pp-filter-caret">▾</span>
     </button>
     {open && <div className="pp-officer-panel pp-sort-panel" id={panelId} role="radiogroup" aria-label="Sort requests">
       {groups.map(group => <div key={group.heading} className="pp-sort-group">

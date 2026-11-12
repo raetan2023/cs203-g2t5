@@ -166,6 +166,24 @@ class OrganisationPlanHttpTests {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.plans[0].buyer_label").doesNotExist());
     }
 
+    @Test void adminListsSayWhoseEachPlanIsAndTheirCurrentPm() throws Exception {
+        UUID pm = UUID.randomUUID(), loner = UUID.randomUUID(), other = UUID.randomUUID();
+        when(plans.findByOrganisation("org_a")).thenReturn(List.of(plan(id, colleague), plan(other, loner)));
+        when(plans.managersByOfficer("org_a")).thenReturn(Map.of(colleague, pm));
+        when(users.labels(any())).thenReturn(Map.of(colleague, "Rae Tan", pm, "Wunna Aung", loner, "Ana Lee"));
+        mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", "admin")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.plans[0].buyer_label").value("Rae Tan"))
+                .andExpect(jsonPath("$.plans[0].pm_user_id").value(pm.toString()))
+                .andExpect(jsonPath("$.plans[0].pm_label").value("Wunna Aung"))
+                .andExpect(jsonPath("$.plans[1].buyer_label").value("Ana Lee"))
+                .andExpect(jsonPath("$.plans[1].pm_user_id").doesNotExist());
+        // Managers get the officer but not the PM; they are the PM.
+        when(plans.findForManager(any(), eq("org_a"))).thenReturn(List.of(plan(id, colleague)));
+        mvc.perform(get("/api/v1/purchase-plans").with(membership("org_a", "manager")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.plans[0].pm_label").doesNotExist());
+    }
+
     @Test void withdrawnPlansLeaveOfficerAndManagerListsAfterFiveDaysButNotAdminLists() throws Exception {
         UUID old = UUID.randomUUID();
         when(plans.findByUser(owner, "org_a")).thenReturn(List.of(plan(id, owner), plan(old, owner)));

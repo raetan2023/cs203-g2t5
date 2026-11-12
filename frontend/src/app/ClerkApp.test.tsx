@@ -276,9 +276,9 @@ describe('Verified organisation permissions', () => {
     backend(role);
     window.history.replaceState(null, '', '/purchase-plans');
     render(<ClerkApp />);
-    // The sample plan is a draft: admins see it, while a manager's list holds only decided plans.
+    // The sample plan is a draft, which only its officer sees.
     if (role === 'org:manager') expect(await screen.findByText(/No approved, purchased or rejected plans/)).toBeInTheDocument();
-    else expect(await screen.findByRole('link', { name: /View recommendation/ })).toBeInTheDocument();
+    else expect(await screen.findByText('No approved, purchased or rejected plans in your organisation yet.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Organisation purchase plans' })).toBeInTheDocument();
     for (const name of ['Create plan', 'Edit', 'Delete']) {
       expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
