@@ -96,11 +96,10 @@ export function createMockPlanService(options: MockOptions = {}): PurchasePlanSe
     async recordPurchase(id, input) {
       await wait('purchase'); const plan = owned(id, 'approved');
       const approvedOn = outcomes.get(id)?.decision?.decided_at.slice(0, 10) ?? getScenarioDate();
-      if (!input.supplier.trim() || input.supplier.trim().length > 200 || !Number.isFinite(input.quantity_mt) || input.quantity_mt <= 0
-          || !Number.isFinite(input.price_usd_per_mt) || input.price_usd_per_mt <= 0 || input.purchased_on > getScenarioDate() || input.purchased_on > plan.purchase_deadline || input.purchased_on < approvedOn)
+      if (!input.supplier.trim() || input.supplier.trim().length > 200 || !Number.isFinite(input.price_usd_per_mt) || input.price_usd_per_mt <= 0 || input.purchased_on > getScenarioDate() || input.purchased_on > plan.purchase_deadline || input.purchased_on < approvedOn)
         throw new PlanError('Please check the purchase details.', {}, 422);
       outcomes.set(id, { ...outcomes.get(id), submission: outcomes.get(id)?.submission ?? null,
-        purchase: { ...input, purchase_id: crypto.randomUUID(), total_usd: input.quantity_mt * input.price_usd_per_mt, recorded_at: instant() } });
+        purchase: { ...input, quantity_mt: plan.quantity_mt, purchase_id: crypto.randomUUID(), total_usd: plan.quantity_mt * input.price_usd_per_mt, recorded_at: instant() } });
       return replace({ ...plan, status: 'purchased' });
     },
     async buyerNotifications() { await wait('read'); return { notifications: [...notifications].reverse().slice(0, 100).map(n => ({ ...n })), unread_count: notifications.filter(n => !n.seen_at).length }; },

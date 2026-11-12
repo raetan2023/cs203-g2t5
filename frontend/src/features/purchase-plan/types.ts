@@ -192,15 +192,16 @@ export type PlanAnalysisState =
   | { status: 'loaded'; analysis: PlanAnalysis }
   | { status: 'stale'; context: PlanResultContext; previous: PlanAnalysis };
 
+/** No quantity: the approved plan fixes it, and the server records the plan's quantity. */
 export interface PurchaseInput {
   purchased_on: string;
   supplier: string;
-  quantity_mt: number;
   price_usd_per_mt: number;
   note?: string;
 }
 export interface PurchaseRecord extends PurchaseInput {
   purchase_id: string;
+  quantity_mt: number;
   total_usd: number;
   recorded_at: string;
 }
@@ -241,7 +242,7 @@ export interface BuyerDecisionNotification {
   comment: string;
 }
 export interface BuyerNotificationsResponse { notifications: BuyerDecisionNotification[]; unread_count: number }
-export type FieldErrors = Partial<Record<keyof PlanInput | keyof PurchaseInput | 'reason', string>>;
+export type FieldErrors = Partial<Record<keyof PlanInput | keyof PurchaseInput | 'quantity_mt' | 'reason', string>>;
 
 /** Wunna's future request-helper adapter can implement this interface. */
 export interface BuyerDecisionInput {
