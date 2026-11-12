@@ -112,8 +112,8 @@ Only the PO's assigned PM can decide
 The first decision is final
 
 If the PM approves:
-  OPEN ISSUE: the PM can approve even after the deadline
-    has passed (see item 10 at the end)
+  Only allowed while the deadline has not passed
+    After the deadline the PM can only reject
   PM can add a comment
   Plan becomes Approved
   PO is notified
@@ -152,12 +152,12 @@ When the PO buys:
   PO enters the purchase date, supplier, 
     price paid in USD/MT (trust user to input correct price of mgo on the day they're buying) and an optional note
     no need to key in qty bought as plan fixed once approved
-  Purchase date must be on or after the approval date
-    and no later than today
-  OPEN ISSUE: nothing stops buying after the deadline
-    The purchase date can be after the deadline,
-    and an approved plan that is never bought stays Approved forever
-    (see item 10 at the end)
+  Purchase date must be on or after the approval date,
+    no later than today, and no later than the deadline
+    (the date bought counts, not the day it's recorded,
+     so a purchase made on time can still be logged a day late)
+  Still open: an approved plan that is never bought
+    stays Approved forever (see item 10 at the end)
   Plan becomes Finished (Purchased)
   The actual cost is compared with the locked recommendation
   Log: "Purchased by PO at $X"
@@ -232,7 +232,7 @@ Everything above that isn't listed here already works on `main`.
 7. **Admin recommendation history.** New read-only endpoint and admin page listing every saved recommendation for any plan in the organisation, each with the PO's response.
 8. **Wording of the automatic rejection reason.** The code acts 5 days *after* the deadline, but the saved reason says "within 5 days of the purchase deadline" (`PlanApprovalService.AUTOMATIC_REASON`).
 9. **No quantity when recording a purchase.** Step 5 says the PO doesn't enter the quantity bought, because the approved plan fixes it. `PlanLifecycleService.recordPurchase` still requires `quantity_mt`, and `purchase_records.quantity_mt` is `NOT NULL`. Fill it from the plan's quantity instead of asking the PO, and drop the field from the purchase form. The cost comparison's "adjusted for a different quantity" totals then always equal the plain ones.
-10. **OPEN ISSUE: buying and approving after the deadline.** Not decided yet. Today:
+10. **Buying and approving after the deadline.** Agreed: (a) + (b) below; (c) stays open as future work. Today:
     - `recordPurchase` only checks that the purchase date is between the approval date and today, so a plan can be bought with a purchase date after its deadline.
     - `PlanApprovalService.decide` doesn't check the deadline, and requests can wait up to 5 days past it before the automatic rejection, so a PM can approve a plan whose deadline has passed.
     - An approved plan that is never bought stays Approved forever; nothing expires it.
