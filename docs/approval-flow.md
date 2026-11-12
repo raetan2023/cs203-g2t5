@@ -144,8 +144,9 @@ Only allowed if the plan is Approved
 The approved plan is locked: it can't be edited, withdrawn or cancelled
 
 When the PO buys:
-  PO enters the purchase date, supplier, quantity bought,
-    price paid (USD/MT) and an optional note
+  PO enters the purchase date, supplier, 
+    price paid in USD/MT (trust user to input correct price of mgo on the day they're buying) and an optional note
+    no need to key in qty bought as plan fixed once approved
   Purchase date must be on or after the approval date
     and no later than today
   Plan becomes Finished (Purchased)
