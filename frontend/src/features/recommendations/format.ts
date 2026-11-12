@@ -4,8 +4,9 @@ import { formatDate } from '../purchase-plan/dates';
 export const amount = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 0 });
 export const price = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 2 });
 export const usd = (value: number) => `USD ${amount(value)}`;
+export const currencyAmount = (value: number) => value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 /** A per-tonne price, always to the cent: a quote of 1,351.50 must not read as 1,352. */
-export const perMt = (value: number) => value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const perMt = currencyAmount;
 
 export function compact(value: number) {
   const magnitude = Math.abs(value);

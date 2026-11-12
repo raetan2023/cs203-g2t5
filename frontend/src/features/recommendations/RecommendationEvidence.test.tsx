@@ -34,3 +34,21 @@ it('explains the saved recommendation in plain words, using the figures from sub
   expect(screen.getAllByRole('listitem').length).toBeLessThanOrEqual(12);
   expect(document.body.textContent).not.toMatch(/calendar days|Policy|Ridge|snapshot|q10|inverse distance/i);
 });
+
+it('keeps a saved cost forecast distinct from the inputs used to recommend when to buy', () => {
+  if (analysis.recommendation.status !== 'ready') throw new Error('Expected recommendation fixture');
+  const guidance = analysis.recommendation.value;
+  const monitor: PlanAnalysis = {
+    ...analysis,
+    cost_impact: { status: 'ready', value: {
+      currency: 'USD', target_date: '2026-12-07', reference_total: 1348797, central_total: 1348797,
+      forecast_total: { lower: 1200000, upper: 1500000 }, difference_total: { lower: -148797, upper: 151203 },
+    } },
+    recommendation: { status: 'ready', value: {
+      ...guidance, action: 'MONITOR',
+      evidence: { ...guidance.evidence!, signal_price: null, signal_inputs: [] },
+    } },
+  };
+  render(<EvidenceView analysis={monitor} plan={plan} />);
+  expect(screen.getByRole('list', { name: 'Reasons' })).not.toHaveTextContent('No price forecast falls before your deadline');
+});

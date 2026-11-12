@@ -11,9 +11,10 @@ import { BuyerDecisionsProvider, BuyerDecisions } from '../purchase-plan/compone
 import { AppShell } from '../../components/AppShell';
 
 afterEach(() => { window.history.replaceState(null, '', '/'); });
-async function fixture(start: 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased' = 'submitted') {
-  const service = withPreviewApproval(createMockPlanService({ initialPlan: scenarioPlan('wait'), scenarioDate: SCENARIO_DATE, delayMs: 0 }), 'wait', start);
-  return { service, plan: (await service.read(scenarioPlan('wait').plan_id)).plan! };
+async function fixture(start: 'submitted' | 'approved' | 'rejected' | 'withdrawn' | 'purchased' = 'submitted', scenario: 'wait' | 'monitor' = 'wait') {
+  const initialPlan = scenarioPlan(scenario);
+  const service = withPreviewApproval(createMockPlanService({ initialPlan, scenarioDate: SCENARIO_DATE, delayMs: 0 }), scenario, start);
+  return { service, plan: (await service.read(initialPlan.plan_id)).plan! };
 }
 function Request({ service, initial, canAct = true }: { service: PurchasePlanService; initial: PurchasePlan; canAct?: boolean }) {
   const [plan, setPlan] = useState(initial), [attempt, setAttempt] = useState(0);
@@ -64,7 +65,18 @@ it('validates fields and records one purchase, showing quantity-adjusted compari
   const outcome = await screen.findByRole('region', { name: 'Recorded purchase' });
   expect(await screen.findByRole('heading', { name: 'Purchase recorded' })).toBeVisible();
   expect(within(outcome).getByText('USD 24,602.46')).toBeVisible();
-  expect(within(outcome).getByText(/Differences compare the same actual quantity/)).toBeVisible();
+  expect(within(outcome).getByText('USD 1,200.12')).toBeVisible();
+  const prices = within(outcome).getByRole('table', { name: 'Price comparison in USD per MT' });
+  expect(screen.queryByRole('table', { name: 'Saved recommendation costs' })).not.toBeInTheDocument();
+  const reference = within(prices).getByRole('row', { name: /Market price/ });
+  expect(within(reference).getByText('1,352.00')).toBeVisible();
+  expect(within(reference).getByText('151.88 less')).toBeVisible();
+  const estimate = within(prices).getByRole('row', { name: /Forecast price/ });
+  expect(within(estimate).getByText('1,330.00')).toBeVisible();
+  expect(within(estimate).getByText('129.88 less')).toBeVisible();
+  await user.click(within(outcome).getByText('Compare total costs'));
+  expect(within(outcome).getByText(/Differences use the 20.5 MT actually bought/)).toBeVisible();
+  expect(within(outcome).getByText('3,113.54 less')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Record purchase' })).not.toBeInTheDocument();
   expect(record).toHaveBeenCalledTimes(1);
 });
@@ -88,9 +100,14 @@ it('keeps purchase drafts on validation errors and requires reload after a confl
 });
 
 it('shows purchase records to read-only viewers without mutation controls', async () => {
-  const { service, plan } = await fixture('purchased');
-  render(<Request service={service} initial={plan} canAct={false} />);
+  const { service, plan } = await fixture('purchased', 'monitor');
+  render(<SubmittedRecommendationView plan={plan} planService={service} canDecide />);
   expect(await screen.findByRole('region', { name: 'Recorded purchase' })).toBeVisible();
+  expect(screen.queryByRole('region', { name: 'Saved recommendation for approval' })).not.toBeInTheDocument();
+  const recommendation = screen.getByText('Original recommendation · Monitor');
+  expect(recommendation.closest('details')).not.toHaveAttribute('open');
+  await userEvent.click(recommendation);
+  expect(screen.getByText(/Monitor prices/)).toBeVisible();
   expect(screen.queryByRole('button', { name: /Record purchase|Withdraw request|Copy to new draft/ })).not.toBeInTheDocument();
 });
 

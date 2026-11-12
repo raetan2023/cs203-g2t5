@@ -17,7 +17,7 @@ export function EvidenceView({ analysis, plan }: { analysis: PlanAnalysis; plan:
   });
   const saved = { ...plan, quantity_mt, purchase_deadline: deadline, days_remaining: calendarDays(asOf, deadline) };
   return <div className="rec-explain">
-    <ol aria-label="Reasons">{plainReasons({ plan: saved, guidance, analysis, columns }).map((reason, i) => <li key={i}>{reason}</li>)}</ol>
+    <ol aria-label="Reasons">{plainReasons({ plan: saved, guidance, analysis, columns, submitted: true }).map((reason, i) => <li key={i}>{reason}</li>)}</ol>
     {!!evidence.allocations.length && <>
       <h3>Suggested split</h3>
       <ul>{evidence.allocations.map(a => <li key={a.date}>{a.quantity_mt.toLocaleString('en-GB', { maximumFractionDigits: 20 })} MT on {formatDate(a.date)}</li>)}</ul>
