@@ -2,6 +2,8 @@
  * A small, dependency-free PDF writer for the purchase recommendation report (A4, built in the browser).
  * It lays out typed blocks — summary card, key figures, tables, lists — with the standard Helvetica fonts.
  */
+import { brandAnchor } from '../../components/brandAnchor';
+
 export type Tone = 'go' | 'wait' | 'watch' | 'split' | 'neutral';
 export type Cell = string | { text: string; sub?: string; bold?: boolean; mono?: boolean; tone?: Tone };
 export type TableColumn = { label: string; width: number; align?: 'left' | 'right' };
@@ -119,6 +121,8 @@ function wrap(text: string, font: Font, size: number, width: number) {
 
 const FONT_REF: Record<Font, string> = { regular: 'F1', bold: 'F2', mono: 'F3' };
 const cellOf = (cell: Cell) => typeof cell === 'string' ? { text: cell } : cell;
+const PDF_PATH = { M: 'm', L: 'l', C: 'c' } as const;
+const ANCHOR_PATH = brandAnchor.path.map(([command, ...coordinates]) => `${coordinates.join(' ')} ${PDF_PATH[command]}`).join(' ');
 
 class Layout {
   pages: string[] = [];
@@ -143,24 +147,35 @@ class Layout {
     this.ops += `${fill} rg ${fmt(x)} ${fmt(PAGE_H - top - height)} ${fmt(width)} ${fmt(height)} re f\n`;
   }
 
-  roundRect(x: number, top: number, width: number, height: number, radius: number, fill?: Rgb, stroke?: Rgb) {
+  roundRect(x: number, top: number, width: number, height: number, radius: number, fill?: Rgb, stroke?: Rgb, strokeWidth = 0.75) {
     const b = PAGE_H - top - height, t = PAGE_H - top, r = Math.min(radius, width / 2, height / 2), k = r * 0.5523;
     const path = [`${fmt(x + r)} ${fmt(b)} m`, `${fmt(x + width - r)} ${fmt(b)} l`,
       `${fmt(x + width - r + k)} ${fmt(b)} ${fmt(x + width)} ${fmt(b + r - k)} ${fmt(x + width)} ${fmt(b + r)} c`,
       `${fmt(x + width)} ${fmt(t - r)} l`, `${fmt(x + width)} ${fmt(t - r + k)} ${fmt(x + width - r + k)} ${fmt(t)} ${fmt(x + width - r)} ${fmt(t)} c`,
       `${fmt(x + r)} ${fmt(t)} l`, `${fmt(x + r - k)} ${fmt(t)} ${fmt(x)} ${fmt(t - r + k)} ${fmt(x)} ${fmt(t - r)} c`,
       `${fmt(x)} ${fmt(b + r)} l`, `${fmt(x)} ${fmt(b + r - k)} ${fmt(x + r - k)} ${fmt(b)} ${fmt(x + r)} ${fmt(b)} c`, 'h'].join(' ');
-    this.ops += `${fill ? `${fill} rg ` : ''}${stroke ? `${stroke} RG 0.75 w ` : ''}${path} ${fill && stroke ? 'B' : fill ? 'f' : 'S'}\n`;
+    this.ops += `${fill ? `${fill} rg ` : ''}${stroke ? `${stroke} RG ${fmt(strokeWidth)} w ` : ''}${path} ${fill && stroke ? 'B' : fill ? 'f' : 'S'}\n`;
   }
 
   hline(x: number, top: number, width: number, color: Rgb, weight = 0.75) {
     this.rect(x, top, width, weight, color);
   }
 
-  logo(x: number, top: number, size: number, fill: Rgb, ink: Rgb) {
-    this.roundRect(x, top, size, size, size * 0.22, fill);
-    const mark = encode('BB'), fontSize = size * 0.42;
-    this.text(mark, x + (size - measure(mark, 'bold', fontSize)) / 2, top + size * 0.65, 'bold', fontSize, ink);
+  logo(x: number, top: number, size: number) {
+    const { viewBoxSize, strokeWidth, ring } = brandAnchor;
+    const iconSize = size * 20 / 32;
+    const scale = iconSize / viewBoxSize;
+    const inset = (size - iconSize) / 2;
+    const iconX = x + inset, iconTop = top + inset;
+    const radius = ring.radius * scale;
+
+    this.ops += 'q\n';
+    this.roundRect(x, top, size, size, size / 2, TEAL);
+    this.roundRect(iconX + ring.cx * scale - radius, iconTop + ring.cy * scale - radius,
+      radius * 2, radius * 2, radius, undefined, WHITE, strokeWidth * scale);
+    // Flip the shared top-left coordinates into the PDF's bottom-left coordinate space.
+    this.ops += `${scale.toFixed(5)} 0 0 ${(-scale).toFixed(5)} ${fmt(iconX)} ${fmt(PAGE_H - iconTop)} cm\n`;
+    this.ops += `${WHITE} RG ${strokeWidth} w 1 J 1 j ${ANCHOR_PATH} S\nQ\n`;
   }
 
   private firstPageHeader() {
@@ -168,7 +183,7 @@ class Layout {
     const band = 132;
     this.rect(0, 0, PAGE_W, band, NAVY);
     this.rect(0, band, PAGE_W, 3, TEAL);
-    this.logo(M, 30, 24, TEAL, WHITE);
+    this.logo(M, 30, 24);
     this.text(encode('BUNKER BUDDY'), M + 34, 41, 'bold', 9.5, WHITE, 1.2);
     this.text(encode('MGO procurement planning'), M + 34, 53, 'regular', 8, PALE);
     let size = 22;
@@ -185,7 +200,7 @@ class Layout {
   }
 
   private continuationHeader() {
-    this.logo(M, 30, 16, TEAL, WHITE);
+    this.logo(M, 30, 16);
     this.text(encode('BUNKER BUDDY'), M + 23, 42, 'bold', 8, NAVY, 1);
     this.rightText(encode(this.doc.title), PAGE_W - M, 42, 'regular', 8, MUTED);
     this.hline(M, 54, W, RULE);
