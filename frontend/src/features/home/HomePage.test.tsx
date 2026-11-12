@@ -43,17 +43,15 @@ describe('Home primary action', () => {
     expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
   });
 
-  it('opens organisation settings for an admin, who has no plan access', async () => {
-    const manage = vi.fn();
-    render(<HomePage displayName="Jordan" role="org:admin" canReadPlans={false} onManageOrganisation={manage} now={afternoon} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Manage organisation' }));
-    expect(manage).toHaveBeenCalledTimes(1);
+  it('provides one administration action for an admin without plan access', () => {
+    render(<HomePage displayName="Jordan" role="org:admin" canReadPlans={false} now={afternoon} />);
+    expect(screen.getByRole('link', { name: 'Enter administration' })).toHaveAttribute('href', '/admin');
+    expect(screen.queryByRole('button', { name: 'Manage organisation' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Open purchase plans' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /plans/i })).not.toBeInTheDocument();
   });
 
   it('falls back when the target is not available', () => {
-    expect(homeAction({ role: 'org:admin', canReadPlans: false })).toBeNull();
     expect(homeAction({ canReadPlans: false })).toBeNull();
   });
 });

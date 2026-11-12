@@ -24,14 +24,19 @@ export function OrganisationSelection({ unsupportedRole, onSignOut }: {
   </OrganisationSelectionFrame>;
 }
 
-export function OrganisationControl({ name, role }: { name: string; role: string }) {
+export function OrganisationControl({ name, role, readOnly = false, imageUrl }: {
+  name: string; role: string; readOnly?: boolean; imageUrl?: string;
+}) {
   return <div className="bb-organisation-control" aria-label="Active organisation">
     <div className="bb-org-workspace"><span className="bb-org-workspace-label">ORGANISATION</span>
-      <OrganizationSwitcher hidePersonal afterSelectOrganizationUrl="/home"
+      {readOnly ? <div className="bb-org-static">
+        {imageUrl && <img src={imageUrl} alt="" />}
+        <span className="bb-org-clerk-name" title={name}>{name}</span>
+      </div> : <OrganizationSwitcher hidePersonal afterSelectOrganizationUrl="/home"
         afterCreateOrganizationUrl="/home" afterLeaveOrganizationUrl="/home"
-        appearance={organisationAppearance} organizationProfileProps={{ appearance: organisationAppearance }} />
+        appearance={organisationAppearance} organizationProfileProps={{ appearance: organisationAppearance }} />}
     </div>
-    <span className="bb-org-sr-only">{name}</span>
+    {!readOnly && <span className="bb-org-sr-only">{name}</span>}
     <span className="bb-org-role-badge"><span aria-hidden="true" />{role}</span>
   </div>;
 }
