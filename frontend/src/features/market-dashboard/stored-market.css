@@ -192,3 +192,8 @@
   .sm-price-card.sm-featured { grid-column: 1 / -1; }
 }
 /* base.css already stops the spin under reduced motion; the refresh button's aria-busy and label still announce progress. */
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): text buttons meet the 44px tap target. */
+@media (max-width: 480px) {
+  .stored-market .sm-text-button { min-height: 44px; }
+}

@@ -117,3 +117,13 @@
   .dh-tabs { width: 100%; }
   .dh-tabs [role=tab] { flex: 1 1 auto; justify-content: center; padding: 0 var(--bb-space-3); }
 }
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): status tabs stay on one line and scroll inside their own box;
+   links meet the 44px tap target. */
+@media (max-width: 480px) {
+  .dh-back { min-height: 44px; }
+  .dh-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .dh-tabs::-webkit-scrollbar { display: none; }
+  .dh-tabs [role=tab] { flex: 1 0 auto; min-width: 44px; justify-content: center; white-space: nowrap; }
+  .dh-card-foot a { min-height: 44px; }
+}

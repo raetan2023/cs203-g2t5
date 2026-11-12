@@ -1,0 +1,196 @@
+# Mobile web plan
+
+Branch: `revamp/mobile` (worktree `.claude/worktrees/revamp-mobile`), based on main ec637b2.
+Started 2026-11-11. Project due 2026-11-13.
+
+Goal: every view works and feels deliberate on a phone. Order: Procurement Officer first, then Procurement Manager, then Admin.
+
+## 1. Locked scope
+
+### Viewports
+
+| Use | Width | Device |
+|---|---|---|
+| Base (design here) | **390px** | iPhone 13/14 |
+| Check | **402px** | iPhone 16 Pro |
+| Upper bound | **430px** | iPhone 15/16 Pro Max class |
+| Floor (must not break, no polish) | 360px | small Android |
+
+- Portrait only. Landscape and tablet are out of scope.
+- **One breakpoint for all new work: `@media (max-width: 480px)`.**
+- Existing breakpoints (640/760/900/1000/1050/1180 and the others) are left as they are. Don't consolidate them.
+
+### In scope
+
+- Layout and touch ergonomics on every routed view, for all three roles (phases below).
+- Shell: the top nav becomes a **hamburger menu** at 480px and below.
+- JSX changes only for layout structure: wrappers, ordering, the menu toggle and its open/closed state.
+
+### Out of scope
+
+- Backend logic, API routes, data contracts.
+- Hooks, contexts, services, fetches, and data-carrying props.
+- New features, copy changes, new design tokens, new libraries.
+- `src/prototypes/` and `src/preview/` (the preview harness may gain mobile scenarios, but no product code lives there).
+
+## 2. Design constraint prompt
+
+Paste this at the top of any chat or agent working on a page:
+
+```
+MOBILE PASS — HARD CONSTRAINTS
+Target: 390px base, verify at 402 and 430, must not break at 360. Portrait only.
+Plan: docs/ui-revamp/MOBILE_PLAN.md
+
+1. Desktop is frozen. All new CSS lives inside @media (max-width: 480px).
+   Screenshots at 1440px must be unchanged before vs after.
+2. No backend, API, data-contract, hook, context or state changes.
+   JSX edits are allowed only for layout structure (wrappers, order, the
+   nav toggle). No new props carrying data, no new fetches.
+3. Use existing --bb-* tokens only. No new colours, fonts, shadows or radii.
+   Type may step down the existing scale; nothing below the 12px floor.
+4. No horizontal page scroll at any target width. Wide content (charts,
+   comparison groups, tables) either reflows to one column or scrolls inside
+   its own container with a visible edge.
+5. Touch: every tappable target is at least 44x44px, with at least 8px
+   between targets. No hover-only affordances. Inputs use 16px text (stops
+   iOS zoom).
+6. Layout: 16px side gutters, single column, the primary action reachable
+   without hunting (sticky bottom bar only for the page's one main action).
+   Respect env(safe-area-inset-*) on anything fixed to an edge.
+7. Keep content and its meaning: hide nothing the desktop shows unless it is
+   decorative; collapse secondary detail behind an existing disclosure.
+8. No new libraries. Touch only the page's own CSS file and its layout JSX.
+   Only the shell work touches AppShell and the shell styles.
+9. Done = screenshots at 360/390/430 for every state of the page, zero
+   horizontal overflow (document scrollWidth == clientWidth), tsc + tests pass.
+```
+
+## 3. Hamburger menu spec (shell, `components/AppShell.tsx`)
+
+At 480px and below:
+
+- The header row has the brand (links Home) on the left. On the right are the unread-decisions badge (only when count > 0, 44px tap target, links to `/purchase-plans/notifications`) and the menu button (44x44, icon, `aria-label="Menu"`).
+- The menu button has `aria-expanded` and `aria-controls` pointing at the panel.
+- The panel opens full width under the header. Its contents, in order:
+  1. the role's nav links (same ones and same order as desktop; the current page is marked)
+  2. the unread-decisions link (if any)
+  3. the organisation control
+  4. Sign out (last, visually separated)
+- Each row is at least 48px tall.
+- It closes on: a link tap, the button again, Escape, a tap outside, or a route change.
+- Focus moves to the first link on open and returns to the button on close. The page behind doesn't scroll while the panel is open.
+- Motion: one short fade/slide on the existing motion tokens, none under `prefers-reduced-motion`.
+
+Above 480px the button is hidden and the desktop header renders exactly as today.
+
+## 4. Phases and checklist
+
+Status: `[ ]` to do, `[~]` in progress, `[x]` done (verified at 360/390/430 + desktop unchanged).
+
+### Phase 0: shared layer (blocks everything)
+
+- [x] Hamburger menu (section 3): `AppShell.tsx`, `app.css`, menu/dismiss icons in `AppIcon.tsx`, tests in `AppShell.test.tsx`. The org control's 640px header rule is overridden at 480 in `organisation.css`.
+- [x] Shell gutters 16px (already: `--bb-page-pad` clamps to 16px), safe-area inset on the menu sheet
+- [x] Global: inputs/selects/textarea 16px text at 480 and below (`base.css`); `.bb-button` was already 44px tall
+- [x] Mobile capture script: `docs/ui-revamp/tools/capture-mobile.mjs` (see section 5)
+- [x] Desktop baseline screenshots taken **before** any CSS change (38 states, `submission/mobile/desktop-baseline/`, local only)
+
+### Phase 1: Procurement Officer
+
+Status 2026-11-11: no officer view overflows at 360–430. Fixed:
+- [x] Header logo link raised to 44px (`app.css`).
+- [x] Plan filter tabs (`purchase-plan.css`) and Decision history status tabs (`decision-history.css`): kept on one line, scrolling inside their own box.
+- [x] Manager decisions: "View decision" and "Mark as seen" are two equal 44px buttons.
+- [x] Raised to 44px: back links, "View recommendation", Total / Per MT toggle (`recommendations.css`), Market text buttons (`stored-market.css`).
+- [x] Left as is: inline text links inside sentences on the mock sign-in (exempt from the target size rule), and the mock sign-in's checkbox (the real app uses Clerk's form).
+
+Follow-ups (done 2026-11-11):
+- [x] Real Clerk sign-in, checked at 360/390/430 against the real app (port 5200):
+  - No overflow, and fields use 16px text.
+  - Fields and the show-password button raised to 44px (`auth.css`).
+  - Left as is: the "Sign up" inline link, the Clerk logo, and Clerk's dev-mode toggle (development keys only).
+- [x] Home news and alerts: new preview state "Home - news and alerts (officer)" (`preview/homeNewsScenario.ts`).
+  - Alerts stack, and news rows become two-line entries.
+  - Headline links raised to 44px (`home.css`).
+- [x] Recommendation: a phone-only "Review and submit" bar is fixed to the bottom of the screen (`RecommendationsPage.tsx`, `recommendations.css`).
+  - It appears only when submitting is possible, scrolls to the Decision section, focuses it, and hides while that section is on screen.
+  - It doesn't submit anything itself.
+
+| # | View | Route | Main files | Watch for |
+|---|---|---|---|---|
+| 1.1 | Login | `/login` | `features/auth/auth.css` | 900px rule exists; video panel vs form at phone height |
+| 1.2 | Home | `/home` | `features/home/home.css` | MGO card, news and alerts (real login only, not in preview) |
+| 1.3 | Purchase plans | `/purchase-plans` | `features/purchase-plan/purchase-plan.css` | To do / Awaiting approval / Finished tabs, card actions, Sort toggle |
+| 1.4 | Create / edit plan dialog | (dialog) | `purchase-plan.css` | full-screen sheet, 16px inputs, keyboard covering the submit button |
+| 1.5 | Recommendation | `/purchase-plans/recommendation` | `features/recommendations/recommendations.css` | 40px verdict hero, read-only comparison groups, cost detail, sticky Accept and submit, confirm step |
+| 1.6 | Recommendation loading | (state) | `RecommendationLoading.tsx` styles | 5-step view, slow notice |
+| 1.7 | Manager decisions | `/purchase-plans/notifications` | `purchase-plan.css` | list rows, back link |
+| 1.8 | Decision history | `/purchase-plans/decisions` | `features/decision-history/decision-history.css` | three hairline columns become stacked rows |
+| 1.9 | Market dashboard | `/market-dashboard` | `features/market-dashboard/stored-market.css` | 4 forecast tiles, history chart (own scroll or reflow), Refresh button |
+| 1.10 | Status pages | not found / restricted | `components/StatusPage.tsx` | quick check |
+
+### Phase 2: Procurement Manager
+
+Status 2026-11-11: done. All 9 manager states have no overflow at 360–430 and no tap targets under 44px. The desktop is unchanged; the only difference is Home's greeting, which follows the clock.
+- [x] Plan list (`purchase-plan.css`): the Active / Overdue / Next deadline summary is one row of three, and the filter and sort buttons are 44px. Admin uses the same summary.
+- [x] Review page (`recommendations.css`): "Approve recommendation" and "Reject recommendation" are stacked at full width.
+- [x] Approve / reject panel (`manager-decision.css`):
+  - Close button and "View full recommendation" are 44px.
+  - Reject and Approve share the footer equally at 44px, with the safe-area inset.
+- [x] New capture states: `plans-manager-list`, `manager-approve-panel`, `manager-reject-panel`.
+- [ ] Not visible in the preview: the approval inbox and team overview, because the preview's plan data has neither. The inbox reuses the Phase 1 decisions-feed styles. Check both with a real manager login.
+
+| # | View | Notes |
+|---|---|---|
+| 2.1 | Home (manager) | role-specific blocks |
+| 2.2 | Purchase plans (manager view) | approval list, manager loading skeleton (`manager-loading.css`) |
+| 2.3 | Manager decision panel | `manager-decision.css` already has a 440px rule; check approve/reject and comment field |
+| 2.4 | Recommendation (manager, read-only) | no Accept block |
+| 2.5 | Market dashboard | same as 1.9, check the role differences |
+| 2.6 | Decision history restricted page | status page |
+
+### Phase 3: Admin
+
+Status 2026-11-11: done. All 8 admin states have no overflow at 360–430 and no tap targets under 44px. The desktop is unchanged, apart from capture artefacts: the clock-based greeting, the 16px brand flake, and the focused skip link.
+- [x] Organisation administration (`admin.css`): "← Back to Home" and the team-reporting manager dropdowns are 44px. Team reporting stacks each officer above a full-width dropdown (an existing 640px rule).
+- [x] Admin plan list (`purchase-plan.css`):
+  - The status filter (All / Pending approval / Approved / Rejected) is one row that scrolls inside its own box.
+  - The summary row is shared with the manager view.
+- [x] Role guide ("Which role should I assign?"): its table fits at 390, so no change.
+- [x] Preview additions:
+  - Team reporting on the admin page, with an in-memory service (`preview/teamReportingScenario.ts`).
+  - New capture states: `admin-roles-open` and `plans-admin-list`.
+
+| # | View | Notes |
+|---|---|---|
+| 3.1 | Organisation administration | `/admin`, `features/admin/admin.css` (640px rule exists) |
+| 3.2 | Organisation management + team reporting | `features/organisation/organisation.css` (several rules exist); tables need their own scroll |
+| 3.3 | Purchase plans (admin view) | admin controls |
+| 3.4 | Home (admin) | |
+
+## 5. How to verify
+
+1. Start the preview harness on port 5199: in `frontend/`, run `npx vite --host 127.0.0.1 --port 5199 --strictPort`, then open `/preview.html` and pick a state from "Demo controls".
+2. From the repo root, run `node docs/ui-revamp/tools/capture-mobile.mjs check <officer|manager|admin|all> [state,...]`.
+   - It writes phone screenshots to `docs/ui-revamp/submission/mobile/<phase>/<state>-<width>.png` and a `report-<phase>.json` with the tap targets under 44px.
+   - It fails on any horizontal overflow.
+   - It compares the 1440px screenshots with `desktop-baseline/` and lists every state whose desktop changed. Only `baseline` mode rewrites the baseline.
+3. The desktop must match the baseline. Investigate any state listed as changed.
+4. `npx tsc --noEmit` and `npm test` in `frontend/`. Run the vitest journeys alone, because they time out when a Playwright script runs alongside.
+5. Finish each phase with a real-account check in Chrome DevTools device mode (iPhone 14 Pro / 15 Pro Max) and on a real phone against the deployed build, if possible.
+
+## 6. Timeline (2 days)
+
+| When | Work |
+|---|---|
+| Day 1 morning | Phase 0 (shell + hamburger + capture script) |
+| Day 1 afternoon | Phase 1 (officer), PR at end of day |
+| Day 2 morning | Phase 2 (manager) + Phase 3 (admin) |
+| Day 2 afternoon | Real-phone pass, fixes, freeze, demo run-through |
+
+If time runs short, Phase 3 drops to "no overflow, nothing broken" without polish.
+
+## 7. Log
+
+- 2026-11-11: scope locked. Viewports 390/402/430 (+360 floor), single 480px breakpoint, hamburger nav, all roles with officer first.
