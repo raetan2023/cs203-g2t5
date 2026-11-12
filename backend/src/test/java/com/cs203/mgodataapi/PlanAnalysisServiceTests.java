@@ -148,8 +148,8 @@ class PlanAnalysisServiceTests {
         assertNull(guidance.evidence().supported_target_date());
         assertEquals(0, new BigDecimal("1351.5").compareTo(guidance.evidence().signal_price()));
         var inputs = guidance.evidence().signal_inputs();
-        assertEquals(java.util.List.of(quote.plusDays(30), quote.plusDays(14)), inputs.stream().map(SignalInput::target_date).toList());
-        assertEquals(94, inputs.getFirst().weight().movePointRight(2).setScale(0, java.math.RoundingMode.HALF_UP).intValue());
+        assertEquals(java.util.List.of(quote.plusDays(14), quote.plusDays(30)), inputs.stream().map(SignalInput::target_date).toList());
+        assertEquals(86, inputs.getFirst().weight().movePointRight(2).setScale(0, java.math.RoundingMode.HALF_UP).intValue());
         // A target that has already passed stays unavailable, and a run cannot be pinned to it.
         assertEquals("unsupported_horizon", ((Result<?>) service.read(context, true, 7, null).get("forecast")).reason());
         assertEquals(org.springframework.http.HttpStatus.CONFLICT,

@@ -10,7 +10,7 @@ import static com.cs203.mgodataapi.PlanAnalysisProvider.*;
 
 /** One buying date from a weighted signal using only forecasts within the saved deadline. */
 public final class RecommendationPolicy {
-    public static final String VERSION = "deadline-weighted-v1";
+    public static final String VERSION = "near-term-weighted-v2";
     private RecommendationPolicy() {}
     public static void validate(PlanAnalysisService.Context c) {
         if (c == null || c.plan_id() == null || !positive(c.quantity_mt()) || c.purchase_deadline() == null || c.scenario_as_of_date() == null)
@@ -56,7 +56,7 @@ public final class RecommendationPolicy {
                     eligibleForecasts.add(f);
             }
         }
-        eligibleForecasts.sort(Comparator.comparing(Forecast::target_date).reversed());
+        eligibleForecasts.sort(Comparator.comparing(Forecast::target_date));
         BigDecimal signal = null, signalLow = null, signalHigh = null;
         var signalInputs = new ArrayList<SignalInput>();
         if (!eligibleForecasts.isEmpty()) {
@@ -64,10 +64,10 @@ public final class RecommendationPolicy {
             signal = nearest.central_estimate();
             signalLow = nearest.prices().lower();
             signalHigh = nearest.prices().upper();
-            long nearDistance = ChronoUnit.DAYS.between(nearest.target_date(), c.purchase_deadline());
-            if (eligibleForecasts.size() > 1 && nearDistance > 0) {
+            long nearDistance = ChronoUnit.DAYS.between(c.scenario_as_of_date(), nearest.target_date());
+            if (eligibleForecasts.size() > 1) {
                 Forecast other = eligibleForecasts.get(1);
-                long otherDistance = ChronoUnit.DAYS.between(other.target_date(), c.purchase_deadline());
+                long otherDistance = ChronoUnit.DAYS.between(c.scenario_as_of_date(), other.target_date());
                 BigDecimal totalDistance = BigDecimal.valueOf(nearDistance + otherDistance);
                 BigDecimal nearestWeight = BigDecimal.valueOf(otherDistance).divide(totalDistance, MathContext.DECIMAL128);
                 BigDecimal otherWeight = BigDecimal.ONE.subtract(nearestWeight);
@@ -80,12 +80,12 @@ public final class RecommendationPolicy {
                 reasons.add("Blended signal: " + percent(nearestWeight) + "% of the " + nearest.target_date()
                         + " forecast ($" + money(nearest.central_estimate()) + "/mt) + " + percent(otherWeight)
                         + "% of the " + other.target_date() + " forecast ($" + money(other.central_estimate())
-                        + "/mt). Weights use inverse distance to the deadline.");
+                        + "/mt). Weights use inverse days from the planning date; nearer-term forecasts receive more weight.");
                 limitations.add("The blend is a timing signal, not a forecast for the recommended date or a split purchase schedule.");
             } else {
                 signalInputs.add(new SignalInput(nearest.target_date(), BigDecimal.ONE, nearest.central_estimate()));
                 reasons.add("Used the " + nearest.target_date() + " forecast at 100% weight: "
-                        + (nearDistance == 0 ? "its target matches the deadline." : "it is the only eligible forecast."));
+                        + "it is the only eligible forecast.");
             }
             reasons.add("Eligible price signal: $" + money(signal) + "/mt; weighted uncertainty range $"
                     + money(signalLow) + "–$" + money(signalHigh) + "/mt.");
@@ -121,7 +121,7 @@ public final class RecommendationPolicy {
             summary = best == null ? "Buy today. The eligible forecast signal does not offer a saving over today's reference price."
                     : "Buy in " + waitDays + " days (" + target + "). Estimated MGO price signal is $" + money(price)
                     + "/mt, representing a potential saving of $" + money(saving) + "/mt compared with buying today.";
-            reasons.add("Compared buying today at $" + money(reference.price()) + "/mt with " + eligibleForecasts.size() + " eligible forecasts. Up to two nearest eligible targets form the signal; uncertainty can require monitoring.");
+            reasons.add("Compared buying today at $" + money(reference.price()) + "/mt with " + eligibleForecasts.size() + " eligible forecasts. Up to two earliest eligible targets form the signal; uncertainty can require monitoring.");
             reasons.add("Estimated savings: $" + money(saving) + "/mt; $" + money(now.subtract(chosen)) + " for " + c.quantity_mt().stripTrailingZeros().toPlainString() + " MT.");
             if (eligibleForecasts.isEmpty()) limitations.add("No available forecast fits the deadline; buying today is the only priced option in the comparison.");
             if (signal != null) {
@@ -147,7 +147,7 @@ public final class RecommendationPolicy {
         }
         if (age != null && age > 7) limitations.add("The reference observation is " + age + " days old. Check a current supplier quote.");
         var evidence = new Evidence(VERSION, c.urgency(), signal == null || reference == null ? "UNAVAILABLE" : signal.compareTo(reference.price()) < 0 ? "DOWN" : signal.compareTo(reference.price()) > 0 ? "UP" : "FLAT", width, now, chosen, difference,
-                age, target, "One deadline-based comparison of today against the weighted eligible forecast signal.",
+                age, target, "One near-term-weighted comparison of today against the weighted eligible forecast signal.",
                 List.copyOf(reasons), List.copyOf(limitations), List.of(), signal, signalLow, signalHigh, List.copyOf(signalInputs));
         String identity = c + ":" + evidence + ":" + action;
         return new Guidance(UUID.nameUUIDFromBytes(identity.getBytes(java.nio.charset.StandardCharsets.UTF_8)).toString(), action, summary, evidence);
