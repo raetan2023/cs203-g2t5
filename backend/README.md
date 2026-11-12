@@ -354,3 +354,14 @@ Tests inject a fixed date/clock; production no longer reads `MGO_SCENARIO_DATE`.
 The active `/api/v1/market/stored` endpoint still returns actual observation dates from the latest
 imported data. `fetchedAt` is retrieval time, not the observation date. Monthly data does not become
 current daily data when plans move to today. Legacy scenario dashboard endpoints remain historical.
+
+## Curated Home headlines
+
+`GET /api/v1/news/latest` also reads `news_daily_features` payloads with
+`status: curated`. These are publisher articles selected through web research,
+with original URLs and collection provenance retained in each record.
+`data-ingestion/news-curated-2026-11-11.json` is the first imported selection.
+The existing `complete` status remains reserved for collected GDELT windows.
+Curated selections are excluded from news-spike counts and model archives.
+Dates without a publisher timezone use a midnight placeholder and retain that
+precision limitation in `seen_at_basis`; they do not establish exact ordering.
