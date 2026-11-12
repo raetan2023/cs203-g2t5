@@ -238,3 +238,133 @@ Everything above that isn't listed here already works on `main`.
     - An approved plan that is never bought stays Approved forever; nothing expires it.
 
     Options: (a) the purchase date must be on or before the deadline (check the date bought, not the day it's recorded); (b) after the deadline the PM can only reject; (c) approved plans not bought within N days after the deadline move to Finished, either `closed` or a new `expired` status; (d) allow late purchases but flag them to the PM and admin. Recommended: (a) + (b) now, since they're small checks with no database change; (c) later, since it needs a status or a job.
+
+## Who is fixing what
+
+| Owner | Items | Files they own |
+|---|---|---|
+| Wunna | 5, 6, 3, 4, plus reviewing and applying **every** migration to the shared Supabase database | `PurchasePlanRepository`, `PurchasePlan.java`, `OrganisationMembers`, the `delete` and `analyze` methods in `PurchasePlanController` |
+| Rae | 10 (a)+(b), 2, 8, 9, 1, 7 | `PlanApprovalService`, `PlanLifecycleService`, `RecommendationPolicy`, `PlanAnalysisService`, the recommendations and purchase UI, the admin history page, and new files for item 1 |
+
+Change a file the other person owns only after agreeing it with them. New endpoints go in new controllers, not `PurchasePlanController`.
+
+### Proposed table for item 1 (Wunna to review before Rae builds on it)
+
+Rae writes this migration file; Wunna reviews it and applies it.
+
+```text
+plan_recommendations              one row per "New recommendation" click, add-only
+  recommendation_row_id  uuid PK default gen_random_uuid()
+  plan_id                uuid      not null
+  clerk_org_id           text      not null, matches ^org_[A-Za-z0-9]+$
+  buyer_user_id          uuid      not null
+    FK (plan_id, clerk_org_id, buyer_user_id) → purchase_plans ON DELETE CASCADE
+    (only drafts can be deleted, and their recommendations go with them)
+  recommendation_id      text      not null   the engine's ID
+  action                 text      not null   BUY_NOW | WAIT | MONITOR
+  target_date            date      null       the X in "Buy on Date X"
+  policy_version         text      not null
+  run_id                 uuid      null       forecast run used
+  scenario_as_of_date    date      not null   the planning day it was made for
+  quantity_mt            numeric   not null   plan inputs at the time
+  purchase_deadline      date      not null
+  analysis               jsonb     not null   full engine output, all three horizons
+  generated_at           timestamptz not null default now()
+  index (plan_id, generated_at desc), index (clerk_org_id, generated_at desc)
+  RLS on, no browser policies (same as the other plan tables)
+
+plan_recommendation_decisions     existing table
+  + recommendation_row_id uuid null → plan_recommendations ON DELETE CASCADE
+    (links each response to the exact saved run; null for older responses)
+```
+
+### Instructions for Wunna's agent
+
+Paste this into your Claude Code session from the repo root:
+
+```text
+You are fixing the database and visibility items of the Bunker Buddy approval
+flow. The spec is docs/approval-flow.md: read the whole file first. My items
+are 5, 6, 3 and 4 in "What the current code still needs". Rae's agent is
+working on items 1, 2, 7, 8, 9 and 10 at the same time, so stay inside my
+files (see "Who is fixing what").
+
+How to work
+- Before starting, and again before each PR: git fetch origin and branch from
+  the latest origin/main. One branch and one small PR per item, in the order
+  5, 6, 3, 4. Do not push to main.
+- Do not touch PlanApprovalService, PlanLifecycleService, RecommendationPolicy,
+  PlanAnalysisService or the recommendations/purchase frontend. If an item
+  needs a change there, stop and tell me so I can agree it with Rae.
+- Backend tests use in-memory H2. Each test class creates its own tables
+  (e.g. PurchasePlanRepositoryTests), so add new columns and tables there too.
+  Run: cd backend && ./mvnw test (in Git Bash on a conda machine:
+  PATH="/usr/bin:$PATH" ./mvnw test). All tests must pass before each PR.
+- When an item is merged, remove it from "What the current code still needs"
+  in docs/approval-flow.md in the same PR.
+
+Migrations (items 3 and 4)
+- New file per change: backend/migrations/YYYYMMDD_short_name.sql, wrapped
+  in BEGIN/COMMIT, additive only, with a header comment saying what it does,
+  what it runs after and "do not rerun". Follow the existing files, e.g.
+  20261029_plan_withdrawal_revision.sql: RLS enabled, no browser policies,
+  clerk_org_id checked against ^org_[A-Za-z0-9]+$, composite FK to
+  purchase_plans(plan_id, clerk_org_id, user_id).
+- Never run anything against the shared Supabase database yourself. I apply
+  migrations by hand after review, in date order, including Rae's item 1
+  migration.
+- Update docs/database-schema.md and docs/mgo_current_sprint_schema.sql to
+  match. If practical, extend backend/scripts/test-plan-lifecycle-migrations.mjs
+  (PGlite, never connects to Supabase).
+
+Item 5: deleting a draft that has responses
+- Today PurchasePlanRepository.delete fails when the draft has rows in
+  plan_recommendation_decisions (FK is ON DELETE RESTRICT), probably as a
+  500 error.
+- In one transaction: keep the existing draft-only, owner and organisation
+  checks, delete that plan's plan_recommendation_decisions rows, then the
+  plan. No migration needed.
+- Tests: deleting a draft with a response returns 204 and removes both; a
+  submitted plan still returns 409; another user's draft still returns 404.
+
+Item 6: PMs never see drafts
+- VISIBLE_TO_MANAGER (used by findForManager and findByIdForManager) and
+  findAssignedToManager return drafts. Exclude status 'draft' from the
+  manager list and single-plan reads. This also blocks the live
+  recommendation endpoint, PurchasePlanController.analyze, because it reads
+  through findByIdForManager.
+- ManagerOverviewController (team overview) uses findAssignedToManager. If
+  it shows draft details, exclude drafts. If it only shows a count of
+  drafts, ask me before changing it.
+- Leave lockAssignedToManager alone (decisions already require 'submitted').
+- Tests: a PM gets 404 for a draft of their PO and doesn't see it in the
+  list; submitted and decided plans still appear; admins still see drafts.
+
+Item 3: when a plan was created
+- Migration: add purchase_plans.created_at timestamptz NULL DEFAULT now().
+  Leave existing rows NULL: their real creation time is unknown, and an
+  audit must not make one up.
+- Add createdAt to the PurchasePlan record, set it in insert and
+  insertRevision (a copy gets its own creation time), and return
+  "created_at" (null when unknown) in toResponse.
+
+Item 4: who closed a plan, when and why
+- Today OrganisationMembers.closeOfficerWork moves approved plans to 'closed'
+  with one bulk UPDATE and records nothing else.
+- Migration: new table plan_closures, modelled on plan_withdrawals: plan_id
+  PK, clerk_org_id, buyer_user_id, reason, closed_at, plus manager_user_id
+  null (the PO's PM at the time), same composite FK and RLS.
+- Change closeOfficerWork to close plans one at a time, like the
+  withdrawals loop just above it, inserting a plan_closures row with reason
+  "Closed: the officer left the officer role". Repeating it must still
+  change nothing.
+- Return the closure record with the plan the way the withdrawal is
+  returned, but the plan detail response lives in Rae's
+  PlanApprovalController, so agree that part with Rae first.
+- Tests: closing writes one closure row per approved plan; running it twice
+  adds nothing.
+
+Before each PR, re-read the item in docs/approval-flow.md and check the
+change matches it. In the PR description, list any migration I still need
+to apply.
+```
