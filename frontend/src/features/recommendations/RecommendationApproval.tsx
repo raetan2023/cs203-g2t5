@@ -207,8 +207,6 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
               {saved && <>
                 <div><dt>Forecast horizon</dt><dd>{submission.horizon_days} days</dd></div>
                 {!cost && <div><dt>Forecast date</dt><dd>{formatDate(saved.target_date)}</dd></div>}
-                <div><dt>Model version</dt><dd>{saved.model_version}</dd></div>
-                <div><dt>Run ID</dt><dd>{saved.run_id}</dd></div>
               </>}
             </dl>
           </details>}
