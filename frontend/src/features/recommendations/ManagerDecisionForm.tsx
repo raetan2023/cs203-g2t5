@@ -17,7 +17,6 @@ export function ManagerDecisionForm({ planId, fingerprint, service, onDecided, o
   const [open, setOpen] = useState(defaultOpen);
   const [choice, setChoice] = useState<Choice>('approved');
   // Approving after the deadline asks once more: the purchase may still happen late.
-  const [lateApproval, setLateApproval] = useState(false);
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -48,7 +47,6 @@ export function ManagerDecisionForm({ planId, fingerprint, service, onDecided, o
   async function confirm(next: Choice) {
     if (!service.decide || pending.current || conflict || success) return;
     setChoice(next);
-    if (next === 'approved' && remaining !== undefined && remaining < 0 && !lateApproval) { setLateApproval(true); return; }
     if (comment.trim().length > 2000 || (next === 'rejected' && !comment.trim())) {
       setInvalid(true); field.current?.focus(); return;
     }
@@ -82,14 +80,17 @@ export function ManagerDecisionForm({ planId, fingerprint, service, onDecided, o
   const referenceTotal = cost?.reference_total ?? (reference && quantity ? reference.price * quantity : undefined);
   const deadline = plan?.purchase_deadline ?? analysis?.context.purchase_deadline;
   const remaining = deadline && (today ?? plan?.scenario_as_of_date) ? calendarDays((today ?? plan!.scenario_as_of_date), deadline) : undefined;
-  const footerDisabled = busy || conflict;
+  // A request must be decided by its deadline; after that it is rejected automatically.
+  const expired = remaining !== undefined && remaining < 0;
+  const footerDisabled = busy || conflict || expired;
   const title = success ? `Plan ${success}` : otherDecision ? 'Plan already decided' : 'Approve plan';
   return <section className="rec-manager-decision" aria-label="Manager review">
     <h3>Manager review</h3>
     <p>Review the saved recommendation. The plan owner sees your decision and comment.</p>
+    {expired && !success && <p className="rec-expired-note" role="status"><strong>The purchase deadline has passed.</strong> This request is rejected automatically, so it can no longer be approved or rejected.</p>}
     <div className="rec-approval-actions" hidden={open}>
-      <button className="bb-button" onClick={() => show('approved')}>Approve recommendation</button>
-      <button className="bb-button bb-button--secondary" onClick={() => show('rejected')}>Reject recommendation</button>
+      <button className="bb-button" disabled={expired} onClick={() => show('approved')}>Approve recommendation</button>
+      <button className="bb-button bb-button--secondary" disabled={expired} onClick={() => show('rejected')}>Reject recommendation</button>
     </div>
     {open && createPortal(<dialog ref={dialog} className="md-panel" tabIndex={-1} aria-labelledby={`${id}-title`} aria-describedby={`${id}-context`} aria-busy={busy}
       onCancel={event => { event.preventDefault(); close(); }} onClick={event => {
@@ -112,8 +113,8 @@ export function ManagerDecisionForm({ planId, fingerprint, service, onDecided, o
         {conflict && <div className="md-notice" role="alert"><strong>{otherDecision ? 'Already decided by another manager' : 'This request has changed'}</strong>
           <p>{otherDecision ? `${otherDecision.decision === 'approved' ? 'Approved' : 'Rejected'} by ${otherDecision.manager_label} · ${formatDateTime(otherDecision.decided_at)}. This decision is final.` : error}</p>
           {otherDecision?.comment && <p>Comment: {otherDecision.comment}</p>}</div>}
-        {lateApproval && !conflict && remaining !== undefined && remaining < 0 && <div className="md-notice" role="alert"><strong>The purchase deadline has passed</strong>
-          <p>It was {Math.abs(remaining)} {Math.abs(remaining) === 1 ? 'day' : 'days'} ago. Approve anyway?</p></div>}
+        {expired && !conflict && <div className="md-notice" role="alert"><strong>The purchase deadline has passed</strong>
+          <p>This request was not decided in time, so it is rejected automatically. It can no longer be approved or rejected.</p></div>}
         {error && !conflict && <div className="md-notice md-notice--error" role="alert"><strong>Couldn’t save your decision</strong><p>{error}</p><p>Your comment is kept. Reload the request to check its current status before retrying.</p></div>}
         <div className="md-recommendation"><span className="md-recommendation-icon"><Icon name="check" /></span><div><span className="md-kicker">Recommendation at submission{plan?.submitted_at && <> · <time dateTime={plan.submitted_at}>{formatDateTime(plan.submitted_at)}</time></>}</span>
           <strong>{guidance ? actionLabel(guidance.action) : 'Recommendation not available'}</strong></div></div>
@@ -137,7 +138,7 @@ export function ManagerDecisionForm({ planId, fingerprint, service, onDecided, o
       <footer className="md-footer">{success ? <button className="md-button md-button--primary" onClick={close}>Back to plan</button>
         : conflict ? <button className="md-button md-button--primary" disabled={busy} onClick={() => { setOpen(false); onRefresh(); }}>Reload request</button>
         : <><button className="md-button md-button--reject" disabled={footerDisabled} aria-label="Confirm rejection" onClick={() => { void confirm('rejected'); }}>{busy && choice === 'rejected' ? <><span className="md-spinner" aria-hidden="true" />Rejecting…</> : 'Reject'}</button>
-          <button className="md-button md-button--primary" disabled={footerDisabled} aria-label="Confirm approval" onClick={() => { void confirm('approved'); }}>{busy && choice === 'approved' ? <><span className="md-spinner" aria-hidden="true" />Approving…</> : lateApproval ? 'Approve anyway' : 'Approve'}</button></>}
+          <button className="md-button md-button--primary" disabled={footerDisabled} aria-label="Confirm approval" onClick={() => { void confirm('approved'); }}>{busy && choice === 'approved' ? <><span className="md-spinner" aria-hidden="true" />Approving…</> : 'Approve'}</button></>}
       </footer>
     </dialog>, document.body)}
   </section>;

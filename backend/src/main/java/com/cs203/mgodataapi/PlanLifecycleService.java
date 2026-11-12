@@ -52,6 +52,9 @@ public class PlanLifecycleService {
     @Transactional
     public PurchasePlan recordPurchase(UUID id, UUID buyer, String org, PurchaseRequest request) {
         var plan = owned(id, buyer, org, "approved");
+        // An approval lasts until the purchase deadline; after it the plan is closed (see OverdueRequestRejector).
+        if (plan.purchaseDeadline().isBefore(dates.today()))
+            throw new ApiException(HttpStatus.CONFLICT, "The purchase deadline has passed, so this plan is closed. Copy it to a new draft to plan the purchase again.");
         var decision = approvals.decision(id, org);
         if (decision == null || !"approved".equals(decision.get("decision")))
             throw new ApiException(HttpStatus.CONFLICT, "The saved approval is missing. Reload the plan.");

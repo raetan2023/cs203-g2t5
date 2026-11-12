@@ -39,7 +39,7 @@ class PlanLifecycleServiceTests {
                 CREATE TABLE purchase_plans (plan_id UUID PRIMARY KEY, user_id UUID NOT NULL,
                 quantity_mt NUMERIC(30,6) NOT NULL, purchase_deadline DATE NOT NULL, scenario_as_of_date DATE NOT NULL,
                 clerk_org_id TEXT, status TEXT NOT NULL DEFAULT 'draft', submitted_at TIMESTAMP WITH TIME ZONE,
-                previous_plan_id UUID REFERENCES purchase_plans(plan_id))""");
+                previous_plan_id UUID REFERENCES purchase_plans(plan_id), closed_reason TEXT, closed_at TIMESTAMP WITH TIME ZONE)""");
         jdbc.execute("""
                 CREATE TABLE plan_approval_notifications (notification_id UUID PRIMARY KEY,
                 plan_id UUID UNIQUE REFERENCES purchase_plans(plan_id), clerk_org_id TEXT, buyer_user_id UUID,
@@ -260,9 +260,10 @@ class PlanLifecycleServiceTests {
         assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM purchase_records", Integer.class));
     }
 
-    @Test void overdueApprovedPlansCanRecordAndReferenceOnlySnapshotsNeverInventAModelEstimate() {
+    @Test void aPurchaseOnTheDeadlineDayUsesOnlySnapshotsAndNeverInventsAModelEstimate() {
         decide("approved");
-        jdbc.update("UPDATE purchase_plans SET purchase_deadline=? WHERE plan_id=?", today.minusDays(1), id);
+        // The deadline day itself is still in time.
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline=? WHERE plan_id=?", today, id);
         jdbc.update("""
                 UPDATE plan_approval_notifications SET recommendation_snapshot=? WHERE plan_id=?""",
                 """
@@ -289,14 +290,17 @@ class PlanLifecycleServiceTests {
         assertTrue(plans.withdrawnBefore("org_b", now.plusSeconds(1)).isEmpty());
     }
 
-    @Test void requestsStillPendingFiveDaysAfterTheirDeadlineAreRejectedAutomatically() {
+    @Test void requestsStillPendingAfterTheirDeadlineAreRejectedAutomatically() {
         var rejector = new OverdueRequestRejector(jdbc, approvals, new OperationalDate(clock), true);
-        // Four days past the deadline: still waiting.
-        jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today.minusDays(4), id);
+        // On the deadline day itself: still waiting for the PM.
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today, id);
         assertEquals(0, rejector.rejectDue());
         assertEquals("submitted", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
-        // Five days past: rejected, recorded and the officer notified.
-        jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today.minusDays(5), id);
+        // The day after: the PM can no longer decide it, and the job rejects it, records it and notifies the officer.
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today.minusDays(1), id);
+        var late = assertThrows(ApiException.class, () -> decide("approved"));
+        assertEquals(409, late.status().value());
+        assertEquals("submitted", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
         assertEquals(1, rejector.rejectDue());
         assertEquals("rejected", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
         var decision = approvals.decision(id, "org_a");
@@ -311,5 +315,21 @@ class PlanLifecycleServiceTests {
         jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today.minusDays(30), id);
         assertEquals(0, new OverdueRequestRejector(jdbc, approvals, new OperationalDate(clock), true).rejectDue());
         assertEquals("submitted", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
+    }
+
+    @Test void anApprovedPlanNotBoughtByItsDeadlineIsClosedAndCanNoLongerBeBought() {
+        decide("approved");
+        var job = new OverdueRequestRejector(jdbc, approvals, new OperationalDate(clock), true);
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today, id);
+        assertEquals(0, job.closeExpired(), "the deadline day itself is still in time");
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline = ? WHERE plan_id = ?", today.minusDays(1), id);
+        // Before the hourly job runs, a purchase after the deadline is already refused.
+        var refused = assertThrows(ApiException.class, () -> lifecycle.recordPurchase(id, buyer, "org_a", purchase()));
+        assertEquals(409, refused.status().value());
+        assertEquals(1, job.closeExpired());
+        assertEquals("closed", plans.findByIdAndOrganisation(id, "org_a").orElseThrow().status());
+        assertEquals("deadline_passed", jdbc.queryForObject("SELECT closed_reason FROM purchase_plans WHERE plan_id = ?", String.class, id));
+        assertEquals(java.util.Map.of(id, "deadline_passed"), plans.closedReasons("org_a"));
+        assertEquals(0, job.closeExpired(), "already closed plans are left alone");
     }
 }
