@@ -354,3 +354,22 @@ Tests inject a fixed date/clock; production no longer reads `MGO_SCENARIO_DATE`.
 The active `/api/v1/market/stored` endpoint still returns actual observation dates from the latest
 imported data. `fetchedAt` is retrieval time, not the observation date. Monthly data does not become
 current daily data when plans move to today. Legacy scenario dashboard endpoints remain historical.
+
+## Curated Home headlines
+
+`GET /api/v1/news/latest` also reads `news_daily_features` payloads with
+`status: curated`. These are publisher articles selected through web research,
+with original URLs and collection provenance retained in each record.
+`data-ingestion/news-curated-2026-11-11.json` is the first imported selection.
+The existing `complete` status remains reserved for collected GDELT windows.
+Curated selections are excluded from news-spike counts and model archives.
+Dates without a publisher timezone use a midnight placeholder and retain that
+precision limitation in `seen_at_basis`; they do not establish exact ordering.
+
+The 5–11 November backfill contains 51 distinct publisher stories in 19 topics.
+Home reads up to 14 archived windows and requests up to 100 headlines so the full
+week can be reached with Show more. Human topic labels do not imply a measured
+price effect. The retained research and reproducible selection builder live in
+`data-ingestion/news-research-2026-11-05-to-11.json` and
+`data-ingestion/build_curated_news.py`. Running the builder writes local JSON
+only; publication requires an explicit upsert keyed by `(date, version)`.

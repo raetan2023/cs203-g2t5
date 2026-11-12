@@ -13,11 +13,11 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Latest stored GDELT headlines for Home. Reads only what the news pipeline archived; never calls GDELT. */
+/** Latest stored provider and curated publisher headlines for Home. Reads only what the news pipeline archived; never calls GDELT. */
 @Service
 public class NewsService {
-    /** Rolling windows overlap, so a few of them cover the last day or two without duplicates after merging. */
-    static final int WINDOWS = 4;
+    /** Read enough provider and curated windows to cover a week; merge overlapping URLs. */
+    static final int WINDOWS = 14;
     static final int MAX_LIMIT = 100;
 
     public record Item(String title, String url, String source, Instant seenAt, String topic, String marketBias) {}
@@ -32,7 +32,7 @@ public class NewsService {
             throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "limit must be between 1 and " + MAX_LIMIT + ".");
         List<String> payloads;
         try {
-            payloads = repository.latestCompleteWindows(WINDOWS);
+            payloads = repository.latestHeadlineWindows(WINDOWS);
         } catch (DataAccessException failure) {
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Stored news is unavailable. Check the backend database connection.");
         }

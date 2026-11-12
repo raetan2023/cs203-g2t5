@@ -106,6 +106,7 @@
 .recommendations .rec-report h3 { display: flex; align-items: center; gap: var(--bb-space-2); font: var(--bb-type-heading); }
 .recommendations .rec-report p { font-size: var(--bb-text-xs); line-height: 18px; color: var(--bb-text-secondary); }
 .rec-report ul { flex: 1; margin: 0; padding-left: var(--bb-space-5); display: flex; flex-direction: column; gap: var(--bb-space-2); font-size: var(--bb-text-xs); line-height: 18px; color: var(--bb-text-secondary); }
+.rec-rail .rec-report { flex: none; }
 
 .rec-section-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--bb-space-3); }
 .rec-section-head > div:first-child { flex: 1 1 320px; min-width: 0; }

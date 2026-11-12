@@ -1,0 +1,75 @@
+{
+  "status": "curated",
+  "news_date": "2026-11-11",
+  "start": "2026-11-11T00:00:00Z",
+  "end": "2026-11-12T00:00:00Z",
+  "retrieved_at": "2026-11-12T12:49:51Z",
+  "collection_method": "chat_web_search",
+  "coverage": "Four selected publisher stories; not a complete GDELT window. Display only; excluded from forecast and spike features.",
+  "records": [
+    {
+      "title": "As higher prices seep into broader economy, Fed officials consider faster hikes",
+      "url": "https://apnews.com/article/1318a1694472e2926e0a4ab5d8ca6457",
+      "seen_at": "2026-11-11T13:02:23Z",
+      "domain": "apnews.com",
+      "collection_method": "chat_web_search",
+      "reference": "turn1news12",
+      "publication_evidence": "Wed Nov 11 13:02:23 2026 UTC",
+      "seen_at_basis": "publication timestamp",
+      "classification": {
+        "valid": true,
+        "category": "other",
+        "market_bias": "unclear",
+        "method": "editorial topic only"
+      }
+    },
+    {
+      "title": "Dollar climbs as traders raise December Fed hike bets",
+      "url": "https://www.kitco.com/news/off-the-wire/2026-11-11/dollar-climbs-traders-raise-december-fed-hike-bets",
+      "seen_at": "2026-11-11T00:00:00Z",
+      "domain": "www.kitco.com",
+      "collection_method": "chat_web_search",
+      "reference": "turn5view0",
+      "publication_evidence": "Published: Nov 11, 2026 - 9:16 PM",
+      "seen_at_basis": "publisher calendar date placeholder; timezone unspecified",
+      "classification": {
+        "valid": true,
+        "category": "other",
+        "market_bias": "unclear",
+        "method": "editorial topic only"
+      }
+    },
+    {
+      "title": "Scoop: U.S. asks Russia to propose new security agreement with Europe",
+      "url": "https://www.axios.com/2026/11/11/russia-ukraine-europe-war-security-agreement",
+      "seen_at": "2026-11-11T20:03:34Z",
+      "domain": "www.axios.com",
+      "collection_method": "chat_web_search",
+      "reference": "turn5search0",
+      "publication_evidence": "Wed Nov 11 20:03:34 2026 UTC",
+      "seen_at_basis": "publication timestamp",
+      "classification": {
+        "valid": true,
+        "category": "other",
+        "market_bias": "unclear",
+        "method": "editorial topic only"
+      }
+    },
+    {
+      "title": "Oil up 2% as Iran official says country will keep enriched nuclear material",
+      "url": "https://www.kitco.com/news/off-the-wire/2026-11-11/oil-2-iran-official-says-country-will-keep-enriched-nuclear-material",
+      "seen_at": "2026-11-11T00:00:00Z",
+      "domain": "www.kitco.com",
+      "collection_method": "chat_web_search",
+      "reference": "turn5view1",
+      "publication_evidence": "Published: Nov 11, 2026 - 6:58 PM",
+      "seen_at_basis": "publisher calendar date placeholder; timezone unspecified",
+      "classification": {
+        "valid": true,
+        "category": "oil_infrastructure_conflict",
+        "market_bias": "unclear",
+        "method": "editorial topic only"
+      }
+    }
+  ]
+}
