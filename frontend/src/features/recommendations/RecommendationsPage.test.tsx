@@ -335,7 +335,7 @@ const renderStale = (service: ReturnType<typeof staleAnalysis>, extra = {}) => {
   return planService;
 };
 
-it('uses each forecast on its real target date, defaults to the one nearest the deadline and can be submitted', async () => {
+it('uses each forecast on its real target date, defaults to the one nearest the deadline and blocks submitting Monitor', async () => {
   const service = staleAnalysis();
   renderStale(service);
   expect(await findInAnswer('Monitor')).toBeVisible();
@@ -347,7 +347,8 @@ it('uses each forecast on its real target date, defaults to the one nearest the 
   expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-col--unavailable');
   expect(screen.getByRole('group', { name: '7 days' })).toHaveAccessibleDescription(/Passed/);
   expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('30-day forecast · Wed 25 Nov')).toBeVisible();
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Accept and submit for approval' })).toBeEnabled());
+  expect(screen.getByText(/Monitoring, check again tomorrow/)).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Accept and submit for approval' })).toBeDisabled();
 });
 
 it('counts the news-aware model from today, even with an old quote', async () => {

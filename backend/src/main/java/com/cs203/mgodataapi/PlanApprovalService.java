@@ -54,6 +54,10 @@ public class PlanApprovalService {
         boolean referenceOnly = recommendation != null && "BUY_NOW".equals(recommendation.action())
                 && reference != null && "ready".equals(reference.status()) && cost != null
                 && "unavailable".equals(cost.status()) && "unsupported_horizon".equals(cost.reason());
+        // Monitor means "not yet": the plan stays a draft. With 7 days or less left the engine says Buy Now,
+        // so a short deadline is never stuck here.
+        if (recommendation != null && "MONITOR".equals(recommendation.action()))
+            throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, MONITOR_BLOCKED);
         if (!"model".equals(verified.get("provenance")) || recommendation == null
                 || forecast == null || !"ready".equals(forecast.status()) || cost == null || (!"ready".equals(cost.status()) && !referenceOnly))
             throw new ApiException(HttpStatus.UNPROCESSABLE_CONTENT, "A current priced recommendation is required. Forecast costs must be available unless buying now uses the observed reference price.");
@@ -121,6 +125,7 @@ public class PlanApprovalService {
         return new PurchasePlan(planId, plan.userId(), plan.quantityMt(), plan.purchaseDeadline(), dates.today(), request.decision(), plan.submittedAt(), plan.previousPlanId());
     }
 
+    public static final String MONITOR_BLOCKED = "Monitoring, check again tomorrow. A Monitor recommendation can't be submitted for approval.";
     public static final String AUTOMATIC_LABEL = "Bunker Buddy (automatic)";
     public static final String AUTOMATIC_SUBJECT = "system";
     public static final String AUTOMATIC_REASON = "Rejected automatically: no decision within 5 days of the purchase deadline.";
