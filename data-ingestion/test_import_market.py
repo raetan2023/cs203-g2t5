@@ -59,10 +59,13 @@ class MarketImportTests(unittest.TestCase):
         for group in market.normalize(data, "gdelt"):
             self.assertEqual(group["metadata"]["source_name"], "GDELT")
             self.assertEqual([r["value_type"] for r in group["rows"]], ["OBSERVED", "ESTIMATED"])
-        data["data"][1]["source"] = "ChatGPT web search"
-        data["data"][1]["metadata"]["imputation_method"] = "chat_web_search"
-        for group in market.normalize(data, "gdelt"):
-            self.assertEqual(group["rows"][1]["value_type"], "ESTIMATED")
+        for source, method in (("ChatGPT web search", "chat_web_search"),
+                               ("OpenAI web search", "openai_web_search")):
+            with self.subTest(source=source):
+                data["data"][1]["source"] = source
+                data["data"][1]["metadata"]["imputation_method"] = method
+                for group in market.normalize(data, "gdelt"):
+                    self.assertEqual(group["rows"][1]["value_type"], "ESTIMATED")
         data["data"][1]["metadata"].pop("imputed")
         with self.assertRaises(ValueError): market.normalize(data, "gdelt")
 
