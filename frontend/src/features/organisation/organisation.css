@@ -68,6 +68,8 @@
 .bb-org-workspace-label { color: var(--bb-text-tertiary); font-size: var(--bb-text-xs); letter-spacing: .15em; margin-left: 8px; }
 .bb-org-clerk-trigger { padding: 3px 7px; min-height: 30px; max-width: 240px; border-radius: var(--bb-radius-control); color: var(--bb-text); }
 .bb-org-clerk-trigger:hover { background: var(--bb-surface-hover); }
+.bb-org-static { display: flex; align-items: center; gap: var(--bb-space-2); padding: 3px 7px; min-height: 30px; color: var(--bb-text); font-weight: 500; }
+.bb-org-static img { width: 20px; height: 20px; flex: none; border-radius: var(--bb-radius-control); object-fit: cover; }
 .bb-org-clerk-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bb-org-role-badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--bb-border-subtle); color: var(--bb-text-secondary); background: var(--bb-neutral-surface); font-size: var(--bb-text-xs); font-weight: 500; padding: 5px 9px; border-radius: var(--bb-radius-control); white-space: nowrap; }
 .bb-org-role-badge > span { width: 5px; height: 5px; background: var(--bb-text-secondary); border-radius: 50%; }
