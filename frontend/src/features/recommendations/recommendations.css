@@ -13,7 +13,7 @@
 .recommendations .rec-header p { font: var(--bb-type-body); }
 .rec-header strong { color: var(--bb-text); font-weight: 500; }
 .rec-header > a { display: inline-flex; align-items: center; gap: var(--bb-space-2); width: max-content; min-height: 44px; color: var(--bb-text-secondary); font-size: var(--bb-text-md); text-decoration: none; border-radius: var(--bb-radius-control); }
-.recommendations > .rec-notice, .recommendations > .pp-previous-plan { margin-bottom: var(--bb-space-6); }
+.recommendations > .pp-previous-plan { margin-bottom: var(--bb-space-6); }
 .rec-header > a:hover { color: var(--bb-text); }
 
 /* The answer card: verdict and its date, then quote -> buy date -> difference. */
@@ -46,7 +46,6 @@
 
 /* Draft recommendation: one column, read top to bottom, ending on the decision. */
 .rec-flow { display: flex; flex-direction: column; gap: var(--bb-space-12); min-width: 0; }
-.recommendations .rec-data-line { margin-bottom: var(--bb-space-6); font: var(--bb-type-body); }
 
 /* Saved request. Desktop: answer and evidence on the left, summary rail on the right. Mobile: answer, rail, evidence. */
 .rec-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; grid-template-areas: 'answer rail' 'evidence rail'; grid-template-rows: auto 1fr; gap: var(--bb-space-8) var(--bb-space-6); align-items: start; }
@@ -197,14 +196,6 @@
 .rec-technical-details dd { font: var(--bb-type-body); }
 .rec-warning-text { display: inline-flex; align-items: center; gap: var(--bb-space-2); color: var(--bb-warning-text); }
 
-.rec-notice { display: flex; gap: var(--bb-space-3); padding: var(--bb-space-4) var(--bb-space-4); border: 1px solid var(--bb-warning-border); border-radius: var(--bb-radius-card); background: var(--bb-warning-surface); color: var(--bb-warning-text); }
-.rec-notice > svg { flex-shrink: 0; margin-top: 3px; }
-.rec-notice > div { flex: 1 1 auto; min-width: 0; }
-.rec-notice-action { flex: none; align-self: flex-start; min-height: 44px; margin: -12px 0; padding: 0 var(--bb-space-2); border: 0; background: transparent; color: var(--bb-warning-text); font: var(--bb-type-label); font-weight: 600; text-decoration: underline; cursor: pointer; }
-.rec-notice-action:hover { color: var(--bb-text); }
-.recommendations .rec-notice h2 { font: var(--bb-type-body-strong); color: var(--bb-warning-text); }
-.recommendations .rec-notice p { margin-top: var(--bb-space-1); max-width: 100ch; font-size: var(--bb-text-md); color: var(--bb-text-secondary); }
-.rec-source-label { display: inline-block; margin-top: var(--bb-space-2); font-size: var(--bb-text-xs); color: var(--bb-warning-text); }
 
 .rec-card { padding: var(--bb-space-6); display: flex; flex-direction: column; align-items: flex-start; gap: var(--bb-space-3); }
 .recommendations .rec-card h2 { font: var(--bb-type-heading); }
@@ -290,8 +281,6 @@
 @media (max-width: 760px) {
   .rec-answer, .rec-summary { padding: var(--bb-space-5); }
   .rec-summary-facts, .rec-calc-steps { grid-template-columns: minmax(0, 1fr); }
-  .rec-notice { flex-wrap: wrap; }
-  .rec-notice-action { margin: 0 0 0 var(--bb-space-6); }
   .recommendations .rec-verdict h2 { font: var(--bb-type-figure-lg); }
   .recommendations .rec-verdict--long h2 { font: var(--bb-type-figure); }
   .rec-verdict { gap: var(--bb-space-3); }
