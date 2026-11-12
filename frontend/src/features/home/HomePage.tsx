@@ -26,7 +26,7 @@ export function homeAction({ role, canReadPlans, onManageOrganisation }: {
   role?: string; canReadPlans: boolean; onManageOrganisation?: () => void;
 }): Action | null {
   if (role === 'org:admin') return onManageOrganisation ? { label: 'Manage organisation', onClick: onManageOrganisation } : null;
-  if (role === 'org:manager') return { label: 'Plans for approval', href: '/purchase-plans#approval-inbox' };
+  if (role === 'org:manager') return { label: 'Approval inbox', href: '/purchase-plans#approval-inbox' };
   return canReadPlans ? { label: 'Go to your plans', href: '/purchase-plans' } : null;
 }
 
@@ -59,7 +59,6 @@ export function HomePage({ displayName, role, canReadPlans = true, marketAvailab
   return <main className="bb-home" aria-labelledby="home-greeting">
     <section className="bb-home-hero">
       <img className="bb-home-photo" src={harbour} alt="" />
-      {(canReadPlans || marketAvailable || role === 'org:admin') && <AppLink className="bb-home-plan-link" href={role === 'org:admin' ? '/admin' : canReadPlans ? '/purchase-plans' : '/market-dashboard'} aria-label={role === 'org:admin' ? 'Open organisation administration' : canReadPlans ? 'Open purchase plans' : 'Open market dashboard'} />}
       <div className="bb-home-content" ref={content}>
         <div className="bb-home-intro">
           <h1 id="home-greeting" className="bb-home-greeting">
@@ -200,7 +199,11 @@ function calendarDate(today?: string) {
 
 function longDate(today?: string) {
   const date = calendarDate(today);
-  return (date ?? new Date()).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', ...(date && { timeZone: 'UTC' }) });
+  // e.g. "Thursday 12 Nov 2026", the same for every role. Built from parts so no comma appears.
+  const parts = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', ...(date && { timeZone: 'UTC' }) })
+    .formatToParts(date ?? new Date());
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find(p => p.type === type)?.value ?? '';
+  return `${part('weekday')} ${part('day')} ${part('month')} ${part('year')}`;
 }
 
 const shortDate = (value: string) => new Date(`${value}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });

@@ -43,9 +43,36 @@ public class OrganisationMembers {
                   set role = excluded.role, updated_at = now()
                   where organisation_members.role is distinct from excluded.role""",
                 userId, organisationId, role);
+        if (!"org:officer".equals(role)) closeOfficerWork(userId, organisationId);
         jdbc.update("""
                 delete from pm_assignments where clerk_org_id = ?
                   and ((pm_user_id = ? and ? <> 'org:manager') or (po_user_id = ? and ? <> 'org:officer'))""",
                 organisationId, userId, role, userId, role);
+    }
+
+    /** Shown on requests withdrawn because their officer stopped being an officer. */
+    static final String ROLE_CHANGE_REASON = "Withdrawn automatically: the officer is no longer a procurement officer.";
+
+    /**
+     * Someone who stops being an officer (promoted, made admin, or gone) can no longer act on their plans,
+     * and nobody else can. So their pending requests are withdrawn, and the manager who was reviewing them
+     * still sees them as withdrawn; their approved plans that were not bought yet are closed. Call this
+     * before their PM assignment is removed. Repeating it changes nothing.
+     */
+    @Transactional
+    public void closeOfficerWork(UUID userId, String organisationId) {
+        var reviewer = jdbc.queryForList("select pm_user_id from pm_assignments where po_user_id = ? and clerk_org_id = ?",
+                UUID.class, userId, organisationId).stream().findFirst().orElse(null);
+        var pending = jdbc.queryForList("select plan_id from purchase_plans where user_id = ? and clerk_org_id = ? and status = 'submitted'",
+                UUID.class, userId, organisationId);
+        for (UUID planId : pending) {
+            if (jdbc.update("update purchase_plans set status = 'withdrawn' where plan_id = ? and clerk_org_id = ? and status = 'submitted'",
+                    planId, organisationId) != 1) continue;
+            jdbc.update("""
+                    insert into plan_withdrawals (plan_id, clerk_org_id, buyer_user_id, reason, manager_user_id)
+                    values (?, ?, ?, ?, ?)""", planId, organisationId, userId, ROLE_CHANGE_REASON, reviewer);
+        }
+        jdbc.update("update purchase_plans set status = 'closed' where user_id = ? and clerk_org_id = ? and status = 'approved'",
+                userId, organisationId);
     }
 }

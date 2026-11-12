@@ -1,5 +1,6 @@
-export interface ReportingOfficer { user_id: string; label: string; pm_user_id: string | null }
-export interface ReportingManager { user_id: string; label: string; officer_count: number }
+/** `label` is the person's name when Clerk has one, otherwise their email. */
+export interface ReportingOfficer { user_id: string; label: string; email?: string | null; pm_user_id: string | null }
+export interface ReportingManager { user_id: string; label: string; email?: string | null; officer_count: number }
 export interface ReportingOverview { officers: ReportingOfficer[]; managers: ReportingManager[] }
 export interface MemberSyncResult { saved: number; removed: number }
 
@@ -12,9 +13,10 @@ export interface TeamReportingService {
 function parseOverview(value: unknown): ReportingOverview {
   const data = value as Partial<ReportingOverview> | null;
   const text = (item: unknown) => typeof item === 'string' && item.length > 0;
+  const optional = (item: unknown) => item === undefined || item === null || typeof item === 'string';
   if (!data || !Array.isArray(data.officers) || !Array.isArray(data.managers)
-    || !data.officers.every(o => text(o?.user_id) && text(o?.label) && (o.pm_user_id === null || text(o.pm_user_id)))
-    || !data.managers.every(m => text(m?.user_id) && text(m?.label) && Number.isSafeInteger(m.officer_count))) {
+    || !data.officers.every(o => text(o?.user_id) && text(o?.label) && optional(o.email) && (o.pm_user_id === null || text(o.pm_user_id)))
+    || !data.managers.every(m => text(m?.user_id) && text(m?.label) && optional(m.email) && Number.isSafeInteger(m.officer_count))) {
     throw new Error('The team reporting response was invalid. Please retry.');
   }
   return data as ReportingOverview;

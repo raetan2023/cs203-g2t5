@@ -47,11 +47,12 @@ class PmAssignmentHttpTests {
 
     @Test void listUsesTheTokenOrganisationAndShowsUnassignedOfficers() throws Exception {
         when(assignments.overview("org_a")).thenReturn(new PmAssignmentService.Overview(
-                List.of(new PmAssignmentService.Officer(po, "po@example.com", null)),
-                List.of(new PmAssignmentService.Manager(pm, "pm@example.com", 0))));
+                List.of(new PmAssignmentService.Officer(po, "Rae Tan", "po@example.com", null)),
+                List.of(new PmAssignmentService.Manager(pm, "Yashwanth Annem", "pm@example.com", 0))));
         mvc.perform(get(PATH).with(member("admin"))).andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "no-store"))
-                .andExpect(jsonPath("$.officers[0].label").value("po@example.com"))
+                .andExpect(jsonPath("$.officers[0].label").value("Rae Tan"))
+                .andExpect(jsonPath("$.officers[0].email").value("po@example.com"))
                 .andExpect(jsonPath("$.officers[0].pm_user_id").isEmpty())
                 .andExpect(jsonPath("$.managers[0].officer_count").value(0));
     }

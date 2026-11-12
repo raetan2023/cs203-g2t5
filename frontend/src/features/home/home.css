@@ -115,13 +115,9 @@ a.bb-home-quote:hover { border-color: var(--bb-border-control); background: colo
   .bb-home-quote { min-width: 0; }
 }
 
-/* The background is a real link; header controls and the market card keep their own targets. */
-.bb-home-plan-link { position: absolute; inset: 0; z-index: 0; }
-.bb-home-plan-link:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: -6px; }
-.bb-home-plan-link ~ .bb-home-content { position: relative; z-index: 1; pointer-events: none; }
-.bb-home-plan-link ~ .bb-home-content a, .bb-home-plan-link ~ .bb-home-content button { pointer-events: auto; }
+/* Only the buttons and cards are links; the photo and empty space do nothing when clicked. */
+.bb-home-content { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: no-preference) {
   .bb-home-cta svg { transition: transform var(--bb-motion-fast) var(--bb-ease-out); }
-  .bb-home-plan-link:hover ~ .bb-home-content .bb-home-cta svg,
   .bb-home-cta:hover svg, .bb-home-cta:focus-visible svg { transform: translateX(3px); }
 }

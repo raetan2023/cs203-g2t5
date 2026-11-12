@@ -10,6 +10,11 @@ import { formatDate } from './dates';
 import { ErrorBanner, Icon, LoadingState, PlanButton } from './components/Primitives';
 import { PurchasePlanForm } from './components/PurchasePlanForm';
 import { PurchasePlanSummary } from './components/PurchasePlanSummary';
+import { Pagination } from './components/Pagination';
+import { ManagerPlans } from './components/ManagerPlans';
+
+/** Three plans per row and two rows per page, like the Approval inbox. */
+export const PLANS_PAGE_SIZE = 6;
 import { requestError, type PlanInput, type PurchasePlan, type PurchasePlanService } from './types';
 import './purchase-plan.css';
 
@@ -46,6 +51,9 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
   const [tab, setTab] = useState<PlanGroup>('todo');
   const [copyError, setCopyError] = useState('');
   const [sort, setSort] = useState<PlanSort>('deadline');
+  const [planPage, setPlanPage] = useState(1);
+  const plansSection = useRef<HTMLElement>(null);
+  useEffect(() => { setPlanPage(1); }, [filter, tab, sort]);
   const sortId = useId();
   const [writingServices, setWritingServices] = useState<Set<PurchasePlanService>>(() => new Set());
   const writing = writingServices.has(service);
@@ -199,16 +207,25 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setAttempt(value => value + 1);
   }
 
-  const filteredPlans = canEdit ? plans.filter(p => planGroup(p) === tab) : plans.filter(p => filter === 'all' || (filter === 'open'
-    ? !['rejected', 'withdrawn', 'purchased'].includes(p.status ?? 'draft')
-    : filter === 'finished' ? ['rejected', 'withdrawn', 'purchased'].includes(p.status ?? 'draft') : p.status === filter));
+  const listed = plans;
+  const filteredPlans = canEdit ? plans.filter(p => planGroup(p) === tab) : listed.filter(p => filter === 'all' || (filter === 'open'
+    ? !['rejected', 'withdrawn', 'purchased', 'closed'].includes(p.status ?? 'draft')
+    : filter === 'finished' ? ['rejected', 'withdrawn', 'purchased', 'closed'].includes(p.status ?? 'draft') : p.status === filter));
+  // After a plan is saved or copied, open the page that shows it.
+  const highlighted = notice?.planId ?? null;
+  useEffect(() => {
+    if (!highlighted) return;
+    const index = sortPlans(filteredPlans, sort).findIndex(plan => plan.plan_id === highlighted);
+    if (index >= 0) setPlanPage(Math.floor(index / PLANS_PAGE_SIZE) + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the highlighted plan changes
+  }, [highlighted]);
   const copies = new Map(plans.flatMap(p => p.previous_plan_id ? [[p.previous_plan_id, p.plan_id] as const] : []));
 
   return <main className="purchase-plan">
     <div className="pp-sr-only" role="status">{announcement}</div>
     {state.mode === 'loading' ? isManager ? <ManagerPlansLoading /> : <LoadingState /> : <>
       <header className="pp-heading">
-        <div><h1>{canEdit ? "Purchase plans" : "Organisation purchase plans"}</h1><p>{saving ? 'Saving your purchase plan...' : canEdit ? 'Manage your purchase quantity and deadline.' : isAdmin ? 'Read-only access to your organisation’s purchase plans, approval status and saved decisions.' : 'View plans in your organisation. Only procurement officers can create or change their own plans.'}</p></div>
+        <div><h1>{canEdit ? "Purchase plans" : "Organisation purchase plans"}</h1><p>{saving ? 'Saving your purchase plan...' : canEdit ? 'Manage your purchase quantity and deadline.' : isAdmin ? 'Read-only access to your organisation’s purchase plans, approval status and saved decisions.' : 'Review your officers’ requests, track their purchasing, and follow up on the plans you’ve decided.'}</p></div>
         {canEdit && <div className="pp-create">
           {/* Fades out on its own (CSS); hovering holds it. The role="status" above announces it. */}
           {notice && <span className="pp-notice" onAnimationEnd={() => setNotice(null)}><Icon name="check" />{notice.text}</span>}
@@ -231,12 +248,14 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
         <ErrorBanner>{state.message}</ErrorBanner>
         <PlanButton onClick={() => setAttempt(value => value + 1)}>Retry</PlanButton>
       </section>}
-      {state.mode === 'view' && plans.length === 0 && <section className="pp-empty" aria-label="No purchase plan">
+      {/* A manager's Plans section loads, filters and refreshes on its own, like the Approval inbox. */}
+      {isManager && state.mode === 'view' && <ManagerPlans service={service} />}
+      {!isManager && state.mode === 'view' && listed.length === 0 && <section className="pp-empty" aria-label="No purchase plan">
         <p>{canEdit ? "You haven't created a purchase plan yet." : 'No purchase plans have been assigned to this organisation yet.'}</p>
       </section>}
       {state.mode === 'view' && copyError && <div className="pp-copy-error"><ErrorBanner>{copyError}</ErrorBanner></div>}
-      {state.mode === 'view' && plans.length > 0 && <>
-        {!canEdit && <PlanOverview plans={plans} />}
+      {!isManager && state.mode === 'view' && listed.length > 0 && <>
+        <section ref={plansSection} className="pp-card pp-plans-panel" aria-label={canEdit ? 'Your plans' : 'Plans'}>
         {canEdit ? <div className="pp-list-heading">
           <h2 className="pp-sr-only">Your plans</h2>
           <div className="pp-tabs" role="group" aria-label="Plan filter">
@@ -265,15 +284,39 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
               onClick={() => setSort(option)}>{option === 'deadline' ? 'Deadline' : 'Volume'}</button>)}
           </div>
         </div>}
+        {/* The team's plan totals sit inside the Plans card, under its heading. */}
+        {!canEdit && <PlanOverview plans={listed} />}
         {filteredPlans.length === 0 && <p role="status">{canEdit ? PLAN_GROUPS.find(group => group.id === tab)!.empty : `No ${filter === 'submitted' ? 'plans pending approval' : `${filter} plans`}.`}</p>}
-        <div className="pp-plan-grid">{sortPlans(filteredPlans, sort).map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} service={service} busy={writing}
+        {(() => {
+          const ordered = sortPlans(filteredPlans, sort);
+          const pageCount = Math.max(1, Math.ceil(ordered.length / PLANS_PAGE_SIZE));
+          // Stay on the last page that still exists after a filter or a deletion.
+          const current = Math.min(planPage, pageCount);
+          const shown = ordered.slice((current - 1) * PLANS_PAGE_SIZE, current * PLANS_PAGE_SIZE);
+          // Empty slots keep a short last page the same size, so the pager does not jump.
+          const spacers = pageCount > 1 ? PLANS_PAGE_SIZE - shown.length : 0;
+          const changePage = (next: number) => {
+            setPlanPage(next);
+            const top = plansSection.current?.getBoundingClientRect().top;
+            if (top !== undefined && top < 0) plansSection.current?.scrollIntoView?.({ block: 'start' });
+          };
+          return <>
+        <div className="pp-plan-grid pp-plan-grid--paged">{shown.map(plan => <PurchasePlanSummary canEdit={canEdit} key={plan.plan_id} plan={plan} service={service} busy={writing}
           saved={notice?.planId === plan.plan_id}
           copiedPlanId={copies.get(plan.plan_id)}
           onCopy={service.revise ? () => void copyPlan(plan) : undefined}
           editRef={state.plan?.plan_id === plan.plan_id ? editRef : undefined}
           deleteRef={state.plan?.plan_id === plan.plan_id ? deleteRef : undefined} onEdit={() => {
             clearFeedback(); setState({ mode: 'form', plan });
-          }} onDelete={() => { clearFeedback(); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}</div>
+          }} onDelete={() => { clearFeedback(); setState({ mode: 'view', plan }); setShowDelete(true); }} />)}
+          {Array.from({ length: spacers }, (_, i) => <div key={`spacer-${i}`} aria-hidden="true" className="pp-plan-spacer" />)}</div>
+        {ordered.length > 0 && pageCount > 1 && <div className="pp-pager-bar">
+          <p className="pp-page-summary">Showing {(current - 1) * PLANS_PAGE_SIZE + 1}–{Math.min(current * PLANS_PAGE_SIZE, ordered.length)} of {ordered.length}</p>
+          <Pagination page={current} pageCount={pageCount} onChange={changePage} label="Plan pages" />
+        </div>}
+          </>;
+        })()}
+        </section>
       </>}
       {canEdit && state.mode === 'form' && state.plan?.previous_plan_id && <PreviousPlanNote plan={state.plan} service={service} />}
       {canEdit && state.mode === 'form' && <PurchasePlanForm plan={state.plan} scenarioDate={scenarioDate} onSave={save} onBusyChange={busy => {
@@ -288,6 +331,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
 }
 
 type PlanSort = 'deadline' | 'volume';
+
 type PlanGroup = 'todo' | 'awaiting' | 'finished';
 
 const PLAN_GROUPS: { id: PlanGroup; label: string; empty: string }[] = [
@@ -310,6 +354,7 @@ function sortPlans(plans: PurchasePlan[], sort: PlanSort) {
 }
 
 /** Page summary derived from the loaded plans. Numbers and units are separate elements so they read as one value. */
+/** "Active" means drafts and requests awaiting approval. */
 function PlanOverview({ plans }: { plans: PurchasePlan[] }) {
   const active = plans.filter(plan => !plan.status || plan.status === 'draft' || plan.status === 'submitted');
   const upcoming = active.filter(plan => plan.days_remaining >= 0);

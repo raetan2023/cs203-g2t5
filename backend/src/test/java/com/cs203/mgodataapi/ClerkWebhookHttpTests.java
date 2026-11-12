@@ -66,7 +66,7 @@ class ClerkWebhookHttpTests {
         mvc.perform(post("/api/v1/admin/members/sync")).andExpect(status().isUnauthorized());
         verifyNoInteractions(directory, sync);
 
-        var members = List.of(new ClerkMembershipSync.Membership("org_a", "user_po", "org:officer", null));
+        var members = List.of(new ClerkMembershipSync.Membership("org_a", "user_po", "org:officer", null, null));
         when(directory.members("org_a")).thenReturn(members);
         when(sync.replaceOrganisation("org_a", members)).thenReturn(Map.of("saved", 1, "removed", 0));
         mvc.perform(post("/api/v1/admin/members/sync").with(jwt().jwt(t -> t.subject("user_admin")

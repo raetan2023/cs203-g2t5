@@ -31,7 +31,7 @@ function parsePlan(payload: { plan?: unknown } | undefined, required = false): {
     || typeof p.days_remaining !== 'number' || !Number.isSafeInteger(p.days_remaining)) {
     throw new PlanError('The purchase-plan response was invalid. Please retry.', {}, 502);
   }
-  if (p.status !== undefined && !['draft', 'submitted', 'approved', 'rejected', 'withdrawn', 'purchased'].includes(p.status))
+  if (p.status !== undefined && !['draft', 'submitted', 'approved', 'rejected', 'withdrawn', 'purchased', 'closed'].includes(p.status))
     throw new PlanError('The purchase-plan status was invalid. Please retry.', {}, 502);
   if (p.previous_plan_id != null && (typeof p.previous_plan_id !== 'string' || !p.previous_plan_id.trim() || p.previous_plan_id === p.plan_id))
     throw new PlanError('The previous plan link was invalid. Please retry.', {}, 502);
@@ -87,14 +87,16 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
   }
 
   return {
-    async managerOverview() {
-      const payload: unknown = await request('GET', undefined, undefined, 'manager-overview');
+    async managerOverview(period = 'all', officerIds: string[] = []) {
+      const officers = officerIds.map(id => `&officer=${encodeURIComponent(id)}`).join('');
+      const payload: unknown = await request('GET', undefined, undefined, `manager-overview?period=${encodeURIComponent(period)}${officers}`);
       const value = payload as ManagerOverview | undefined;
       const nonnegative = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0;
-      if (!value || !Number.isSafeInteger(value.plan_count) || value.plan_count < 0
-          || !Number.isSafeInteger(value.pending_approval_count) || value.pending_approval_count < 0
-          || value.pending_approval_count > value.plan_count
-          || !nonnegative(value.total_quantity_mt) || !nonnegative(value.open_quantity_mt)
+      if (!value || !nonnegative(value.total_quantity_mt) || !nonnegative(value.purchased_quantity_mt)
+          || (value.purchase_difference_mt !== undefined && (typeof value.purchase_difference_mt !== 'number' || !Number.isFinite(value.purchase_difference_mt)))
+          || (value.officers !== undefined && (!Array.isArray(value.officers) || !value.officers.every(o => typeof o?.user_id === 'string' && !!o.user_id
+            && typeof o.label === 'string' && !!o.label.trim() && Number.isSafeInteger(o.plan_count) && o.plan_count >= 0)))
+          || !nonnegative(value.open_quantity_mt)
           || value.open_quantity_mt > value.total_quantity_mt
           || !(value.reference_price_usd_per_mt === null && value.reference_date === null && value.exposure_usd === null
             || nonnegative(value.reference_price_usd_per_mt) && value.reference_price_usd_per_mt > 0
@@ -171,6 +173,8 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
           || typeof n.created_at !== 'string' || !Number.isFinite(Date.parse(n.created_at))
           || typeof n.quantity_mt !== 'number' || !Number.isFinite(n.quantity_mt) || n.quantity_mt <= 0
           || typeof n.purchase_deadline !== 'string' || !isValidDate(n.purchase_deadline)
+          || typeof n.buyer_label !== 'string' || !n.buyer_label.trim()
+          || typeof n.buyer_user_id !== 'string' || !n.buyer_user_id
           || !['submitted', 'approved', 'rejected', 'withdrawn', 'purchased'].includes(n.status ?? '');
       })) throw new PlanError('The approval inbox response was invalid. Please retry.', {}, 502);
       return { notifications: payload.notifications as ApprovalNotification[] };

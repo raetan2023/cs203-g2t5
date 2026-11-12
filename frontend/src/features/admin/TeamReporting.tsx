@@ -83,6 +83,9 @@ export function TeamReporting({ service }: { service: TeamReportingService }) {
   };
 
   const managers = overview?.managers ?? [];
+  // Add the email only when two managers share a name.
+  const managerName = (manager: { label: string; email?: string | null }) =>
+    manager.email && manager.email !== manager.label && managers.filter(m => m.label === manager.label).length > 1 ? `${manager.label} (${manager.email})` : manager.label;
   // A pick stops counting if it matches what is saved, or its people changed role.
   const changes = Object.entries(picks).filter(([officerId, managerId]) => {
     const officer = overview?.officers.find(item => item.user_id === officerId);
@@ -114,13 +117,15 @@ export function TeamReporting({ service }: { service: TeamReportingService }) {
             {overview.officers.map(officer => {
               const selectId = `pm-for-${officer.user_id}`;
               return <li key={officer.user_id}>
-                <label htmlFor={selectId}>{officer.label}</label>
+                <label htmlFor={selectId} className="bb-admin-team-person">{officer.label}
+                  {officer.email && officer.email !== officer.label && <span className="bb-admin-team-email">{officer.email}</span>}
+                </label>
                 <div className="bb-admin-team-choice">
                   {officer.pm_user_id === null && <span className="bb-admin-team-warning">No PM assigned</span>}
                   <select id={selectId} value={picked.get(officer.user_id) ?? officer.pm_user_id ?? ''} disabled={busy || managers.length === 0}
                     onChange={event => pick(officer.user_id, event.target.value)}>
                     {officer.pm_user_id === null && <option value="">Choose a manager</option>}
-                    {managers.map(manager => <option key={manager.user_id} value={manager.user_id}>{manager.label} ({poCount(managerCount(manager.user_id))})</option>)}
+                    {managers.map(manager => <option key={manager.user_id} value={manager.user_id}>{managerName(manager)} ({poCount(managerCount(manager.user_id))})</option>)}
                   </select>
                 </div>
               </li>;

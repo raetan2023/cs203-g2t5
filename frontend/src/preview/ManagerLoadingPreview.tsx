@@ -19,10 +19,10 @@ function ManagerLoadingPreview() {
       async list() { await wait(1800); return base.list(); },
       async notifications() { await wait(1600); return { notifications: plans.map(plan => ({
         notification_id: plan.plan_id, plan_id: plan.plan_id, created_at: plan.submitted_at!, quantity_mt: plan.quantity_mt,
-        purchase_deadline: plan.purchase_deadline, status: plan.status!,
+        purchase_deadline: plan.purchase_deadline, status: plan.status!, buyer_label: 'Alex Ng', buyer_user_id: 'preview-officer',
       })) }; },
-      async managerOverview() { await wait(1600); return { plan_count: 3, total_quantity_mt: 266,
-        open_quantity_mt: 266, pending_approval_count: 3, reference_price_usd_per_mt: 1351.5,
+      async managerOverview() { await wait(1600); return { total_quantity_mt: 266,
+        purchased_quantity_mt: 0, open_quantity_mt: 266, reference_price_usd_per_mt: 1351.5,
         reference_date: '2026-10-26', exposure_usd: 359499 }; },
     };
   }, [revision]);

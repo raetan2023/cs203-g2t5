@@ -15,6 +15,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserAccounts {
 
+    /** SQL for how a person is shown: their name, else their email, else their Clerk ID. */
+    static String labelOf(String alias) {
+        return "coalesce(nullif(trim(" + alias + ".display_name), ''), nullif(trim(" + alias + ".email), ''), " + alias + ".clerk_user_id)";
+    }
+
     private static final String FIND = "select user_id from users where clerk_user_id = ?";
 
     private final JdbcTemplate jdbc;
@@ -42,5 +47,21 @@ public class UserAccounts {
                 insert into users (clerk_user_id, email) values (?, null)
                 on conflict (clerk_user_id) do nothing""", subject);
         return jdbc.queryForObject(FIND, UUID.class, subject);
+    }
+
+    /** How each of these people is shown (see {@link #labelOf}); unknown ids are left out. */
+    public java.util.Map<UUID, String> labels(java.util.Collection<UUID> userIds) {
+        var ids = java.util.List.copyOf(new java.util.LinkedHashSet<>(userIds));
+        if (ids.isEmpty()) return java.util.Map.of();
+        var labels = new java.util.HashMap<UUID, String>();
+        jdbc.query("select u.user_id, " + labelOf("u") + " as label from users u where u.user_id in ("
+                + String.join(", ", java.util.Collections.nCopies(ids.size(), "?")) + ")",
+                rs -> { labels.put(rs.getObject("user_id", UUID.class), rs.getString("label")); }, ids.toArray());
+        return labels;
+    }
+
+    /** Looks up an existing record without creating one, so it works in read-only transactions. */
+    public java.util.Optional<UUID> find(String subject) {
+        return jdbc.queryForList(FIND, UUID.class, subject).stream().findFirst();
     }
 }

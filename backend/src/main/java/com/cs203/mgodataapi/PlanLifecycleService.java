@@ -43,8 +43,8 @@ public class PlanLifecycleService {
     @Transactional
     public PurchasePlan revise(UUID id, UUID buyer, String org) {
         var plan = plans.lockOwned(id, buyer, org).orElseThrow(PlanLifecycleService::notFound);
-        if (!Set.of("rejected", "withdrawn").contains(plan.status()))
-            throw new ApiException(HttpStatus.CONFLICT, "Only rejected or withdrawn plans can be copied to a new draft.");
+        if (!Set.of("rejected", "withdrawn", "closed").contains(plan.status()))
+            throw new ApiException(HttpStatus.CONFLICT, "Only rejected, withdrawn or closed plans can be copied to a new draft.");
         // Preserve even an elapsed deadline; the draft must be edited before it can be submitted.
         return plans.insertRevision(plan, org, dates.today());
     }
@@ -99,7 +99,9 @@ public class PlanLifecycleService {
     public List<Map<String, Object>> buyerNotifications(UUID buyer, String org) {
         return jdbc.query("""
                 select n.notification_id, n.plan_id, n.decision, n.created_at, n.seen_at,
-                    p.quantity_mt, p.purchase_deadline, d.manager_label, d.decision_comment
+                    p.quantity_mt, p.purchase_deadline, d.decision_comment,
+                    case when d.manager_clerk_user_id = 'system' then d.manager_label
+                         else coalesce((select nullif(trim(u.display_name), '') from users u where u.user_id = d.manager_user_id), d.manager_label) end as manager_label
                 from plan_decision_notifications n
                 join purchase_plans p on p.plan_id = n.plan_id and p.clerk_org_id = n.clerk_org_id and p.user_id = n.buyer_user_id
                 join plan_approval_decisions d on d.plan_id = n.plan_id and d.clerk_org_id = n.clerk_org_id
