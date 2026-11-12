@@ -123,18 +123,25 @@ it('shows the final decision and reason to the buyer without giving them decisio
   expect(api.decide).not.toHaveBeenCalled();
 });
 
-it('asks once more before approving a request whose deadline has passed', async () => {
+it('only offers rejection once the deadline has passed', async () => {
   const user = userEvent.setup();
   const api = service();
   const late = { ...plan, purchase_deadline: '2026-10-20' };
   render(<ManagerDecisionForm planId={plan.plan_id} fingerprint={fingerprint} service={api}
     onDecided={vi.fn()} onRefresh={vi.fn()} plan={late} analysis={snapshot.analysis} today="2026-10-23" />);
-  await user.click(screen.getByRole('button', { name: 'Approve recommendation' }));
-  await user.click(screen.getByRole('button', { name: 'Confirm approval' }));
-  expect(api.decide).not.toHaveBeenCalled();
-  expect(screen.getByText('The purchase deadline has passed')).toBeVisible();
-  expect(screen.getByText('It was 3 days ago. Approve anyway?')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Confirm approval' })).toHaveTextContent('Approve anyway');
-  await user.click(screen.getByRole('button', { name: 'Confirm approval' }));
-  await waitFor(() => expect(api.decide).toHaveBeenCalledTimes(1));
+  expect(screen.getByText('The purchase deadline has passed, so this request can only be rejected.')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Approve recommendation' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Reject recommendation' }));
+  expect(screen.getByText('It was 3 days ago, so this request can only be rejected.')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Confirm approval' })).not.toBeInTheDocument();
+  await user.type(screen.getByLabelText('Rejection reason (required)'), 'Too late to buy');
+  await user.click(screen.getByRole('button', { name: 'Confirm rejection' }));
+  await waitFor(() => expect(api.decide).toHaveBeenCalledWith(plan.plan_id, expect.objectContaining({ decision: 'rejected' })));
+});
+
+it('still offers approval on the deadline day', () => {
+  const due = { ...plan, purchase_deadline: '2026-10-23' };
+  render(<ManagerDecisionForm planId={plan.plan_id} fingerprint={fingerprint} service={service()}
+    onDecided={vi.fn()} onRefresh={vi.fn()} plan={due} analysis={snapshot.analysis} today="2026-10-23" />);
+  expect(screen.getByRole('button', { name: 'Approve recommendation' })).toBeVisible();
 });

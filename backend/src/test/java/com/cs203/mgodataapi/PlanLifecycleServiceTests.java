@@ -260,9 +260,33 @@ class PlanLifecycleServiceTests {
         assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM purchase_records", Integer.class));
     }
 
-    @Test void overdueApprovedPlansCanRecordAndReferenceOnlySnapshotsNeverInventAModelEstimate() {
+    @Test void aPurchaseMadeByTheDeadlineCanBeRecordedLateButNotOneMadeAfterIt() {
         decide("approved");
+        // Approved 3 days ago with a deadline of yesterday: bought on time, recorded today.
+        jdbc.update("UPDATE plan_approval_decisions SET decided_at=? WHERE plan_id=?", java.sql.Timestamp.from(now.minus(Duration.ofDays(3))), id);
         jdbc.update("UPDATE purchase_plans SET purchase_deadline=? WHERE plan_id=?", today.minusDays(1), id);
+        var late = assertThrows(ApiException.class, () -> lifecycle.recordPurchase(id, buyer, "org_a", purchase()));
+        assertEquals(422, late.status().value()); assertTrue(late.fieldErrors().containsKey("purchased_on"));
+        assertEquals("approved", plans.findByIdAndUser(id, buyer, "org_a").orElseThrow().status());
+        var onDeadline = new PlanLifecycleService.PurchaseRequest(today.minusDays(1), "Supplier A", new BigDecimal("5.25"), new BigDecimal("900.12"), null);
+        assertEquals("purchased", lifecycle.recordPurchase(id, buyer, "org_a", onDeadline).status());
+    }
+
+    @Test void afterTheDeadlineAManagerCanOnlyReject() {
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline=? WHERE plan_id=?", today.minusDays(1), id);
+        error(422, () -> decide("approved"));
+        assertEquals("submitted", plans.findByIdAndUser(id, buyer, "org_a").orElseThrow().status());
+        assertNull(approvals.decision(id, "org_a"));
+        assertEquals("rejected", decide("rejected").status());
+    }
+
+    @Test void aManagerCanStillApproveOnTheDeadlineDay() {
+        jdbc.update("UPDATE purchase_plans SET purchase_deadline=? WHERE plan_id=?", today, id);
+        assertEquals("approved", decide("approved").status());
+    }
+
+    @Test void referenceOnlySnapshotsNeverInventAModelEstimate() {
+        decide("approved");
         jdbc.update("""
                 UPDATE plan_approval_notifications SET recommendation_snapshot=? WHERE plan_id=?""",
                 """

@@ -9,7 +9,7 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
   onChanged(plan: PurchasePlan): void; onReload(): void;
 }) {
   const [action, setAction] = useState<'revise' | 'purchase'>();
-  const [draft, setDraft] = useState({ purchased_on: today, supplier: '', quantity_mt: String(plan.quantity_mt), price_usd_per_mt: '', note: '' });
+  const [draft, setDraft] = useState({ purchased_on: plan.purchase_deadline < today ? plan.purchase_deadline : today, supplier: '', quantity_mt: String(plan.quantity_mt), price_usd_per_mt: '', note: '' });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [uncertain, setUncertain] = useState(false);
   const focusInvalid = useRef(false);
@@ -17,6 +17,8 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
   const id = useId();
   useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
   useEffect(() => { if (focusInvalid.current) { focusInvalid.current = false; form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(); } }, [errors]);
+  // The date bought must fall between approval and the deadline, and can't be in the future.
+  const latestPurchase = plan.purchase_deadline < today ? plan.purchase_deadline : today;
   const approvedOn = data.decision && new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Singapore', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(data.decision.decided_at));
   const field = (key: keyof typeof draft, label: string, type = 'text', extra = {}) => <div className="pp-field">
     <label htmlFor={`${id}-${key}`}>{label}</label>
@@ -30,7 +32,7 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
     const validation: FieldErrors = {};
     let input: PurchaseInput | undefined;
     if (action === 'purchase') {
-      if (!isValidDate(draft.purchased_on) || draft.purchased_on > today || (approvedOn && draft.purchased_on < approvedOn)) validation.purchased_on = 'Choose a date from approval through today (Singapore).';
+      if (!isValidDate(draft.purchased_on) || draft.purchased_on > latestPurchase || (approvedOn && draft.purchased_on < approvedOn)) validation.purchased_on = 'Choose a date from approval through today, no later than the purchase deadline (Singapore).';
       if (!draft.supplier.trim() || draft.supplier.trim().length > 200) validation.supplier = 'Enter a supplier of at most 200 characters.';
       for (const key of ['quantity_mt', 'price_usd_per_mt'] as const) {
         const n = Number(draft[key]);
@@ -58,7 +60,7 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
   // A purchased plan has no next action: render nothing rather than an empty section (a blank band in the status card).
   if (!action && !offered && !error && !data.revision_plan_ids?.length && !(plan.status === 'approved' && plan.days_remaining < 0)) return null;
   return <section className="rec-lifecycle" aria-label="Next plan action">
-    {plan.status === 'approved' && plan.days_remaining < 0 && <p role="status">This plan is overdue. You can still record a purchase made on or after approval.</p>}
+    {plan.status === 'approved' && plan.days_remaining < 0 && <p role="status">The purchase deadline has passed. You can still record a purchase made on or before {formatDate(plan.purchase_deadline)}.</p>}
     {!action ? <div className="rec-approval-actions">
       {plan.status === 'approved' && service.recordPurchase && <button className="bb-button" onClick={() => setAction('purchase')}>Record purchase</button>}
       {(plan.status === 'rejected' || plan.status === 'withdrawn' || plan.status === 'closed') && service.revise && <button className="bb-button" onClick={() => setAction('revise')}>Copy to new draft</button>}
@@ -67,7 +69,7 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
       {action === 'revise' ? <p>The original plan and its history stay saved. Review the copied quantity and deadline before submitting the new draft.</p>
           : <><p>One purchase can be recorded per plan. This record cannot be edited. Confirm the invoice details before saving.</p>
             <div className="rec-purchase-fields">
-              {field('purchased_on', 'Date bought (Singapore)', 'date', { min: approvedOn, max: today, autoFocus: true })}
+              {field('purchased_on', 'Date bought (Singapore)', 'date', { min: approvedOn, max: latestPurchase, autoFocus: true })}
               {field('supplier', 'Supplier', 'text', { maxLength: 200 })}
               {field('quantity_mt', 'Actual quantity (MT)', 'number', { step: '0.000001', min: '0.000001' })}
               {field('price_usd_per_mt', 'Price paid (USD/MT)', 'number', { step: '0.000001', min: '0.000001' })}

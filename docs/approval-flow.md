@@ -232,12 +232,7 @@ Everything above that isn't listed here already works on `main`.
 7. **Admin recommendation history.** New read-only endpoint and admin page listing every saved recommendation for any plan in the organisation, each with the PO's response.
 8. **Wording of the automatic rejection reason.** The code acts 5 days *after* the deadline, but the saved reason says "within 5 days of the purchase deadline" (`PlanApprovalService.AUTOMATIC_REASON`).
 9. **No quantity when recording a purchase.** Step 5 says the PO doesn't enter the quantity bought, because the approved plan fixes it. `PlanLifecycleService.recordPurchase` still requires `quantity_mt`, and `purchase_records.quantity_mt` is `NOT NULL`. Fill it from the plan's quantity instead of asking the PO, and drop the field from the purchase form. The cost comparison's "adjusted for a different quantity" totals then always equal the plain ones.
-10. **Buying and approving after the deadline.** Agreed: (a) + (b) below; (c) stays open as future work. Today:
-    - `recordPurchase` only checks that the purchase date is between the approval date and today, so a plan can be bought with a purchase date after its deadline.
-    - `PlanApprovalService.decide` doesn't check the deadline, and requests can wait up to 5 days past it before the automatic rejection, so a PM can approve a plan whose deadline has passed.
-    - An approved plan that is never bought stays Approved forever; nothing expires it.
-
-    Options: (a) the purchase date must be on or before the deadline (check the date bought, not the day it's recorded); (b) after the deadline the PM can only reject; (c) approved plans not bought within N days after the deadline move to Finished, either `closed` or a new `expired` status; (d) allow late purchases but flag them to the PM and admin. Recommended: (a) + (b) now, since they're small checks with no database change; (c) later, since it needs a status or a job.
+10. **Approved plans that are never bought (future work).** An approved plan that is never bought stays Approved forever; nothing expires it. Option: approved plans not bought within N days after the deadline move to Finished, either `closed` or a new `expired` status. Left for later, since it needs a status or a scheduled job. (A purchase dated after the deadline, and a PM approving after the deadline, are already blocked.)
 
 ## Who is fixing what
 

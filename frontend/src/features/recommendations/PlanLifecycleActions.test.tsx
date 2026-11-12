@@ -99,6 +99,16 @@ it('keeps purchase drafts on validation errors and requires reload after a confl
   expect(record).toHaveBeenCalledTimes(2);
 });
 
+it('caps the purchase date at the deadline once the deadline has passed', async () => {
+  const { service, plan } = await fixture('approved'), user = userEvent.setup();
+  const overdue = { ...plan, purchase_deadline: '2026-10-24', days_remaining: -4 };
+  render(<Request service={service} initial={overdue} />);
+  expect(await screen.findByText(/You can still record a purchase made on or before/)).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Record purchase' }));
+  expect(screen.getByLabelText('Date bought (Singapore)')).toHaveAttribute('max', '2026-10-24');
+  expect(screen.getByLabelText('Date bought (Singapore)')).toHaveValue('2026-10-24');
+});
+
 it('shows purchase records to read-only viewers without mutation controls', async () => {
   const { service, plan } = await fixture('purchased', 'monitor');
   render(<SubmittedRecommendationView plan={plan} planService={service} canDecide />);
