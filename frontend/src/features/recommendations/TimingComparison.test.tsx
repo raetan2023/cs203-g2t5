@@ -41,13 +41,13 @@ it('puts each forecast on its real target date and marks a passed date as unavai
   ]} quantity={888} today="2026-11-06" deadline="2026-11-26" recommended={[]} />);
   const passed = screen.getByRole('group', { name: '7 days' });
   expect(within(passed).getByText('Mon 02 Nov')).toBeVisible();
-  expect(passed).toHaveClass('rec-col--unavailable');
+  expect(passed).toHaveClass('rec-row--unavailable');
   expect(passed).toHaveAccessibleDescription(/Passed.*Unavailable/);
   expect(within(passed).getByText(/A newer quote is needed/)).toBeVisible();
   expect(within(passed).queryByText(/USD/)).not.toBeInTheDocument();
   const fourteen = screen.getByRole('group', { name: '14 days' });
   expect(within(fourteen).getByText('Mon 09 Nov')).toBeVisible();
-  expect(fourteen).not.toHaveClass('rec-col--unavailable');
+  expect(fourteen).not.toHaveClass('rec-row--unavailable');
   const thirty = screen.getByRole('group', { name: '30 days' });
   expect(within(thirty).getByText(/Wed 25 Nov · 1 day before deadline/)).toBeVisible();
   expect(screen.getByText(/Forecast dates count from the 26 Oct 2026 quote, not from today/)).toBeVisible();
@@ -81,7 +81,7 @@ it('marks only the recommended date; eligible dates and today carry no chip', ()
     quantity={10} today="2026-10-26" deadline="2026-12-01" recommended={[30]} />);
   const card = screen.getByRole('group', { name: '30 days' });
   expect(within(card).getByText('Recommended')).toBeVisible();
-  expect(card).toHaveClass('rec-col--recommended');
+  expect(card).toHaveClass('rec-row--recommended');
   for (const text of ['Selected', 'Eligible', 'Observed']) expect(screen.queryByText(text)).not.toBeInTheDocument();
   expect(screen.getByRole('group', { name: '14 days' })).toHaveAccessibleDescription(/^USD 10,000Range/);
 });
@@ -113,7 +113,7 @@ it('does not repeat a forecast failure the page already shows, and keeps cards w
   expect(screen.queryByText(/News missing\./)).not.toBeInTheDocument();
   unmount();
   render(<Harness service={{ read: async h => h === 7 ? unavailable('Quote too old.') : entry(h, 1000) }} />);
-  expect(await screen.findByRole('group', { name: '7 days' })).toHaveClass('rec-col--unavailable');
+  expect(await screen.findByRole('group', { name: '7 days' })).toHaveClass('rec-row--unavailable');
   expect(screen.getByText('Model status: Quote too old.')).toBeVisible();
 });
 
@@ -121,6 +121,6 @@ it('marks late targets after the deadline and shows the deadline between the dat
   render(<Harness deadline="2026-11-15" />);
   const late = await screen.findByRole('group', { name: '30 days' });
   expect(late).toHaveAccessibleDescription(/After deadline/);
-  expect(late).toHaveClass('rec-col--late');
+  expect(late).toHaveClass('rec-row--late');
   expect(screen.getByLabelText('Purchase deadline 15 Nov 2026')).toBeVisible();
 });

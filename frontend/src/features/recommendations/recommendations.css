@@ -418,3 +418,39 @@
   .rec-manager-decision .rec-approval-actions { flex-direction: column; }
   .rec-manager-decision .rec-approval-actions .bb-button { width: 100%; }
 }
+
+/* Compare buying dates: horizontal rows on a shared price axis. */
+.rec-compare { --rec-label: 112px; --rec-value: 136px; --rec-gap: var(--bb-space-3); --rec-pad: var(--bb-space-3); }
+.rec-rows { position: relative; display: flex; flex-direction: column; }
+.rec-rows-plot { position: absolute; top: 0; bottom: 0; left: calc(var(--rec-pad) + var(--rec-label) + var(--rec-gap)); right: calc(var(--rec-pad) + var(--rec-value) + var(--rec-gap)); pointer-events: none; z-index: 0; }
+.rec-rows-today { position: absolute; top: 2px; bottom: 2px; width: 0; border-left: 1px dashed var(--bb-border-control); }
+.rec-row { position: relative; z-index: 1; display: grid; grid-template-columns: var(--rec-label) minmax(0, 1fr) var(--rec-value); column-gap: var(--rec-gap); align-items: center; padding: var(--bb-space-3) var(--rec-pad); border-radius: var(--bb-radius-card); color: var(--bb-text); }
+.rec-row--recommended { background: var(--bb-surface-hover); }
+.rec-row--late, .rec-row--unavailable { color: var(--bb-text-secondary); }
+.rec-row-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.rec-row-label { font: var(--bb-type-body-strong); white-space: nowrap; }
+.rec-row--recommended .rec-row-label { color: var(--bb-action); }
+.rec-row-date { font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); }
+.rec-row .rec-chip { align-self: flex-start; display: inline-flex; align-items: center; min-height: 20px; margin-top: 2px; padding: 0 var(--bb-space-2); background: var(--bb-neutral-surface); border-radius: var(--bb-radius-pill); font-size: var(--bb-text-xs); font-weight: 600; white-space: nowrap; color: var(--bb-text-secondary); }
+.rec-row--recommended .rec-chip { background: var(--bb-action); color: var(--bb-text-on-action); }
+.rec-row-plot { position: relative; height: 24px; min-width: 0; }
+.rec-row-plot--empty { display: flex; align-items: center; font-size: var(--bb-text-xs); color: var(--bb-text-secondary); overflow-wrap: anywhere; }
+.rec-row-bar { position: absolute; top: 50%; height: 8px; margin-top: -4px; border-radius: var(--bb-radius-pill); background: color-mix(in srgb, var(--bb-action) 22%, transparent); }
+.rec-row-dot { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--bb-text); border: 2px solid var(--bb-surface); }
+.rec-row--recommended .rec-row-bar { background: color-mix(in srgb, var(--bb-action) 34%, transparent); }
+.rec-row--recommended .rec-row-dot { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: var(--bb-action); box-shadow: 0 0 0 4px color-mix(in srgb, var(--bb-action) 20%, transparent); }
+.rec-row--late .rec-row-bar { background: var(--bb-border-subtle); }
+.rec-row--late .rec-row-dot { background: var(--bb-text-secondary); }
+.rec-row-values { display: flex; flex-direction: column; gap: 2px; text-align: right; }
+.rec-row-values strong { font: var(--bb-type-body-strong); overflow-wrap: anywhere; }
+.rec-row--recommended .rec-row-values strong { color: var(--bb-action); }
+.rec-row-values span { font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); overflow-wrap: anywhere; }
+.rec-row-deadline { display: flex; align-items: center; gap: var(--bb-space-2); margin: var(--bb-space-1) 0; padding: 0 var(--rec-pad); font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); }
+.rec-row-deadline span { color: var(--bb-text); white-space: nowrap; }
+.rec-row-deadline::after { content: ''; flex: 1; border-top: 1px dashed var(--bb-border-subtle); }
+.rec-axis { position: relative; height: 22px; margin: var(--bb-space-2) calc(var(--rec-pad) + var(--rec-value) + var(--rec-gap)) 0 calc(var(--rec-pad) + var(--rec-label) + var(--rec-gap)); border-top: 1px solid var(--bb-border-subtle); }
+.rec-axis-tick { position: absolute; top: 6px; transform: translateX(-50%); font-size: var(--bb-text-xs); color: var(--bb-text-tertiary); white-space: nowrap; }
+.rec-axis-tick::before { content: ''; position: absolute; top: -6px; left: 50%; width: 0; height: 4px; border-left: 1px solid var(--bb-border-subtle); }
+@media (max-width: 760px) {
+  .rec-compare { --rec-label: 96px; --rec-value: 112px; --rec-gap: var(--bb-space-2); --rec-pad: var(--bb-space-2); }
+}
