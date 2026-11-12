@@ -5,10 +5,15 @@
 .bb-admin-eyebrow { margin: 0 0 var(--bb-space-3); font-size: var(--bb-text-xs); letter-spacing: .1em; text-transform: uppercase; color: var(--bb-text-secondary); }
 .bb-admin-heading h1 { font: var(--bb-type-title); margin: 0; overflow-wrap: anywhere; }
 .bb-admin-intro { color: var(--bb-text-secondary); line-height: 1.6; margin: var(--bb-space-3) 0 0; max-width: 620px; }
+.bb-admin-heading-side { display: flex; flex-shrink: 0; align-items: flex-end; gap: var(--bb-space-4); }
+.bb-admin-switcher { display: flex; flex-direction: column; gap: var(--bb-space-1); }
+.bb-admin-switcher-label { color: var(--bb-text-tertiary); font-size: var(--bb-text-xs); letter-spacing: .1em; text-transform: uppercase; }
+.bb-admin-switcher .cl-organizationSwitcherTrigger { border: 1px solid var(--bb-border-control); }
 .bb-admin-role { flex-shrink: 0; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); padding: var(--bb-space-2) var(--bb-space-3); font-size: var(--bb-text-xs); color: var(--bb-text); }
 .bb-admin-workspace { border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); overflow: hidden; background: var(--bb-surface); }
 .bb-admin-section-heading { padding: var(--bb-space-6); border-bottom: 1px solid var(--bb-border-subtle); }
-.bb-admin-section-heading h2 { margin: 0 0 var(--bb-space-2); font-size: var(--bb-text-xl); }
+/* Same size as the manager section titles, such as Approval inbox. */
+.bb-admin-section-heading h2 { margin: 0 0 var(--bb-space-2); font-size: var(--bb-text-4xl); font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
 .bb-admin-section-heading p, .bb-admin-fallback p { margin: 0; color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.6; }
 .bb-admin-fallback { padding: var(--bb-space-8) var(--bb-space-6); }
 .bb-admin-fallback .bb-button { margin-top: var(--bb-space-5); }
@@ -28,6 +33,7 @@
 @media(max-width:640px) {
   .bb-admin { padding-top: var(--bb-space-6); }
   .bb-admin-heading { flex-direction: column; gap: var(--bb-space-4); padding-block: var(--bb-space-6); }
+  .bb-admin-heading-side { flex-wrap: wrap; align-items: flex-start; }
   .bb-admin-section-heading, .bb-admin-fallback { padding: var(--bb-space-5) var(--bb-space-4); }
   .bb-admin-summary-hint { display: none; }
   .bb-admin-role-table th, .bb-admin-role-table td { padding: var(--bb-space-3) var(--bb-space-2); overflow-wrap: anywhere; }
@@ -35,24 +41,25 @@
   .bb-admin .bb-button { max-width: 100%; white-space: normal; }
 }
 
-.bb-admin-plan-access { display: flex; align-items: center; justify-content: space-between; gap: var(--bb-space-6); margin-bottom: var(--bb-space-6); padding: var(--bb-space-5) var(--bb-space-6); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); }
-.bb-admin-plan-access h2 { margin: 0 0 var(--bb-space-2); font-size: var(--bb-text-xl); }
-.bb-admin-plan-access p { margin: 0; color: var(--bb-text-secondary); line-height: 1.6; font-size: var(--bb-text-md); }
-.bb-admin-plan-access a { flex-shrink: 0; text-decoration: none; }
-@media(max-width:640px) { .bb-admin-plan-access { flex-direction: column; align-items: flex-start; padding: var(--bb-space-5) var(--bb-space-4); gap: var(--bb-space-4); } }
 
-.bb-admin-team { margin-bottom: var(--bb-space-6); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); }
+.bb-admin-team { position: relative; overflow: hidden; margin-bottom: var(--bb-space-6); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); }
 .bb-admin-team-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--bb-space-6); }
 .bb-admin-team-heading .bb-admin-team-status { margin: var(--bb-space-1) 0 var(--bb-space-2); font-size: var(--bb-text-md); font-weight: 600; }
 .bb-admin-team-heading .bb-admin-team-status--required { color: var(--bb-error-text); }
 .bb-admin-team-heading .bb-admin-team-status--complete { color: var(--bb-success-text); }
-.bb-admin-team-refresh { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 44px; height: 44px; color: var(--bb-text); background: transparent; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); cursor: pointer; }
-.bb-admin-team-refresh:hover:not(:disabled) { background: var(--bb-surface-hover); }
-.bb-admin-team-refresh:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
-.bb-admin-team-refresh:disabled { color: var(--bb-text-disabled); cursor: default; }
-.bb-admin-team-refresh.is-refreshing svg { animation: bb-admin-team-spin 0.9s linear infinite; }
+/* The refresh button and "Updated as of" line, as on the manager pages. */
+.bb-admin .pp-icon-button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 44px; height: 44px; color: var(--bb-text); background: transparent; border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); cursor: pointer; }
+.bb-admin .pp-icon-button:hover:not(:disabled) { background: var(--bb-surface-hover); }
+.bb-admin .pp-icon-button:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
+.bb-admin .pp-icon-button:disabled { color: var(--bb-text-disabled); cursor: default; }
+.bb-admin .pp-icon-button.is-refreshing svg { animation: bb-admin-team-spin 0.9s linear infinite; }
 @keyframes bb-admin-team-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .bb-admin-team-refresh.is-refreshing svg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bb-admin .pp-icon-button.is-refreshing svg { animation: none; } }
+.bb-admin .pp-updated { display: flex; align-items: center; gap: var(--bb-space-2); margin: var(--bb-space-3) 0 0; color: var(--bb-text-secondary); font-size: var(--bb-text-md); }
+.bb-admin .pp-updated strong { color: var(--bb-text); font-weight: 600; }
+.bb-admin .pp-updated-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--bb-text); }
+.bb-admin .pp-updated-dot--fresh { background: var(--bb-success-text); }
+.bb-admin .pp-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .bb-admin-team-body { padding: var(--bb-space-5) var(--bb-space-6); }
 .bb-admin-team-note, .bb-admin-team-message { margin: 0 0 var(--bb-space-4); font-size: var(--bb-text-md); line-height: 1.6; color: var(--bb-text-secondary); }
 .bb-admin-team-note:last-child { margin-bottom: 0; }
@@ -72,7 +79,7 @@
 .bb-admin-team-choice select:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
 @media(max-width:640px) {
   .bb-admin-team-heading { flex-direction: column; gap: var(--bb-space-4); }
-  .bb-admin-team-refresh { align-self: flex-end; }
+  .bb-admin-team-heading .pp-icon-button { align-self: flex-end; }
   .bb-admin-team-body { padding: var(--bb-space-4); }
   .bb-admin-team-list li, .bb-admin-team-choice { flex-direction: column; align-items: stretch; gap: var(--bb-space-2); }
   .bb-admin-team-choice select { width: 100%; }

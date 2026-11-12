@@ -164,8 +164,11 @@ it('counts pending and withdrawn requests and filters by officer and type', asyn
   const user = userEvent.setup();
   render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
   const inbox = await screen.findByRole('region', { name: 'Approval inbox' });
-  const count = (label: string) => within(inbox.querySelector<HTMLElement>('.pp-inbox-counts')!).getByText(label).nextElementSibling?.textContent;
-  await waitFor(() => expect(inbox.querySelector('.pp-inbox-counts')).not.toBeNull());
+  // Counts sit inside the type buttons, e.g. "Pending (3)".
+  const count = (label: string) => within(inbox).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
+  await waitFor(() => expect(within(inbox).queryByRole('button', { name: /^Pending \(/ })).not.toBeNull());
+  expect(inbox.querySelector('.pp-inbox-counts')).toBeNull();
+  expect(count('All')).toBe('5');
   expect(count('Pending')).toBe('3');
   expect(count('Withdrawn')).toBe('2');
   expect(within(inbox).queryByRole('button', { name: 'Show all requests' })).not.toBeInTheDocument();
@@ -184,13 +187,13 @@ it('counts pending and withdrawn requests and filters by officer and type', asyn
   expect(within(inbox).getAllByRole('listitem').filter(item => item.closest('.pp-approval-list'))).toHaveLength(3);
 
   // Then only withdrawn ones.
-  await user.click(within(inbox).getByRole('button', { name: 'Withdrawn' }));
+  await user.click(within(inbox).getByRole('button', { name: /^Withdrawn/ }));
   expect(within(inbox).getAllByRole('listitem').filter(item => item.closest('.pp-approval-list'))).toHaveLength(2);
 
   await user.click(within(inbox).getByRole('button', { name: 'Show all requests' }));
   expect(count('Pending')).toBe('3');
   expect(within(inbox).getAllByRole('listitem').filter(item => item.closest('.pp-approval-list'))).toHaveLength(5);
-  expect(within(inbox).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+  expect(within(inbox).getByRole('button', { name: /^All/ })).toHaveAttribute('aria-pressed', 'true');
 });
 
 it('sorts the inbox by deadline or MT and resets to newest first', async () => {
@@ -232,7 +235,7 @@ it('shows six plans per page in their own section and pages through the rest', a
   expect(section.querySelectorAll('.pp-plan-grid > .pp-summary')).toHaveLength(2);
   expect(section.querySelectorAll('.pp-plan-spacer')).toHaveLength(4);
   // Changing the filter returns to the first page.
-  await user.click(within(section).getByRole('button', { name: 'To buy' }));
+  await user.click(within(section).getByRole('button', { name: /^To buy \(/ }));
   expect(within(section).getByText('Showing 1–6 of 8')).toBeVisible();
 });
 
@@ -246,7 +249,7 @@ it('lists only approved, purchased and rejected plans for a manager', async () =
   await waitFor(() => expect(section.querySelectorAll('.pp-plan-grid > .pp-summary')).toHaveLength(3));
   const shown = [...section.querySelectorAll('.pp-summary-qty .pp-sr-only')].map(el => el.textContent);
   expect(shown.sort()).toEqual(['103 MT', '104 MT', '105 MT']);
-  const count = (label: string) => within(section.querySelector<HTMLElement>('.pp-plan-counts')!).getByText(label).nextElementSibling?.textContent;
+  const count = (label: string) => within(section).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
   expect([count('To buy'), count('Overdue'), count('Purchased'), count('Rejected')]).toEqual(['1', '0', '1', '1']);
 });
 
@@ -260,8 +263,8 @@ it('sorts out overdue plans, filters plans by officer and type, and resets', asy
   const user = userEvent.setup();
   render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
   const section = await screen.findByRole('region', { name: 'Plans' });
-  await waitFor(() => expect(section.querySelector('.pp-plan-counts')).not.toBeNull());
-  const count = (label: string) => within(section.querySelector<HTMLElement>('.pp-plan-counts')!).getByText(label).nextElementSibling?.textContent;
+  await waitFor(() => expect(within(section).queryByRole('button', { name: /^To buy \(/ })).not.toBeNull());
+  const count = (label: string) => within(section).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
   const shown = () => [...section.querySelectorAll('.pp-summary-qty .pp-sr-only')].map(el => el.textContent);
   expect([count('To buy'), count('Overdue'), count('Purchased'), count('Rejected')]).toEqual(['1', '2', '1', '1']);
   expect(within(section).getByText(/Updated as of/)).toBeVisible();
@@ -269,7 +272,7 @@ it('sorts out overdue plans, filters plans by officer and type, and resets', asy
   // A purchased plan is never overdue, even after its deadline.
   expect(section.querySelectorAll('.pp-tag--overdue')).toHaveLength(2);
 
-  await user.click(within(section).getByRole('button', { name: 'Overdue' }));
+  await user.click(within(section).getByRole('button', { name: /^Overdue \(/ }));
   expect(shown()).toEqual(['2 MT', '3 MT']);
   await user.click(within(section).getByRole('button', { name: /All officers/ }));
   await user.click(within(section).getByRole('checkbox', { name: /Select all/ }));
@@ -279,7 +282,7 @@ it('sorts out overdue plans, filters plans by officer and type, and resets', asy
 
   await user.click(within(section).getByRole('button', { name: 'Show all plans' }));
   expect(shown()).toHaveLength(5);
-  expect(within(section).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+  expect(within(section).getByRole('button', { name: /^All \(/ })).toHaveAttribute('aria-pressed', 'true');
 });
 
 it('marks requests past their deadline as overdue, counts them and filters them', async () => {
@@ -289,11 +292,11 @@ it('marks requests past their deadline as overdue, counts them and filters them'
   const user = userEvent.setup();
   render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
   const inbox = await screen.findByRole('region', { name: 'Approval inbox' });
-  await waitFor(() => expect(inbox.querySelector('.pp-inbox-counts')).not.toBeNull());
-  const count = (label: string) => within(inbox.querySelector<HTMLElement>('.pp-inbox-counts')!).getByText(label).nextElementSibling?.textContent;
+  await waitFor(() => expect(within(inbox).queryByRole('button', { name: /^Pending \(/ })).not.toBeNull());
+  const count = (label: string) => within(inbox).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
   expect([count('Pending'), count('Overdue'), count('Withdrawn')]).toEqual(['1', '1', '1']);
   expect(inbox.querySelectorAll('.pp-tag--overdue')).toHaveLength(1);
-  await user.click(within(inbox).getByRole('button', { name: 'Overdue' }));
+  await user.click(within(inbox).getByRole('button', { name: /^Overdue/ }));
   expect([...inbox.querySelectorAll('.pp-inbox-card .pp-summary-qty .pp-sr-only')].map(el => el.textContent)).toEqual(['2 MT']);
 });
 
@@ -305,10 +308,13 @@ it('shows closed plans with their own tag, figure and filter only when there are
   render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
   const section = await screen.findByRole('region', { name: 'Plans' });
   await waitFor(() => expect(section.querySelector('.pp-tag--closed')).not.toBeNull());
-  expect(within(section).getByText('Closed because the officer is no longer a procurement officer.')).toBeVisible();
-  const count = (label: string) => within(section.querySelector<HTMLElement>('.pp-plan-counts')!).getByText(label).nextElementSibling?.textContent;
+  expect(within(section).getByText('Closed: the officer changed role.')).toBeVisible();
+  const count = (label: string) => within(section).getByRole('button', { name: new RegExp(`^${label} \\(`) }).textContent?.match(/\((\d+)\)/)?.[1];
   expect(count('Closed')).toBe('1');
-  await user.click(within(section).getByRole('button', { name: 'Closed' }));
+  // Closed comes right after Rejected.
+  const labels = [...within(section).getByRole('group', { name: 'Plan type' }).querySelectorAll('button')].map(button => button.textContent);
+  expect(labels.slice(-2)).toEqual(['Rejected (0)', 'Closed (1)']);
+  await user.click(within(section).getByRole('button', { name: /^Closed \(/ }));
   expect([...section.querySelectorAll('.pp-summary-qty .pp-sr-only')].map(el => el.textContent)).toEqual(['2 MT']);
 });
 
@@ -317,7 +323,19 @@ it('shows no Closed figure or filter when nothing is closed', async () => {
     notifications: vi.fn().mockResolvedValue({ notifications: [] }) };
   render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
   const section = await screen.findByRole('region', { name: 'Plans' });
-  await waitFor(() => expect(section.querySelector('.pp-plan-counts')).not.toBeNull());
-  expect(within(section).queryByRole('button', { name: 'Closed' })).not.toBeInTheDocument();
-  expect(within(section.querySelector<HTMLElement>('.pp-plan-counts')!).queryByText('Closed')).not.toBeInTheDocument();
+  await waitFor(() => expect(within(section).queryByRole('button', { name: /^To buy \(/ })).not.toBeNull());
+  expect(within(section).queryByRole('button', { name: /^Closed \(/ })).not.toBeInTheDocument();
+  expect(section.querySelector('.pp-plan-counts')).toBeNull();
+});
+
+it('offers every officer on the team in the filters, even with no requests or plans', async () => {
+  const api = { ...service(), notifications: vi.fn().mockResolvedValue({ notifications: [] }),
+    team: vi.fn().mockResolvedValue({ officers: [{ user_id: 'u-rae', label: 'Rae Tan' }, { user_id: 'u-yash', label: 'Yashwanth Annem' }] }) };
+  const user = userEvent.setup();
+  render(<PurchasePlanPage service={api} scenarioDate={DEMO_SCENARIO_DATE} canEdit={false} isManager />);
+  const inbox = await screen.findByRole('region', { name: 'Approval inbox' });
+  await waitFor(() => expect(api.team).toHaveBeenCalled());
+  await user.click(await within(inbox).findByRole('button', { name: /All officers/ }));
+  expect(within(inbox).getByRole('checkbox', { name: /Rae Tan/ })).toBeVisible();
+  expect(within(inbox).getByRole('checkbox', { name: /Yashwanth Annem/ }).closest('label')).toHaveTextContent('Yashwanth Annem0');
 });

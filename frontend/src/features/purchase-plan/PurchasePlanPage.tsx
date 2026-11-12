@@ -248,13 +248,15 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
         <ErrorBanner>{state.message}</ErrorBanner>
         <PlanButton onClick={() => setAttempt(value => value + 1)}>Retry</PlanButton>
       </section>}
-      {/* A manager's Plans section loads, filters and refreshes on its own, like the Approval inbox. */}
-      {isManager && state.mode === 'view' && <ManagerPlans service={service} />}
-      {!isManager && state.mode === 'view' && listed.length === 0 && <section className="pp-empty" aria-label="No purchase plan">
+      {/* Managers' and admins' Plans section loads, filters and refreshes on its own, like the Approval inbox. */}
+      {(isManager || isAdmin) && state.mode === 'view' && <ManagerPlans service={service} audience={isAdmin ? 'admin' : 'manager'} />}
+      {/* Admins get the organisation's figures under their Plans section; managers have theirs above it. */}
+      {isAdmin && state.mode === 'view' && service.managerOverview && <ManagerTeamOverview service={service} audience="admin" />}
+      {!isManager && !isAdmin && state.mode === 'view' && listed.length === 0 && <section className="pp-empty" aria-label="No purchase plan">
         <p>{canEdit ? "You haven't created a purchase plan yet." : 'No purchase plans have been assigned to this organisation yet.'}</p>
       </section>}
       {state.mode === 'view' && copyError && <div className="pp-copy-error"><ErrorBanner>{copyError}</ErrorBanner></div>}
-      {!isManager && state.mode === 'view' && listed.length > 0 && <>
+      {!isManager && !isAdmin && state.mode === 'view' && listed.length > 0 && <>
         <section ref={plansSection} className="pp-card pp-plans-panel" aria-label={canEdit ? 'Your plans' : 'Plans'}>
         {canEdit ? <div className="pp-list-heading">
           <h2 className="pp-sr-only">Your plans</h2>

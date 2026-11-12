@@ -93,7 +93,6 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
       const value = payload as ManagerOverview | undefined;
       const nonnegative = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n) && n >= 0;
       if (!value || !nonnegative(value.total_quantity_mt) || !nonnegative(value.purchased_quantity_mt)
-          || (value.purchase_difference_mt !== undefined && (typeof value.purchase_difference_mt !== 'number' || !Number.isFinite(value.purchase_difference_mt)))
           || (value.officers !== undefined && (!Array.isArray(value.officers) || !value.officers.every(o => typeof o?.user_id === 'string' && !!o.user_id
             && typeof o.label === 'string' && !!o.label.trim() && Number.isSafeInteger(o.plan_count) && o.plan_count >= 0)))
           || !nonnegative(value.open_quantity_mt)
@@ -103,6 +102,13 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
               && typeof value.reference_date === 'string' && isValidDate(value.reference_date) && nonnegative(value.exposure_usd)))
         throw new PlanError('The team exposure response was invalid. Please retry.', {}, 502);
       return value;
+    },
+    async team() {
+      const payload = await request('GET', undefined, undefined, 'team') as { officers?: unknown } | undefined;
+      const officers = payload?.officers;
+      if (!Array.isArray(officers) || !officers.every(o => typeof o?.user_id === 'string' && !!o.user_id && typeof o.label === 'string'))
+        throw new PlanError('The team list was invalid. Please retry.', {}, 502);
+      return { officers };
     },
     recordRecommendationDecision(planId, input) { return decisions.record(planId, input); },
     readRecommendationDecisions(planId) { return decisions.history(planId); },

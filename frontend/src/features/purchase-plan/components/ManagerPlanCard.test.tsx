@@ -22,10 +22,12 @@ it('shows the status on top, then who submitted, when, and the outcome', async (
   expect(status.querySelector('svg')).not.toBeNull();
 });
 
-it('shows the bought amount for a purchase and the reason for a rejection', async () => {
+it('shows the approval but no amount for a purchase, and the reason for a rejection', async () => {
   const purchase = { purchase_id: 'p1', quantity_mt: 495, price_usd_per_mt: 640, purchased_on: '2026-11-03', supplier: 'S', note: '', total_usd: 316800, recorded_at: '2026-11-03T00:00:00Z' };
   const view = render(<ManagerPlanCard plan={plan('purchased')} service={service({ decision: decided('approved'), purchase })} />);
-  expect(await screen.findByText('Bought 495 MT of 500 MT planned.')).toBeVisible();
+  expect(await screen.findByText('Approved by Wunna Aung · 02 Nov 2026, 23:54:00')).toBeVisible();
+  // A purchase is always the whole plan, so there is no "Bought … of … planned" line.
+  expect(screen.queryByText(/Bought/)).not.toBeInTheDocument();
   expect(screen.getByRole('link', { name: /View purchase record/ })).toBeVisible();
   expect(view.container.querySelector('.pp-tag--purchased')).toHaveTextContent('purchased');
   view.unmount();

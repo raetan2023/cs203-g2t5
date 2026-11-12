@@ -81,7 +81,7 @@
 /* Plans section: its own card, three per row and two rows per page, like the Approval inbox. */
 .purchase-plan .pp-plans-panel { margin-top: var(--pp-space); }
 .pp-plan-grid--paged { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; }
-.pp-plan-spacer { visibility: hidden; }
+.pp-plan-spacer { visibility: hidden; min-height: 240px; }
 .purchase-plan .pp-plans-panel .pp-overview { margin: var(--bb-space-2) 0 var(--bb-space-6); padding-bottom: var(--bb-space-5); border-bottom: 1px solid var(--bb-border-subtle); }
 @media (max-width: 1000px) { .pp-plan-grid--paged { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .pp-plan-grid--paged { grid-template-columns: minmax(0, 1fr); } }
@@ -217,7 +217,7 @@
 .purchase-plan .pp-decision-meta { color: var(--bb-text-secondary); }
 .pp-approval-inbox { margin-bottom: var(--bb-space-6); }
 .pp-approval-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--bb-space-4); margin-top: var(--bb-space-8); }
-.pp-approval-list li.pp-approval-spacer { visibility: hidden; }
+.pp-approval-list li.pp-approval-spacer { visibility: hidden; min-height: 200px; }
 .pp-approval-list li { min-width: 0; padding: var(--bb-space-5); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); overflow-wrap: anywhere; }
 .pp-approval-list .pp-inbox-card { display: flex; flex-direction: column; gap: var(--bb-space-3); }
 .purchase-plan .pp-inbox-meta { color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.5; }
@@ -251,7 +251,7 @@
 .pp-previous-plan { margin-block: var(--bb-space-5); padding: var(--bb-space-4); border: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-card); background: var(--bb-surface); color: var(--bb-text-secondary); }
 .pp-previous-plan a { color: var(--bb-text); }
 .pp-unread { display: inline-block; margin-inline-start: var(--bb-space-2); padding: var(--bb-space-1) var(--bb-space-2); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font-size: var(--bb-text-xs); font-weight: 600; }
-.pp-filter { display: flex; flex-wrap: wrap; gap: var(--bb-space-2); }
+.pp-filter { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--bb-space-2); }
 .pp-filter button { padding: var(--bb-space-2) var(--bb-space-3); border: 1px solid var(--bb-border-control); background: var(--bb-surface); color: var(--bb-text); font: inherit; cursor: pointer; }
 .pp-filter button[aria-pressed="true"] { background: var(--bb-action); color: var(--bb-text-on-action); }
 /* Title and figures on the left; filters and refresh pinned to the top right, wrapping within their own column. */
@@ -266,13 +266,16 @@
 @keyframes pp-icon-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .purchase-plan .pp-icon-button.is-refreshing svg { animation: none; } }
 .purchase-plan .pp-inbox-counts { display: flex; gap: var(--bb-space-6); margin: var(--bb-space-4) 0 0; }
-.purchase-plan .pp-inbox-counts dt { color: var(--bb-text-secondary); font-size: var(--bb-text-xl); }
+.purchase-plan .pp-inbox-counts dt { color: var(--bb-text-secondary); font-size: var(--bb-text-xl); white-space: nowrap; }
 .purchase-plan .pp-inbox-counts dd { margin: var(--bb-space-1) 0 0; font-size: 2rem; line-height: 1.2; font-weight: 600; font-variant-numeric: tabular-nums; }
 .purchase-plan .pp-inbox-counts-withdrawn dd { color: var(--bb-error-text); }
 .purchase-plan .pp-inbox-counts-overdue dd { color: var(--bb-warning-text); }
-.purchase-plan .pp-inbox-controls { flex-wrap: wrap; justify-content: flex-end; }
+.purchase-plan .pp-inbox-controls { flex-wrap: wrap; justify-content: flex-end; align-items: flex-start; }
+/* The reset link keeps its space while hidden, so choosing a filter never moves the others. */
+.pp-inbox-reset--idle { visibility: hidden; }
 .pp-officer-filter { position: relative; }
-.pp-filter-trigger { display: inline-flex; align-items: center; gap: var(--bb-space-2); min-height: 40px; max-width: 260px; padding: 0 var(--bb-space-3); color: var(--bb-text); background: var(--bb-surface-input, transparent); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font: inherit; font-size: var(--bb-text-md); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Fixed widths: a longer choice is shortened with … rather than widening the row. */
+.pp-filter-trigger { display: inline-flex; align-items: center; justify-content: space-between; width: 190px; gap: var(--bb-space-2); min-height: 40px; padding: 0 var(--bb-space-3); color: var(--bb-text); background: var(--bb-surface-input, transparent); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); font: inherit; font-size: var(--bb-text-md); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pp-filter-trigger:focus-visible, .pp-officer-panel input:focus-visible, .pp-inbox-reset:focus-visible { outline: 2px solid var(--bb-focus); outline-offset: 2px; }
 .pp-filter-caret { color: var(--bb-text-secondary); font-size: var(--bb-text-xs); }
 .pp-officer-panel { position: absolute; z-index: 20; top: calc(100% + var(--bb-space-1)); left: 0; width: 280px; max-width: calc(100vw - 32px); padding: var(--bb-space-2); background: var(--bb-surface); border: 1px solid var(--bb-border-control); border-radius: var(--bb-radius-control); box-shadow: 0 8px 24px rgb(0 0 0 / 35%); }
@@ -286,9 +289,20 @@
 .pp-inbox-reset { padding: var(--bb-space-2) var(--bb-space-3); color: var(--bb-text); background: transparent; border: 0; font: inherit; font-size: var(--bb-text-md); text-decoration: underline; cursor: pointer; }
 /* "Select all" sits above the officers, set apart by a line. */
 .pp-officer-panel label.pp-officer-all { margin-bottom: var(--bb-space-1); padding-bottom: 0; border-bottom: 1px solid var(--bb-border-subtle); border-radius: var(--bb-radius-control) var(--bb-radius-control) 0 0; font-weight: 600; }
+/* Officer and People checkboxes (ticked, half-ticked) use the app's beige rather than the browser's blue, like the Sort menu. */
+.pp-officer-panel input[type="checkbox"] { accent-color: var(--bb-action); }
+/* People dropdown: officers indented under their PM. */
+.pp-people-panel { width: 320px; }
+.pp-people-panel > ul { max-height: 320px; }
+.pp-people-group ul { max-height: none; overflow: visible; padding-left: var(--bb-space-5); }
+.pp-officer-panel label.pp-people-pm { font-weight: 600; }
+.pp-people-role { color: var(--bb-text-secondary); font-weight: 400; }
 .purchase-plan .pp-officer-hint { padding: var(--bb-space-2); color: var(--bb-warning-text); font-size: var(--bb-text-xs); }
 .purchase-plan .pp-inbox-notes { margin-top: var(--bb-space-2); }
 .purchase-plan .pp-inbox-empty { margin-top: var(--bb-space-8); }
+/* The two rows always keep their space; an empty message sits at the top of that space. */
+.purchase-plan .pp-fixed-grid { position: relative; }
+.purchase-plan .pp-grid-empty { position: absolute; z-index: 1; top: 0; left: 0; right: 0; margin: var(--bb-space-8) 0 0; }
 .purchase-plan .pp-inbox-note { font-size: var(--bb-text-xs); }
 .purchase-plan .pp-inbox-note + .pp-inbox-note { margin-top: 2px; }
 .purchase-plan .pp-inbox-note-overdue { color: var(--bb-warning-text); font-weight: 600; }
@@ -323,14 +337,14 @@
 .purchase-plan .pp-progress-swatch { width: 10px; height: 10px; border-radius: 2px; }
 .purchase-plan .pp-progress-swatch--purchased { background: var(--pp-progress-fill); }
 .purchase-plan .pp-progress-swatch--remaining { background: var(--pp-progress-track); }
-/* Approved volume that was never bought: a striped block, so it does not read as a normal part. */
-.purchase-plan .pp-progress-part--shortfall, .purchase-plan .pp-progress-swatch--shortfall { color: var(--bb-text); background: repeating-linear-gradient(135deg, var(--pp-progress-track) 0 4px, transparent 4px 8px); box-shadow: inset 0 0 0 1px var(--pp-progress-track); }
 .purchase-plan .pp-figure-note { margin-top: var(--bb-space-1); color: var(--bb-text-secondary); font-size: var(--bb-text-xs); }
 .purchase-plan .pp-progress-empty { margin-bottom: var(--bb-space-5); }
 @media (prefers-reduced-motion: reduce) { .purchase-plan .pp-progress-part { transition: none; } }
 
 /* A manager's plan card: the Approval inbox layout. */
-.pp-manager-plan { gap: var(--bb-space-3); }
+.pp-manager-plan { gap: var(--bb-space-2); padding-block: var(--bb-space-4); min-height: 240px; }
+/* Tighter lines inside the card, but keep a clear gap above its button. */
+.pp-manager-plan > :nth-last-child(2) { margin-bottom: var(--bb-space-2); }
 .pp-manager-plan a.pp-inbox-open { width: 100%; margin-top: auto; color: var(--bb-text-on-action); text-decoration: none; }
 .purchase-plan .pp-manager-plan-outcome { color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.5; }
 .purchase-plan .pp-manager-plan-reason { color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.5; overflow-wrap: anywhere; }
@@ -350,8 +364,13 @@
 /* The Plans counts wear the same colours as their tags. */
 .purchase-plan .pp-plan-count--overdue dd { color: var(--bb-warning-text); }
 .purchase-plan .pp-plan-count--purchased dd { color: var(--bb-success-text); }
-.purchase-plan .pp-plan-count--rejected dd { color: var(--bb-error-text); }
-.pp-plans-panel .pp-plan-grid { margin-top: var(--bb-space-8); }
+.purchase-plan .pp-plan-count--rejected dd, .purchase-plan .pp-plan-count--withdrawn dd { color: var(--bb-error-text); }
+.purchase-plan .pp-plan-count--closed dd { color: var(--bb-text-secondary); }
+.purchase-plan .pp-manager-plan-pm { color: var(--bb-text-secondary); font-size: var(--bb-text-md); line-height: 1.5; }
+.purchase-plan .pp-manager-plan-pm strong { color: var(--bb-text); font-weight: 600; }
+.purchase-plan .pp-manager-plan-no-pm { color: var(--bb-error-text); font-weight: 600; }
+.purchase-plan .pp-admin-oversight { margin-top: var(--pp-space); }
+.pp-plans-panel .pp-plan-grid { margin-top: var(--bb-space-8); row-gap: var(--bb-space-4); }
 
 /* Phones (docs/ui-revamp/MOBILE_PLAN.md): filter tabs stay on one line and scroll inside their own box;
    the decisions feed gets two equal 44px actions. */
@@ -374,4 +393,14 @@
   .pp-filter { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .pp-filter::-webkit-scrollbar { display: none; }
   .pp-filter button { flex: 0 0 auto; white-space: nowrap; }
+}
+
+.pp-filter-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-filter-caret { flex-shrink: 0; }
+/* The sort button holds the longest label, "Date submitted: Newest". */
+.pp-filter-trigger.pp-sort-trigger { width: 230px; }
+/* On a phone (one card per row) placeholders would only add empty scrolling, so the section sizes to its cards. */
+@media (max-width: 640px) {
+  .pp-plan-spacer, .pp-approval-list li.pp-approval-spacer { display: none; }
+  .purchase-plan .pp-grid-empty { position: static; }
 }

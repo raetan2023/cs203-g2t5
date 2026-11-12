@@ -8,7 +8,7 @@ import { App } from './App';
 import MarketDashboard from '../features/market-dashboard/MarketDashboard';
 import { createApiForecastService } from '../features/forecast/apiService';
 import { createApiRecommendationService } from '../features/recommendations/apiService';
-import { OrganisationSelection, OrganisationControl } from '../features/organisation/OrganisationAccess';
+import { OrganisationSelection, OrganisationControl, AdminOrganisationSwitcher } from '../features/organisation/OrganisationAccess';
 import { fetchOrganisationAccess, type OrganisationPermissions } from '../features/organisation/apiService';
 import { organisationRoleLabel } from '../features/organisation/roles';
 import { organisationAppearance } from '../features/organisation/appearance';
@@ -168,6 +168,7 @@ export function ClerkApp() {
           },
         }} /> : undefined}
     teamReporting={organisationReady && scenario.state === 'ready' && scenario.permissions.role === 'org:admin' ? <TeamReporting service={teamReportingService} /> : undefined}
+    organisationSwitcher={organisationReady && scenario.state === 'ready' && scenario.permissions.role === 'org:admin' ? <AdminOrganisationSwitcher /> : undefined}
     planAccess={scenario.state === 'ready' ? scenario.permissions : undefined}
     auth={auth}
     createPlanService={createPlanService}

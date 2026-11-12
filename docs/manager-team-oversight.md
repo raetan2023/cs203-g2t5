@@ -7,7 +7,10 @@ cannot change the verified organisation.
 
 The Purchase plans page includes the existing approval inbox, plan listing and a
 new Team oversight section. `GET /api/v1/purchase-plans/manager-overview` requires a
-manager session, returns `Cache-Control: no-store`, and provides:
+manager or admin session, returns `Cache-Control: no-store`, and provides the figures
+below. For a manager they cover their current officers; for an admin (shown as
+Organisation oversight under the admin's Plans section) they cover every plan in the
+organisation, and each entry in `officers` also carries the officer's current PM.
 
 Only approved plans count. `period=30d` limits every figure to plans approved in
 the last 30 days including today (Singapore time); `period=all`, the default, has no
@@ -16,8 +19,9 @@ response always lists the manager's full team in `officers` for the dropdown.
 
 - `total_quantity_mt`, shown as Total planned volume: plans a manager approved,
   including those since purchased. Pending, rejected and withdrawn plans are left out.
-- `purchased_quantity_mt`, shown as Purchased volume: MT the officers recorded
-  buying, from their purchase records.
+- `purchased_quantity_mt`, shown as Purchased volume: the planned amount of every
+  purchased plan. A purchase is always the whole plan, so there is no "bought less
+  than planned" figure.
 - `open_quantity_mt`, shown as Remaining to buy: approved plans not yet purchased.
   Pending requests are not counted until a manager approves them.
 - `exposure_usd`, shown as Estimated remaining cost: Remaining to buy multiplied by the
@@ -50,13 +54,29 @@ The existing approval service and HTTP tests cover comments, audit rollback,
 status changes and concurrent decisions. A live journey still requires separate
 buyer and manager memberships in Clerk.
 
+## Team list for filters
+
+`GET /api/v1/purchase-plans/team` (managers and admins) lists everyone the officer
+filters offer, even before they have any plans: a manager's current officers, or for
+an admin every current officer with their PM. The Approval inbox, Plans and oversight
+dropdowns use it, so an officer with nothing yet still appears with a count of 0.
+
+## Plans section
+
+Managers and admins see decided plans (approved, purchased, rejected, and closed when
+there are any) as cards, 6 per page. Each plan is one of To buy, Overdue (approved,
+past its deadline, not bought), Purchased, Rejected or Closed; the filter buttons show
+how many of each. Admins also filter by PM and officer in one People dropdown and
+see each officer's PM on the card. Drafts, pending and withdrawn requests are not
+listed here.
+
 ## Approval inbox
 
 The inbox lists pending and withdrawn requests from the manager's officers, newest
 first, 6 per page (two rows of three). Approved, rejected and purchased requests are left out because
-they need no action. Pending and Withdrawn counts sit under the heading, and the
-list can be narrowed to any number of officers and to one request type; the counts
-follow the officer choice.
+they need no action. The type buttons show how many requests are pending, overdue
+and withdrawn, and the list can be narrowed to any number of officers and to one
+request type; the counts follow the officer choice.
 
 A pending request whose purchase deadline has passed is shown as overdue, with its
 own count and filter. A manager can still approve it after confirming. If it is still
