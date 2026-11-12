@@ -14,8 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PlanLifecycleService {
     public record WithdrawalRequest(String reason) {}
-    public record PurchaseRequest(LocalDate purchased_on, String supplier, BigDecimal quantity_mt,
-            BigDecimal price_usd_per_mt, String note) {}
+    /** No quantity: the approved plan fixes it, so the purchase records the plan's quantity. */
+    public record PurchaseRequest(LocalDate purchased_on, String supplier, BigDecimal price_usd_per_mt, String note) {}
 
     private final PurchasePlanRepository plans;
     private final PlanApprovalService approvals;
@@ -68,7 +68,6 @@ public class PlanLifecycleService {
         String supplier = request.supplier() == null ? "" : request.supplier().strip();
         String note = request.note() == null ? "" : request.note().strip();
         if (supplier.isEmpty() || supplier.length() > 200) errors.put("supplier", "Enter a supplier of at most 200 characters.");
-        if (!positiveAmount(request.quantity_mt())) errors.put("quantity_mt", "Enter a positive quantity with at most 6 decimal places and 12 whole digits.");
         if (!positiveAmount(request.price_usd_per_mt())) errors.put("price_usd_per_mt", "Enter a positive USD/MT price with at most 6 decimal places and 12 whole digits.");
         if (note.length() > 2000) errors.put("note", "Use at most 2000 characters.");
         if (!errors.isEmpty()) invalid(errors);
@@ -77,7 +76,7 @@ public class PlanLifecycleService {
                 insert into purchase_records (purchase_id, plan_id, clerk_org_id, buyer_user_id, purchased_on,
                     supplier, quantity_mt, price_usd_per_mt, note, recorded_at)
                 values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", UUID.randomUUID(), id, org, buyer,
-                request.purchased_on(), supplier, request.quantity_mt().stripTrailingZeros(), request.price_usd_per_mt().stripTrailingZeros(), note, Timestamp.from(clock.instant()));
+                request.purchased_on(), supplier, plan.quantityMt().stripTrailingZeros(), request.price_usd_per_mt().stripTrailingZeros(), note, Timestamp.from(clock.instant()));
         return plans.findByIdAndUser(id, buyer, org).orElseThrow();
     }
 
@@ -193,7 +192,8 @@ public class PlanLifecycleService {
         result.put("actual_total", actual);
         result.put("actual_minus_reference", reference == null ? null : actual.subtract(reference));
         result.put("actual_minus_estimate", estimate == null ? null : actual.subtract(estimate));
-        // Quantity-adjusted totals keep a smaller delivery from being presented as a price saving.
+        // New purchases always record the plan's quantity, so these equal the plain totals. Older records
+        // may have a different quantity; adjusting keeps a smaller delivery from looking like a saving.
         BigDecimal adjustedReference = adjusted(reference, plan.quantityMt(), quantity);
         BigDecimal adjustedEstimate = adjusted(estimate, plan.quantityMt(), quantity);
         result.put("reference_total_for_actual_quantity", adjustedReference);

@@ -178,7 +178,7 @@ export function withPreviewApproval(plans: PurchasePlanService, scenario: Recomm
     if (start === 'submitted') return;
     if (start === 'withdrawn') { await plans.withdraw!(plan.plan_id, 'Delivery schedule changed.'); return; }
     await plans.decide!(plan.plan_id, { decision: start === 'rejected' ? 'rejected' : 'approved', comment: start === 'rejected' ? PREVIEW_REJECTION : 'Within budget. Go ahead.', approval_fingerprint: 'a'.repeat(64) });
-    if (start === 'purchased') await plans.recordPurchase!(plan.plan_id, { purchased_on: SCENARIO_DATE, supplier: 'Synthetic supplier', quantity_mt: plan.quantity_mt, price_usd_per_mt: 1300, note: 'Illustrative purchase record only.' });
+    if (start === 'purchased') await plans.recordPurchase!(plan.plan_id, { purchased_on: SCENARIO_DATE, supplier: 'Synthetic supplier', price_usd_per_mt: 1300, note: 'Illustrative purchase record only.' });
   }) : Promise.resolve();
   return {
     ...plans,

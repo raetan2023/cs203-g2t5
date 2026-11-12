@@ -51,7 +51,7 @@ it('copies a rejected plan into an editable linked draft with the earlier reject
   expect(plans.plans.find(p => p.plan_id === plan.plan_id)?.status).toBe('rejected');
 });
 
-it('validates fields and records one purchase, showing quantity-adjusted comparisons', async () => {
+it('validates fields and records one purchase at the plan quantity, with comparisons', async () => {
   const { service, plan } = await fixture('approved'), user = userEvent.setup();
   const record = vi.spyOn(service as Required<PurchasePlanService>, 'recordPurchase');
   render(<Request service={service} initial={plan} />);
@@ -59,12 +59,14 @@ it('validates fields and records one purchase, showing quantity-adjusted compari
   await user.click(screen.getByRole('button', { name: 'Confirm purchase record' }));
   expect(record).not.toHaveBeenCalled(); expect(screen.getByLabelText('Supplier')).toHaveAttribute('aria-invalid', 'true');
   await user.type(screen.getByLabelText('Supplier'), 'Supplier A');
-  await user.clear(screen.getByLabelText('Actual quantity (MT)')); await user.type(screen.getByLabelText('Actual quantity (MT)'), '20.5');
+  // The quantity is fixed by the approved plan, so there is no field for it.
+  expect(screen.queryByLabelText(/quantity/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/The quantity is the 47 MT in the approved plan/)).toBeVisible();
   await user.type(screen.getByLabelText('Price paid (USD/MT)'), '1200.12');
   await user.click(screen.getByRole('button', { name: 'Confirm purchase record' }));
   const outcome = await screen.findByRole('region', { name: 'Recorded purchase' });
   expect(await screen.findByRole('heading', { name: 'Purchase recorded' })).toBeVisible();
-  expect(within(outcome).getByText('USD 24,602.46')).toBeVisible();
+  expect(within(outcome).getByText('USD 56,405.64')).toBeVisible();
   expect(within(outcome).getByText('USD 1,200.12')).toBeVisible();
   const prices = within(outcome).getByRole('table', { name: 'Price comparison in USD per MT' });
   expect(screen.queryByRole('table', { name: 'Saved recommendation costs' })).not.toBeInTheDocument();
@@ -75,10 +77,11 @@ it('validates fields and records one purchase, showing quantity-adjusted compari
   expect(within(estimate).getByText('1,330.00')).toBeVisible();
   expect(within(estimate).getByText('129.88 less')).toBeVisible();
   await user.click(within(outcome).getByText('Compare total costs'));
-  expect(within(outcome).getByText(/Differences use the 20.5 MT actually bought/)).toBeVisible();
-  expect(within(outcome).getByText('3,113.54 less')).toBeVisible();
+  expect(within(outcome).getByText('Totals use the 47 MT in the plan.')).toBeVisible();
+  expect(within(outcome).getByText('7,138.36 less')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Record purchase' })).not.toBeInTheDocument();
   expect(record).toHaveBeenCalledTimes(1);
+  expect(record.mock.calls[0][1]).not.toHaveProperty('quantity_mt');
 });
 
 it('keeps purchase drafts on validation errors and requires reload after a conflict', async () => {
