@@ -173,6 +173,22 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
   </div> : impactNote && <div className="rec-tile rec-tile--note"><p className="rec-tile-note">{impactNote}</p></div>;
   const refresh = connected && <button type="button" className="bb-button bb-button--secondary rec-refresh" onClick={onRefresh}><RefreshIcon />Refresh prices</button>;
   const download = () => downloadReportPdf(reportFilename(plan), buildRecommendationReport({ plan, guidance: guidance!, analysis: analysis!, columns, buyNow, waitCost: waitTarget && point?.mid != null ? point.mid * plan.quantity_mt : undefined, costDetail, demo }));
+  // Phones (docs/ui-revamp/MOBILE_PLAN.md): the decision sits far down the page, so a bar fixed to the bottom
+  // jumps to it. It only scrolls; submitting still happens in the decision section. Hidden once that section is on screen.
+  const decision = useRef<HTMLElement>(null);
+  const [decisionInView, setDecisionInView] = useState(false);
+  const canJump = !!(approval && guidance && g.analysis);
+  useEffect(() => {
+    const target = decision.current;
+    if (!canJump || !target || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setDecisionInView(entry.isIntersecting), { threshold: 0.1 });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [canJump]);
+  const jumpToDecision = () => {
+    decision.current?.scrollIntoView({ block: 'start', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    decision.current?.focus({ preventScroll: true });
+  };
 
   return <div className="rec-flow">
     <section className="rec-answer" aria-label="Recommendation" aria-busy={preparing || g.loading}>
@@ -208,7 +224,8 @@ function PlanDecision({ plan, planService, service, reload, horizonDays, targetD
       <KeyAssumptions evidence={evidence} reference={reference} published={published} today={plan.scenario_as_of_date} />
     </div>}
 
-    <section className="rec-summary" aria-label={readOnly ? 'Recommendation summary' : 'Decision'}>
+    {canJump && !decisionInView && <div className="rec-jump-bar"><button type="button" className="bb-button" onClick={jumpToDecision}>Review and submit</button></div>}
+    <section ref={decision} tabIndex={-1} className="rec-summary" aria-label={readOnly ? 'Recommendation summary' : 'Decision'}>
       <div className="rec-summary-main">
         <div><h2 className="rec-kicker">Recommendation summary</h2>{preparing ? <span className="rec-shimmer rec-rail-pending" aria-hidden="true" />
           : <strong className="rec-summary-action">{guidance ? actionLabel(guidance.action) : 'No recommendation yet'}</strong>}</div>

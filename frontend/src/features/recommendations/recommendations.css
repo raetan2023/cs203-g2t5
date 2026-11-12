@@ -378,3 +378,23 @@
   .rec-lc-unit { display: none; }
   .rec-lc-unit-short { display: inline; }
 }
+
+/* Phones (docs/ui-revamp/MOBILE_PLAN.md): the Total / Per MT toggle meets the 44px tap target. */
+@media (max-width: 480px) {
+  .rec-toggle button { min-height: 44px; }
+}
+
+/* Phones: "Review and submit" bar fixed to the bottom; jumps to the decision section (RecommendationsPage). */
+.rec-jump-bar { display: none; }
+.rec-summary:focus:not(:focus-visible) { outline: none; }
+@media (max-width: 480px) {
+  .rec-jump-bar { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; padding: var(--bb-space-3) var(--bb-page-pad) calc(var(--bb-space-3) + env(safe-area-inset-bottom)); background: var(--bb-canvas); border-top: 1px solid var(--bb-border-subtle); box-shadow: var(--bb-shadow-card); }
+  .rec-jump-bar .bb-button { width: 100%; }
+  .rec-summary { scroll-margin-top: var(--bb-space-4); }
+}
+
+/* Phones: the manager's Approve / Reject recommendation buttons stack at full width. */
+@media (max-width: 480px) {
+  .rec-manager-decision .rec-approval-actions { flex-direction: column; }
+  .rec-manager-decision .rec-approval-actions .bb-button { width: 100%; }
+}
