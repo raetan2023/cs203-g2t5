@@ -1,12 +1,12 @@
 import { getStored } from './storedApi';
 
-/** One headline from the GDELT news pipeline, as stored by the backend. */
+/** One stored provider or curated publisher headline. */
 export interface NewsItem {
   title: string;
   url: string;
   /** Publisher domain, e.g. reuters.com. */
   source: string;
-  /** ISO timestamp when GDELT first saw the article. */
+  /** ISO indexing/publication timestamp; curated date-only sources use a documented placeholder. */
   seenAt: string;
   /** Classifier category, or null when the headline was not classified. */
   topic: string | null;
@@ -31,6 +31,25 @@ const TOPICS: Record<string, string> = {
   oil_infrastructure_conflict: 'Conflict and infrastructure',
   strategic_stock_release: 'Strategic reserves',
   demand_shock: 'Demand shock',
+  economy_inflation: 'Economy and inflation',
+  monetary_policy: 'Central banks',
+  fiscal_policy: 'Fiscal policy',
+  financial_markets: 'Financial markets',
+  corporate_finance: 'Business and finance',
+  politics_elections: 'Politics and elections',
+  geopolitics: 'Geopolitics',
+  trade_tariffs: 'Trade and tariffs',
+  technology_ai: 'Technology and AI',
+  cybersecurity: 'Cybersecurity',
+  climate_environment: 'Climate and environment',
+  natural_disasters: 'Natural disasters',
+  agriculture_food: 'Agriculture and food',
+  shipping_logistics: 'Shipping and logistics',
+  aviation_transport: 'Aviation and transport',
+  automotive: 'Automotive',
+  manufacturing: 'Manufacturing',
+  energy: 'Energy',
+  humanitarian: 'Humanitarian',
   other: 'General',
 };
 
@@ -66,5 +85,5 @@ export function parseNewsFeed(data: unknown): NewsFeed {
 }
 
 export function createStoredNewsReader(): ReadNews {
-  return async () => parseNewsFeed(await getStored('/api/v1/news/latest?limit=40', 'Could not read the latest news.'));
+  return async () => parseNewsFeed(await getStored('/api/v1/news/latest?limit=100', 'Could not read the latest news.'));
 }

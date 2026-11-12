@@ -1,0 +1,1033 @@
+[
+  {
+    "date": "2026-11-05",
+    "version": "curated:chat-web-search:v1",
+    "payload": {
+      "status": "curated",
+      "news_date": "2026-11-05",
+      "start": "2026-11-05T00:00:00Z",
+      "end": "2026-11-06T00:00:00Z",
+      "retrieved_at": "2026-11-12T14:15:31.401352+00:00",
+      "collection_method": "chat_web_search",
+      "coverage": "Selected publisher stories across multiple topics. Not an exhaustive archive or a complete GDELT window. Display only; excluded from forecasts and spike analytics.",
+      "records": [
+        {
+          "title": "90 million displaced people at risk from climate threats,\u00a0UN refugee agency says",
+          "url": "https://new.streetinsider.com/Reuters/90%2Bmillion%2Bdisplaced%2Bpeople%2Bat%2Brisk%2Bfrom%2Bclimate%2Bthreats%2C%C2%A0UN%2Brefugee%2Bagency%2Bsays/27301964.html",
+          "publication_evidence": "November 5, 2026 6:04 PM EST",
+          "reference": "turn22view6",
+          "category": "humanitarian",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-05T23:04:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "humanitarian",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Canada's budget uses higher oil revenue to spend on tax incentives, infrastructure",
+          "url": "https://new.streetinsider.com/Reuters/Canada%27s%2Bbudget%2Buses%2Bhigher%2Boil%2Brevenue%2Bto%2Bspend%2Bon%2Btax%2Bincentives%2C%2Binfrastructure/27301540.html",
+          "publication_evidence": "November 5, 2026 5:08 PM EST",
+          "reference": "turn22view0",
+          "category": "fiscal_policy",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-05T22:08:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "fiscal_policy",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Trading Day: A November 5 market bonfire\u00a0",
+          "url": "https://new.streetinsider.com/Reuters/Trading%2BDay%3A%2BA%2BNovember%2B5%2Bmarket%2Bbonfire%C2%A0/27301505.html",
+          "publication_evidence": "November 5, 2026 5:06 PM EST",
+          "reference": "turn22view1",
+          "category": "financial_markets",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-05T22:06:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "financial_markets",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Australia's Qantas lifts first-half fuel cost forecast, sees prices staying high",
+          "url": "https://new.streetinsider.com/Reuters/Australia%27s%2BQantas%2Blifts%2Bfirst-half%2Bfuel%2Bcost%2Bforecast%2C%2Bsees%2Bprices%2Bstaying%2Bhigh/27301311.html",
+          "publication_evidence": "November 5, 2026 4:58 PM EST",
+          "reference": "turn22view2",
+          "category": "aviation_transport",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-05T21:58:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "aviation_transport",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "AI data center firm IREN delays Microsoft AI deliveries, plans $15 billion spending push",
+          "url": "https://new.streetinsider.com/Reuters/AI%2Bdata%2Bcenter%2Bfirm%2BIREN%2Bdelays%2BMicrosoft%2BAI%2Bdeliveries%2C%2Bplans%2B%2415%2Bbillion%2Bspending%2Bpush/27300797.html",
+          "publication_evidence": "November 5, 2026 4:35 PM EST",
+          "reference": "turn22view4",
+          "category": "technology_ai",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-05T21:35:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "technology_ai",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Bank of Canada and government agree to keep 2% inflation target",
+          "url": "https://new.streetinsider.com/Reuters/Bank%2Bof%2BCanada%2Band%2Bgovernment%2Bagree%2Bto%2Bkeep%2B2%25%2Binflation%2Btarget/27300753.html",
+          "publication_evidence": "November 5, 2026 4:34 PM EST",
+          "reference": "turn22view3",
+          "category": "monetary_policy",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-05T21:34:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "monetary_policy",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Argentina analysts cut 2026 growth forecast, bumps inflation outlook",
+          "url": "https://new.streetinsider.com/Reuters/Argentina%2Banalysts%2Bcut%2B2026%2Bgrowth%2Bforecast%2C%2Bbumps%2Binflation%2Boutlook/27300623.html",
+          "publication_evidence": "November 5, 2026 4:29 PM EST",
+          "reference": "turn22view5",
+          "category": "economy_inflation",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-05T21:29:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "economy_inflation",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Audi may boost size of new US auto plant by $3 billion, add 3,000 jobs",
+          "url": "https://new.streetinsider.com/Reuters/Audi%2Bmay%2Bboost%2Bsize%2Bof%2Bnew%2BUS%2Bauto%2Bplant%2Bby%2B%243%2Bbillion%2C%2Badd%2B3%2C000%2Bjobs/27300579.html",
+          "publication_evidence": "November 5, 2026 4:28 PM EST",
+          "reference": "turn22view7",
+          "category": "manufacturing",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-05T21:28:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "manufacturing",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-11-06",
+    "version": "curated:chat-web-search:v1",
+    "payload": {
+      "status": "curated",
+      "news_date": "2026-11-06",
+      "start": "2026-11-06T00:00:00Z",
+      "end": "2026-11-07T00:00:00Z",
+      "retrieved_at": "2026-11-12T14:15:31.401718+00:00",
+      "collection_method": "chat_web_search",
+      "coverage": "Selected publisher stories across multiple topics. Not an exhaustive archive or a complete GDELT window. Display only; excluded from forecasts and spike analytics.",
+      "records": [
+        {
+          "title": "Fed policymakers consider rate hike after strong jobs report",
+          "url": "https://new.streetinsider.com/Reuters/Fed%2Bpolicymakers%2Bconsider%2Brate%2Bhike%2Bafter%2Bstrong%2Bjobs%2Breport/27304646.html",
+          "publication_evidence": "November 6, 2026 8:44 AM EST",
+          "reference": "turn8search1",
+          "category": "monetary_policy",
+          "seen_at": "2026-11-06T13:44:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "monetary_policy",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "World food prices dip in October, but remain higher than a year ago",
+          "url": "https://new.streetinsider.com/Reuters/World%2Bfood%2Bprices%2Bdip%2Bin%2BOctober%2C%2Bbut%2Bremain%2Bhigher%2Bthan%2Ba%2Byear%2Bago/27302860.html",
+          "publication_evidence": "November 6, 2026 5:18 AM EST",
+          "reference": "turn22view8",
+          "category": "agriculture_food",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-06T10:18:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "agriculture_food",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "South Korean cryptoexchange Gopax suspends withdrawals amid hacking concerns",
+          "url": "https://new.streetinsider.com/Reuters/South%2BKorean%2Bcryptoexchange%2BGopax%2Bsuspends%2Bwithdrawals%2Bamid%2Bhacking%2Bconcerns/27302861.html",
+          "publication_evidence": "November 6, 2026 5:18 AM EST",
+          "reference": "turn22view14",
+          "category": "cybersecurity",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-06T10:18:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "cybersecurity",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "China adopts law on Antarctic activities and environmental protection",
+          "url": "https://new.streetinsider.com/Reuters/China%2Badopts%2Blaw%2Bon%2BAntarctic%2Bactivities%2Band%2Benvironmental%2Bprotection/27302766.html",
+          "publication_evidence": "November 6, 2026 4:33 AM EST",
+          "reference": "turn22view13",
+          "category": "climate_environment",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-06T09:33:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "climate_environment",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "German industrial output rises 0.7% in September",
+          "url": "https://new.streetinsider.com/Reuters/German%2Bindustrial%2Boutput%2Brises%2B0.7%25%2Bin%2BSeptember/27302458.html",
+          "publication_evidence": "November 6, 2026 2:58 AM EST",
+          "reference": "turn22view9",
+          "category": "manufacturing",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-06T07:58:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "manufacturing",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Airbus delivers 621 aircraft in January-October, a 6% increase",
+          "url": "https://new.streetinsider.com/Reuters/Airbus%2Bdelivers%2B621%2Baircraft%2Bin%2BJanuary-October%2C%2Ba%2B6%25%2Bincrease/27302448.html",
+          "publication_evidence": "November 6, 2026 2:54 AM EST",
+          "reference": "turn22view10",
+          "category": "aviation_transport",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-06T07:54:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "aviation_transport",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "AI boom turns chip packaging into the next battleground for semiconductors",
+          "url": "https://new.streetinsider.com/Reuters/AI%2Bboom%2Bturns%2Bchip%2Bpackaging%2Binto%2Bthe%2Bnext%2Bbattleground%2Bfor%2Bsemiconductors/27302306.html",
+          "publication_evidence": "November 6, 2026 12:51 AM EST",
+          "reference": "turn22view11",
+          "category": "technology_ai",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-06T05:51:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "technology_ai",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Singapore Airlines to splash $1.6 billion on luxury long-haul cabins as rivals up their game",
+          "url": "https://new.streetinsider.com/Reuters/Singapore%2BAirlines%2Bto%2Bsplash%2B%241.6%2Bbillion%2Bon%2Bluxury%2Blong-haul%2Bcabins%2Bas%2Brivals%2Bup%2Btheir%2Bgame/27302278.html",
+          "publication_evidence": "November 6, 2026 12:34 AM EST",
+          "reference": "turn22view12",
+          "category": "aviation_transport",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-06T05:34:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "aviation_transport",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-11-07",
+    "version": "curated:chat-web-search:v1",
+    "payload": {
+      "status": "curated",
+      "news_date": "2026-11-07",
+      "start": "2026-11-07T00:00:00Z",
+      "end": "2026-11-08T00:00:00Z",
+      "retrieved_at": "2026-11-12T14:15:31.401724+00:00",
+      "collection_method": "chat_web_search",
+      "coverage": "Selected publisher stories across multiple topics. Not an exhaustive archive or a complete GDELT window. Display only; excluded from forecasts and spike analytics.",
+      "records": [
+        {
+          "title": "Israeli president picks Gadi Eisenkot, Netanyahu rival, to try to form government",
+          "url": "https://new.streetinsider.com/Reuters/Israeli%2Bpresident%2Bpicks%2BGadi%2BEisenkot%2C%2BNetanyahu%2Brival%2C%2Bto%2Btry%2Bto%2Bform%2Bgovernment/27309346.html",
+          "publication_evidence": "November 7, 2026 2:32 PM EST",
+          "reference": "turn16view3",
+          "category": "politics_elections",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-07T19:32:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "politics_elections",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Tesla to add Cybertruck shift to clear orders before dismantling line next year",
+          "url": "https://new.streetinsider.com/Reuters/Tesla%2Bto%2Badd%2BCybertruck%2Bshift%2Bto%2Bclear%2Borders%2Bbefore%2Bdismantling%2Bline%2Bnext%2Byear/27309339.html",
+          "publication_evidence": "November 7, 2026 1:38 PM EST",
+          "reference": "turn22view15",
+          "category": "automotive",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-07T18:38:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "automotive",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Employers, watchmen at California ports extend contract talks",
+          "url": "https://new.streetinsider.com/Reuters/Employers%2C%2Bwatchmen%2Bat%2BCalifornia%2Bports%2Bextend%2Bcontract%2Btalks/27309300.html",
+          "publication_evidence": "November 7, 2026 9:35 AM EST",
+          "reference": "turn16view0",
+          "category": "shipping_logistics",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-07T14:35:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "shipping_logistics",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Berkshire Hathaway speeds up stock buybacks, though profit falls",
+          "url": "https://new.streetinsider.com/Reuters/Berkshire%2BHathaway%2Bspeeds%2Bup%2Bstock%2Bbuybacks%2C%2Bthough%2Bprofit%2Bfalls/27309292.html",
+          "publication_evidence": "November 7, 2026 8:16 AM EST",
+          "reference": "turn16view2",
+          "category": "corporate_finance",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-07T13:16:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "corporate_finance",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Italy foreign minister says he has been targeted by pro-Russian hackers over Ukraine backing",
+          "url": "https://new.streetinsider.com/Reuters/Italy%2Bforeign%2Bminister%2Bsays%2Bhe%2Bhas%2Bbeen%2Btargeted%2Bby%2Bpro-Russian%2Bhackers%2Bover%2BUkraine%2Bbacking/27309283.html",
+          "publication_evidence": "November 7, 2026 7:20 AM EST",
+          "reference": "turn16view1",
+          "category": "cybersecurity",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-07T12:20:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "cybersecurity",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "SoftBank, ABB explore China carve-out to salvage robotics deal, Bloomberg News reports",
+          "url": "https://new.streetinsider.com/Reuters/SoftBank%2C%2BABB%2Bexplore%2BChina%2Bcarve-out%2Bto%2Bsalvage%2Brobotics%2Bdeal%2C%2BBloomberg%2BNews%2Breports/27309269.html",
+          "publication_evidence": "November 7, 2026 4:54 AM EST",
+          "reference": "turn16view4",
+          "category": "technology_ai",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-07T09:54:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "technology_ai",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "As COP31 comes to Turkey, satellites reveal a landfill methane problem",
+          "url": "https://new.streetinsider.com/Reuters/As%2BCOP31%2Bcomes%2Bto%2BTurkey%2C%2Bsatellites%2Breveal%2Ba%2Blandfill%2Bmethane%2Bproblem/27309239.html",
+          "publication_evidence": "November 7, 2026 1:08 AM EST",
+          "reference": "turn16view5",
+          "category": "climate_environment",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-07T06:08:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "new.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "climate_environment",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "2026 General Election preliminary results",
+          "url": "https://elections.nz/media-and-news/2026/2026-general-election-preliminary-results",
+          "publication_date": "2026-11-07",
+          "category": "politics_elections",
+          "publication_evidence": "Nov 7, 2026 | Media release",
+          "reference": "turn10search0",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-07T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "elections.nz",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "politics_elections",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-11-08",
+    "version": "curated:chat-web-search:v1",
+    "payload": {
+      "status": "curated",
+      "news_date": "2026-11-08",
+      "start": "2026-11-08T00:00:00Z",
+      "end": "2026-11-09T00:00:00Z",
+      "retrieved_at": "2026-11-12T14:15:31.401729+00:00",
+      "collection_method": "chat_web_search",
+      "coverage": "Selected publisher stories across multiple topics. Not an exhaustive archive or a complete GDELT window. Display only; excluded from forecasts and spike analytics.",
+      "records": [
+        {
+          "title": "Climate talks should focus on implementation, not new targets, Singapore says",
+          "url": "https://www.streetinsider.com/Reuters/Climate%2Btalks%2Bshould%2Bfocus%2Bon%2Bimplementation%2C%2Bnot%2Bnew%2Btargets%2C%2BSingapore%2Bsays/27309510.html",
+          "publication_evidence": "November 8, 2026 4:02 PM EST",
+          "reference": "turn16view8",
+          "category": "climate_environment",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-08T21:02:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "www.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "climate_environment",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Iraq's Khor Mor gas field halted after drone attack, operator says",
+          "url": "https://www.streetinsider.com/Reuters/Iraq%27s%2BKhor%2BMor%2Bgas%2Bfield%2Bhalted%2Bafter%2Bdrone%2Battack%2C%2Boperator%2Bsays/27309502.html",
+          "publication_evidence": "November 8, 2026 3:47 PM EST",
+          "reference": "turn16view6",
+          "category": "energy",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-08T20:47:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "www.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "energy",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "G7 ministers to discuss recent cyber attacks, Italy says",
+          "url": "https://www.streetinsider.com/Reuters/G7%2Bministers%2Bto%2Bdiscuss%2Brecent%2Bcyber%2Battacks%2C%2BItaly%2Bsays/27309485.html",
+          "publication_evidence": "November 8, 2026 11:58 AM EST",
+          "reference": "turn16view10",
+          "category": "cybersecurity",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-08T16:58:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "www.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "cybersecurity",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Anthropic secures $3.4 billion generator deal for AI data centers, FT reports",
+          "url": "https://www.streetinsider.com/Reuters/Anthropic%2Bsecures%2B%243.4%2Bbillion%2Bgenerator%2Bdeal%2Bfor%2BAI%2Bdata%2Bcenters%2C%2BFT%2Breports/27309458.html",
+          "publication_evidence": "November 8, 2026 7:53 AM EST",
+          "reference": "turn16view7",
+          "category": "technology_ai",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-08T12:53:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "www.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "technology_ai",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Power restored to Zaporizhzhia nuclear plant, IAEA says",
+          "url": "https://www.streetinsider.com/Reuters/Power%2Brestored%2Bto%2BZaporizhzhia%2Bnuclear%2Bplant%2C%2BIAEA%2Bsays/27309439.html",
+          "publication_evidence": "November 8, 2026 3:51 AM EST",
+          "reference": "turn16view9",
+          "category": "energy",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-08T08:51:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "www.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "energy",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "South Africa's ANC takes a beating in municipal vote, setting up tough coalition talks",
+          "url": "https://www.streetinsider.com/Reuters/South%2BAfrica%27s%2BANC%2Btakes%2Ba%2Bbeating%2Bin%2Bmunicipal%2Bvote%2C%2Bsetting%2Bup%2Btough%2Bcoalition%2Btalks/27309437.html",
+          "publication_evidence": "November 8, 2026 3:44 AM EST",
+          "reference": "turn16view11",
+          "category": "politics_elections",
+          "publisher": "Reuters via StreetInsider",
+          "seen_at": "2026-11-08T08:44:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "www.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "politics_elections",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Trump to meet Qatar's prime minister as Iran diplomacy faces hurdles",
+          "url": "https://www.al-monitor.com/originals/2026/11/trump-meet-qatars-prime-minister-iran-diplomacy-faces-hurdles",
+          "publication_date": "2026-11-08",
+          "publication_evidence": "Nov 8, 2026",
+          "reference": "turn11search11",
+          "category": "geopolitics",
+          "seen_at": "2026-11-08T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "www.al-monitor.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "geopolitics",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Strong earthquake shakes central Japan, shattering store windows and injuring at least 22",
+          "url": "https://ny1.com/nyc/all-boroughs/ap-top-news/2026/11/08/strong-earthquake-shakes-central-japan-shattering-store-windows-and-injuring-at-least-22",
+          "publication_date": "2026-11-08",
+          "category": "natural_disasters",
+          "publication_evidence": "PUBLISHED 2:23 AM ET Nov. 08, 2026",
+          "reference": "turn12search1",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-08T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "ny1.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "natural_disasters",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-11-09",
+    "version": "curated:chat-web-search:v1",
+    "payload": {
+      "status": "curated",
+      "news_date": "2026-11-09",
+      "start": "2026-11-09T00:00:00Z",
+      "end": "2026-11-10T00:00:00Z",
+      "retrieved_at": "2026-11-12T14:15:31.401733+00:00",
+      "collection_method": "chat_web_search",
+      "coverage": "Selected publisher stories across multiple topics. Not an exhaustive archive or a complete GDELT window. Display only; excluded from forecasts and spike analytics.",
+      "records": [
+        {
+          "title": "Take Five: Tech wreck and roll",
+          "url": "https://www.investing.com/news/economy-news/take-five-tech-wreck-and-roll-5010819",
+          "publication_date": "2026-11-09",
+          "category": "economy_inflation",
+          "publication_evidence": "Published Nov 09, 2026, 03:53 AM",
+          "reference": "turn23search8",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-09T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "www.investing.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "economy_inflation",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Norway reins in data centre industry amid AI boom",
+          "url": "https://www.devdiscourse.com/article/international/4003864-norway-reins-in-data-centre-industry-amid-ai-boom",
+          "publication_date": "2026-11-09",
+          "category": "technology_ai",
+          "publication_evidence": "Created: 09-11-2026 15:50 IST",
+          "reference": "turn24view2",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-09T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "www.devdiscourse.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "technology_ai",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Trump: New Iran attacks \"quite unlikely\"",
+          "url": "https://www.axios.com/2026/11/09/trump-iran-war-qatar-negotiations-attacks-unlikely",
+          "publication_date": "2026-11-09",
+          "category": "geopolitics",
+          "publication_evidence": "Mon Nov 9 22:55:28 2026 UTC",
+          "reference": "turn0news18",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-09T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "www.axios.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "geopolitics",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "ANALYSIS-Trader angst pivots from inflation to growth as tech rout deepens",
+          "url": "https://wealthinsights.metrobank.com.ph/news/analysis-trader-angst-pivots-from-inflation-to-growth-as-tech-rout-deepens",
+          "publication_date": "2026-11-09",
+          "category": "financial_markets",
+          "publication_evidence": "November 9, 2026 by Reuters",
+          "reference": "turn9search7",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-09T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "wealthinsights.metrobank.com.ph",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "financial_markets",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "China\u2019s factory-gate inflation at fastest in nearly 4-1/2 years in October, while CPI rise moderates",
+          "url": "https://au.investing.com/news/economy-news/chinas-factorygate-inflation-gains-momentum-in-october-consumer-price-pressures-stay-muted-4753734",
+          "publication_date": "2026-11-09",
+          "category": "economy_inflation",
+          "publication_evidence": "Published 09/11/2026, 01:04 pm",
+          "reference": "turn24view3",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-09T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "au.investing.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "economy_inflation",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-11-10",
+    "version": "curated:chat-web-search:v1",
+    "payload": {
+      "status": "curated",
+      "news_date": "2026-11-10",
+      "start": "2026-11-10T00:00:00Z",
+      "end": "2026-11-11T00:00:00Z",
+      "retrieved_at": "2026-11-12T14:15:31.401737+00:00",
+      "collection_method": "chat_web_search",
+      "coverage": "Selected publisher stories across multiple topics. Not an exhaustive archive or a complete GDELT window. Display only; excluded from forecasts and spike analytics.",
+      "records": [
+        {
+          "title": "Exclusive-Microsoft presses Trump to scuttle expected ban on Chinese data center technology",
+          "url": "https://www.investing.com/news/stock-market-news/exclusivemicrosoft-presses-trump-to-scuttle-expected-ban-on-chinese-data-center-technology-5014745",
+          "publication_date": "2026-11-10",
+          "category": "trade_tariffs",
+          "publication_evidence": "Published Nov 10, 2026, 06:01 AM",
+          "reference": "turn19search1",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-10T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "www.investing.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "trade_tariffs",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Price pressures persisted in October",
+          "url": "https://www.axios.com/2026/11/10/cpi-october-inflation-fed",
+          "publication_date": "2026-11-10",
+          "category": "economy_inflation",
+          "publication_evidence": "Tue Nov 10 14:07:32 2026 UTC",
+          "reference": "turn1news19",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-10T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "www.axios.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "economy_inflation",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "India, US continuing talks to finalise first tranche of trade deal, official says",
+          "url": "https://www.aol.com/articles/india-us-continuing-talks-finalise-160121000.html",
+          "publication_date": "2026-11-10",
+          "category": "trade_tariffs",
+          "publication_evidence": "Tue, November 10, 2026 at 4:01 PM UTC",
+          "reference": "turn24view8",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-10T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "www.aol.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "trade_tariffs",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "China's trade surplus soars past $1 trillion as AI boom powers exports",
+          "url": "https://in.marketscreener.com/news/china-s-trade-surplus-soars-past-1-trillion-as-ai-boom-powers-exports-ce785edad989f623",
+          "publication_date": "2026-11-10",
+          "category": "trade_tariffs",
+          "publication_evidence": "Published on 11/10/2026 at 08:34 am IST",
+          "reference": "turn18search2",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-10T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "in.marketscreener.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "trade_tariffs",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Exclusive: AP granted rare access to European Union naval patrol fighting piracy in the Gulf of Aden",
+          "url": "https://apnews.com/article/27bc3f388afd489c1c0d189037eb8995",
+          "publication_date": "2026-11-10",
+          "category": "shipping_logistics",
+          "publication_evidence": "Tue Nov 10 05:32:28 2026 UTC",
+          "reference": "turn0news16",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-10T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "apnews.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "shipping_logistics",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "date": "2026-11-11",
+    "version": "curated:chat-web-search:v1",
+    "payload": {
+      "status": "curated",
+      "news_date": "2026-11-11",
+      "start": "2026-11-11T00:00:00Z",
+      "end": "2026-11-12T00:00:00Z",
+      "retrieved_at": "2026-11-12T14:15:31.401744+00:00",
+      "collection_method": "chat_web_search",
+      "coverage": "Selected publisher stories across multiple topics. Not an exhaustive archive or a complete GDELT window. Display only; excluded from forecasts and spike analytics.",
+      "records": [
+        {
+          "title": "Scoop: U.S. asks Russia to propose new security agreement with Europe",
+          "url": "https://www.axios.com/2026/11/11/russia-ukraine-europe-war-security-agreement",
+          "seen_at": "2026-11-11T20:03:34Z",
+          "domain": "www.axios.com",
+          "collection_method": "chat_web_search",
+          "reference": "turn5search0",
+          "publication_evidence": "Wed Nov 11 20:03:34 2026 UTC",
+          "seen_at_basis": "publication timestamp",
+          "classification": {
+            "valid": true,
+            "category": "geopolitics",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "As higher prices seep into broader economy, Fed officials consider faster hikes",
+          "url": "https://apnews.com/article/1318a1694472e2926e0a4ab5d8ca6457",
+          "seen_at": "2026-11-11T13:02:23Z",
+          "domain": "apnews.com",
+          "collection_method": "chat_web_search",
+          "reference": "turn1news12",
+          "publication_evidence": "Wed Nov 11 13:02:23 2026 UTC",
+          "seen_at_basis": "publication timestamp",
+          "classification": {
+            "valid": true,
+            "category": "economy_inflation",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "US and China should stay clear-eyed on AI cooperation and competition, Bessent says",
+          "url": "https://www.streetinsider.com/Reuters/US%2Band%2BChina%2Bshould%2Bstay%2Bclear-eyed%2Bon%2BAI%2Bcooperation%2Band%2Bcompetition%2C%2BBessent%2Bsays/27325364.html",
+          "publication_date": "2026-11-11",
+          "category": "technology_ai",
+          "publication_evidence": "November 10, 2026 8:25 PM EST",
+          "reference": "turn9search4",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-11T01:25:00Z",
+          "seen_at_basis": "publisher timestamp with explicit EST offset",
+          "domain": "www.streetinsider.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "technology_ai",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Oil up 2% as Iran official says country will keep enriched nuclear material",
+          "url": "https://www.kitco.com/news/off-the-wire/2026-11-11/oil-2-iran-official-says-country-will-keep-enriched-nuclear-material",
+          "seen_at": "2026-11-11T00:00:00Z",
+          "domain": "www.kitco.com",
+          "collection_method": "chat_web_search",
+          "reference": "turn5view1",
+          "publication_evidence": "Published: Nov 11, 2026 - 6:58 PM",
+          "seen_at_basis": "publisher calendar date placeholder; timezone unspecified",
+          "classification": {
+            "valid": true,
+            "category": "geopolitics",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Dollar climbs as traders raise December Fed hike bets",
+          "url": "https://www.kitco.com/news/off-the-wire/2026-11-11/dollar-climbs-traders-raise-december-fed-hike-bets",
+          "seen_at": "2026-11-11T00:00:00Z",
+          "domain": "www.kitco.com",
+          "collection_method": "chat_web_search",
+          "reference": "turn5view0",
+          "publication_evidence": "Published: Nov 11, 2026 - 9:16 PM",
+          "seen_at_basis": "publisher calendar date placeholder; timezone unspecified",
+          "classification": {
+            "valid": true,
+            "category": "monetary_policy",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "CoreWeave sparks AI cloud stock rally, lifts Nvidia as results ease bubble fears",
+          "url": "https://www.investing.com/news/stock-market-news/coreweave-sparks-ai-cloud-stock-rally-lifts-nvidia-as-results-ease-bubble-fears-5018610",
+          "publication_date": "2026-11-11",
+          "category": "technology_ai",
+          "publication_evidence": "Published Nov 11, 2026, 07:16 AM",
+          "reference": "turn24view16",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-11T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "www.investing.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "technology_ai",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "Ternium weighs more anti-dumping cases as steel snarls trade talks with US",
+          "url": "https://in.marketscreener.com/news/ternium-weighs-more-anti-dumping-cases-as-steel-snarls-trade-talks-with-us-ce785edbdd8af32d",
+          "publication_date": "2026-11-11",
+          "category": "trade_tariffs",
+          "publication_evidence": "Published on 11/11/2026 at 04:32 pm IST",
+          "reference": "turn23search0",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-11T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "in.marketscreener.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "trade_tariffs",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "U.S. Container Imports Hit Record High As China Trade",
+          "url": "https://contabo.marinelink.com/news/us-container-imports-hit-record-high-544286",
+          "publication_date": "2026-11-11",
+          "category": "shipping_logistics",
+          "publication_evidence": "November 11, 2026",
+          "reference": "turn24view13",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-11T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "contabo.marinelink.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "shipping_logistics",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        },
+        {
+          "title": "World leaders urge stronger and faster action at UN climate talks over inadequate response",
+          "url": "https://apnews.com/article/056ff011b2e6f324c2cd089862c13824",
+          "publication_date": "2026-11-11",
+          "category": "climate_environment",
+          "publication_evidence": "Wed Nov 11 02:00:11 2026 UTC",
+          "reference": "turn10news12",
+          "date_precision": "publisher calendar date unless explicit timezone provided",
+          "seen_at": "2026-11-11T00:00:00Z",
+          "seen_at_basis": "publisher calendar date placeholder; exact ordering not established",
+          "domain": "apnews.com",
+          "collection_method": "chat_web_search",
+          "classification": {
+            "valid": true,
+            "category": "climate_environment",
+            "market_bias": "unclear",
+            "method": "editorial topic only"
+          }
+        }
+      ]
+    }
+  }
+]
