@@ -344,7 +344,7 @@ it('uses each forecast on its real target date, defaults to the one nearest the 
   expect(getInAnswer('Latest quote · 26 Oct')).toBeVisible();
   expect(getInAnswer('USD 1,200,132 for 888 MT')).toBeVisible();
   expect(getInAnswer('If you buy Wed 25 Nov · 30-day forecast')).toBeVisible();
-  expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-col--unavailable');
+  expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-row--unavailable');
   expect(screen.getByRole('group', { name: '7 days' })).toHaveAccessibleDescription(/Passed/);
   expect(within(screen.getByRole('region', { name: 'Decision' })).getByText('30-day forecast · Wed 25 Nov')).toBeVisible();
   expect(screen.getByText(/Monitoring, check again tomorrow/)).toBeVisible();
@@ -527,7 +527,7 @@ it('skips a default whose target has passed and chooses a forecast still to come
   await waitFor(() => expect(read).toHaveBeenCalledWith(expect.anything(), 14, 'mixed-targets'));
   expect(read.mock.calls.every(call => call[1] !== 7)).toBe(true);
   expect(impact.mock.calls.every(call => call[1] !== 7)).toBe(true);
-  expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-col--unavailable');
+  expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-row--unavailable');
   expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
 });
 
@@ -544,11 +544,11 @@ it('recovers after refresh when a newer quote moves the forecast dates', async (
     <RecommendationsPage planId={currentPlan.plan_id} planService={planService} service={service} scenarioDate={today} />
   </ForecastProvider>);
   await screen.findByRole('group', { name: '7 days' });
-  expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-col--unavailable');
+  expect(screen.getByRole('group', { name: '7 days' })).toHaveClass('rec-row--unavailable');
   current = true;
   fireEvent.click(screen.getAllByRole('button', { name: 'Refresh prices' })[0]);
   await waitFor(() => expect(read).toHaveBeenCalledWith(expect.anything(), 7, 'fresh-run'));
-  await waitFor(() => expect(screen.getByRole('group', { name: '7 days' })).not.toHaveClass('rec-col--unavailable'));
+  await waitFor(() => expect(screen.getByRole('group', { name: '7 days' })).not.toHaveClass('rec-row--unavailable'));
   expect(screen.queryByText('Price estimate unavailable')).not.toBeInTheDocument();
 });
 
