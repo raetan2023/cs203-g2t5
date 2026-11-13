@@ -28,7 +28,9 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
   const upcoming = !!forecast && forecast.target_date > plan.scenario_as_of_date;
   const referenceOnly = guidance?.action === 'BUY_NOW' && analysis.reference.status === 'ready'
     && analysis.cost_impact.status === 'unavailable' && analysis.cost_impact.reason === 'unsupported_horizon';
-  const valid = plan.status === 'draft' && !!planService.submit && analysis.source === 'api' && analysis.provenance === 'model'
+  // Monitor means "not yet": it can't be submitted, and the plan stays a draft.
+  const monitoring = guidance?.action === 'MONITOR';
+  const valid = !monitoring && plan.status === 'draft' && !!planService.submit && analysis.source === 'api' && analysis.provenance === 'model'
     && !!guidance && !!forecast?.run_id && upcoming && (analysis.cost_impact.status === 'ready' || referenceOnly)
     && !!analysis.approval_fingerprint?.match(/^[a-f0-9]{64}$/);
 
@@ -58,7 +60,8 @@ export function RecommendationApproval({ analysis, plan, horizon, planService, o
       {refresh}
     </div>}
     {error && <p role="alert">{error} Nothing was submitted. Refresh the page if the plan or forecast changed.</p>}
-    {!upcoming ? <p className="rec-approval-note">An updated {horizon}-day forecast is required before submitting.</p>
+    {monitoring ? <p className="rec-approval-note">Monitoring, check again tomorrow. A Monitor recommendation can’t be submitted for approval.</p>
+      : !upcoming ? <p className="rec-approval-note">An updated {horizon}-day forecast is required before submitting.</p>
       : !valid ? <p className="rec-approval-note">A saved draft and a current priced recommendation are required.</p>
       : referenceOnly ? <p className="rec-approval-note">Uses the observed reference price for buying now. No supported forecast cost is available within the deadline.</p>
       : null}

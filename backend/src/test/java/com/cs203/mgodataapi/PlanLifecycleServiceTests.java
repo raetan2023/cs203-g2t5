@@ -80,7 +80,7 @@ class PlanLifecycleServiceTests {
         return approvals.decide(id, "org_a", manager, "user_manager", "Manager", new PlanDecisionRequest(outcome, "Budget reviewed", fingerprint));
     }
     PlanLifecycleService.PurchaseRequest purchase() {
-        return new PlanLifecycleService.PurchaseRequest(today, "  Supplier A  ", new BigDecimal("5.25"), new BigDecimal("900.12"), "  Invoice 123  ");
+        return new PlanLifecycleService.PurchaseRequest(today, "  Supplier A  ", new BigDecimal("900.12"), "  Invoice 123  ");
     }
     void status(String state) { jdbc.update("UPDATE purchase_plans SET status=? WHERE plan_id=?", state, id); }
     void error(int status, org.junit.jupiter.api.function.Executable action) {
@@ -218,13 +218,15 @@ class PlanLifecycleServiceTests {
         assertEquals("purchased", saved.status());
         var actual = lifecycle.purchase(id, "org_a");
         assertEquals("Supplier A", actual.get("supplier")); assertEquals("Invoice 123", actual.get("note"));
-        assertEquals(0, new BigDecimal("4725.6300").compareTo((BigDecimal) actual.get("total_usd")));
+        // The quantity comes from the approved plan (10 MT), not the request.
+        assertEquals(0, BigDecimal.TEN.compareTo((BigDecimal) actual.get("quantity_mt")));
+        assertEquals(0, new BigDecimal("9001.2").compareTo((BigDecimal) actual.get("total_usd")));
         assertNull(lifecycle.purchase(id, "org_b"));
         var comparison = lifecycle.comparison(saved, "org_a", actual);
-        assertEquals(false, comparison.get("same_quantity"));
+        assertEquals(true, comparison.get("same_quantity"));
         assertEquals(new BigDecimal("10000"), comparison.get("reference_total"));
-        assertEquals(0, new BigDecimal("5250").compareTo((BigDecimal) comparison.get("reference_total_for_actual_quantity")));
-        assertEquals(0, new BigDecimal("-524.37").compareTo((BigDecimal) comparison.get("actual_minus_adjusted_reference")));
+        assertEquals(0, new BigDecimal("10000").compareTo((BigDecimal) comparison.get("reference_total_for_actual_quantity")));
+        assertEquals(0, new BigDecimal("-998.8").compareTo((BigDecimal) comparison.get("actual_minus_adjusted_reference")));
         error(409, () -> lifecycle.recordPurchase(id, buyer, "org_a", purchase()));
         error(409, () -> lifecycle.revise(id, buyer, "org_a"));
         assertFalse(plans.delete(id, buyer, "org_a"));
@@ -234,13 +236,13 @@ class PlanLifecycleServiceTests {
     @Test void invalidPurchaseFieldsAndSingaporeApprovalDateAreValidated() {
         decide("approved");
         // Approval was on 29 Oct SGT although UTC was still 28 Oct.
-        var request = new PlanLifecycleService.PurchaseRequest(today.minusDays(1), " ", BigDecimal.ZERO, new BigDecimal("-1"), "x".repeat(2001));
+        var request = new PlanLifecycleService.PurchaseRequest(today.minusDays(1), " ", new BigDecimal("-1"), "x".repeat(2001));
         var error = assertThrows(ApiException.class, () -> lifecycle.recordPurchase(id, buyer, "org_a", request));
-        assertEquals(422, error.status().value()); assertEquals(5, error.fieldErrors().size());
+        assertEquals(422, error.status().value()); assertEquals(4, error.fieldErrors().size());
         error(422, () -> lifecycle.recordPurchase(id, buyer, "org_a", null));
-        error(422, () -> lifecycle.recordPurchase(id, buyer, "org_a", new PlanLifecycleService.PurchaseRequest(today.plusDays(1), "A", BigDecimal.ONE, BigDecimal.ONE, null)));
-        error(422, () -> lifecycle.recordPurchase(id, buyer, "org_a", new PlanLifecycleService.PurchaseRequest(today, "A", new BigDecimal("0.0000001"), BigDecimal.ONE, null)));
-        error(422, () -> lifecycle.recordPurchase(id, buyer, "org_a", new PlanLifecycleService.PurchaseRequest(today, "A", BigDecimal.ONE, new BigDecimal("1e1000"), null)));
+        error(422, () -> lifecycle.recordPurchase(id, buyer, "org_a", new PlanLifecycleService.PurchaseRequest(today.plusDays(1), "A", BigDecimal.ONE, null)));
+        error(422, () -> lifecycle.recordPurchase(id, buyer, "org_a", new PlanLifecycleService.PurchaseRequest(today, "A", new BigDecimal("0.0000001"), null)));
+        error(422, () -> lifecycle.recordPurchase(id, buyer, "org_a", new PlanLifecycleService.PurchaseRequest(today, "A", new BigDecimal("1e1000"), null)));
         assertNull(lifecycle.purchase(id, "org_a"));
         assertEquals("approved", plans.findByIdAndUser(id, buyer, "org_a").orElseThrow().status());
     }

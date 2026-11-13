@@ -106,6 +106,14 @@ it('never submits a forecast whose target date has passed', () => {
   expect(submitButton()).toBeDisabled();
 });
 
+it('never submits a Monitor recommendation: check again tomorrow', () => {
+  const monitor = analysis(14);
+  monitor.recommendation = { status: 'ready', value: { recommendation_id: 'plan-rec', action: 'MONITOR', explanation: 'Monitor prices.' } };
+  render(<RecommendationApproval analysis={monitor} plan={draft} horizon={14} planService={service()} onSubmitted={vi.fn()} />);
+  expect(screen.getByText(/Monitoring, check again tomorrow/)).toBeVisible();
+  expect(submitButton()).toBeDisabled();
+});
+
 it('never submits illustrative results', () => {
   render(<RecommendationApproval analysis={{ ...analysis(), source: 'mock', provenance: 'fixture' }} plan={draft} horizon={14} planService={service()} onSubmitted={vi.fn()} />);
   expect(submitButton()).toBeDisabled();
