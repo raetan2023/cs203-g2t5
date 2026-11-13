@@ -154,7 +154,7 @@ class ForecastServiceTests {
         @SuppressWarnings("unchecked") var guidance = (Result<Guidance>) response.get("recommendation");
         assertEquals("BUY_NOW", guidance.value().action());
         assertFalse(guidance.value().explanation().contains("70,000 to 82,000"));
-        assertTrue(guidance.value().evidence().limitations().stream().anyMatch(s -> s.contains("No available forecast fits")));
+        assertTrue(guidance.value().evidence().limitations().stream().anyMatch(s -> s.contains("Forecasts are not compared for deadlines 7 days away or less")));
         assertEquals("unavailable", ((Result<?>) analysis.read(context, true, 7, run).get("cost_impact")).status());
         assertEquals(HttpStatus.CONFLICT, assertThrows(ApiException.class,
                 () -> analysis.read(context, false, 7, UUID.randomUUID())).status());

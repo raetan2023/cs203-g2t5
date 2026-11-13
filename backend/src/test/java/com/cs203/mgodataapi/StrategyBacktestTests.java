@@ -15,8 +15,9 @@ class StrategyBacktestTests {
                 Result.ready(new Forecast(new Range(new BigDecimal(low), new BigDecimal(high)), origin.plusDays(7), basis,
                         "experimental", "7 days", new BigDecimal("690"))));
     }
+    // Deadline 8 days out: with 7 or fewer the policy buys now without looking at forecasts.
     PlanAnalysisService.Context context() {
-        return new PlanAnalysisService.Context(new UUID(0, 1), new BigDecimal("100"), origin.plusDays(7), origin);
+        return new PlanAnalysisService.Context(new UUID(0, 1), new BigDecimal("100"), origin.plusDays(8), origin);
     }
     @Test void lossIsReportedUsingActualExecutionRatherThanForecast() {
         var result = StrategyBacktest.replay(context(), List.of(forecast("680", "700")),
@@ -38,7 +39,7 @@ class StrategyBacktestTests {
     }
     @Test void quantityScalesCostsButNotSavingsPerMt() {
         var observations = Map.of(origin, new BigDecimal("720"), origin.plusDays(7), new BigDecimal("650"));
-        var small = new PlanAnalysisService.Context(new UUID(0, 1), BigDecimal.ONE, origin.plusDays(7), origin);
+        var small = new PlanAnalysisService.Context(new UUID(0, 1), BigDecimal.ONE, origin.plusDays(8), origin);
         var result = StrategyBacktest.replay(small, List.of(forecast("680", "700")), observations);
         assertEquals(new BigDecimal("70"), result.savedPerMt());
         assertEquals(new BigDecimal("650"), result.strategy());
