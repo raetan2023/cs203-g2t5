@@ -108,13 +108,31 @@ class RecommendationPolicyTests {
         assertThrows(ApiException.class, () -> RecommendationPolicy.evaluate(new PlanAnalysisService.Context(UUID.randomUUID(), BigDecimal.ZERO, date, date), null));
     }
 
-    @Test void staleReferenceCannotRecommendBuyingWhenNoForecastFits() {
+    @Test void aStaleReferenceStillGivesBuyNowWithSevenDaysOrLessLeft() {
         var p = prices(14, "695");
         var stale = new Prices(date, Result.ready(new Reference(new BigDecimal("720"), date.minusDays(11), basis)), p.forecast());
         var result = RecommendationPolicy.evaluate(context(3), stale);
-        assertEquals("MONITOR", result.action());
-        assertNull(result.evidence().supported_target_date());
-        assertNull(result.evidence().alternative_cost_usd());
+        assertEquals("BUY_NOW", result.action());
+        assertEquals(date, result.evidence().supported_target_date());
+        assertEquals(0, result.evidence().alternative_minus_now_usd().signum());
+        assertTrue(result.evidence().limitations().stream().anyMatch(s -> s.contains("11 days old")));
+        // With more than 7 days left the stale reference still means Monitor.
+        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(8), stale).action());
+    }
+
+    @Test void sevenDaysOrLessIgnoresForecastsAndNeverMonitors() {
+        // At exactly 7 days a cheaper 7-day forecast used to give Buy on Date X; a wide range used to give Monitor.
+        var cheaper = RecommendationPolicy.evaluate(context(7), prices(7, "600"));
+        assertEquals("BUY_NOW", cheaper.action());
+        assertNull(cheaper.evidence().signal_price());
+        assertTrue(cheaper.evidence().signal_inputs().isEmpty());
+        var original = prices(7, "695");
+        var wide = new Prices(date, original.reference(), Result.ready(new Forecast(new Range(new BigDecimal("600"), new BigDecimal("800")), date.plusDays(7), basis, "Wide", "7 days", new BigDecimal("695"))));
+        assertEquals("BUY_NOW", RecommendationPolicy.evaluate(context(7), wide).action());
+        assertEquals("WAIT", RecommendationPolicy.evaluate(context(8), prices(7, "600")).action());
+        // The deadline-passed and missing-reference checks still come first.
+        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(-1), prices(7, "600")).action());
+        assertEquals("MONITOR", RecommendationPolicy.evaluate(context(3), null).action());
     }
 
     @Test void newsAwareCentralEstimatesDriveTimingDespiteOldReferenceAndWideRanges() {

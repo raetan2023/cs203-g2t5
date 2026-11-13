@@ -24,6 +24,8 @@ class PlanApprovalServiceTests {
     PlanApprovalRequest choice;
     final UUID run = UUID.randomUUID();
     final java.util.concurrent.atomic.AtomicReference<BigDecimal> central = new java.util.concurrent.atomic.AtomicReference<>(new BigDecimal("1001"));
+    // Lower bound above the 1000 reference: a plain Buy Now. Lowering it below 1000 makes the range overlap, giving Monitor.
+    final java.util.concurrent.atomic.AtomicReference<BigDecimal> lower = new java.util.concurrent.atomic.AtomicReference<>(new BigDecimal("1000.5"));
     final java.util.concurrent.atomic.AtomicInteger targetOffset = new java.util.concurrent.atomic.AtomicInteger();
     final UUID owner = UUID.randomUUID(), id = UUID.randomUUID(), manager = UUID.randomUUID();
     final Instant now = Instant.parse("2026-10-27T08:00:00Z");
@@ -56,7 +58,7 @@ class PlanApprovalServiceTests {
             public Prices prices(LocalDate date, int horizon) {
                 var basis = new Basis("Singapore MGO", "USD", "MT");
                 return new Prices(date, Result.ready(new Reference(new BigDecimal("1000"), date, basis)),
-                    Result.ready(new Forecast(new Range(new BigDecimal("950"), new BigDecimal("1050")), date.plusDays(horizon + targetOffset.get()), basis,
+                    Result.ready(new Forecast(new Range(lower.get(), new BigDecimal("1050")), date.plusDays(horizon + targetOffset.get()), basis,
                         "Experimental range", horizon + " calendar days", central.get(), run, "ridge-test")));
             }
             public Recommendation recommendation(PlanAnalysisService.Context context) { throw new UnsupportedOperationException(); }
@@ -126,6 +128,17 @@ class PlanApprovalServiceTests {
         assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM plan_approval_notifications", Integer.class));
         respond(choice, run, "accept", now.plusSeconds(4));
         assertEquals("submitted", submit(id, owner, "org_a").status());
+    }
+
+    @Test void anAcceptedMonitorRecommendationCannotBeSubmitted() {
+        lower.set(new BigDecimal("950"));
+        choice = selection(7, "NORMAL");
+        respond(choice, run, "accept", now.plusSeconds(1));
+        var blocked = assertThrows(ApiException.class, () -> submit(id, owner, "org_a"));
+        assertEquals(422, blocked.status().value());
+        assertEquals(PlanApprovalService.MONITOR_BLOCKED, blocked.getMessage());
+        assertEquals("draft", plans.findByIdAndUser(id, owner, "org_a").orElseThrow().status());
+        assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM plan_approval_notifications", Integer.class));
     }
 
     @Test void ownedValidDraftCreatesOneDurableOrganisationNotification() {
