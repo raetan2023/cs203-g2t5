@@ -13,6 +13,19 @@ class OperationalDateTests {
         assertEquals("2026-10-27", new ConfigController(after).config().get("scenario_as_of_date"));
     }
 
+    /** Spring must build it from the application Clock, so the fixture profile's fixed date reaches plan dates. */
+    @Test void springUsesTheApplicationClock() {
+        var context = new org.springframework.context.annotation.AnnotationConfigApplicationContext();
+        context.registerBean(Clock.class, () -> Clock.fixed(Instant.parse("2025-10-23T16:00:00Z"), ZoneOffset.UTC));
+        context.register(OperationalDate.class);
+        context.refresh();
+        try {
+            assertEquals(LocalDate.of(2025, 10, 24), context.getBean(OperationalDate.class).today());
+        } finally {
+            context.close();
+        }
+    }
+
     @Test void readsClockEveryTimeRatherThanFreezingAtConstruction() {
         var clock = org.mockito.Mockito.mock(Clock.class);
         org.mockito.Mockito.when(clock.instant()).thenReturn(

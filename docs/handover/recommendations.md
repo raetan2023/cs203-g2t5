@@ -60,7 +60,6 @@ plans. Real signed-in buyer/manager verification remains.
 There are no mockups for the after-the-decision screens yet. Match the pages already shipped:
 
 - **Revamp mockup:** [`docs/ui-revamp/assets/inspo/recommendations-page/`](../ui-revamp/assets/inspo/recommendations-page/), with the Claude Design exports of the reworked page (`Option A`, `A2`). It sets the request page layout: answer card, sticky side rail, fine print. For the plan cards and list, use `docs/ui-revamp/assets/inspo/purchase-plans-page/image.png`.
-- **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `Purchase recommendation · *.png` (loading, couldn't load, unavailable, updating), `recommendation*.png`.
 - **What's built now:** run the preview (see [Start here](../handover.md#test-and-preview)).
 - **Patterns to reuse:**
   - forms: `PurchasePlanForm.tsx`

@@ -45,7 +45,6 @@ Name "Bunker Buddy" is the current name. Nothing is confirmed as binding: the ap
 ## Evidence on Hand
 
 - Product requirements: docs/PRD.md; database design and sprint contracts under docs/.
-- State mockups: docs/ui-mockups/*.png (state checklist).
 - Wireframe login prototype: frontend/src/prototypes/wireframe/.
 - No real customer testimonials, benchmarks or validated model performance exist. Synthetic preview/fixture outputs are labelled as such and must not be presented as real model results.
 

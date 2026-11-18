@@ -267,6 +267,43 @@ class MgoDataApiApplicationTests {
                 .andExpect(jsonPath("$.field_errors.quantity_mt").value("Quantity must be greater than zero."));
     }
 
+    /** A plan quantity must fit purchase_records.quantity_mt, or the approved plan could never be recorded. */
+    @Test
+    void rejectsAQuantityThePurchaseRecordCannotStore() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(users.resolve("user_2abc", null)).thenReturn(userId);
+        for (String quantity : new String[]{"100.1234567", "1000000000000"}) {
+            mvc.perform(post("/api/v1/purchase-plans")
+                            .with(jwt().jwt(token -> token.subject("user_2abc").claim("o", java.util.Map.of("id", "org_a", "rol", "officer"))))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"quantity_mt\": " + quantity + ", \"purchase_deadline\": \"2025-11-15\"}"))
+                    .andExpect(status().isUnprocessableContent())
+                    .andExpect(jsonPath("$.field_errors.quantity_mt").value("Enter a quantity with at most 6 decimal places and 12 whole digits."));
+        }
+        verify(plans, org.mockito.Mockito.never()).insert(any(), any(), any(), any(), any());
+
+        when(plans.findByUser(userId, "org_a")).thenReturn(List.of());
+        when(plans.insert(any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("org_a"))).thenReturn(new PurchasePlan(
+                UUID.randomUUID(), userId, new BigDecimal("999999999999.123456"),
+                LocalDate.parse("2025-11-15"), LocalDate.parse("2025-10-24")));
+        mvc.perform(post("/api/v1/purchase-plans")
+                        .with(jwt().jwt(token -> token.subject("user_2abc").claim("o", java.util.Map.of("id", "org_a", "rol", "officer"))))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"quantity_mt\": 999999999999.123456, \"purchase_deadline\": \"2025-11-15\"}"))
+                .andExpect(status().isCreated());
+    }
+
+    /** A missing query parameter gets the API's error shape, like any other bad parameter. */
+    @Test
+    void missingQueryParameterUsesTheApiErrorShape() throws Exception {
+        mvc.perform(get("/api/v1/purchase-plans/recommendation")
+                        .param("plan_id", UUID.randomUUID().toString())
+                        .param("purchase_deadline", "2025-11-15").param("scenario_as_of_date", "2025-10-24")
+                        .with(jwt().jwt(token -> token.subject("user_2abc").claim("o", java.util.Map.of("id", "org_a", "rol", "officer")))))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.detail").value("Invalid query parameter. See /docs for allowed values."));
+    }
+
     @Test
     void configReportsTheScenarioDate() throws Exception {
         mvc.perform(get("/api/v1/config").header("X-API-Key", KEY))

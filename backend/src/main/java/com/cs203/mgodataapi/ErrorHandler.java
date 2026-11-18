@@ -11,7 +11,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-/** Renders every error as {"detail": ..., "field_errors": {...}}, the shape agreed with the frontend. */
+/**
+ * Renders request errors as {"detail": ..., "field_errors": {...}}, the shape agreed with the
+ * frontend. Unexpected server errors (500) still use Spring's default error body.
+ */
 @RestControllerAdvice
 public class ErrorHandler {
 
@@ -33,7 +36,8 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler({HandlerMethodValidationException.class, ConstraintViolationException.class,
-            MethodArgumentTypeMismatchException.class})
+            MethodArgumentTypeMismatchException.class,
+            org.springframework.web.bind.MissingServletRequestParameterException.class})
     public ResponseEntity<Map<String, String>> invalid() {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .cacheControl(org.springframework.http.CacheControl.noStore())

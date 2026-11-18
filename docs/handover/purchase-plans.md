@@ -40,7 +40,6 @@ Open/Finished filters, lifecycle adapters and previews are implemented on `backe
 ## Design inspiration
 
 - **Revamp mockup:** [`docs/ui-revamp/assets/inspo/purchase-plans-page/image.png`](../ui-revamp/assets/inspo/purchase-plans-page/image.png). It was built without the dashed "Create plan" card and without a progress bar.
-- **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `purchase-plan*.png`, `purchase-plans-*.png` and `Purchase plans · Desktop overview.png`: every state, including saving, save failed, editing, deleting and delete failed.
 - **What's built now:** run the preview (see [Start here](../handover.md#test-and-preview)).
 - **Patterns to reuse** (all in `features/purchase-plan/components/`):
   - cards, summary strip and sort: `PurchasePlanSummary.tsx`

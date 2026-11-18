@@ -30,7 +30,8 @@ import java.util.List;
 /**
  * Service orchestrating market data aggregation for Anjali's historical market dashboard.
  * Supports querying database records (MARKET_SERIES, MARKET_OBSERVATIONS, MARKET_INDICATORS),
- * fetching live data from external API, and serving clearly labelled mock historical data.
+ * and otherwise fetching live data from the external API. When neither has data the
+ * response has no tickers and the controller answers 204 No Content.
  */
 @Service
 public class MarketDashboardService {
@@ -75,12 +76,13 @@ public class MarketDashboardService {
             }
         }
 
-        // 2. Attempt live external data hub
+        // 2. Attempt live external data hub. With no data the controller answers 204,
+        // so made-up prices are never presented as market data.
         try {
             return fetchFromExternalApi(date);
         } catch (Exception e) {
-            log.error("Failed to fetch live market data from {}. Using fallback mock fixtures. Error: {}", API_BASE, e.getMessage());
-            return buildFallbackResponse(date);
+            log.error("Failed to fetch live market data from {}. Error: {}", API_BASE, e.getMessage());
+            return new DashboardResponse(date, List.of(), List.of(), List.of());
         }
     }
 
@@ -156,6 +158,9 @@ public class MarketDashboardService {
         BigDecimal prevMgo = latestMgo;
         LocalDate latestDate = scenarioDate != null ? scenarioDate : LocalDate.of(2025, 10, 24);
 
+        if (!hasData(mgoRoot)) {
+            throw new IllegalStateException("No Singapore MGO data was returned.");
+        }
         if (mgoRoot != null && mgoRoot.has("data") && mgoRoot.get("data").isArray()) {
             JsonNode dataArray = mgoRoot.get("data");
             for (int i = 0; i < dataArray.size(); i++) {
@@ -225,13 +230,18 @@ public class MarketDashboardService {
         BigDecimal gasoilVal = latestMgo.divide(gasoilConversionFactor, 2, RoundingMode.HALF_UP);
         BigDecimal gasoilChangeAbs = mgoChangeAbs.divide(gasoilConversionFactor, 2, RoundingMode.HALF_UP);
 
-        // Build 4 Ticker cards
-        List<MarketTickerDTO> tickers = List.of(
+        // Build ticker cards. The gasoil card is computed from MGO, and a series whose
+        // fetch failed is left out rather than shown with placeholder values.
+        List<MarketTickerDTO> tickers = new ArrayList<>(List.of(
             new MarketTickerDTO("SGP_MGO_DERIVED", "Singapore MGO (derived est.)", "USD/MT", "USD", "Derived via Singapore Gasoil Proxy", "ESTIMATED", latestMgo, mgoChangeAbs, mgoChangePct, latestDate),
-            new MarketTickerDTO("SGP_GASOIL_FUT", "Singapore Gasoil futures", "USD/bbl", "USD", "SGX SG Gasoil (GSD)", "OBSERVED", gasoilVal, gasoilChangeAbs, mgoChangePct, latestDate),
-            new MarketTickerDTO("BRENT_CRUDE", "Brent crude", "USD/bbl", "USD", "ICE Brent Crude", "OBSERVED", latestBrent, brentChangeAbs, brentChangePct, brentDate),
-            new MarketTickerDTO("USD_INDEX", "USD index", null, null, "ICE DXY", "OBSERVED", latestUsd, usdChangeAbs, usdChangePct, usdDate)
-        );
+            new MarketTickerDTO("SGP_GASOIL_FUT", "Singapore Gasoil futures", "USD/bbl", "USD", "Derived from Singapore MGO", "ESTIMATED", gasoilVal, gasoilChangeAbs, mgoChangePct, latestDate)
+        ));
+        if (hasData(brentRoot)) {
+            tickers.add(new MarketTickerDTO("BRENT_CRUDE", "Brent crude", "USD/bbl", "USD", "ICE Brent Crude", "OBSERVED", latestBrent, brentChangeAbs, brentChangePct, brentDate));
+        }
+        if (hasData(usdRoot)) {
+            tickers.add(new MarketTickerDTO("USD_INDEX", "USD index", null, null, "ICE DXY", "OBSERVED", latestUsd, usdChangeAbs, usdChangePct, usdDate));
+        }
 
         // Parse Indicators
         BigDecimal volVal = BigDecimal.valueOf(24.1);
@@ -255,6 +265,10 @@ public class MarketDashboardService {
         return new DashboardResponse(latestDate, tickers, chartSeries, indicators);
     }
 
+    private static boolean hasData(JsonNode root) {
+        return root != null && root.has("data") && root.get("data").isArray() && !root.get("data").isEmpty();
+    }
+
     private JsonNode fetchJson(String url) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -271,34 +285,5 @@ public class MarketDashboardService {
             log.warn("Could not retrieve {}: {}", url, e.getMessage());
         }
         return null;
-    }
-
-    private DashboardResponse buildFallbackResponse(LocalDate scenarioDate) {
-        LocalDate date = scenarioDate != null ? scenarioDate : LocalDate.of(2025, 10, 24);
-        List<MarketTickerDTO> tickers = List.of(
-            new MarketTickerDTO("SGP_MGO_DERIVED", "Singapore MGO (derived est.)", "USD/MT", "USD", "Derived via Singapore Gasoil Proxy", "ESTIMATED", BigDecimal.valueOf(614.50), BigDecimal.valueOf(4.20), BigDecimal.valueOf(0.69), date),
-            new MarketTickerDTO("SGP_GASOIL_FUT", "Singapore Gasoil futures", "USD/bbl", "USD", "SGX SG Gasoil (GSD)", "OBSERVED", BigDecimal.valueOf(84.10), BigDecimal.valueOf(0.85), BigDecimal.valueOf(1.02), date),
-            new MarketTickerDTO("BRENT_CRUDE", "Brent crude", "USD/bbl", "USD", "ICE Brent Crude", "OBSERVED", BigDecimal.valueOf(78.45), BigDecimal.valueOf(-1.20), BigDecimal.valueOf(-1.51), date),
-            new MarketTickerDTO("USD_INDEX", "USD index", null, null, "ICE DXY", "OBSERVED", BigDecimal.valueOf(104.25), BigDecimal.valueOf(0.12), BigDecimal.valueOf(0.12), date)
-        );
-
-        List<ChartPointDTO> chartSeries = List.of(
-            new ChartPointDTO(date.minusDays(23), BigDecimal.valueOf(582.00), "SGP_MGO_DERIVED"),
-            new ChartPointDTO(date.minusDays(19), BigDecimal.valueOf(587.50), "SGP_MGO_DERIVED"),
-            new ChartPointDTO(date.minusDays(14), BigDecimal.valueOf(591.00), "SGP_MGO_DERIVED"),
-            new ChartPointDTO(date.minusDays(9), BigDecimal.valueOf(598.00), "SGP_MGO_DERIVED"),
-            new ChartPointDTO(date.minusDays(6), BigDecimal.valueOf(601.00), "SGP_MGO_DERIVED"),
-            new ChartPointDTO(date.minusDays(3), BigDecimal.valueOf(607.00), "SGP_MGO_DERIVED"),
-            new ChartPointDTO(date, BigDecimal.valueOf(614.50), "SGP_MGO_DERIVED")
-        );
-
-        List<IndicatorDTO> indicators = List.of(
-            new IndicatorDTO("Brent-Dubai Spread", "Platts / S&P", date, BigDecimal.valueOf(1.82), "/bbl"),
-            new IndicatorDTO("Gasoil 10ppm Crack", "SGX Exchange", date, BigDecimal.valueOf(18.45), "/bbl"),
-            new IndicatorDTO("MGO Implied Volatility", "Internal Estimate", date.minusDays(1), BigDecimal.valueOf(24.1), "%"),
-            new IndicatorDTO("SG Bunker Sales Vol", "MPA Singapore", LocalDate.of(2025, 9, 1), BigDecimal.valueOf(4210000), "MT")
-        );
-
-        return new DashboardResponse(date, tickers, chartSeries, indicators);
     }
 }
