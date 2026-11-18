@@ -68,6 +68,7 @@ Install:
 1. [Git](https://git-scm.com/download/mac)
 2. [Node.js](https://nodejs.org/) version 22.12 or newer
 3. [Java JDK](https://adoptium.net/) version 21
+4. [Python](https://www.python.org/downloads/macos/) version 3.12, the version the deployed forecast model uses
 
 
 Check the installations in Terminal:
@@ -77,7 +78,19 @@ git --version
 node --version
 npm --version
 java --version
+python3 --version
 ```
+
+## Install the forecast model runtime (once)
+
+Both the launcher and the manual steps need this. From the repository root, run:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r ridge-regression-model/requirements-lock.txt
+```
+
+The backend automatically uses `.venv/bin/python`. Without this step, `run.command` stops with an install message, and a manual start serves the site without purchase-plan forecasts.
 
 ## Start both services with one file (recommended)
 
@@ -192,6 +205,7 @@ Install:
 1. [Git for Windows](https://git-scm.com/download/win)
 2. [Node.js](https://nodejs.org/) version 22.12 or newer
 3. [Java JDK](https://adoptium.net/) version 21
+4. [Python](https://www.python.org/downloads/windows/) version 3.12, the version the deployed forecast model uses
 
 You do not need to install Maven because the project includes the Maven wrapper.
 
@@ -202,7 +216,19 @@ git --version
 node --version
 npm --version
 java --version
+python --version
 ```
+
+## Step 0: Install the forecast model runtime (once)
+
+From the repository root in PowerShell, run:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r ridge-regression-model/requirements-lock.txt
+```
+
+The backend automatically uses `.venv\Scripts\python.exe` when it runs on Windows. Without this step, the site still starts, but purchase-plan forecasts will not load.
 
 ## Step 1: Start the backend
 
@@ -235,11 +261,13 @@ Open a second PowerShell window in the project folder, then run:
 ```powershell
 cd frontend
 npm install
+Copy-Item .env.example .env.local
+notepad .env.local
 ```
 
-edit .env.example the file to:
+Replace the contents of `.env.local` with the following, then save and close Notepad:
 
-```env.
+```env
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_YOUR_TEAM_KEY
 VITE_API_URL=http://127.0.0.1:8000
 VITE_API_KEY=mgo_public_demo_2026
