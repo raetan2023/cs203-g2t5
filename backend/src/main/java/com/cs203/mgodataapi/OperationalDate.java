@@ -12,10 +12,10 @@ public class OperationalDate {
     private static final ZoneId SINGAPORE = ZoneId.of("Asia/Singapore");
     private final Clock clock;
 
+    // Uses the application Clock bean, so the fixed scenario date under the test and
+    // analysis-fixture profiles applies to plan dates as well as forecasts.
     @Autowired
-    public OperationalDate() { this(Clock.systemUTC()); }
-
-    OperationalDate(Clock clock) { this.clock = clock; }
+    public OperationalDate(Clock clock) { this.clock = clock; }
 
     public LocalDate today() { return LocalDate.ofInstant(clock.instant(), SINGAPORE); }
 }
