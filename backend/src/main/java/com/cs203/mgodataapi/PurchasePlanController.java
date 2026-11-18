@@ -190,6 +190,12 @@ public class PurchasePlanController {
             errors.put("quantity_mt", "Quantity is required.");
         } else if (request.quantityMt().compareTo(BigDecimal.ZERO) <= 0) {
             errors.put("quantity_mt", "Quantity must be greater than zero.");
+        } else {
+            // Same limits as purchase_records.quantity_mt, so an approved plan can always be recorded.
+            var quantity = request.quantityMt().stripTrailingZeros();
+            if (quantity.scale() > 6 || quantity.precision() - quantity.scale() > 12) {
+                errors.put("quantity_mt", "Enter a quantity with at most 6 decimal places and 12 whole digits.");
+            }
         }
         if (request == null || request.purchaseDeadline() == null) {
             errors.put("purchase_deadline", "Purchase deadline is required.");
