@@ -71,7 +71,6 @@ Everything is in [`docs/ui-revamp/market-proposal/`](../ui-revamp/market-proposa
 - **Revamp mockup:** [`docs/ui-revamp/assets/inspo/mkt-dashboard-page/`](../ui-revamp/assets/inspo/mkt-dashboard-page/)
   - `Market overview (redesign)-html/Market.dc.html`: the Claude Design export the spec's layout comes from. Its data is hard-coded, and `PARITY.md` lists where the spec departs from it.
   - `image.png`: a third-party finance dashboard, for mood only (dark cards, large figures). None of its content applies.
-- **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `market-dashboard.png`, `market-dashboard-loading.png`, `market-dashboard-failed.png`.
 - **Screenshots before the revamp:** none are committed. Open `/market-dashboard` on the running app.
 - **What's built now:** the spec itself, [`market-proposal.html`](../ui-revamp/market-proposal/market-proposal.html).
 - **Patterns to reuse:**

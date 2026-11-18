@@ -30,7 +30,6 @@ Nothing is required. If someone picks up the optional "sail on success":
 - **Revamp mockup:** [`docs/ui-revamp/assets/inspo/sign-in-page/`](../ui-revamp/assets/inspo/sign-in-page/)
   - `Sign in — source 2, video warmed to match-html/`: the design now live.
   - `sign-in-inspo.html` and `instr.txt`: the earlier night-ship scene and its animation brief.
-- **Original mockups:** [`docs/ui-mockups/`](../ui-mockups/) `login-screen.png`, `signup-screen.png`, `forgot-password.png`.
 - **What's built now:** run the preview (see [Start here](../handover.md#test-and-preview)).
 - **Patterns to reuse:**
   - the scene and its form reactions: `features/auth/ReactiveShip.tsx`, `useAuthFormSignals.ts`
