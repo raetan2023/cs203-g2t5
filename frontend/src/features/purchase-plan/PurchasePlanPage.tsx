@@ -91,11 +91,11 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setAnnouncement('');
     setNotice(null);
     focusAfterRender.current = null;
-    const cached = readRequest.current;
+    let cached = readRequest.current;
     if (!cached || cached.context !== context || cached.attempt !== attempt || cached.editPlanId !== editPlanId || cached.canEdit !== canEdit) {
-      readRequest.current = { context, attempt, editPlanId, canEdit, promise: service.list() };
+      cached = readRequest.current = { context, attempt, editPlanId, canEdit, promise: service.list() };
     }
-    readRequest.current.promise.then(({ plans }) => {
+    cached.promise.then(({ plans }) => {
       if (!current) return;
       const message = plans.map(scenarioError).find(Boolean);
       setPlans(plans);
