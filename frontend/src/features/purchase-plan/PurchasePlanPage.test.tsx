@@ -273,5 +273,15 @@ describe('opening a draft from edit_plan_id', () => {
     expect(await screen.findByText('600 MT')).toBeVisible();
     expect(screen.queryByText('500 MT')).not.toBeInTheDocument();
   });
+
+  it.each(['Save changes', 'Cancel'])('does not reopen the form on Refresh after %s', async button => {
+    window.history.replaceState(null, '', `/purchase-plans?edit_plan_id=${DEMO_PLAN.plan_id}`);
+    const user = setup(createMockPlanService({ delayMs: 0, initialPlan: { ...DEMO_PLAN, status: 'draft' } }));
+    await screen.findByLabelText('Quantity');
+    await user.click(screen.getByRole('button', { name: button }));
+    await user.click(await screen.findByRole('button', { name: 'Refresh plans' }));
+    expect(await screen.findByText('500 MT')).toBeVisible();
+    expect(screen.queryByLabelText('Quantity')).not.toBeInTheDocument();
+  });
 });
 

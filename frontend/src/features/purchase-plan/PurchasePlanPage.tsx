@@ -75,6 +75,7 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
   // Sharing this promise avoids consuming fail-once fixtures twice in StrictMode.
   // Keyed on every effect input: reusing it when edit_plan_id changes would restore a list from before the last save.
   const readRequest = useRef<{ context: typeof context; attempt: number; editPlanId: string | null; canEdit: boolean; promise: ReturnType<PurchasePlanService['list']> } | null>(null);
+  const openedEditPlanId = useRef<string | null>(null);
 
   function scenarioError(plan: PurchasePlan | null): string | null {
     return plan && plan.scenario_as_of_date !== scenarioDate
@@ -98,7 +99,9 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
       if (!current) return;
       const message = plans.map(scenarioError).find(Boolean);
       setPlans(plans);
-      const edit = canEdit && editPlanId ? plans.find(p => p.plan_id === editPlanId && (!p.status || p.status === 'draft')) : undefined;
+      // edit_plan_id opens its form once; a later Refresh after saving or cancelling must not reopen it.
+      const edit = canEdit && editPlanId && editPlanId !== openedEditPlanId.current ? plans.find(p => p.plan_id === editPlanId && (!p.status || p.status === 'draft')) : undefined;
+      if (edit) openedEditPlanId.current = editPlanId;
       setState(message ? { mode: 'error', message } : edit ? { mode: 'form', plan: edit } : { mode: 'view', plan: null });
     }).catch(error => {
       if (current) setState({ mode: 'error', message: requestError(error).detail });
