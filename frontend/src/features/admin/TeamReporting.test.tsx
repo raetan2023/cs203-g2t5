@@ -47,7 +47,7 @@ it('labels how many POs each manager has', async () => {
   render(<TeamReporting service={service({ load: vi.fn(async () => counted) })} />);
   const select = await screen.findByLabelText('po1@example.com');
   expect(within(select).getByRole('option', { name: 'pm1@example.com (2 POs)' })).toBeInTheDocument();
-  expect(within(select).getByRole('option', { name: 'pm2@example.com (0 PO)' })).toBeInTheDocument();
+  expect(within(select).getByRole('option', { name: 'pm2@example.com (0 POs)' })).toBeInTheDocument();
   expect(within(select).getByRole('option', { name: 'pm3@example.com (1 PO)' })).toBeInTheDocument();
 });
 
@@ -56,7 +56,7 @@ it('previews PO counts for unsaved picks and restores them on cancel', async () 
   const unassigned = await screen.findByLabelText('po2@example.com');
   const option = (name: string) => within(unassigned).getByRole('option', { name });
   expect(option('pm1@example.com (1 PO)')).toBeInTheDocument();
-  expect(option('pm2@example.com (0 PO)')).toBeInTheDocument();
+  expect(option('pm2@example.com (0 POs)')).toBeInTheDocument();
   await userEvent.selectOptions(unassigned, 'pm1');
   expect(option('pm1@example.com (2 POs)')).toBeInTheDocument();
   await userEvent.selectOptions(unassigned, 'pm2');
@@ -64,7 +64,7 @@ it('previews PO counts for unsaved picks and restores them on cancel', async () 
   expect(option('pm2@example.com (1 PO)')).toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(option('pm1@example.com (1 PO)')).toBeInTheDocument();
-  expect(option('pm2@example.com (0 PO)')).toBeInTheDocument();
+  expect(option('pm2@example.com (0 POs)')).toBeInTheDocument();
 });
 
 it('saves a chosen manager and shows the new assignment', async () => {
@@ -272,7 +272,7 @@ it('shows names, keeps the email under each officer, and adds the email only to 
   const select = await screen.findByRole('combobox');
   expect(screen.getByText('Rae Tan')).toBeVisible();
   expect(screen.getByText('rae@example.com')).toBeVisible();
-  expect(within(select).getByRole('option', { name: 'Alex Lim (alex1@example.com) (0 PO)' })).toBeInTheDocument();
-  expect(within(select).getByRole('option', { name: 'Alex Lim (alex2@example.com) (0 PO)' })).toBeInTheDocument();
-  expect(within(select).getByRole('option', { name: 'Yashwanth Annem (0 PO)' })).toBeInTheDocument();
+  expect(within(select).getByRole('option', { name: 'Alex Lim (alex1@example.com) (0 POs)' })).toBeInTheDocument();
+  expect(within(select).getByRole('option', { name: 'Alex Lim (alex2@example.com) (0 POs)' })).toBeInTheDocument();
+  expect(within(select).getByRole('option', { name: 'Yashwanth Annem (0 POs)' })).toBeInTheDocument();
 });

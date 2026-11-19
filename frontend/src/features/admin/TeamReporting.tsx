@@ -5,7 +5,7 @@ import { ManagerRefreshBar, useRefreshSweep } from '../purchase-plan/components/
 
 const AUTO_UPDATE_MS = 5000;
 const SUCCESS_MESSAGE_MS = 4000;
-const poCount = (count: number) => `${count} PO${count > 1 ? 's' : ''}`;
+const poCount = (count: number) => `${count} PO${count === 1 ? '' : 's'}`;
 
 export function TeamReporting({ service }: { service: TeamReportingService }) {
   const [overview, setLoadedOverview] = useState<ReportingOverview | null>(null);

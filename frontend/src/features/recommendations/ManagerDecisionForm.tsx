@@ -124,7 +124,7 @@ export function ManagerDecisionForm({ planId, fingerprint, service, onDecided, o
             <p className="md-cost-note">Forecast impact versus the saved reference; not realised savings.</p></>}
         </div>
         <dl className="md-facts"><div><dt>Procurement Officer</dt><dd>{buyerLabel ?? 'Plan owner unavailable'}</dd></div>
-          <div><dt>Buy by</dt><dd className={remaining !== undefined && remaining <= 2 ? 'md-deadline' : undefined}>{deadline ? formatDate(deadline) : 'Unavailable'}{remaining !== undefined && <span>{remaining < 0 ? `overdue by ${Math.abs(remaining)} days` : remaining === 0 ? 'today' : `in ${remaining} ${remaining === 1 ? 'day' : 'days'}`}</span>}</dd></div>
+          <div><dt>Buy by</dt><dd className={remaining !== undefined && remaining <= 2 ? 'md-deadline' : undefined}>{deadline ? formatDate(deadline) : 'Unavailable'}{remaining !== undefined && <span>{remaining < 0 ? `overdue by ${Math.abs(remaining)} ${remaining === -1 ? 'day' : 'days'}` : remaining === 0 ? 'today' : `in ${remaining} ${remaining === 1 ? 'day' : 'days'}`}</span>}</dd></div>
           <div><dt>Reference</dt><dd>{reference ? <>USD {reference.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/MT<span>Singapore MGO · {formatDate(reference.observation_date)}</span></> : 'Unavailable'}</dd></div>
         </dl>
         <button className="md-detail-link" disabled={busy} onClick={close}>View full recommendation →</button>
