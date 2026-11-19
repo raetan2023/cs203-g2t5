@@ -218,12 +218,23 @@ export function createApiPlanService(options: ApiOptions = {}): PurchasePlanServ
 export async function fetchScenarioDate(options: ApiOptions = {}): Promise<string> {
   const baseUrl = (options.baseUrl ?? env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/$/, '');
   const apiKey = options.apiKey ?? env.VITE_API_KEY ?? '';
-  const response = await fetch(`${baseUrl}/api/v1/config`, {
-    cache: 'no-store',
-    headers: { ...(apiKey && { 'X-API-Key': apiKey }) },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}/api/v1/config`, {
+      cache: 'no-store',
+      headers: { ...(apiKey && { 'X-API-Key': apiKey }) },
+    });
+  } catch {
+    // Backend not running or unreachable: say so instead of the browser's "Failed to fetch".
+    throw new PlanError('Could not load the scenario date.', {}, 0);
+  }
   if (!response.ok) throw new PlanError('Could not load the scenario date.', {}, response.status);
-  const payload = (await response.json()) as { scenario_as_of_date?: unknown } | null;
+  let payload: { scenario_as_of_date?: unknown } | null;
+  try {
+    payload = (await response.json()) as { scenario_as_of_date?: unknown } | null;
+  } catch {
+    payload = null;
+  }
   if (typeof payload?.scenario_as_of_date !== 'string' || !isValidDate(payload.scenario_as_of_date)) {
     throw new PlanError('The scenario date response was invalid. Please retry.', {}, 502);
   }
