@@ -4,7 +4,7 @@ CS203 Group 2 Team 5's historical Marine Gas Oil (MGO) purchase-planning project
 
 The app uses **React + TypeScript + Vite**, a **Java Spring Boot API**, **Clerk authentication**, and **Supabase-hosted PostgreSQL**. Python modelling experiments live separately in this repository.
 
-## Current functionality
+## Features
 
 - Clerk sign-in, signup, session handling and logout.
 - A historical market dashboard with prices, charts and indicators.
