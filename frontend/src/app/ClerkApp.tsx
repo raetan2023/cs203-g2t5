@@ -59,21 +59,25 @@ export function ClerkApp() {
       return;
     }
 
-    let current = true;
+    let current = true, membershipChanged = false;
     setScenario(previous => previous.state === 'ready' && previous.context === contextKey ? previous : { state: 'loading' });
     Promise.all([fetchScenarioDate(), fetchOrganisationAccess(() => getContextToken(true))])
       .then(([date, permissions]) => {
         if (!current) return;
         if (permissions.organisation_id !== orgId || permissions.role !== orgRole) {
+          membershipChanged = true;
           throw new Error('Your organisation membership changed. Refresh your session and retry.');
         }
         setScenario({ state: 'ready', date, context: contextKey, permissions });
       })
       .catch(error => {
-        if (current) setScenario({
+        if (!current) return;
+        const failed: Scenario = {
           state: 'error', context: contextKey,
           message: error instanceof Error ? error.message : 'Could not load the application configuration.',
-        });
+        };
+        // A failed background refresh (tab return, midnight) keeps the loaded app, so unsaved work is not unmounted.
+        setScenario(previous => !membershipChanged && previous.state === 'ready' && previous.context === contextKey ? previous : failed);
       });
     return () => { current = false; };
   }, [organisationReady, contextKey, scenarioAttempt]);
