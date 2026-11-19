@@ -73,7 +73,8 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     return () => { activeContext.current = null; };
   }, [context]);
   // Sharing this promise avoids consuming fail-once fixtures twice in StrictMode.
-  const readRequest = useRef<{ context: typeof context; attempt: number; promise: ReturnType<PurchasePlanService['list']> } | null>(null);
+  // Keyed on every effect input: reusing it when edit_plan_id changes would restore a list from before the last save.
+  const readRequest = useRef<{ context: typeof context; attempt: number; editPlanId: string | null; canEdit: boolean; promise: ReturnType<PurchasePlanService['list']> } | null>(null);
 
   function scenarioError(plan: PurchasePlan | null): string | null {
     return plan && plan.scenario_as_of_date !== scenarioDate
@@ -89,8 +90,9 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setAnnouncement('');
     setNotice(null);
     focusAfterRender.current = null;
-    if (!readRequest.current || readRequest.current.context !== context || readRequest.current.attempt !== attempt) {
-      readRequest.current = { context, attempt, promise: service.list() };
+    const cached = readRequest.current;
+    if (!cached || cached.context !== context || cached.attempt !== attempt || cached.editPlanId !== editPlanId || cached.canEdit !== canEdit) {
+      readRequest.current = { context, attempt, editPlanId, canEdit, promise: service.list() };
     }
     readRequest.current.promise.then(({ plans }) => {
       if (!current) return;
