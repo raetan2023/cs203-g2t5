@@ -4,6 +4,7 @@ import { StatusPage } from '../components/StatusPage';
 import { ClerkAuthPage } from '../features/auth/ClerkAuthPage';
 import type { AuthService, SessionUser } from '../features/auth/types';
 import { createApiPlanService, fetchScenarioDate } from '../features/purchase-plan/apiService';
+import { PlanError } from '../features/purchase-plan/types';
 import { App } from './App';
 import MarketDashboard from '../features/market-dashboard/MarketDashboard';
 import { createApiForecastService } from '../features/forecast/apiService';
@@ -112,13 +113,14 @@ export function ClerkApp() {
   }), [authState.signOut, sessionUser]);
 
   // Prevent an adapter from sending a request after its account/organisation context changed.
+  // PlanError so requestError() shows this message instead of its generic "Something went wrong".
   const getContextToken = useCallback(async (skipCache = false) => {
     if (!organisationReady || generation.current.value !== currentGeneration) {
-      throw new Error('Your organisation changed. Please try again.');
+      throw new PlanError('Your organisation changed. Please try again.');
     }
     const token = await authState.getToken({ skipCache });
     if (generation.current.value !== currentGeneration) {
-      throw new Error('Your organisation changed. Please try again.');
+      throw new PlanError('Your organisation changed. Please try again.');
     }
     return token;
   }, [authState.getToken, organisationReady, currentGeneration]);
