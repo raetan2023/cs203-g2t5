@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ApprovalDecision, PurchasePlan, PurchasePlanService } from '../types';
+import { closedPlanText, type ApprovalDecision, type PurchasePlan, type PurchasePlanService } from '../types';
 import { Icon } from './Primitives';
 
 export const decisionTime = (value: string) => new Date(value).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -38,7 +38,7 @@ export function PlanDecisionNote({ plan, service, canAct = true }: { plan: Purch
   </div>;
   if (plan.status === 'purchased') return <div className="pp-decision"><Icon name="check-circle" /><p>Purchase recorded. Open this plan to see the actual cost and saved estimate.</p></div>;
   if (plan.status === 'withdrawn') return <div className="pp-decision"><Icon name="cross-circle" /><p>Request withdrawn. Copy it to a new draft to request approval again.</p></div>;
-  if (plan.status === 'closed') return <div className="pp-decision"><Icon name="minus-circle" /><p>Closed because the officer is no longer a procurement officer. It can no longer be bought.</p></div>;
+  if (plan.status === 'closed') return <div className="pp-decision"><Icon name="minus-circle" /><p>{closedPlanText(plan)}</p></div>;
   if (!decided) return null;
   const approved = plan.status === 'approved';
   const current = result?.planId === plan.plan_id && result.status === plan.status ? result : undefined;

@@ -297,6 +297,13 @@ export class PlanError extends Error {
   }
 }
 
+/** Why a closed plan was closed. Officers' plan lists carry no closed_reason, so the fallback covers both causes. */
+export function closedPlanText(plan: Pick<PurchasePlan, 'closed_reason'>): string {
+  if (plan.closed_reason === 'role_change') return 'Closed because the officer is no longer a procurement officer. It can no longer be bought.';
+  if (plan.closed_reason === 'deadline_passed') return 'Closed because it was not bought by the purchase deadline. It can no longer be bought.';
+  return 'This plan was closed and can no longer be bought.';
+}
+
 export function requestError(error: unknown): PlanError {
   return error instanceof PlanError ? error : new PlanError('Something went wrong. Please try again.');
 }
