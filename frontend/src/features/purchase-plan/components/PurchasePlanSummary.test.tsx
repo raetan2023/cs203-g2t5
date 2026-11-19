@@ -113,7 +113,7 @@ describe('approval workflow in the redesigned cards', () => {
     expect(screen.getByRole('link', { name: /View recommendation/ })).toBeVisible();
   });
 
-  it.each([['submitted', 'Awaiting approval', /View submitted recommendation/], ['approved', 'Approved', /Record purchase/]] as const)('shows both pills on an overdue %s plan and keeps its link', (status, pill, link) => {
+  it.each([['submitted', 'Awaiting approval', /View submitted recommendation/], ['approved', 'Approved', /View decision/]] as const)('shows both pills on an overdue %s plan and keeps its link', (status, pill, link) => {
     render(<PurchasePlanSummary plan={{ ...DEMO_PLAN, status, days_remaining: -3 }} onEdit={vi.fn()} onDelete={vi.fn()} />);
     expect(screen.getByText('Overdue')).toBeVisible();
     expect(screen.getByText(pill)).toBeVisible();

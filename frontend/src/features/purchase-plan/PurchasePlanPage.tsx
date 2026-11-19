@@ -73,7 +73,9 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     return () => { activeContext.current = null; };
   }, [context]);
   // Sharing this promise avoids consuming fail-once fixtures twice in StrictMode.
-  const readRequest = useRef<{ context: typeof context; attempt: number; promise: ReturnType<PurchasePlanService['list']> } | null>(null);
+  // Keyed on every effect input: reusing it when edit_plan_id changes would restore a list from before the last save.
+  const readRequest = useRef<{ context: typeof context; attempt: number; editPlanId: string | null; canEdit: boolean; promise: ReturnType<PurchasePlanService['list']> } | null>(null);
+  const openedEditPlanId = useRef<string | null>(null);
 
   function scenarioError(plan: PurchasePlan | null): string | null {
     return plan && plan.scenario_as_of_date !== scenarioDate
@@ -89,14 +91,17 @@ export function PurchasePlanPage({ service, scenarioDate, onInvalidateAnalysis, 
     setAnnouncement('');
     setNotice(null);
     focusAfterRender.current = null;
-    if (!readRequest.current || readRequest.current.context !== context || readRequest.current.attempt !== attempt) {
-      readRequest.current = { context, attempt, promise: service.list() };
+    let cached = readRequest.current;
+    if (!cached || cached.context !== context || cached.attempt !== attempt || cached.editPlanId !== editPlanId || cached.canEdit !== canEdit) {
+      cached = readRequest.current = { context, attempt, editPlanId, canEdit, promise: service.list() };
     }
-    readRequest.current.promise.then(({ plans }) => {
+    cached.promise.then(({ plans }) => {
       if (!current) return;
       const message = plans.map(scenarioError).find(Boolean);
       setPlans(plans);
-      const edit = canEdit && editPlanId ? plans.find(p => p.plan_id === editPlanId && (!p.status || p.status === 'draft')) : undefined;
+      // edit_plan_id opens its form once; a later Refresh after saving or cancelling must not reopen it.
+      const edit = canEdit && editPlanId && editPlanId !== openedEditPlanId.current ? plans.find(p => p.plan_id === editPlanId && (!p.status || p.status === 'draft')) : undefined;
+      if (edit) openedEditPlanId.current = editPlanId;
       setState(message ? { mode: 'error', message } : edit ? { mode: 'form', plan: edit } : { mode: 'view', plan: null });
     }).catch(error => {
       if (current) setState({ mode: 'error', message: requestError(error).detail });

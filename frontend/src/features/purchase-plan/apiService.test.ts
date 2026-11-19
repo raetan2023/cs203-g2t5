@@ -168,6 +168,15 @@ describe('fetchScenarioDate', () => {
     await expect(fetchScenarioDate(options)).resolves.toBe('2025-10-24');
   });
 
+  it('gives a readable PlanError, not the browser text, when the backend is unreachable or replies with non-JSON', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    await expect(fetchScenarioDate(options)).rejects.toMatchObject({ detail: 'Could not load the scenario date.', status: 0 });
+    mockFetch(200);
+    const error = await fetchScenarioDate(options).catch(e => e);
+    expect(error).toBeInstanceOf(PlanError);
+    expect(error.status).toBe(502);
+  });
+
   it('throws a PlanError when the scenario date cannot be loaded', async () => {
     mockFetch(500);
     const error = await fetchScenarioDate(options).catch(e => e);

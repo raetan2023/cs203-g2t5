@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppLink } from '../../app/router';
 import { formatDate, formatDateTime } from '../purchase-plan/dates';
-import { requestError, type PlanAnalysis, type PurchasePlan, type PurchasePlanService, type SubmissionResponse } from '../purchase-plan/types';
+import { closedPlanText, requestError, type PlanAnalysis, type PurchasePlan, type PurchasePlanService, type SubmissionResponse } from '../purchase-plan/types';
 import type { Horizon } from '../forecast/apiService';
 import { PreviousPlanNote } from '../purchase-plan/components/PreviousPlanNote';
 import { PlanLifecycleActions, PurchaseOutcome } from './PlanLifecycleActions';
@@ -112,7 +112,7 @@ export function SubmittedRecommendationView({ plan, planService, canDecide = fal
     : !canAct ? 'Read-only access to the saved request, manager decision and purchase history.' : status === 'submitted' ? 'Await a manager decision.'
     : status === 'purchased' ? 'The actual purchase is recorded below. The plan and approval history remain saved.'
     : status === 'withdrawn' ? 'This request was withdrawn. Copy it to a new draft to request approval again.'
-    : status === 'closed' ? 'Closed because the officer is no longer a procurement officer. It can no longer be bought.'
+    : status === 'closed' ? closedPlanText(plan)
     : approved ? 'Buy using a current supplier quote, then record the actual purchase. Approval does not place an order.'
     : 'This plan stays locked. Copy it to a new draft to review the quantity and deadline before submitting again.';
   const title = status === 'purchased' ? 'Purchase recorded' : status === 'withdrawn' ? 'Request withdrawn' : status === 'closed' ? 'Plan closed'

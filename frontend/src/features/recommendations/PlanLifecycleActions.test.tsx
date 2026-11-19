@@ -84,6 +84,14 @@ it('validates fields and records one purchase at the plan quantity, with compari
   expect(record.mock.calls[0][1]).not.toHaveProperty('quantity_mt');
 });
 
+it('does not offer a purchase on an approved plan past its deadline, which the backend would refuse', async () => {
+  const { service, plan } = await fixture('approved');
+  render(<Request service={service} initial={{ ...plan, days_remaining: -1 }} />);
+  expect(await screen.findByText(/purchase deadline has passed, so a purchase can no longer be recorded/)).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Record purchase' })).not.toBeInTheDocument();
+  expect(screen.queryByText(/You can still record a purchase/)).not.toBeInTheDocument();
+});
+
 it('keeps purchase drafts on validation errors and requires reload after a conflict', async () => {
   const { service, plan } = await fixture('approved'), user = userEvent.setup();
   const record = vi.spyOn(service as Required<PurchasePlanService>, 'recordPurchase')!.mockRejectedValueOnce(new PlanError('Supplier is invalid', { supplier: 'Use the invoice supplier.' }, 422))

@@ -24,6 +24,13 @@ describe('decision history page', () => {
     expect(screen.queryByRole('region', { name: 'Summary' })).toBeNull();
   });
 
+  it('keeps a plan the backend closed, labelled Closed, under All', async () => {
+    render(<DecisionHistory planService={service([{ ...APPROVED, plan_id: 'closed-1', status: 'closed' }])} today={TODAY} />);
+    await screen.findByRole('tabpanel');
+    expect(screen.getAllByRole('article')).toHaveLength(1);
+    expect(screen.getByText('Closed')).toBeVisible();
+  });
+
   it('tells each stage its own story: pending, approved with progress, rejected with the comment, completed with the saving', async () => {
     render(<DecisionHistory planService={service([PENDING, APPROVED, REJECTED, DONE])} today={TODAY} />);
     await screen.findByRole('tabpanel');

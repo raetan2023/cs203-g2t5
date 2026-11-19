@@ -77,7 +77,7 @@
 .dh-pill--pending { background: var(--bb-warning-surface); color: var(--bb-warning-text); border-color: var(--bb-warning-border); }
 .dh-pill--approved { background: var(--bb-success-surface); color: var(--bb-success-text); border-color: var(--bb-success-border); }
 .dh-pill--rejected { background: var(--bb-error-surface); color: var(--bb-error-text); border-color: var(--bb-error-border); }
-.dh-pill--withdrawn, .dh-pill--completed { background: var(--bb-neutral-surface); color: var(--bb-text-secondary); border-color: var(--bb-border-subtle); }
+.dh-pill--withdrawn, .dh-pill--closed, .dh-pill--completed { background: var(--bb-neutral-surface); color: var(--bb-text-secondary); border-color: var(--bb-border-subtle); }
 .dh-chip { align-self: flex-start; display: inline-flex; align-items: center; min-height: 24px; padding: 0 var(--bb-space-3); border-radius: var(--bb-radius-control); font: var(--bb-type-label); font-variant-numeric: tabular-nums; }
 .dh-chip--good { background: var(--bb-price-down-chip); color: var(--bb-price-down); }
 .dh-chip--bad { background: var(--bb-price-up-chip); color: var(--bb-price-up); }

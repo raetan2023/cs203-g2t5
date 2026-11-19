@@ -12,3 +12,12 @@ it('says a purchase was recorded without an amount, since a purchase is always t
   render(<PlanDecisionNote plan={plan} canAct />);
   expect(screen.getByText('Purchase recorded. See the actual cost and saved estimate.')).toBeVisible();
 });
+
+it.each([
+  ['deadline_passed', 'Closed because it was not bought by the purchase deadline. It can no longer be bought.'],
+  ['role_change', 'Closed because the officer is no longer a procurement officer. It can no longer be bought.'],
+  [undefined, 'This plan was closed and can no longer be bought.'],
+] as const)('gives the closed reason %s, and does not guess one when it is missing', (closed_reason, text) => {
+  render(<PlanDecisionNote plan={{ ...DEMO_PLAN, status: 'closed', closed_reason }} canAct />);
+  expect(screen.getByText(text)).toBeVisible();
+});

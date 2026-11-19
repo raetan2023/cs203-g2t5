@@ -3,7 +3,7 @@ import { calendarDays, formatDate } from '../purchase-plan/dates';
 import { actionLabel, amount, changeRange, compact, compactRange, dayDate, perMt } from '../recommendations/format';
 
 /** Where a submitted plan is in its life. Drafts never appear here: they belong on Purchase plans. */
-export type Stage = 'pending' | 'approved' | 'rejected' | 'withdrawn' | 'completed';
+export type Stage = 'pending' | 'approved' | 'rejected' | 'withdrawn' | 'closed' | 'completed';
 export type Filter = 'all' | Stage;
 
 export interface DecisionCard {
@@ -32,7 +32,7 @@ export interface DecisionCard {
 
 
 export const STAGE_LABEL: Record<Stage, string> = {
-  pending: 'Waiting for a manager', approved: 'Approved', rejected: 'Rejected', withdrawn: 'Withdrawn', completed: 'Completed',
+  pending: 'Waiting for a manager', approved: 'Approved', rejected: 'Rejected', withdrawn: 'Withdrawn', closed: 'Closed', completed: 'Completed',
 };
 export const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'All' }, { id: 'pending', label: 'Pending approval' }, { id: 'approved', label: 'Approved' },
@@ -45,6 +45,8 @@ export function stageOf(plan: PurchasePlan): Stage | null {
     case 'approved': return 'approved';
     case 'rejected': return 'rejected';
     case 'withdrawn': return 'withdrawn';
+    // Closed by the backend (deadline passed unbought, or the officer lost the role). Shown under All, like withdrawn.
+    case 'closed': return 'closed';
     case 'purchased': return 'completed';
     default: return null;
   }

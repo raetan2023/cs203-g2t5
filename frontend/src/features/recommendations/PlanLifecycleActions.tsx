@@ -51,14 +51,16 @@ export function PlanLifecycleActions({ plan, data, service, today, onChanged, on
       setUncertain(e.status !== 422);
     } finally { lock.current = false; if (active.current) setBusy(false); }
   }
-  const offered = (plan.status === 'approved' && !!service.recordPurchase)
+  // The backend refuses a purchase once the deadline has passed and closes the plan on its next hourly run.
+  const pastDeadline = plan.status === 'approved' && plan.days_remaining < 0;
+  const offered = (plan.status === 'approved' && !pastDeadline && !!service.recordPurchase)
     || ((plan.status === 'rejected' || plan.status === 'withdrawn' || plan.status === 'closed') && !!service.revise);
   // A purchased plan has no next action: render nothing rather than an empty section (a blank band in the status card).
-  if (!action && !offered && !error && !data.revision_plan_ids?.length && !(plan.status === 'approved' && plan.days_remaining < 0)) return null;
+  if (!action && !offered && !error && !data.revision_plan_ids?.length && !pastDeadline) return null;
   return <section className="rec-lifecycle" aria-label="Next plan action">
-    {plan.status === 'approved' && plan.days_remaining < 0 && <p role="status">This plan is overdue. You can still record a purchase made on or after approval.</p>}
+    {pastDeadline && <p role="status">The purchase deadline has passed, so a purchase can no longer be recorded. The plan will be closed shortly, and you can then copy it to a new draft.</p>}
     {!action ? <div className="rec-approval-actions">
-      {plan.status === 'approved' && service.recordPurchase && <button className="bb-button" onClick={() => setAction('purchase')}>Record purchase</button>}
+      {plan.status === 'approved' && !pastDeadline && service.recordPurchase && <button className="bb-button" onClick={() => setAction('purchase')}>Record purchase</button>}
       {(plan.status === 'rejected' || plan.status === 'withdrawn' || plan.status === 'closed') && service.revise && <button className="bb-button" onClick={() => setAction('revise')}>Copy to new draft</button>}
     </div> : <form ref={form} noValidate aria-busy={busy} onSubmit={e => { e.preventDefault(); void confirm(); }}>
       <h3>{action === 'purchase' ? 'Record actual purchase' : 'Copy this plan to a new draft?'}</h3>

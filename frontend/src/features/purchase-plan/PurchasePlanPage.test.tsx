@@ -1,7 +1,8 @@
 import { StrictMode } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { navigate } from '../../app/router';
 import { PurchasePlanPage } from './PurchasePlanPage';
 import { BuyerDecisionsProvider } from './components/BuyerDecisions';
 import { DEMO_PLAN, DEMO_SCENARIO_DATE } from './fixtures';
@@ -255,6 +256,32 @@ describe('plan overview and sorting', () => {
     await user.click(within(sort).getByRole('button', { name: 'Volume' }));
     expect(within(sort).getByRole('button', { name: 'Volume' })).toHaveAttribute('aria-pressed', 'true');
     expect(titles().map(title => title?.split(' MT')[0])).toEqual(['900', '300', '100']);
+  });
+});
+
+describe('opening a draft from edit_plan_id', () => {
+  afterEach(() => { window.history.replaceState(null, '', '/'); });
+
+  it('keeps a saved edit after navigating back to the plan list', async () => {
+    window.history.replaceState(null, '', `/purchase-plans?edit_plan_id=${DEMO_PLAN.plan_id}`);
+    const user = setup(createMockPlanService({ delayMs: 0, initialPlan: { ...DEMO_PLAN, status: 'draft' } }));
+    await user.clear(await screen.findByLabelText('Quantity'));
+    await user.type(screen.getByLabelText('Quantity'), '600');
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+    expect(await screen.findByText('600 MT')).toBeVisible();
+    act(() => navigate('/purchase-plans'));
+    expect(await screen.findByText('600 MT')).toBeVisible();
+    expect(screen.queryByText('500 MT')).not.toBeInTheDocument();
+  });
+
+  it.each(['Save changes', 'Cancel'])('does not reopen the form on Refresh after %s', async button => {
+    window.history.replaceState(null, '', `/purchase-plans?edit_plan_id=${DEMO_PLAN.plan_id}`);
+    const user = setup(createMockPlanService({ delayMs: 0, initialPlan: { ...DEMO_PLAN, status: 'draft' } }));
+    await screen.findByLabelText('Quantity');
+    await user.click(screen.getByRole('button', { name: button }));
+    await user.click(await screen.findByRole('button', { name: 'Refresh plans' }));
+    expect(await screen.findByText('500 MT')).toBeVisible();
+    expect(screen.queryByLabelText('Quantity')).not.toBeInTheDocument();
   });
 });
 

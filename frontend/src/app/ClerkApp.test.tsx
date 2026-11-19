@@ -108,6 +108,32 @@ describe('Singapore application date refresh', () => {
     await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
     expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(3);
   });
+
+  it('keeps the loaded app when a tab-return refresh fails, and still shows the error on first load', async () => {
+    window.history.replaceState(null, '', '/home');
+    let down = false;
+    const fetcher = vi.fn(async (url: string) => down ? reply({ detail: 'Backend unavailable.' }, 503)
+      : url.endsWith('/organisation') ? accessReply() : url.endsWith('/config') ? reply({ scenario_as_of_date: '2025-10-24' })
+      : reply({ status: 'unavailable', reason: 'no_run', message: 'No current forecast.' }));
+    vi.stubGlobal('fetch', fetcher);
+    render(<ClerkApp />);
+    const greeting = await screen.findByText('Friday 24 Oct 2025', {}, { timeout: 5000 });
+    down = true;
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
+    await waitFor(() => expect(fetcher.mock.calls.filter(([url]) => url.endsWith('/config'))).toHaveLength(2));
+    await act(async () => { await Promise.resolve(); });
+    expect(greeting).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
+  });
+
+  it('shows the error page with Retry when the first load fails', async () => {
+    window.history.replaceState(null, '', '/home');
+    vi.stubGlobal('fetch', vi.fn(async () => reply({ detail: 'Backend unavailable.' }, 503)));
+    render(<ClerkApp />);
+    expect(await screen.findByRole('button', { name: 'Retry' }, { timeout: 5000 })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Unable to load your session' })).toBeVisible();
+  });
 });
 
 
