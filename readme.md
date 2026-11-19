@@ -4,6 +4,15 @@ CS203 Group 2 Team 5's historical Marine Gas Oil (MGO) purchase-planning project
 
 The app uses **React + TypeScript + Vite**, a **Java Spring Boot API**, **Clerk authentication**, and **Supabase-hosted PostgreSQL**. Python modelling experiments live separately in this repository.
 
+## Contents
+
+- [Current functionality](#current-functionality)
+- [Repository map](#repository-map)
+- [Run the main app locally](#run-the-main-app-locally)
+- [Checks and isolated preview](#checks-and-isolated-preview)
+- [Modelling experiments](#modelling-experiments)
+- [Further documentation](#further-documentation)
+
 ## Current functionality
 
 - Clerk sign-in, signup, session handling and logout.
