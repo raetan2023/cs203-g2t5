@@ -41,7 +41,7 @@ export function PurchasePlanSummary({ plan, service, onEdit, onDelete, onCopy, c
   const planHref = (planId: string) => `/purchase-plans/recommendation?plan_id=${encodeURIComponent(planId)}`;
   const editOnly = canEdit && draft && overdue;
   const copyable = canEdit && (plan.status === 'rejected' || plan.status === 'withdrawn' || plan.status === 'closed') && (!!onCopy || !!copiedPlanId);
-  const openLabel = draft ? 'View recommendation' : plan.status === 'submitted' ? 'View submitted recommendation' : plan.status === 'approved' && canEdit ? 'Record purchase' : plan.status === 'purchased' ? 'View purchase record' : plan.status === 'withdrawn' ? 'View withdrawn request' : 'View decision';
+  const openLabel = draft ? 'View recommendation' : plan.status === 'submitted' ? 'View submitted recommendation' : plan.status === 'approved' && canEdit && !overdue ? 'Record purchase' : plan.status === 'purchased' ? 'View purchase record' : plan.status === 'withdrawn' ? 'View withdrawn request' : 'View decision';
 
   // Guide: docs/ui-revamp/assets/inspo/purchase-plans-page/image.png. Quantity leads; deadline and time left follow.
   return <section className={`pp-card pp-summary pp-summary--${status}${saved ? ' pp-summary--saved' : ''}`} aria-labelledby={headingId}>
